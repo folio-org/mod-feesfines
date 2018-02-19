@@ -1,0 +1,12 @@
+{
+  "typefeefines": "fine",
+  "typefeefinesId": "7261ecaae3a74dc68b468e12a70b1aec",
+  "defaultamount": 0,
+  "allowmanualcreation": "true",
+  "taxvat": "0",
+  "library": "Biblioteca Central",
+  "meta": {
+    "creation_date": "2017-10-05T0723",
+    "last_login_date": ""
+  }
+}

@@ -1,0 +1,30 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Feefines Schema",
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string"
+		},
+		"typefeefines": {
+			"type": "string"
+		},
+		"defaultamont": {
+			"type": "string"
+		},
+		"allowmanualcreation": {
+			"type": "boolean"
+		},
+		"taxvat": {
+			"type": "string"
+		},
+		"library": {
+			"type": "string"
+		}
+	},
+	"additionalProperties": false,
+	"required": [
+		"typefeefines",
+		"id"
+	]
+}
