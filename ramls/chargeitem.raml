@@ -1,0 +1,55 @@
+#%RAML 0.8
+title: chargeitem
+version: v1
+baseUri: http://github.com/org/folio/mod-feefines
+
+documentation:
+  - title: mod-feefines API
+    content: This documents the API calls that can be made to query and manage feefine of the system
+
+schemas:
+  - chargeitemdata: !include schemas/chargeitemdata.json
+  - chargeitemdataCollection: !include schemas/chargeitemdataCollection.json
+  - errors: !include ../raml-util/schemas/errors.schema
+  - error: !include ../raml-util/schemas/error.schema
+  - parameters: !include ../raml-util/schemas/parameters.schema
+
+traits:
+  - secured: !include ../raml-util/traits/auth.raml
+  - orderable: !include ../raml-util/traits/orderable.raml
+  - pageable: !include ../raml-util/traits/pageable.raml
+  - searchable: !include ../raml-util/traits/searchable.raml
+  - language: !include ../raml-util/traits/language.raml
+  - validate: !include ../raml-util/traits/validation.raml
+
+resourceTypes:
+  - collection: !include ../raml-util/rtypes/collection.raml
+  - collection-item: !include ../raml-util/rtypes/item-collection.raml
+  - get-only: !include ../raml-util/rtypes/get-only.raml
+  - post-empty-body: !include ../raml-util/rtypes/post-empty-body.raml
+
+/chargeitem:
+  type:
+    collection:
+      exampleCollection: !include examples/chargeitem_collection.sample
+      exampleItem: !include examples/chargeitem.sample
+      schemaCollection: chargeitemdataCollection
+      schemaItem: chargeitemdata
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "active=true"},
+      orderable: {fieldsList: "field A, field B"},
+      pageable
+    ]
+    description: Return a list of chargeitem
+  post:
+#    is: [validate]
+    description: Create a chargeitem
+  /{chargeitemId}:
+    type:
+      collection-item:
+        exampleItem: !include examples/chargeitem.sample
+        schema: chargeitemdata
+    get:
+      description: Get a single chargeitem
+

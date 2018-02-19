@@ -1,0 +1,11 @@
+{
+  "dateAction": "2017-07-24T01:24:01Z",
+  "typeAction": "Payment-ckeck",
+  "amount": -200.00,
+  "balance": 50.00,
+  "transactionNumber": 3452,
+  "comment": "This a comment",
+  "feeFineId": "d771eb5b-6c9b-408e-a624-a8656d55293e",
+  "userId": "1ad737b0-d847-11e6-bf26-cec0c932ce01",
+  "id": "bcb9b1d9-b967-41c4-a476-a4c282527cea"
+}

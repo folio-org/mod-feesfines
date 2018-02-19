@@ -1,0 +1,18 @@
+{
+  "chargeitem": [{
+    "instance": "Transparent water",
+    "callNumber": "M1366.S67 T73 2017",
+    "barcode": "2453505835707",
+    "itemStatus": "Checked out",
+    "location": "Main Library",
+    "id": "e9285a1c-1dfc-4380-868c-e74073003f43"
+    }, {
+    "instance": "Temeraire",
+    "callNumber": "some-callnumber",
+    "barcode": "645398607547",
+    "itemStatus": "Checked out",
+    "location": "Main Library",
+    "id": "e6d7e91a-4dbc-4a70-9b38-e000d2fbdc79"  
+  } ],
+  "total_records": 2
+}

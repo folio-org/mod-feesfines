@@ -1,0 +1,39 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "FeeFineActions Schema",
+  "type": "object",
+  "properties": {
+    "dateAction": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "typeAction": {
+      "type": "string"
+    },
+    "comment": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "balance": {
+      "type": "number"
+    },
+    "transactionNumber": {
+      "type": "number"
+    },
+    "feeFineId": {
+      "type": "string"
+    },
+    "userId": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+   ]
+}

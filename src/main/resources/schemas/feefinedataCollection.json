@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "feefines": {
+      "type": "array",
+      "id": "feefinesData",
+      "items": {
+        "type": "object",
+        "$ref": "feefinedata"
+      }
+    },
+    "total_records": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "feefines",
+    "total_records"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "Item Information Schema",
+  "type": "object",
+  "properties": {
+    "instance": {
+      "type": "string"
+    },
+    "callNumber": {
+      "type": "string"
+    },
+    "barcode": {
+      "type": "string"
+    },
+    "itemStatus": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+   "id": {
+      "type": "string"
+    },
+    "materialTypeId": {
+      "type": "string"
+    }
+
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+   ]
+}
