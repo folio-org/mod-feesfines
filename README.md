@@ -7,7 +7,7 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 ## Introduction
 
-Module to provide central user management for FOLIO systems.
+Module to provide central feesfines management for FOLIO systems.
 
 ## Additional information
 
