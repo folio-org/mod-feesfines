@@ -103,34 +103,6 @@ public class RestVerticleIT {
         context.async().complete();
     }
 
-    /*  private Future<Void> getEmptyFeeFines(TestContext context) {
-    Future future = Future.future();
-    HttpClient client = vertx.createHttpClient();
-    client.get(port, "localhost", "/feefines", res -> {
-      if(res.statusCode() != 200) {
-        res.bodyHandler(buf -> {
-          String body = buf.toString();
-          future.fail("Bad status code: " + res.statusCode() + " : " + body);
-        });
-      } else {
-        res.bodyHandler(buf -> {
-          JsonObject feefineCollectionObject = buf.toJsonObject();
-          if(feefineCollectionObject.getJsonArray("feefines").size() == 0 &&
-                  feefineCollectionObject.getInteger("totalRecords") == 00) {
-            future.complete();
-          } else {
-            future.fail("Invalid return JSON: " + buf.toString());
-          }
-        });
-      }
-    })
-            .putHeader("X-Okapi-Tenant", "diku")
-            .putHeader("content-type", "application/json")
-            .putHeader("accept", "application/json")
-            .end();
-    return future;
-  }
-     */
     private Future<Void> postFeefine(TestContext context) {
         Future future = Future.future();
         System.out.println(" postFeefine");
