@@ -7,7 +7,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.persist.PostgresClient;
@@ -19,7 +18,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
-
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -105,10 +103,6 @@ public class RestVerticleIT {
 
     private Future<Void> postFeefine(TestContext context) {
         Future future = Future.future();
-        System.out.println(" postFeefine");
-        System.out.println(" postFeefine");
-        System.out.println(" postFeefine");
-
         JsonObject feefineObject = new JsonObject()
                 .put("id", "1234567")
                 .put("feeFineType", "por credencial")
@@ -288,34 +282,6 @@ public class RestVerticleIT {
         return future;
     }
 
-
-    /*
- @Test
-  public void doSequentialTests(TestContext context) {
-     System.out.println("doSequentialTests"); 
-    Async async = context.async();
-    Future<Void> startFuture;
-    Future<Void> f1 = Future.future();
-    startFuture = f1.compose(v -> {
-      Future<Void> f = Future.future();
-      postFeefine(context).setHandler(f.completer());
-      return f;
-    }).compose(v -> {
-      Future<Void> f = Future.future();
-      getFeefine(context).setHandler(f.completer());
-      return f;
-    });
-
-
-    startFuture.setHandler(res -> {
-      if(res.succeeded()) {
-        async.complete();
-      } else {
-        context.fail(res.cause());
-      }
-    });
-  }
-     */
     @Test
     public void testCrossTableQueries(TestContext context) {
         String url = "http://localhost:" + port + "/feefines?query=";
@@ -327,7 +293,7 @@ public class RestVerticleIT {
             int inc = 0;
             CompletableFuture<Response> addFeefineCF = new CompletableFuture();
             String addFeefineURL = feefineUrl;
-            // createFeefine crea el objeto json para la base de datos
+            // createFeefine create the object json to the DB
             send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "74385ea9-e4c0-4270-baff-3524cbbb84b2", "Damaged Book").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF));
             Response addFeefineResponse = addFeefineCF.get(5, TimeUnit.SECONDS);
