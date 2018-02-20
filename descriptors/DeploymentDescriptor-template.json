@@ -2,6 +2,6 @@
   "srvcId": "${artifactId}-${version}",
   "nodeId": "10.0.2.15",
   "descriptor": {
-    "exec": "java -jar /home/folio/mod-feefines/target/mod-feesfines-fat.jar -Dhttp.port=%p"
+    "exec": "java -jar /home/folio/mod-feesfines/target/mod-feesfines-fat.jar -Dhttp.port=%p"
   }
 }
