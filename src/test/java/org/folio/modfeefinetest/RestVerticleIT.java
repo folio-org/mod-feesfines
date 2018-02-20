@@ -63,7 +63,7 @@ public class RestVerticleIT {
         PostgresClient postgres = PostgresClient.getInstance(vertx);
         //postgres.dropCreateDatabase("test_mod_feefines");
 
-        String sql = "drop schema if exists diku_mod_feefines cascade;\n"
+        String sql = "drop schema if exists diku_mod_feesfines cascade;\n"
                 + "drop role if exists diku_mod_feefines;\n";
         Async async = context.async();
         PostgresClient.getInstance(vertx).runSQLFile(sql, true, result -> {
@@ -142,7 +142,7 @@ public class RestVerticleIT {
                 .put("feeFineType", "por credencial")
                 .put("defaultAmount", "10.00")
                 .put("allowManualCreation", "false")
-                .put("taxVat", "0.15")
+                .put("taxVat", "15")
                 .put("ownerId", "Biblioteca postFeefine");
         HttpClient client = vertx.createHttpClient();
         client.post(port, "localhost", "/feefines", res -> {
@@ -187,7 +187,7 @@ public class RestVerticleIT {
                     }
                 });
             } else {
-                future.fail("Bad no hay UNAM UNAM UNAM response: " + res.statusCode());
+                future.fail("Bad response: " + res.statusCode());
             }
         })
                 .putHeader("X-Okapi-Tenant", "diku")
@@ -204,7 +204,7 @@ public class RestVerticleIT {
                 .put("feeFineType", "por Perdidad de libro")
                 .put("defaultAmount", "10.00")
                 .put("allowManualCreation", false)
-                .put("taxVat", "0.15")
+                .put("taxVat", "15")
                 .put("ownerId", "Biblioteca Central");
 
         HttpClient client = vertx.createHttpClient();
@@ -231,7 +231,7 @@ public class RestVerticleIT {
                 .put("feeFineType", "por credencial")
                 .put("defaultAmount", "10.00")
                 .put("allowManualCreation", false)
-                .put("taxVat", "0.15")
+                .put("taxVat", "15")
                 .put("ownerId", "Biblioteca Central");
 
         HttpClient client = vertx.createHttpClient();
@@ -296,7 +296,7 @@ public class RestVerticleIT {
                 .put("feeFineType", "por credencial")
                 .put("defaultAmount", "10.00")
                 .put("allowManualCreation", false)
-                .put("taxVat", "0.15")
+                .put("taxVat", "15")
                 .put("ownerId", "Biblioteca Central");
 
         HttpClient client = vertx.createHttpClient();
@@ -321,13 +321,9 @@ public class RestVerticleIT {
  @Test
   public void doSequentialTests(TestContext context) {
      System.out.println("doSequentialTests"); 
-     System.out.println("doSequentialTests"); 
-     System.out.println("doSequentialTests"); 
-     System.out.println("doSequentialTests"); 
     Async async = context.async();
     Future<Void> startFuture;
     Future<Void> f1 = Future.future();
-    //getEmptyFeeFines(context).setHandler(f1.completer());
     startFuture = f1.compose(v -> {
       Future<Void> f = Future.future();
       postFeefine(context).setHandler(f.completer());
@@ -346,14 +342,10 @@ public class RestVerticleIT {
         context.fail(res.cause());
       }
     });
-     System.out.println("Salida . Salida doSequentialTests"); 
   }
      */
     @Test
     public void testCrossTableQueries(TestContext context) {
-        System.out.println("inicio");
-        System.out.println("inicio");
-        System.out.println("inicio");
         String url = "http://localhost:" + port + "/feefines?query=";
         String feefineUrl = "http://localhost:" + port + "/feefines";
         String ownerUrl = "http://localhost:" + port + "/owners";
@@ -364,18 +356,17 @@ public class RestVerticleIT {
             CompletableFuture<Response> addFeefineCF = new CompletableFuture();
             String addFeefineURL = feefineUrl;
             // createFeefine crea el objeto json para la base de datos
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "74385ea9-e4c0-4270-baff-3524cbbb84b2", "Por credencial").encode(),
+            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "74385ea9-e4c0-4270-baff-3524cbbb84b2", "Damaged Book").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF));
             Response addFeefineResponse = addFeefineCF.get(5, TimeUnit.SECONDS);
             context.assertEquals(addFeefineResponse.code, HttpURLConnection.HTTP_CREATED);
             System.out.println(addFeefineResponse.body
                     + "\nStatus -POST " + addFeefineResponse.code + " time " + System.currentTimeMillis() + " for " + addFeefineURL);
 
-            System.out.println("");
 
             CompletableFuture<Response> addFeefineCF2 = new CompletableFuture();
 
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "59fd88f4-06b7-494e-a607-a400e479cf66", "POr daño del libros").encode(),
+            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "59fd88f4-06b7-494e-a607-a400e479cf66", "Late").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF2));
             Response addFeefineResponse2 = addFeefineCF2.get(5, TimeUnit.SECONDS);
             context.assertEquals(addFeefineResponse2.code, HttpURLConnection.HTTP_CREATED);
@@ -384,7 +375,7 @@ public class RestVerticleIT {
 
             CompletableFuture<Response> addFeefineCF3 = new CompletableFuture();
 
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "74385ea9-e4c0-4270-baff-3524cbbb84b2", "Devolucion libros").encode(),
+            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "74385ea9-e4c0-4270-baff-3524cbbb84b2", "Printing Fee").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF3));
             Response addFeefineResponse3 = addFeefineCF3.get(5, TimeUnit.SECONDS);
             context.assertEquals(addFeefineResponse3.code, HttpURLConnection.HTTP_CREATED);
@@ -412,48 +403,17 @@ public class RestVerticleIT {
 
             CompletableFuture<Response> addOwnerCF3 = new CompletableFuture();
 
-            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Olin Circ", "Olin Library Circulation Desk").encode(),
+            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Shared", "Shared").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF3));
             Response addOwnerResponse3 = addOwnerCF3.get(5, TimeUnit.SECONDS);
             context.assertEquals(addOwnerResponse3.code, HttpURLConnection.HTTP_CREATED);
             System.out.println(addOwnerResponse3.body
                     + "\nStatus -POST " + addOwnerResponse3.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
 
-            CompletableFuture<Response> addAccountCF = new CompletableFuture();
-            String addAccountURL = accountUrl;
-
-            send(addAccountURL, context, HttpMethod.POST, createAccount(null,20.50,10.50,1,"Open","Paid Partially","Note account","0bab56e5-1ab6-4ac2-afdf-8b2df0434378","2b94c631-fca9-a892-c730-03ee529ffe27","04d830a8-810c-415c-aa50-4d09c1fee133","23fdb0bc-ab58-442a-b326-577a96204487","cf0e582b-58c3-48b1-8158-e4158211b74e").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addAccountCF));
-            Response addAccountResponse = addAccountCF.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addAccountResponse.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addAccountResponse.body
-                    + "\nStatus -POST " + addAccountResponse.code + " time " + System.currentTimeMillis() + " for " + addAccountURL);
-
-            CompletableFuture<Response> addAccountCF2 = new CompletableFuture();
-
-            send(addAccountURL, context, HttpMethod.POST, createAccount(null,5.50,5.50, 2,"Closed","Refunded Fully","note", "959f65f6-ce51-4984-99fa-5e11c1f5661c", "2b94c631-fca9-a892-c730-03ee529ffe27", "3215e796-ac83-4f79-8253-a3ca4cccbfb7", "23f2c8e1-bd5d-4f27-9398-a688c998808a", "d7549eed-bc92-4dac-8900-0cf3c839679a4").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addAccountCF2));
-            Response addAccountResponse2 = addAccountCF2.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addAccountResponse2.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addAccountResponse2.body
-                    + "\nStatus -POST " + addAccountResponse2.code + " time " + System.currentTimeMillis() + " for " + addAccountURL);
 
             System.out.println("");
-            //query on feefines and sort by groups
             String url1 = url + URLEncoder.encode("id=*", "UTF-8");
-            System.out.println("UNAM  " + url1);
-            //String url2 = url+URLEncoder.encode("active=* sortBy patronGroup.group/sort.ascending", "UTF-8");
-            //query and sort on groups via feefines endpoint
-            //String url3 = url+URLEncoder.encode("patronGroup.group=lib* sortBy patronGroup.group/sort.descending", "UTF-8");
-            //query on feefines sort on feefines and groups
-            //String url4 = url+URLEncoder.encode("active=* sortby patronGroup.group personal.lastName personal.firstName", "UTF-8");
-            //query on feefines and groups sort by groups
-            //String url5 = url+URLEncoder.encode("feefinename=jhandley2nd and patronGroup.group=lib* sortby patronGroup.group", "UTF-8");
-            //query on feefines and sort by feefines
             String url6 = url + URLEncoder.encode("id=*", "UTF-8");
-            System.out.println("UNAM  " + url6);
-            //non existant group - should be 0 results
-            //String url7 = url+URLEncoder.encode("feefinename=jhandley2nd and patronGroup.group=abc* sortby patronGroup.group", "UTF-8");
 
             CompletableFuture<Response> cqlCF6 = new CompletableFuture();
             CompletableFuture<Response> cqlCF1 = new CompletableFuture();
@@ -480,10 +440,7 @@ public class RestVerticleIT {
             String contentType, int errorCode, Handler<HttpClientResponse> handler) {
         HttpClient client = vertx.createHttpClient();
         HttpClientRequest request;
-        System.out.println("valor en send  " + url);
-        System.out.println("valor en send  " + url);
-        System.out.println("valor en send  " + url);
-        System.out.println("valor en send  " + url);
+        // System.out.println("valor en send  " + url);
         if (content == null) {
             content = "";
         }
@@ -570,7 +527,7 @@ public class RestVerticleIT {
         feefine.put("feeFineType", typefeefine)
                 .put("defaultAmount", "10.00")
                 .put("allowManualCreation", "false")
-                .put("taxVat", "0.15")
+                .put("taxVat", "15")
                 .put("ownerId", biblioteca);
 
         return feefine;
@@ -590,37 +547,5 @@ public class RestVerticleIT {
                 .put("desc", desc);
         return ownerJO;
     }
-
-    private static JsonObject createAccount(String id, double amount, double remaining, Integer accountTransaction, String status, String paymentStatus, String notes, String loanId, String materialTypeId,String userId,String itemId, String feeFineId) {
-    JsonObject account = new JsonObject();
-    if (id
-
-    
-        != null) {
-            account.put("id", id);
-    }
-
-    
-        else {
-            id = UUID.randomUUID().toString();
-        account.put("id", id);
-    }
-
-    account.put (
-    "amount", amount)
-                .put("remaining", remaining)
-                .put("accountTransaction", accountTransaction)
-                .put("status", new JsonObject()
-                    .put("name",status))
-                .put("paymentStatus", new JsonObject()
-                    .put("name",paymentStatus))
-                .put("notes", "this is a note for the fines module")
-                .put("loanId", loanId)
-                .put("materialTypeId", materialTypeId)
-                .put("userId", userId)
-                .put("itemId", itemId)
-                .put("feeFineId", feeFineId);
-    return account ;
-}
 }
 
