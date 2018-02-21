@@ -3,7 +3,7 @@
     "amount": 15.0,
     "remaining": 15.0,
     "accountTransaction": 1,
-    "notes": "This is a note",
+    "comments": "This is a comments",
     "dateCreated": "2018-01-31T00:00:01Z",
     "dateUpdated": "2018-01-31T00:00:01Z",
     "status": {
@@ -23,7 +23,7 @@
     "amount": 5.0,
     "remaining": 5.0,
     "accountTransaction": 2,
-    "notes": "This is a note 2",
+    "comments": "This is a comment 2",
     "dateCreated": "2018-01-31T00:00:01Z",
     "dateUpdated": "2018-01-31T00:00:01Z",
     "status": {

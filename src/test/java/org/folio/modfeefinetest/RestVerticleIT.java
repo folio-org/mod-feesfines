@@ -294,7 +294,7 @@ public class RestVerticleIT {
             CompletableFuture<Response> addFeefineCF = new CompletableFuture();
             String addFeefineURL = feefineUrl;
             // createFeefine create the object json to the DB
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "74385ea9-e4c0-4270-baff-3524cbbb84b2", "Damaged Book").encode(),
+            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Damaged Book Fee").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF));
             Response addFeefineResponse = addFeefineCF.get(5, TimeUnit.SECONDS);
             context.assertEquals(addFeefineResponse.code, HttpURLConnection.HTTP_CREATED);
@@ -304,7 +304,7 @@ public class RestVerticleIT {
 
             CompletableFuture<Response> addFeefineCF2 = new CompletableFuture();
 
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "59fd88f4-06b7-494e-a607-a400e479cf66", "Late").encode(),
+            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Late").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF2));
             Response addFeefineResponse2 = addFeefineCF2.get(5, TimeUnit.SECONDS);
             context.assertEquals(addFeefineResponse2.code, HttpURLConnection.HTTP_CREATED);
@@ -313,7 +313,7 @@ public class RestVerticleIT {
 
             CompletableFuture<Response> addFeefineCF3 = new CompletableFuture();
 
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "74385ea9-e4c0-4270-baff-3524cbbb84b2", "Printing Fee").encode(),
+            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Item Lost Fee").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF3));
             Response addFeefineResponse3 = addFeefineCF3.get(5, TimeUnit.SECONDS);
             context.assertEquals(addFeefineResponse3.code, HttpURLConnection.HTTP_CREATED);
@@ -341,7 +341,7 @@ public class RestVerticleIT {
 
             CompletableFuture<Response> addOwnerCF3 = new CompletableFuture();
 
-            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Shared", "Shared").encode(),
+            send(addOwnerURL, context, HttpMethod.POST, createOwner("3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Shared", "Shared").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF3));
             Response addOwnerResponse3 = addOwnerCF3.get(5, TimeUnit.SECONDS);
             context.assertEquals(addOwnerResponse3.code, HttpURLConnection.HTTP_CREATED);
@@ -452,7 +452,7 @@ public class RestVerticleIT {
         return false;
     }
 
-    private static JsonObject createFeefine(String id, String biblioteca, String typefeefine) {
+    private static JsonObject createFeefine(String id, String ownerId, String typefeefine) {
 
         int inc = 0;
         JsonObject feefine = new JsonObject();
@@ -464,9 +464,9 @@ public class RestVerticleIT {
         }
         feefine.put("feeFineType", typefeefine)
                 .put("defaultAmount", "10.00")
-                .put("allowManualCreation", "false")
+                .put("allowManualCreation", "true")
                 .put("taxVat", "15")
-                .put("ownerId", biblioteca);
+                .put("ownerId", ownerId);
 
         return feefine;
     }
