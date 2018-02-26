@@ -291,6 +291,35 @@ public class RestVerticleIT {
 
         try {
             int inc = 0;
+            
+            CompletableFuture<Response> addOwnerCF = new CompletableFuture();
+            String addOwnerURL = ownerUrl;
+
+            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Main Admin", "Main Library Administration Office").encode(),
+                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF));
+            Response addOwnerResponse = addOwnerCF.get(5, TimeUnit.SECONDS);
+            context.assertEquals(addOwnerResponse.code, HttpURLConnection.HTTP_CREATED);
+            System.out.println(addOwnerResponse.body
+                    + "\nStatus -POST " + addOwnerResponse.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
+
+            CompletableFuture<Response> addOwnerCF2 = new CompletableFuture();
+			
+			send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Main Circ", "Main Library Circulation Desk").encode(),
+                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF2));
+            Response addOwnerResponse2 = addOwnerCF2.get(5, TimeUnit.SECONDS);
+            context.assertEquals(addOwnerResponse2.code, HttpURLConnection.HTTP_CREATED);
+            System.out.println(addOwnerResponse2.body
+                    + "\nStatus -POST " + addOwnerResponse2.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
+ 
+            CompletableFuture<Response> addOwnerCF3 = new CompletableFuture();
+
+            send(addOwnerURL, context, HttpMethod.POST, createOwner("3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Shared", "Shared").encode(),
+                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF3));
+            Response addOwnerResponse3 = addOwnerCF3.get(5, TimeUnit.SECONDS);
+            context.assertEquals(addOwnerResponse3.code, HttpURLConnection.HTTP_CREATED);
+            System.out.println(addOwnerResponse3.body
+                    + "\nStatus -POST " + addOwnerResponse3.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
+
             CompletableFuture<Response> addFeefineCF = new CompletableFuture();
             String addFeefineURL = feefineUrl;
             // createFeefine create the object json to the DB
@@ -300,7 +329,6 @@ public class RestVerticleIT {
             context.assertEquals(addFeefineResponse.code, HttpURLConnection.HTTP_CREATED);
             System.out.println(addFeefineResponse.body
                     + "\nStatus -POST " + addFeefineResponse.code + " time " + System.currentTimeMillis() + " for " + addFeefineURL);
-
 
             CompletableFuture<Response> addFeefineCF2 = new CompletableFuture();
 
@@ -319,35 +347,6 @@ public class RestVerticleIT {
             context.assertEquals(addFeefineResponse3.code, HttpURLConnection.HTTP_CREATED);
             System.out.println(addFeefineResponse3.body
                     + "\nStatus -POST " + addFeefineResponse3.code + " time " + System.currentTimeMillis() + " for " + addFeefineURL);
-
-            CompletableFuture<Response> addOwnerCF = new CompletableFuture();
-            String addOwnerURL = ownerUrl;
-
-            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Main Admin", "Main Library Administration Office").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF));
-            Response addOwnerResponse = addOwnerCF.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addOwnerResponse.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addOwnerResponse.body
-                    + "\nStatus -POST " + addOwnerResponse.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
-
-            CompletableFuture<Response> addOwnerCF2 = new CompletableFuture();
-
-            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Main Circ", "Main Library Circulation Desk").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF2));
-            Response addOwnerResponse2 = addOwnerCF2.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addOwnerResponse2.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addOwnerResponse2.body
-                    + "\nStatus -POST " + addOwnerResponse2.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
-
-            CompletableFuture<Response> addOwnerCF3 = new CompletableFuture();
-
-            send(addOwnerURL, context, HttpMethod.POST, createOwner("3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Shared", "Shared").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF3));
-            Response addOwnerResponse3 = addOwnerCF3.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addOwnerResponse3.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addOwnerResponse3.body
-                    + "\nStatus -POST " + addOwnerResponse3.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
-
 
             System.out.println("");
             String url1 = url + URLEncoder.encode("id=*", "UTF-8");
