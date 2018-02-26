@@ -6,17 +6,98 @@ CREATE SCHEMA myuniversity_mymodule AUTHORIZATION myuniversity_mymodule;
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE IF NOT EXISTS myuniversity_mymodule.feefines (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), jsonb JSONB NOT NULL);
-
 CREATE TABLE IF NOT EXISTS myuniversity_mymodule.owners (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), jsonb JSONB NOT NULL);
 
-CREATE TABLE IF NOT EXISTS myuniversity_mymodule.accounts (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), jsonb JSONB NOT NULL);
+--Update id to owner
+CREATE OR REPLACE FUNCTION update_owner_id()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.id = NEW.jsonb->>'id';
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
 
+CREATE TRIGGER update_owner_id
+  BEFORE INSERT OR UPDATE ON myuniversity_mymodule.owners
+  FOR EACH ROW EXECUTE PROCEDURE update_owner_id();
+
+--patch id = jsonb->>'id'
+UPDATE myuniversity_mymodule.owners SET id = uuid(jsonb->>'id');
+
+
+CREATE TABLE IF NOT EXISTS myuniversity_mymodule.feefines (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), jsonb JSONB NOT NULL, ownerid UUID REFERENCES myuniversity_mymodule.owners);
+
+--Update id to ownerid	
+CREATE OR REPLACE FUNCTION update_feefines_references()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.ownerid = NEW.jsonb->>'ownerId';
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_feefines_references
+  BEFORE INSERT OR UPDATE ON myuniversity_mymodule.feefines
+  FOR EACH ROW EXECUTE PROCEDURE update_feefines_references();
+
+--update id
+CREATE OR REPLACE FUNCTION update_feefines_id()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.id = NEW.jsonb->>'id';
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_feefines_id
+  BEFORE INSERT OR UPDATE ON diku_mod_feesfines.feefines
+  FOR EACH ROW EXECUTE PROCEDURE update_feefines_id();
+
+--patch id = jsonb->>'id'
+UPDATE myuniversity_mymodule.feefines SET id = uuid(jsonb->>'id');
+
+CREATE TABLE IF NOT EXISTS diku_mod_feesfines.accounts (
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
+jsonb JSONB NOT NULL,
+feefineid UUID REFERENCES diku_mod_feesfines.feefines, 
+ownerid UUID REFERENCES diku_mod_feesfines.owners);
+
+---
+CREATE OR REPLACE FUNCTION update_accounts_references()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.feefineid = NEW.jsonb->>'feeFineId';
+  NEW.ownerid = NEW.jsonb->>'ownerId';
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+--
+CREATE TRIGGER update_accounts_references
+  BEFORE INSERT OR UPDATE ON diku_mod_feesfines.accounts
+  FOR EACH ROW EXECUTE PROCEDURE update_accounts_references();
+
+--Update id
+CREATE OR REPLACE FUNCTION update_accounts_id()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.id = NEW.jsonb->>'id';
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_accounts_id
+  BEFORE INSERT OR UPDATE ON diku_mod_feesfines.accounts
+  FOR EACH ROW EXECUTE PROCEDURE update_accounts_id();
+  
+UPDATE diku_mod_feesfines.accounts SET id = uuid(jsonb->>'id');
+
+--Table feefineactions
 CREATE TABLE IF NOT EXISTS myuniversity_mymodule.feefineactions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), jsonb 
 JSONB NOT NULL);
 
 -- View Fees Fines History
-CREATE VIEW myuniversity_mymodule.feefine_history_view AS  SELECT id AS id,row_to_json(t) AS jsonb
+CREATE VIEW myuniversity_mymodule.feefine_history_view AS  SELECT id AS id,to_jsonb(t) AS jsonb
 FROM (
 SELECT a.jsonb->>'id' AS id,
   SUBSTRING(a.jsonb->>'dateCreated' FROM 1 FOR 10) AS "dateCreated",
