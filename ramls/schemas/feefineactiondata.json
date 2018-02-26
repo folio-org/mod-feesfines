@@ -10,7 +10,7 @@
     "typeAction": {
       "type": "string"
     },
-    "comment": {
+    "comments": {
       "type": "string"
     },
     "amount": {
@@ -20,7 +20,13 @@
       "type": "number"
     },
     "transactionNumber": {
-      "type": "number"
+      "type": "integer"
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
     },
     "feeFineId": {
       "type": "string"
@@ -34,6 +40,8 @@
   },
   "additionalProperties": false,
   "required": [
+    "feeFineId",
+    "userId",
     "id"
    ]
 }
