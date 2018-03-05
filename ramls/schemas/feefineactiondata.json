@@ -1,6 +1,6 @@
 {
   "$schema" : "http://json-schema.org/draft-04/schema#",
-  "title": "FeeFineActions Schema",
+  "title": "Fee/Fine Actions Schema",
   "type": "object",
   "properties": {
     "dateAction": {
@@ -13,7 +13,7 @@
     "comments": {
       "type": "string"
     },
-    "amount": {
+    "amountAction": {
       "type": "number"
     },
     "balance": {
@@ -28,7 +28,7 @@
     "source": {
       "type": "string"
     },
-    "feeFineId": {
+    "accountId": {
       "type": "string"
     },
     "userId": {
@@ -40,7 +40,7 @@
   },
   "additionalProperties": false,
   "required": [
-    "feeFineId",
+    "accountId",
     "userId",
     "id"
    ]
