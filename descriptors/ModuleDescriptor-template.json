@@ -1,337 +1,441 @@
 {
-	"id": "${artifactId}-${version}",
-	"name": "feefines",
-	"provides": [{
-			"id": "feefines",
-			"version": "14.0",
-			"handlers": [{
-					"methods": ["GET"],
-					"pathPattern": "/feefines",
-					"permissionsRequired": ["feefines.collection.get"],
-					"permissionsDesired": [
-						"feefines.read.basic",
-						"feefines.read.restricted"
-					]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/feefines/{id}",
-					"permissionsRequired": ["feefines.item.get"],
-					"permissionsDesired": [
-						"feefines.read.basic",
-						"feefines.read.restricted"
-					]
-				},
-				{
-					"methods": ["POST"],
-					"pathPattern": "/feefines",
-					"permissionsRequired": ["feefines.item.post"]
-				},
-				{
-					"methods": ["PUT"],
-					"pathPattern": "/feefines/{id}",
-					"permissionsRequired": ["feefines.item.put"]
-				},
-				{
-					"methods": ["DELETE"],
-					"pathPattern": "/feefines/{id}",
-					"permissionsRequired": ["feefines.item.delete"]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/owners",
-					"permissionsRequired": ["owners.collection.get"]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/owners/{id}",
-					"permissionsRequired": ["owners.item.get"],
-					"permissionsDesired": [
-						"owners.read.basic",
-						"owners.read.restricted"
-					]
-				},
-				{
-					"methods": ["POST"],
-					"pathPattern": "/owners",
-					"permissionsRequired": ["owners.item.post"]
-				},
-				{
-					"methods": ["PUT"],
-					"pathPattern": "/owners/{id}",
-					"permissionsRequired": ["owners.item.put"]
-				},
-				{
-					"methods": ["DELETE"],
-					"pathPattern": "/owners/{id}",
-					"permissionsRequired": ["owners.item.delete"]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/accounts",
-					"permissionsRequired": ["accounts.collection.get"]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/accounts/{id}",
-					"permissionsRequired": ["accounts.item.get"],
-					"permissionsDesired": [
-						"accounts.read.basic",
-						"accounts.read.restricted"
-					]
-				},
-				{
-					"methods": ["POST"],
-					"pathPattern": "/accounts",
-					"permissionsRequired": ["accounts.item.post"]
-				},
-				{
-					"methods": ["PUT"],
-					"pathPattern": "/accounts/{id}",
-					"permissionsRequired": ["accounts.item.put"]
-				},
-				{
-					"methods": ["DELETE"],
-					"pathPattern": "/accounts/{id}",
-					"permissionsRequired": ["accounts.item.delete"]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/feefinehistory",
-					"permissionsRequired": ["feefinehistory.collection.get"]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/feefinehistory/{id}",
-					"permissionsRequired": ["feefinehistory.item.get"],
-					"permissionsDesired": [
-						"feefinehistory.read.basic",
-						"feefinehistory.read.restricted"
-					]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/feefineactions",
-					"permissionsRequired": ["feefineactions.collection.get"]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/feefineactions/{id}",
-					"permissionsRequired": ["feefineactions.item.get"],
-					"permissionsDesired": [
-						"feefineactions.read.basic",
-						"feefineactions.read.restricted"
-					]
-				},
-				{
-					"methods": ["POST"],
-					"pathPattern": "/feefineactions",
-					"permissionsRequired": ["feefineactions.item.post"]
-				},
-				{
-					"methods": ["PUT"],
-					"pathPattern": "/feefineactions/{id}",
-					"permissionsRequired": ["feefineactions.item.put"]
-				},
-				{
-					"methods": ["DELETE"],
-					"pathPattern": "/feefineactions/{id}",
-					"permissionsRequired": ["feefineactions.item.delete"]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/chargeitem",
-					"permissionsRequired": ["chargeitem.collection.get"]
-				},
-				{
-					"methods": ["GET"],
-					"pathPattern": "/chargeitem/{id}",
-					"permissionsRequired": ["chargeitem.item.get"],
-					"permissionsDesired": [
-						"chargeitem.read.basic",
-						"chargeitem.read.restricted"
-					]
-				}
-			]
-		},
-		{
-			"id": "_tenant",
-			"version": "1.0",
-			"interfaceType": "system",
-			"handlers": [{
-				"methods": ["POST", "DELETE"],
-				"pathPattern": "/_/tenant"
-			}]
-		}
-	],
-	"permissionSets": [{
-			"permissionName": "feefines.collection.get",
-			"displayName": "feefines collection get",
-			"description": "Get a collection of owner records"
-		},
-		{
-			"permissionName": "feefines.item.get",
-			"displayName": "feefines item get",
-			"description": "Read an individual record in the User module"
-		},
-		{
-			"permissionName": "feefines.read.basic",
-			"displayName": "feefines read-basic",
-			"description": "Read non-restricted User data information"
-		},
-		{
-			"permissionName": "feefines.read.restricted",
-			"displayName": "feefines read-restricted",
-			"description": "Read restricted User data information"
-		},
-		{
-			"permissionName": "feefines.item.post",
-			"displayName": "feefines item post",
-			"description": "Create new records in the User module"
-		},
-		{
-			"permissionName": "feefines.item.put",
-			"displayName": "feefines item put",
-			"description": "Edit existing records in the User module"
-		},
-		{
-			"permissionName": "feefines.item.delete",
-			"displayName": "feefines item delete",
-			"description": "Delete records from the User module"
-		},
-		{
-			"permissionName": "owners.collection.get",
-			"displayName": "owners collection get",
-			"description": "Get a list of ownergroup records"
-		},
-		{
-			"permissionName": "owners.item.get",
-			"displayName": "owners item get",
-			"description": "Get a single ownergroup item"
-		},
-		{
-			"permissionName": "owners.item.post",
-			"displayName": "owners item post",
-			"description": "Create new Owners for feefines"
-		},
-		{
-			"permissionName": "owners.item.put",
-			"displayName": "owners item put",
-			"description": "Edit existing Owners for feefines"
-		},
-		{
-			"permissionName": "owners.item.delete",
-			"displayName": "owners item delete",
-			"description": "Delete Owners for feefines"
-		},
-		{
-			"permissionName": "accounts.collection.get",
-			"displayName": "accounts collection get",
-			"description": "Get a list of account records"
-		},
-		{
-			"permissionName": "accounts.item.get",
-			"displayName": "accounts item get",
-			"description": "Get a single account record"
-		},
-		{
-			"permissionName": "accounts.item.post",
-			"displayName": "accounts item post",
-			"description": "Create a new account record"
-		},
-		{
-			"permissionName": "accounts.item.put",
-			"displayName": "accounts item put",
-			"description": "Edit an account record"
-		},
-		{
-			"permissionName": "accounts.item.delete",
-			"displayName": "accounts item delete",
-			"description": "Delete an account record"
-		},
-		{
-			"permissionName": "feefinehistory.collection.get",
-			"displayName": "feefinehistory collection get",
-			"description": "Get a collection of owner records"
-		},
-		{
-			"permissionName": "feefinehistory.item.get",
-			"displayName": "feefinehistory item get",
-			"description": "Read an individual record in the User module"
-		},
-		{
-			"permissionName": "feefinehistory.read.basic",
-			"displayName": "feefinehistory read-basic",
-			"description": "Read non-restricted User data information"
-		},
-		{
-			"permissionName": "feefinehistory.read.restricted",
-			"displayName": "feefinehistory read-restricted",
-			"description": "Read restricted User data information"
-		},
-		{
-			"permissionName": "feefinehistory.item.post",
-			"displayName": "feefinehistory item post",
-			"description": "Create new records in the User module"
-		},
-		{
-			"permissionName": "feefinehistory.item.put",
-			"displayName": "feefinehistory item put",
-			"description": "Edit existing records in the User module"
-		},
-		{
-			"permissionName": "feefinehistory.item.delete",
-			"displayName": "feefinehistory item delete",
-			"description": "Delete records from the User module"
-		},
-		{
-			"permissionName": "feefineactions.collection.get",
-			"displayName": "feefineactions collection get",
-			"description": "Get a list of feefineactions records"
-		},
-		{
-			"permissionName": "feefineactions.item.get",
-			"displayName": "feefineactions item get",
-			"description": "Get a single feefineaction record"
-		},
-		{
-			"permissionName": "feefineactions.item.post",
-			"displayName": "feefineactions item post",
-			"description": "Create a new feefineaction record"
-		},
-		{
-			"permissionName": "feefineactions.item.put",
-			"displayName": "feefineactions item put",
-			"description": "Edit an feefineaction record"
-		},
-		{
-			"permissionName": "feefineactions.item.delete",
-			"displayName": "feefineactions item delete",
-			"description": "Delete an feefineaction record"
-		},
-		{
-			"permissionName": "chargeitem.collection.get",
-			"displayName": "chargeitem collection get",
-			"description": "Get a list of chargeitem records"
-		},
-		{
-			"permissionName": "chargeitem.item.get",
-			"displayName": "chargeitem item get",
-			"description": "Get a single chargeitem record"
-		},
-		{
-			"permissionName": "feefines.all",
-			"displayName": "feefines all",
-			"description": "All permissions for the mod-feefines module",
-			"subPermissions": [
-				"feefines.collection.get",
-				"feefines.item.get",
-				"feefines.read.basic",
-				"feefines.read.restricted",
-				"feefines.item.post",
-				"feefines.item.put",
-				"feefines.item.delete"
-			]
-		}
-	]
+  "id":"${artifactId}-${version}",
+  "name":"feefines",
+  "provides":[
+    {
+      "id":"feefines",
+      "version":"14.0",
+      "handlers":[
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/feefines",
+          "permissionsRequired":[
+            "feefines.collection.get"
+          ],
+          "permissionsDesired":[
+            "feefines.read.basic",
+            "feefines.read.restricted"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/feefines/{id}",
+          "permissionsRequired":[
+            "feefines.item.get"
+          ],
+          "permissionsDesired":[
+            "feefines.read.basic",
+            "feefines.read.restricted"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/feefines",
+          "permissionsRequired":[
+            "feefines.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/feefines/{id}",
+          "permissionsRequired":[
+            "feefines.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/feefines/{id}",
+          "permissionsRequired":[
+            "feefines.item.delete"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/owners",
+          "permissionsRequired":[
+            "owners.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/owners/{id}",
+          "permissionsRequired":[
+            "owners.item.get"
+          ],
+          "permissionsDesired":[
+            "owners.read.basic",
+            "owners.read.restricted"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/owners",
+          "permissionsRequired":[
+            "owners.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/owners/{id}",
+          "permissionsRequired":[
+            "owners.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/owners/{id}",
+          "permissionsRequired":[
+            "owners.item.delete"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/accounts",
+          "permissionsRequired":[
+            "accounts.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/accounts/{id}",
+          "permissionsRequired":[
+            "accounts.item.get"
+          ],
+          "permissionsDesired":[
+            "accounts.read.basic",
+            "accounts.read.restricted"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts",
+          "permissionsRequired":[
+            "accounts.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/accounts/{id}",
+          "permissionsRequired":[
+            "accounts.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/accounts/{id}",
+          "permissionsRequired":[
+            "accounts.item.delete"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/feefinehistory",
+          "permissionsRequired":[
+            "feefinehistory.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/feefinehistory/{id}",
+          "permissionsRequired":[
+            "feefinehistory.item.get"
+          ],
+          "permissionsDesired":[
+            "feefinehistory.read.basic",
+            "feefinehistory.read.restricted"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/feefineactions",
+          "permissionsRequired":[
+            "feefineactions.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/feefineactions/{id}",
+          "permissionsRequired":[
+            "feefineactions.item.get"
+          ],
+          "permissionsDesired":[
+            "feefineactions.read.basic",
+            "feefineactions.read.restricted"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/feefineactions",
+          "permissionsRequired":[
+            "feefineactions.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/feefineactions/{id}",
+          "permissionsRequired":[
+            "feefineactions.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/feefineactions/{id}",
+          "permissionsRequired":[
+            "feefineactions.item.delete"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/chargeitem",
+          "permissionsRequired":[
+            "chargeitem.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/chargeitem/{id}",
+          "permissionsRequired":[
+            "chargeitem.item.get"
+          ],
+          "permissionsDesired":[
+            "chargeitem.read.basic",
+            "chargeitem.read.restricted"
+          ]
+        }
+      ]
+    },
+    {
+      "id":"_tenant",
+      "version":"1.0",
+      "interfaceType":"system",
+      "handlers":[
+        {
+          "methods":[
+            "POST",
+            "DELETE"
+          ],
+          "pathPattern":"/_/tenant"
+        }
+      ]
+    }
+  ],
+  "permissionSets":[
+    {
+      "permissionName":"feefines.collection.get",
+      "displayName":"feefines collection get",
+      "description":"Get a collection of owner records"
+    },
+    {
+      "permissionName":"feefines.item.get",
+      "displayName":"feefines item get",
+      "description":"Read an individual record in the User module"
+    },
+    {
+      "permissionName":"feefines.read.basic",
+      "displayName":"feefines read-basic",
+      "description":"Read non-restricted User data information"
+    },
+    {
+      "permissionName":"feefines.read.restricted",
+      "displayName":"feefines read-restricted",
+      "description":"Read restricted User data information"
+    },
+    {
+      "permissionName":"feefines.item.post",
+      "displayName":"feefines item post",
+      "description":"Create new records in the User module"
+    },
+    {
+      "permissionName":"feefines.item.put",
+      "displayName":"feefines item put",
+      "description":"Edit existing records in the User module"
+    },
+    {
+      "permissionName":"feefines.item.delete",
+      "displayName":"feefines item delete",
+      "description":"Delete records from the User module"
+    },
+    {
+      "permissionName":"owners.collection.get",
+      "displayName":"owners collection get",
+      "description":"Get a list of ownergroup records"
+    },
+    {
+      "permissionName":"owners.item.get",
+      "displayName":"owners item get",
+      "description":"Get a single ownergroup item"
+    },
+    {
+      "permissionName":"owners.item.post",
+      "displayName":"owners item post",
+      "description":"Create new Owners for feefines"
+    },
+    {
+      "permissionName":"owners.item.put",
+      "displayName":"owners item put",
+      "description":"Edit existing Owners for feefines"
+    },
+    {
+      "permissionName":"owners.item.delete",
+      "displayName":"owners item delete",
+      "description":"Delete Owners for feefines"
+    },
+    {
+      "permissionName":"accounts.collection.get",
+      "displayName":"accounts collection get",
+      "description":"Get a list of account records"
+    },
+    {
+      "permissionName":"accounts.item.get",
+      "displayName":"accounts item get",
+      "description":"Get a single account record"
+    },
+    {
+      "permissionName":"accounts.item.post",
+      "displayName":"accounts item post",
+      "description":"Create a new account record"
+    },
+    {
+      "permissionName":"accounts.item.put",
+      "displayName":"accounts item put",
+      "description":"Edit an account record"
+    },
+    {
+      "permissionName":"accounts.item.delete",
+      "displayName":"accounts item delete",
+      "description":"Delete an account record"
+    },
+    {
+      "permissionName":"feefinehistory.collection.get",
+      "displayName":"feefinehistory collection get",
+      "description":"Get a collection of owner records"
+    },
+    {
+      "permissionName":"feefinehistory.item.get",
+      "displayName":"feefinehistory item get",
+      "description":"Read an individual record in the User module"
+    },
+    {
+      "permissionName":"feefinehistory.read.basic",
+      "displayName":"feefinehistory read-basic",
+      "description":"Read non-restricted User data information"
+    },
+    {
+      "permissionName":"feefinehistory.read.restricted",
+      "displayName":"feefinehistory read-restricted",
+      "description":"Read restricted User data information"
+    },
+    {
+      "permissionName":"feefinehistory.item.post",
+      "displayName":"feefinehistory item post",
+      "description":"Create new records in the User module"
+    },
+    {
+      "permissionName":"feefinehistory.item.put",
+      "displayName":"feefinehistory item put",
+      "description":"Edit existing records in the User module"
+    },
+    {
+      "permissionName":"feefinehistory.item.delete",
+      "displayName":"feefinehistory item delete",
+      "description":"Delete records from the User module"
+    },
+    {
+      "permissionName":"feefineactions.collection.get",
+      "displayName":"feefineactions collection get",
+      "description":"Get a list of feefineactions records"
+    },
+    {
+      "permissionName":"feefineactions.item.get",
+      "displayName":"feefineactions item get",
+      "description":"Get a single feefineaction record"
+    },
+    {
+      "permissionName":"feefineactions.item.post",
+      "displayName":"feefineactions item post",
+      "description":"Create a new feefineaction record"
+    },
+    {
+      "permissionName":"feefineactions.item.put",
+      "displayName":"feefineactions item put",
+      "description":"Edit an feefineaction record"
+    },
+    {
+      "permissionName":"feefineactions.item.delete",
+      "displayName":"feefineactions item delete",
+      "description":"Delete an feefineaction record"
+    },
+    {
+      "permissionName":"chargeitem.collection.get",
+      "displayName":"chargeitem collection get",
+      "description":"Get a list of chargeitem records"
+    },
+    {
+      "permissionName":"chargeitem.item.get",
+      "displayName":"chargeitem item get",
+      "description":"Get a single chargeitem record"
+    },
+    {
+      "permissionName":"feefines.all",
+      "displayName":"feefines all",
+      "description":"All permissions for the mod-feefines module",
+      "subPermissions":[
+        "feefines.collection.get",
+        "feefines.item.get",
+        "feefines.read.basic",
+        "feefines.read.restricted",
+        "feefines.item.post",
+        "feefines.item.put",
+        "feefines.item.delete"
+      ]
+    }
+  ]
 }
