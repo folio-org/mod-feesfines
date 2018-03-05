@@ -47,6 +47,9 @@
     "comments": {
       "type": "string"
     },
+    "loanId": {
+      "type": "string"
+    },
     "userId": {
       "type": "string"
     },
