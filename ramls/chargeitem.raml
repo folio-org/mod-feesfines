@@ -1,10 +1,10 @@
 #%RAML 0.8
-title: chargeitem
+title: Chargeitem
 version: v1
-baseUri: http://github.com/org/folio/mod-feefines
+baseUri: http://github.com/org/folio/mod-feesfines
 
 documentation:
-  - title: mod-feefines API
+  - title: Chargeitem API
     content: This documents the API calls that can be made to query and manage feefine of the system
 
 schemas:
@@ -42,9 +42,7 @@ resourceTypes:
       pageable
     ]
     description: Return a list of chargeitem
-  post:
-#    is: [validate]
-    description: Create a chargeitem
+
   /{chargeitemId}:
     type:
       collection-item:

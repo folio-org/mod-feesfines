@@ -1,10 +1,10 @@
 #%RAML 0.8
-title: FEES/FINES HISTORY
+title: Fee Fine History
 version: v1
-baseUri: http://github.com/org/folio/mod-feefines
+baseUri: http://github.com/org/folio/mod-feesfines
 
 documentation:
-  - title: mod-feefines FEES/FINES HISTORY API
+  - title: Fee Fine History API
     content: This documents the API calls that can be made to query and manage feefinehistory of the system
 
 schemas:
@@ -42,9 +42,7 @@ resourceTypes:
       pageable
     ]
     description: Return a list of feefinehistorys
-  post:
-#    is: [validate]
-    description: Create a feefinehistory
+
   /{feefinehistoryId}:
     type:
       collection-item:
