@@ -113,7 +113,8 @@ SELECT a.jsonb->>'id' AS id,
   m.jsonb->'name' AS "itemType",
   h.jsonb->'callNumber' AS "callNumber",
   a.jsonb->'accountTransaction' AS "loanTransaction",
-  a.jsonb->'comments' AS "comments",
+  fa.jsonb->'comments' AS "comments",
+  a.jsonb->'loanId' AS "loanId",
   a.jsonb->'userId' AS "userId"
   FROM myuniversity_mymodule.accounts a
   INNER JOIN diku_mod_users.users u ON u.jsonb->>'id' = a.jsonb->>'userId'
@@ -124,6 +125,7 @@ SELECT a.jsonb->>'id' AS id,
   LEFT JOIN diku_mod_inventory_storage.material_type m ON i.jsonb->>'materialTypeId' = m.jsonb->>'id'
   LEFT JOIN diku_mod_inventory_storage.holdings_record h ON i.jsonb->>'holdingsRecordId' = h.jsonb->>'id'
   LEFT JOIN diku_mod_inventory_storage.instance ins ON ins.jsonb->>'id' = h.jsonb->>'instanceId'
+  INNER JOIN diku_mod_feesfines.feefineactions fa ON fa.jsonb->>'accountId' = a.jsonb->>'id'
 ) t;
 
 --View item information
