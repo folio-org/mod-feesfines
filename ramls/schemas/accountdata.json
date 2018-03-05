@@ -12,9 +12,6 @@
     "accountTransaction": {
       "type": "integer"
     },
-    "comments": {
-      "type": "string"
-    },
     "dateCreated": {
       "type": "string",
       "format": "date-time"
@@ -45,6 +42,17 @@
         "name"
       ]
     },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "createdByUserId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "createdByUserId"
+      ]
+    },
     "loanId": {
       "type": "string"
     },
@@ -69,7 +77,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "loanId",
     "materialTypeId",
     "userId",
     "itemId",

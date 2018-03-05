@@ -3,7 +3,6 @@
     "amount": 15.0,
     "remaining": 15.0,
     "accountTransaction": 1,
-    "comments": "This is a comments",
     "dateCreated": "2018-01-31T00:00:01Z",
     "dateUpdated": "2018-01-31T00:00:01Z",
     "status": {
@@ -11,6 +10,9 @@
     },
     "paymentStatus": {
       "name": "Paid Partially"
+    },
+    "metadata": {
+    "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce01"
     },
     "loanId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434378",
     "materialTypeId": "2b94c631-fca9-a892-c730-03ee529ffe27",
