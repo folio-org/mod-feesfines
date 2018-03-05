@@ -1,14 +1,14 @@
 ###
 # vert.x docker example using a Java verticle packaged as a fatjar
 # To build:
-#  docker build -t folio-feefines-module .
+#  docker build -t folio-feesfines-module .
 # To run:
-#   docker run -t -i -p 8080:8080 folio-feefines-module
+#   docker run -t -i -p 8080:8080 folio-feesfines-module
 ###
 
 FROM java:8
 
-ENV VERTICLE_FILE mod-feefines-fat.jar
+ENV VERTICLE_FILE mod-feesfines-fat.jar
 
 # Set the location of the verticles
 ENV VERTICLE_HOME /usr/verticles
