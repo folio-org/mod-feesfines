@@ -291,7 +291,7 @@ public class RestVerticleIT {
 
         try {
             int inc = 0;
-            
+
             CompletableFuture<Response> addOwnerCF = new CompletableFuture();
             String addOwnerURL = ownerUrl;
 
@@ -303,14 +303,14 @@ public class RestVerticleIT {
                     + "\nStatus -POST " + addOwnerResponse.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
 
             CompletableFuture<Response> addOwnerCF2 = new CompletableFuture();
-			
-			send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Main Circ", "Main Library Circulation Desk").encode(),
+
+            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Main Circ", "Main Library Circulation Desk").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF2));
             Response addOwnerResponse2 = addOwnerCF2.get(5, TimeUnit.SECONDS);
             context.assertEquals(addOwnerResponse2.code, HttpURLConnection.HTTP_CREATED);
             System.out.println(addOwnerResponse2.body
                     + "\nStatus -POST " + addOwnerResponse2.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
- 
+
             CompletableFuture<Response> addOwnerCF3 = new CompletableFuture();
 
             send(addOwnerURL, context, HttpMethod.POST, createOwner("3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Shared", "Shared").encode(),

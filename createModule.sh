@@ -3,7 +3,7 @@
 
 curl -i -w '\n' -X GET http://localhost:9130/_/proxy/tenants
 
-#**********************************Declare the module to Okapi 
+#**********************************Declare the module to Okapi
 curl -w '\n' -X POST -D -   \
     -H "Content-type: application/json"   \
     -d @target/ModuleDescriptor.json \
@@ -18,7 +18,7 @@ curl -w '\n' -D - -s \
    -H "Content-type: application/json" \
    -d @target/DeploymentDescriptor.json  \
    http://localhost:9130/_/discovery/modules
-   
+
 #**********************************Enable the module for our tenant:
 
 curl -i -w '\n' \

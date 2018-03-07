@@ -56,7 +56,7 @@ public class AccountsAPI implements AccountsResource {
                     PostgresClient postgresClient = PostgresClient.getInstance(
                             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
                     String[] fieldList = {"*"};
-                    
+
                     postgresClient.get(ACCOUNTS_TABLE, Account.class, fieldList, cql,
                             true, false, reply -> {
                                 try {
@@ -115,7 +115,7 @@ public class AccountsAPI implements AccountsResource {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
                 PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-                
+
                 postgresClient.startTx(beginTx -> {
                     try {
                         postgresClient.save(beginTx, ACCOUNTS_TABLE, entity, reply -> {
@@ -161,14 +161,14 @@ public class AccountsAPI implements AccountsResource {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-                
+
                 try {
                     Criteria idCrit = new Criteria();
                     idCrit.addField(ACCOUNT_ID_FIELD);
                     idCrit.setOperation("=");
                     idCrit.setValue(accountId);
                     Criterion criterion = new Criterion(idCrit);
-                    
+
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(ACCOUNTS_TABLE, Account.class, criterion,
                             true, false, getReply -> {
                                 if (getReply.failed()) {
@@ -271,16 +271,16 @@ public class AccountsAPI implements AccountsResource {
                 logger.error("accountId is missing");
                 asyncResultHandler.handle(Future.succeededFuture(PutAccountsByAccountIdResponse.withPlainBadRequest("accountId is missing")));
             }
-            
+
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-                
+
                 Criteria idCrit = new Criteria();
                 idCrit.addField(ACCOUNT_ID_FIELD);
                 idCrit.setOperation("=");
                 idCrit.setValue(accountId);
                 Criterion criterion = new Criterion(idCrit);
-                
+
                 try {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(ACCOUNTS_TABLE,
                             Account.class, criterion, true, false, getReply -> {

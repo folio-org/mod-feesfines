@@ -228,7 +228,7 @@ public class FeeFineHistoryAPI implements FeefinehistoryResource {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-                
+
                 Criteria idCrit = new Criteria();
                 idCrit.addField(FEEFINE_ID_FIELD);
                 idCrit.setOperation("=");

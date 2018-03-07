@@ -1,6 +1,6 @@
-{  
-  "feefineactions":[  
-    {  
+{
+  "feefineactions":[
+    {
       "dateAction":"2017-07-24T01:24:01Z",
       "typeAction":"Payment-ckeck",
       "amountAction":-200.00,
