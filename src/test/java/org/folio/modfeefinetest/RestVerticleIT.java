@@ -291,7 +291,7 @@ public class RestVerticleIT {
 
         try {
             int inc = 0;
-            
+
             CompletableFuture<Response> addOwnerCF = new CompletableFuture();
             String addOwnerURL = ownerUrl;
 
@@ -310,7 +310,7 @@ public class RestVerticleIT {
             context.assertEquals(addOwnerResponse2.code, HttpURLConnection.HTTP_CREATED);
             System.out.println(addOwnerResponse2.body
                     + "\nStatus -POST " + addOwnerResponse2.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
- 
+
             CompletableFuture<Response> addOwnerCF3 = new CompletableFuture();
 
             send(addOwnerURL, context, HttpMethod.POST, createOwner("3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Shared", "Shared").encode(),

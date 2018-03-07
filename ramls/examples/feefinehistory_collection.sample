@@ -1,6 +1,6 @@
-{  
-  "feefinehistory":[  
-    {  
+{
+  "feefinehistory":[
+    {
       "dateCreated":"2018-01-31",
       "dateUpdated":"2018-01-31",
       "feeFineType":"Damaged Camera Fee",
@@ -19,7 +19,7 @@
       "userId":"04d830a8-810c-415c-aa50-4d09c1fee133",
       "id":"0bab56e5-1ab6-4ac2-afdf-8b2df0434376"
     },
-    {  
+    {
       "dateCreated":"2018-01-31",
       "dateUpdated":"2018-01-31",
       "feeFineType":"Damaged Item Fee",

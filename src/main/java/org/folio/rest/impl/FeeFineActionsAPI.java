@@ -39,7 +39,7 @@ public class FeeFineActionsAPI implements FeefineactionsResource {
     public FeeFineActionsAPI(Vertx vertx, String tenantId) {
         PostgresClient.getInstance(vertx, tenantId).setIdField("id");
     }
-    
+
     private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(FEEFINEACTIONS_TABLE + ".jsonb"
         );
@@ -216,7 +216,7 @@ public class FeeFineActionsAPI implements FeefineactionsResource {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-                
+
                 Criteria idCrit = new Criteria();
                 idCrit.setOperation("=");
                 idCrit.setValue(feefineactionId);

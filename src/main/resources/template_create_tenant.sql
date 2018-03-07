@@ -27,7 +27,7 @@ UPDATE myuniversity_mymodule.owners SET id = uuid(jsonb->>'id');
 
 CREATE TABLE IF NOT EXISTS myuniversity_mymodule.feefines (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), jsonb JSONB NOT NULL, ownerid UUID REFERENCES myuniversity_mymodule.owners);
 
---Update id to ownerid	
+--Update id to ownerid
 CREATE OR REPLACE FUNCTION update_feefines_references()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -57,9 +57,9 @@ CREATE TRIGGER update_feefines_id
 UPDATE myuniversity_mymodule.feefines SET id = uuid(jsonb->>'id');
 
 CREATE TABLE IF NOT EXISTS diku_mod_feesfines.accounts (
-id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 jsonb JSONB NOT NULL,
-feefineid UUID REFERENCES diku_mod_feesfines.feefines, 
+feefineid UUID REFERENCES diku_mod_feesfines.feefines,
 ownerid UUID REFERENCES diku_mod_feesfines.owners);
 
 ---
@@ -89,11 +89,11 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_accounts_id
   BEFORE INSERT OR UPDATE ON diku_mod_feesfines.accounts
   FOR EACH ROW EXECUTE PROCEDURE update_accounts_id();
-  
+
 UPDATE diku_mod_feesfines.accounts SET id = uuid(jsonb->>'id');
 
 --Table feefineactions
-CREATE TABLE IF NOT EXISTS myuniversity_mymodule.feefineactions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), jsonb 
+CREATE TABLE IF NOT EXISTS myuniversity_mymodule.feefineactions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), jsonb
 JSONB NOT NULL);
 
 -- View Fees Fines History
