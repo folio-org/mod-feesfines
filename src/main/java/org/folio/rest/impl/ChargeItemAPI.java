@@ -115,7 +115,7 @@ public class ChargeItemAPI implements ChargeitemResource {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-                
+
                 PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
 
                 postgresClient.startTx(beginTx -> {
@@ -223,7 +223,7 @@ public class ChargeItemAPI implements ChargeitemResource {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-                
+
                 Criteria idCrit = new Criteria();
                 idCrit.addField(CHARGEITEM_ID_FIELD);
                 idCrit.setOperation("=");

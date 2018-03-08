@@ -1,6 +1,6 @@
-{  
-  "feefines":[  
-    {  
+{
+  "feefines":[
+    {
       "feeFineType":"overdue",
       "id":"7261ecaae3a74dc68b468e12a70b1aec",
       "defaultAmount":100,
