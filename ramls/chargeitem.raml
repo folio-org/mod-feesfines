@@ -8,11 +8,11 @@ documentation:
     content: This documents the API calls that can be made to query and manage feefine of the system
 
 schemas:
-  - chargeitemdata: !include schemas/chargeitemdata.json
+  - chargeitemdata.json: !include schemas/chargeitemdata.json
   - chargeitemdataCollection: !include schemas/chargeitemdataCollection.json
   - errors: !include raml-util/schemas/errors.schema
-  - error: !include raml-util/schemas/error.schema
-  - parameters: !include raml-util/schemas/parameters.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
 
 traits:
   - secured: !include raml-util/traits/auth.raml
@@ -34,7 +34,7 @@ resourceTypes:
       exampleCollection: !include examples/chargeitem_collection.sample
       exampleItem: !include examples/chargeitem.sample
       schemaCollection: chargeitemdataCollection
-      schemaItem: chargeitemdata
+      schemaItem: chargeitemdata.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
@@ -47,7 +47,7 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/chargeitem.sample
-        schema: chargeitemdata
+        schema: chargeitemdata.json
     get:
       description: Get a single chargeitem
 

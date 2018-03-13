@@ -8,11 +8,11 @@ documentation:
     content: This documents the API calls that can be made to query and manage owner of the system
 
 schemas:
-  - ownerdata: !include schemas/ownerdata.json
+  - ownerdata.json: !include schemas/ownerdata.json
   - ownerdataCollection: !include schemas/ownerdataCollection.json
   - errors: !include raml-util/schemas/errors.schema
-  - error: !include raml-util/schemas/error.schema
-  - parameters: !include raml-util/schemas/parameters.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
 
 traits:
   - secured: !include raml-util/traits/auth.raml
@@ -34,7 +34,7 @@ resourceTypes:
       exampleCollection: !include examples/owner_collection.sample
       exampleItem: !include examples/owner.sample
       schemaCollection: ownerdataCollection
-      schemaItem: ownerdata
+      schemaItem: ownerdata.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
@@ -49,6 +49,6 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/owner.sample
-        schema: ownerdata
+        schema: ownerdata.json
     get:
       description: Get a single owner

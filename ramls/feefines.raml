@@ -8,11 +8,11 @@ documentation:
     content: This documents the API calls that can be made to query and manage feefine of the system
 
 schemas:
-  - feefinedata: !include schemas/feefinedata.json
+  - feefinedata.json: !include schemas/feefinedata.json
   - feefinedataCollection: !include schemas/feefinedataCollection.json
   - errors: !include raml-util/schemas/errors.schema
-  - error: !include raml-util/schemas/error.schema
-  - parameters: !include raml-util/schemas/parameters.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
 
 traits:
   - secured: !include raml-util/traits/auth.raml
@@ -34,7 +34,7 @@ resourceTypes:
       exampleCollection: !include examples/feefine_collection.sample
       exampleItem: !include examples/feefine.sample
       schemaCollection: feefinedataCollection
-      schemaItem: feefinedata
+      schemaItem: feefinedata.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
@@ -49,6 +49,6 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/feefine.sample
-        schema: feefinedata
+        schema: feefinedata.json
     get:
       description: Get a single feefine
