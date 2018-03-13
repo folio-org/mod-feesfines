@@ -7,7 +7,7 @@
       "id": "chargeitemData",
       "items": {
         "type": "object",
-        "$ref": "chargeitemdata"
+        "$ref": "chargeitemdata.json"
       }
     },
     "total_records": {

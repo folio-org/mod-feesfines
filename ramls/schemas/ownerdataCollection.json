@@ -7,7 +7,7 @@
       "id": "ownersData",
       "items": {
         "type": "object",
-        "$ref": "ownerdata"
+        "$ref": "ownerdata.json"
       }
     },
     "total_records": {
