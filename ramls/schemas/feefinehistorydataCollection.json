@@ -7,7 +7,7 @@
       "id": "feefinehistoryData",
       "items": {
         "type": "object",
-        "$ref": "feefinehistorydata"
+        "$ref": "feefinehistorydata.json"
       }
     },
     "total_records": {

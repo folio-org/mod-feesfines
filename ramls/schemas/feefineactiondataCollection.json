@@ -7,7 +7,7 @@
       "id": "feefineactionsData",
       "items": {
         "type": "object",
-        "$ref": "feefineactiondata"
+        "$ref": "feefineactiondata.json"
       }
     },
     "total_records": {

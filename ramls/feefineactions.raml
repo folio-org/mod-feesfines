@@ -8,25 +8,25 @@ documentation:
     content: This documents the API calls that can be made to query and manage feefine of the system
 
 schemas:
-  - feefineactiondata: !include schemas/feefineactiondata.json
+  - feefineactiondata.json: !include schemas/feefineactiondata.json
   - feefineactiondataCollection: !include schemas/feefineactiondataCollection.json
-  - errors: !include ../raml-util/schemas/errors.schema
-  - error: !include ../raml-util/schemas/error.schema
-  - parameters: !include ../raml-util/schemas/parameters.schema
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
 
 traits:
-  - secured: !include ../raml-util/traits/auth.raml
-  - orderable: !include ../raml-util/traits/orderable.raml
-  - pageable: !include ../raml-util/traits/pageable.raml
-  - searchable: !include ../raml-util/traits/searchable.raml
-  - language: !include ../raml-util/traits/language.raml
-  - validate: !include ../raml-util/traits/validation.raml
+  - secured: !include raml-util/traits/auth.raml
+  - orderable: !include raml-util/traits/orderable.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+  - language: !include raml-util/traits/language.raml
+  - validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include ../raml-util/rtypes/collection.raml
-  - collection-item: !include ../raml-util/rtypes/item-collection.raml
-  - get-only: !include ../raml-util/rtypes/get-only.raml
-  - post-empty-body: !include ../raml-util/rtypes/post-empty-body.raml
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
+  - get-only: !include raml-util/rtypes/get-only.raml
+  - post-empty-body: !include raml-util/rtypes/post-empty-body.raml
 
 /feefineactions:
   type:
@@ -34,7 +34,7 @@ resourceTypes:
       exampleCollection: !include examples/feefineaction_collection.sample
       exampleItem: !include examples/feefineaction.sample
       schemaCollection: feefineactiondataCollection
-      schemaItem: feefineactiondata
+      schemaItem: feefineactiondata.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
@@ -49,7 +49,7 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/feefineaction.sample
-        schema: feefineactiondata
+        schema: feefineactiondata.json
     get:
       description: Get a single feefineaction
 
