@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "feefines": {
+      "type": "array",
+      "id": "feefinesData",
+      "items": {
+        "type": "object",
+        "$ref": "feefinedata.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+     },
+    "resultInfo":{
+      "$ref": "raml-util/schemas/resultInfo.schema",
+      "readonly":true
+    }
+
+  },
+  "required": [
+    "feefines",
+    "totalRecords"
+  ]
+}
