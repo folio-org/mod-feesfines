@@ -1,0 +1,34 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "Fee/Fine Schema",
+  "type": "object",
+  "properties": {
+    "feeFineType": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "defaultAmount": {
+      "type": "number"
+    },
+    "allowManualCreation": {
+      "type": "boolean"
+    },
+    "taxVat": {
+      "type": "number"
+    },
+    "ownerId": {
+      "type": "string"
+    },
+    "metadata" : {
+      "type" : "object",
+      "$ref" : "raml-util/schemas/metadata.schema"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "feeFineType",
+    "id"
+   ]
+}
