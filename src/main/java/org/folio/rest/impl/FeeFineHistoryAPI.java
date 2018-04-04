@@ -64,9 +64,9 @@ public class FeeFineHistoryAPI implements FeefinehistoryResource {
                                 try {
                                     if (reply.succeeded()) {
                                         FeefinehistorydataCollection feefinehistoryCollection = new FeefinehistorydataCollection();
-                                        List<Feefinehistory> feefinehistories = (List<Feefinehistory>) reply.result()[0];
+                                        List<Feefinehistory> feefinehistories = (List<Feefinehistory>) reply.result().getResults();
                                         feefinehistoryCollection.setFeefinehistory(feefinehistories);
-                                        feefinehistoryCollection.setTotalRecords((Integer) reply.result()[1]);
+                                        feefinehistoryCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 FeefinehistoryResource.GetFeefinehistoryResponse.withJsonOK(feefinehistoryCollection)));
                                     } else {
@@ -185,7 +185,7 @@ public class FeeFineHistoryAPI implements FeefinehistoryResource {
                                             FeefinehistoryResource.GetFeefinehistoryByFeefinehistoryIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Feefinehistory> feefinehistoryList = (List<Feefinehistory>) getReply.result()[0];
+                                    List<Feefinehistory> feefinehistoryList = (List<Feefinehistory>) getReply.result().getResults();
                                     if (feefinehistoryList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 FeefinehistoryResource.GetFeefinehistoryByFeefinehistoryIdResponse.withPlainNotFound("Feefinehistory"

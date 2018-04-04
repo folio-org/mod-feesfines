@@ -63,9 +63,9 @@ public class FeeFineActionsAPI implements FeefineactionsResource {
                         try {
                             if (reply.succeeded()) {
                                 FeefineactiondataCollection feefineactionCollection = new FeefineactiondataCollection();
-                                List<Feefineaction> feefineactions = (List<Feefineaction>) reply.result()[0];
+                                List<Feefineaction> feefineactions = (List<Feefineaction>) reply.result().getResults();
                                 feefineactionCollection.setFeefineactions(feefineactions);
-                                feefineactionCollection.setTotalRecords((Integer) reply.result()[1]);
+                                feefineactionCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                 asyncResultHandler.handle(Future.succeededFuture(
                                         GetFeefineactionsResponse.withJsonOK(feefineactionCollection)));
                             } else {
@@ -179,7 +179,7 @@ public class FeeFineActionsAPI implements FeefineactionsResource {
                                             GetFeefineactionsByFeefineactionIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Feefineaction> feefineactionList = (List<Feefineaction>) getReply.result()[0];
+                                    List<Feefineaction> feefineactionList = (List<Feefineaction>) getReply.result().getResults();
                                     if (feefineactionList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetFeefineactionsByFeefineactionIdResponse.withPlainNotFound("Feefineaction"
