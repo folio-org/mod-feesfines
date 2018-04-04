@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "owners": {
+      "type": "array",
+      "id": "ownersData",
+      "items": {
+        "type": "object",
+        "$ref": "ownerdata.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "owners",
+    "totalRecords"
+  ]
+}
