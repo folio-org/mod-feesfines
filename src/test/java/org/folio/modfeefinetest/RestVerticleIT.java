@@ -53,16 +53,15 @@ public class RestVerticleIT {
     private static Vertx vertx;
     static int port;
 
-//  private String groupID;
     @Rule
     public Timeout rule = Timeout.seconds(15);
 
     public static void initDatabase(TestContext context) throws SQLException {
+        PostgresClient.setIsEmbedded(true);
         PostgresClient postgres = PostgresClient.getInstance(vertx);
-        //postgres.dropCreateDatabase("test_mod_feefines");
 
         String sql = "drop schema if exists diku_mod_feesfines cascade;\n"
-                + "drop role if exists diku_mod_feefines;\n";
+                + "drop role if exists diku_mod_feesfines;\n";
         Async async = context.async();
         PostgresClient.getInstance(vertx).runSQLFile(sql, true, result -> {
             if (result.failed()) {
@@ -366,7 +365,7 @@ public class RestVerticleIT {
                         new HTTPResponseHandler(cf));
                 Response cqlResponse = cf.get(5, TimeUnit.SECONDS);
                 context.assertEquals(cqlResponse.code, HttpURLConnection.HTTP_OK);
-                context.assertEquals(3, cqlResponse.body.getInteger("total_records"));
+                context.assertEquals(3, cqlResponse.body.getInteger("totalRecords"));
             }
         } catch (Exception e) {
             context.fail(e.getMessage());
