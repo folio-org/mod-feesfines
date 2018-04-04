@@ -20,6 +20,8 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.persist.facets.FacetField;
+import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
@@ -45,11 +47,12 @@ public class AccountsAPI implements AccountsResource {
     }
 
     @Override
-    public void getAccounts(String query, String orderBy, Order order, int offset, int limit, String lang,
+    public void getAccounts(String query, String orderBy, Order order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) throws Exception {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
         CQLWrapper cql = getCQL(query, limit, offset);
+        List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
             vertxContext.runOnContext(v -> {
                 try {
@@ -58,13 +61,14 @@ public class AccountsAPI implements AccountsResource {
                     String[] fieldList = {"*"};
 
                     postgresClient.get(ACCOUNTS_TABLE, Account.class, fieldList, cql,
-                            true, false, reply -> {
+                            true, false, facetList, reply -> {
                                 try {
                                     if (reply.succeeded()) {
                                         AccountdataCollection accountCollection = new AccountdataCollection();
-                                        List<Account> accounts = (List<Account>) reply.result()[0];
+                                        List<Account> accounts = (List<Account>) reply.result().getResults();
                                         accountCollection.setAccounts(accounts);
-                                        accountCollection.setTotalRecords((Integer) reply.result()[1]);
+                                        accountCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                        accountCollection.setResultInfo(reply.result().getResultInfo());
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetAccountsResponse.withJsonOK(accountCollection)));
                                     } else {
@@ -177,7 +181,7 @@ public class AccountsAPI implements AccountsResource {
                                             GetAccountsByAccountIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Account> accountList = (List<Account>) getReply.result()[0];
+                                    List<Account> accountList = (List<Account>) getReply.result().getResults();
                                     if (accountList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetAccountsByAccountIdResponse.withPlainNotFound("Account"
