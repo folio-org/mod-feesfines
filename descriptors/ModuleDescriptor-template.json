@@ -412,19 +412,11 @@
       ]
     }
   ],
-  "launchDescriptor":{
-    "dockerImage":"${artifactId}:${version}",
-    "dockerArgs":{
-      "HostConfig":{
-        "PortBindings":{
-          "8081/tcp":[
-            {
-              "HostPort":"%p"
-            }
-          ]
-        }
-      }
+  "launchDescriptor": {
+    "dockerImage": "${artifactId}:${version}",
+    "dockerArgs": {
+      "HostConfig": { "PortBindings": { "8081/tcp":  [{ "HostPort": "%p" }] } } 
     },
-    "dockerPull":false
+    "dockerPull" : false
   }
 }
