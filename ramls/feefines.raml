@@ -8,8 +8,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage feefine of the system
 
 schemas:
-  - feefinedata.json: !include schemas/feefinedata.json
-  - feefinedataCollection: !include schemas/feefinedataCollection.json
+  - feefinedata.json: !include feefinedata.json
+  - feefinedataCollection: !include feefinedataCollection.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
@@ -21,6 +21,7 @@ traits:
   - searchable: !include raml-util/traits/searchable.raml
   - language: !include raml-util/traits/language.raml
   - validate: !include raml-util/traits/validation.raml
+  - facets: !include raml-util/traits/facets.raml
 
 resourceTypes:
   - collection: !include raml-util/rtypes/collection.raml
@@ -39,7 +40,8 @@ resourceTypes:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
       orderable: {fieldsList: "field A, field B"},
-      pageable
+      pageable,
+      facets
     ]
     description: Return a list of feefines
   post:

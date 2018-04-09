@@ -2,20 +2,21 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "owners": {
+    "feefinehistory": {
       "type": "array",
-      "id": "ownersData",
+      "id": "feefinehistoryData",
       "items": {
         "type": "object",
-        "$ref": "ownerdata.json"
+        "$ref": "feefinehistorydata.json"
       }
     },
-    "total_records": {
+    "totalRecords": {
       "type": "integer"
     }
   },
   "required": [
-    "owners",
-    "total_records"
+    "feefinehistory",
+    "totalRecords"
   ]
 }
+

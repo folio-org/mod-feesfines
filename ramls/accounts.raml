@@ -8,11 +8,13 @@ documentation:
     content: This documents the API calls that can be made to query and manage feefine of the system
 
 schemas:
-  - accountdata.json: !include schemas/accountdata.json
-  - accountdataCollection: !include schemas/accountdataCollection.json
+  - accountdata.json: !include accountdata.json
+  - accountdataCollection: !include accountdataCollection.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
+  - raml-util/schemas/resultInfo.schema: !include raml-util/schemas/resultInfo.schema
+  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
   - secured: !include raml-util/traits/auth.raml
@@ -21,6 +23,7 @@ traits:
   - searchable: !include raml-util/traits/searchable.raml
   - language: !include raml-util/traits/language.raml
   - validate: !include raml-util/traits/validation.raml
+  - facets: !include raml-util/traits/facets.raml
 
 resourceTypes:
   - collection: !include raml-util/rtypes/collection.raml
@@ -39,7 +42,8 @@ resourceTypes:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
       orderable: {fieldsList: "field A, field B"},
-      pageable
+      pageable,
+      facets
     ]
     description: Return a list of accounts
   post:

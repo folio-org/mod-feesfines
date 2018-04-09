@@ -20,6 +20,10 @@
     },
     "ownerId": {
       "type": "string"
+    },
+    "metadata" : {
+      "type" : "object",
+      "$ref" : "raml-util/schemas/metadata.schema"
     }
   },
   "additionalProperties": false,

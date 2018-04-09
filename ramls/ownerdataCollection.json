@@ -2,20 +2,20 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "chargeitem": {
+    "owners": {
       "type": "array",
-      "id": "chargeitemData",
+      "id": "ownersData",
       "items": {
         "type": "object",
-        "$ref": "chargeitemdata.json"
+        "$ref": "ownerdata.json"
       }
     },
-    "total_records": {
+    "totalRecords": {
       "type": "integer"
     }
   },
   "required": [
-    "chargeitem",
-    "total_records"
+    "owners",
+    "totalRecords"
   ]
 }

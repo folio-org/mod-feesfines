@@ -10,12 +10,17 @@
         "$ref": "feefinedata.json"
       }
     },
-    "total_records": {
+    "totalRecords": {
       "type": "integer"
+     },
+    "resultInfo":{
+      "$ref": "raml-util/schemas/resultInfo.schema",
+      "readonly":true
     }
+
   },
   "required": [
     "feefines",
-    "total_records"
+    "totalRecords"
   ]
 }

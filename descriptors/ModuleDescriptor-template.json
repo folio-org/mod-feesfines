@@ -75,10 +75,6 @@
           "pathPattern":"/owners/{id}",
           "permissionsRequired":[
             "owners.item.get"
-          ],
-          "permissionsDesired":[
-            "owners.read.basic",
-            "owners.read.restricted"
           ]
         },
         {
@@ -124,10 +120,6 @@
           "pathPattern":"/accounts/{id}",
           "permissionsRequired":[
             "accounts.item.get"
-          ],
-          "permissionsDesired":[
-            "accounts.read.basic",
-            "accounts.read.restricted"
           ]
         },
         {
@@ -173,10 +165,6 @@
           "pathPattern":"/feefinehistory/{id}",
           "permissionsRequired":[
             "feefinehistory.item.get"
-          ],
-          "permissionsDesired":[
-            "feefinehistory.read.basic",
-            "feefinehistory.read.restricted"
           ]
         },
         {
@@ -195,10 +183,6 @@
           "pathPattern":"/feefineactions/{id}",
           "permissionsRequired":[
             "feefineactions.item.get"
-          ],
-          "permissionsDesired":[
-            "feefineactions.read.basic",
-            "feefineactions.read.restricted"
           ]
         },
         {
@@ -244,10 +228,6 @@
           "pathPattern":"/chargeitem/{id}",
           "permissionsRequired":[
             "chargeitem.item.get"
-          ],
-          "permissionsDesired":[
-            "chargeitem.read.basic",
-            "chargeitem.read.restricted"
           ]
         }
       ]
@@ -271,62 +251,62 @@
     {
       "permissionName":"feefines.collection.get",
       "displayName":"feefines collection get",
-      "description":"Get a collection of owner records"
+      "description":"Get a collection of feefines records"
     },
     {
       "permissionName":"feefines.item.get",
       "displayName":"feefines item get",
-      "description":"Read an individual record in the User module"
+      "description":"Read an individual record in the Feefine module"
     },
     {
       "permissionName":"feefines.read.basic",
       "displayName":"feefines read-basic",
-      "description":"Read non-restricted User data information"
+      "description":"Read non-restricted Feefine data information"
     },
     {
       "permissionName":"feefines.read.restricted",
       "displayName":"feefines read-restricted",
-      "description":"Read restricted User data information"
+      "description":"Read restricted Feefine data information"
     },
     {
       "permissionName":"feefines.item.post",
       "displayName":"feefines item post",
-      "description":"Create new records in the User module"
+      "description":"Create new records in the Feefine module"
     },
     {
       "permissionName":"feefines.item.put",
       "displayName":"feefines item put",
-      "description":"Edit existing records in the User module"
+      "description":"Edit existing records in the Feefine module"
     },
     {
       "permissionName":"feefines.item.delete",
       "displayName":"feefines item delete",
-      "description":"Delete records from the User module"
+      "description":"Delete records from the Feefine module"
     },
     {
       "permissionName":"owners.collection.get",
       "displayName":"owners collection get",
-      "description":"Get a list of ownergroup records"
+      "description":"Get a list of owner records"
     },
     {
       "permissionName":"owners.item.get",
       "displayName":"owners item get",
-      "description":"Get a single ownergroup item"
+      "description":"Get a single owner item"
     },
     {
       "permissionName":"owners.item.post",
       "displayName":"owners item post",
-      "description":"Create new Owners for feefines"
+      "description":"Create new Owners"
     },
     {
       "permissionName":"owners.item.put",
       "displayName":"owners item put",
-      "description":"Edit existing Owners for feefines"
+      "description":"Edit existing Owners"
     },
     {
       "permissionName":"owners.item.delete",
       "displayName":"owners item delete",
-      "description":"Delete Owners for feefines"
+      "description":"Delete Owners"
     },
     {
       "permissionName":"accounts.collection.get",
@@ -356,42 +336,17 @@
     {
       "permissionName":"feefinehistory.collection.get",
       "displayName":"feefinehistory collection get",
-      "description":"Get a collection of owner records"
+      "description":"Get a collection of feefinehistory records"
     },
     {
       "permissionName":"feefinehistory.item.get",
       "displayName":"feefinehistory item get",
-      "description":"Read an individual record in the User module"
-    },
-    {
-      "permissionName":"feefinehistory.read.basic",
-      "displayName":"feefinehistory read-basic",
-      "description":"Read non-restricted User data information"
-    },
-    {
-      "permissionName":"feefinehistory.read.restricted",
-      "displayName":"feefinehistory read-restricted",
-      "description":"Read restricted User data information"
-    },
-    {
-      "permissionName":"feefinehistory.item.post",
-      "displayName":"feefinehistory item post",
-      "description":"Create new records in the User module"
-    },
-    {
-      "permissionName":"feefinehistory.item.put",
-      "displayName":"feefinehistory item put",
-      "description":"Edit existing records in the User module"
-    },
-    {
-      "permissionName":"feefinehistory.item.delete",
-      "displayName":"feefinehistory item delete",
-      "description":"Delete records from the User module"
+      "description":"Read an individual record in the feefinehistory module"
     },
     {
       "permissionName":"feefineactions.collection.get",
       "displayName":"feefineactions collection get",
-      "description":"Get a list of feefineactions records"
+      "description":"Get a list of feefineaction records"
     },
     {
       "permissionName":"feefineactions.item.get",
@@ -426,7 +381,7 @@
     {
       "permissionName":"feefines.all",
       "displayName":"feefines all",
-      "description":"All permissions for the mod-feefines module",
+      "description":"All permissions for the mod-feesfines module",
       "subPermissions":[
         "feefines.collection.get",
         "feefines.item.get",
@@ -434,7 +389,26 @@
         "feefines.read.restricted",
         "feefines.item.post",
         "feefines.item.put",
-        "feefines.item.delete"
+        "feefines.item.delete",
+        "owners.collection.get",
+        "owners.item.get",
+        "owners.item.post",
+        "owners.item.put",
+        "owners.item.delete",
+        "accounts.collection.get",
+        "accounts.item.get",
+        "accounts.item.post",
+        "accounts.item.put",
+        "accounts.item.delete",
+        "feefineactions.collection.get",
+        "feefineactions.item.get",
+        "feefineactions.item.post",
+        "feefineactions.item.put",
+        "feefineactions.item.delete",
+        "feefinehistory.collection.get",
+        "feefinehistory.item.get",
+        "chargeitem.collection.get",
+        "chargeitem.item.get"
       ]
     }
   ],

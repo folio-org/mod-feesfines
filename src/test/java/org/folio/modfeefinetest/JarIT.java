@@ -1,4 +1,4 @@
-package org.folio.modfeefinestest;
+package org.folio.modfeefinetest;
 
 import java.io.BufferedReader;
 import java.io.IOException;

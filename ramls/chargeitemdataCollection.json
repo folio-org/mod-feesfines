@@ -2,21 +2,20 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "feefineactions": {
+    "chargeitem": {
       "type": "array",
-      "id": "feefineactionsData",
+      "id": "chargeitemData",
       "items": {
         "type": "object",
-        "$ref": "feefineactiondata.json"
+        "$ref": "chargeitemdata.json"
       }
     },
-    "total_records": {
+    "totalRecords": {
       "type": "integer"
     }
   },
   "required": [
-    "feefineactions",
-    "total_records"
+    "chargeitem",
+    "totalRecords"
   ]
 }
-

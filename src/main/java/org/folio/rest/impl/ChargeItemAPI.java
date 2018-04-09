@@ -64,9 +64,9 @@ public class ChargeItemAPI implements ChargeitemResource {
                                 try {
                                     if (reply.succeeded()) {
                                         ChargeitemdataCollection chargeitemCollection = new ChargeitemdataCollection();
-                                        List<Chargeitem> chargeitems = (List<Chargeitem>) reply.result()[0];
+                                        List<Chargeitem> chargeitems = (List<Chargeitem>) reply.result().getResults();
                                         chargeitemCollection.setChargeitem(chargeitems);
-                                        chargeitemCollection.setTotalRecords((Integer) reply.result()[1]);
+                                        chargeitemCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 ChargeitemResource.GetChargeitemResponse.withJsonOK(chargeitemCollection)));
                                     } else {
@@ -182,7 +182,7 @@ public class ChargeItemAPI implements ChargeitemResource {
                                             ChargeitemResource.GetChargeitemByChargeitemIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Chargeitem> chargeitemList = (List<Chargeitem>) getReply.result()[0];
+                                    List<Chargeitem> chargeitemList = (List<Chargeitem>) getReply.result().getResults();
                                     if (chargeitemList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 ChargeitemResource.GetChargeitemByChargeitemIdResponse.withPlainNotFound("Chargeitem"

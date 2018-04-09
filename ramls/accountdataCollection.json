@@ -10,12 +10,16 @@
         "$ref": "accountdata.json"
       }
     },
-    "total_records": {
+    "totalRecords": {
       "type": "integer"
+    },
+    "resultInfo":{
+      "$ref": "raml-util/schemas/resultInfo.schema",
+      "readonly":true
     }
   },
   "required": [
     "accounts",
-    "total_records"
+    "totalRecords"
   ]
 }

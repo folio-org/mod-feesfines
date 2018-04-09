@@ -30,12 +30,6 @@
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
-      <artifactId>postgres-runner</artifactId>
-      <version>${raml-module-builder.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
       <version>${raml-module-builder.version}</version>
     </dependency>
@@ -43,6 +37,23 @@
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>2.9.9</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+      <version>3.4.1</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web</artifactId>
+      <version>3.4.1</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-unit</artifactId>
+      <version>3.4.1</version>
+      <scope>test</scope>
+      <type>jar</type>
     </dependency>
   </dependencies>
   <build>
@@ -99,55 +110,6 @@
             <goals>
               <goal>exec</goal>
             </goals>
-          </execution>
-          <execution>
-            <id>start-postgres</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>java</executable>
-              <async>true</async>
-              <classpathScope>test</classpathScope>
-              <arguments>
-                <argument>-classpath</argument>
-                <classpath />
-                <argument>org.folio.rest.persist.PostgresRunner</argument>
-                <argument>${postgresrunner.port}</argument>
-                <argument>${postgres.port}</argument>
-                <argument>postgres</argument>  <!-- username -->
-                <argument>postgres</argument>  <!-- password -->
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>wait-for-postgres</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <classpathScope>test</classpathScope>
-              <mainClass>org.folio.rest.persist.PostgresWaiter</mainClass>
-              <arguments>
-                <argument>${postgresrunner.port}</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>stop-postgres</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <classpathScope>test</classpathScope>
-              <mainClass>org.folio.rest.persist.PostgresStopper</mainClass>
-              <arguments>
-                <argument>${postgresrunner.port}</argument>
-              </arguments>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -215,22 +177,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>copy-resources-3</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${basedir}/src/main/resources</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${ramlfiles_path}</directory>
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-          <execution>
             <id>filter-descriptor-inputs</id>
             <phase>generate-resources</phase>
             <goals>
@@ -245,6 +191,26 @@
                   <filtering>true</filtering>
                 </resource>
               </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+ 
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <id>add-raml-jaxrs-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/raml-jaxrs</source>
+              </sources>
             </configuration>
           </execution>
         </executions>
@@ -405,7 +371,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <raml-module-builder.version>13.0.2</raml-module-builder.version>
+    <raml-module-builder.version>19.0.0</raml-module-builder.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
     <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->

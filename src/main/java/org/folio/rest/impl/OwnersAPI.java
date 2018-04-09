@@ -62,9 +62,9 @@ public class OwnersAPI implements OwnersResource {
                                 try {
                                     if (reply.succeeded()) {
                                         OwnerdataCollection OwnersCollection = new OwnerdataCollection();
-                                        List<Owner> owner = (List<Owner>) reply.result()[0];
+                                        List<Owner> owner = (List<Owner>) reply.result().getResults();
                                         OwnersCollection.setOwners(owner);
-                                        OwnersCollection.setTotalRecords((Integer) reply.result()[1]);
+                                        OwnersCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetOwnersResponse.withJsonOK(OwnersCollection)));
                                     } else {
@@ -183,7 +183,7 @@ public class OwnersAPI implements OwnersResource {
                                             GetOwnersByOwnerIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Owner> ownerList = (List<Owner>) getReply.result()[0];
+                                    List<Owner> ownerList = (List<Owner>) getReply.result().getResults();
                                     if (ownerList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetOwnersByOwnerIdResponse.withPlainNotFound("Owner"
