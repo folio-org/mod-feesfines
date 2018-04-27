@@ -59,6 +59,12 @@ public class RestVerticleIT {
     public static void initDatabase(TestContext context) throws SQLException {
         PostgresClient.setIsEmbedded(true);
         PostgresClient postgres = PostgresClient.getInstance(vertx);
+        try {
+            postgres.startEmbeddedPostgres();
+        } catch (Exception e) {
+            context.fail(e);
+            return;
+        }
 
         String sql = "drop schema if exists diku_mod_feesfines cascade;\n"
                 + "drop role if exists diku_mod_feesfines;\n";
@@ -97,7 +103,11 @@ public class RestVerticleIT {
 
     @AfterClass
     public static void teardown(TestContext context) {
-        context.async().complete();
+        Async async = context.async();
+        vertx.close(context.asyncAssertSuccess(res -> {
+            PostgresClient.stopEmbeddedPostgres();
+            async.complete();
+        }));
     }
 
     private Future<Void> postFeefine(TestContext context) {
