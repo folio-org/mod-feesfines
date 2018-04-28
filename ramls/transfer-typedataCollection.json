@@ -1,0 +1,21 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "type":"object",
+  "properties":{
+    "transfertypes":{
+      "type":"array",
+      "id":"transfer-typesData",
+      "items":{
+        "type":"object",
+        "$ref":"transfer-typedata.json"
+      }
+    },
+    "totalRecords":{
+      "type":"integer"
+    }
+  },
+  "required":[
+    "transfertypes",
+    "totalRecords"
+  ]
+}
