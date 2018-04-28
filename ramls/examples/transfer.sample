@@ -1,0 +1,14 @@
+{
+  "requireComment": true,
+  "accountName": "Payroll",
+  "allowedRefundMethod": true,
+  "metadata": {
+    "createdDate": "2018-04-16T14:22:07Z",
+    "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce01",
+    "createdByUsername": "diku_admin",
+    "updatedDate": "2018-04-16T14:22:07Z"
+  },
+  "accountId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434374",
+  "transferTypeId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434361",
+  "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434371"
+}
