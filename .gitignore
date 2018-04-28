@@ -1,0 +1,16 @@
+#mvn build
+target/
+#vert.x
+.vertx/
+#insertData
+insertCurl.sh
+insertCurlOut.sh
+pay.json
+refund.json
+transfer.json
+waive.json
+transfer-type.json
+#Test
+TestOutOkapi
+#Module
+deleteModule.sh
