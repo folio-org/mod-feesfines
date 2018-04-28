@@ -1,0 +1,33 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "Transfers Schema",
+  "type": "object",
+  "properties": {
+    "requireComment": {
+      "type": "boolean"
+    },
+    "accountName": {
+      "type": "string"
+    },
+    "allowedRefundMethod": {
+      "type": "boolean"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref" : "raml-util/schemas/metadata.schema"
+    },
+    "transferTypeId": {
+      "type": "string"
+    },
+    "accountId": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+   ]
+}
