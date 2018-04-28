@@ -33,6 +33,46 @@
       "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
+    },
+    {
+      "tableName":"payments",
+      "generateId":true,
+      "fromModuleVersion":"14.2",
+      "populateJsonWithId":false,
+      "withMetadata":true,
+      "pkColumnName":"id"
+    },
+    {
+      "tableName":"waives",
+      "generateId":true,
+      "fromModuleVersion":"14.2",
+      "populateJsonWithId":false,
+      "withMetadata":true,
+      "pkColumnName":"id"
+    },
+    {
+      "tableName":"refunds",
+      "generateId":true,
+      "fromModuleVersion":"14.2",
+      "populateJsonWithId":false,
+      "withMetadata":true,
+      "pkColumnName":"id"
+    },
+    {
+      "tableName":"transfers",
+      "generateId":true,
+      "fromModuleVersion":"14.2",
+      "populateJsonWithId":false,
+      "withMetadata":true,
+      "pkColumnName":"id"
+    },
+    {
+      "tableName":"transfer_type",
+      "generateId":true,
+      "fromModuleVersion":"14.2",
+      "populateJsonWithId":false,
+      "withMetadata":false,
+      "pkColumnName":"id"
     }
   ]
 }

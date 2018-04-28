@@ -10,9 +10,9 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.AccountdataCollection;
-import org.folio.rest.jaxrs.resource.AccountsResource;
+import org.folio.rest.jaxrs.model.Waife;
+import org.folio.rest.jaxrs.model.WaivedataCollection;
+import org.folio.rest.jaxrs.resource.WaivesResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -29,25 +29,25 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-public class AccountsAPI implements AccountsResource {
+public class WaivesAPI implements WaivesResource {
 
-    private static final String ACCOUNTS_TABLE = "accounts";
-    private static final String ACCOUNT_ID_FIELD = "'id'";
+    private static final String WAIVES_TABLE = "waives";
+    private static final String WAIVE_ID_FIELD = "'id'";
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Messages messages = Messages.getInstance();
-    private final Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+    private final Logger logger = LoggerFactory.getLogger(WaivesAPI.class);
 
-    public AccountsAPI(Vertx vertx, String tenantId) {
+    public WaivesAPI(Vertx vertx, String tenantId) {
         PostgresClient.getInstance(vertx, tenantId).setIdField("id");
     }
 
     private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON(ACCOUNTS_TABLE + ".jsonb");
+        CQL2PgJSON cql2pgJson = new CQL2PgJSON(WAIVES_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
     @Override
-    public void getAccounts(String query, String orderBy, Order order, int offset, int limit, List<String> facets, String lang,
+    public void getWaives(String query, String orderBy, Order order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) throws Exception {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -60,26 +60,26 @@ public class AccountsAPI implements AccountsResource {
                             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
                     String[] fieldList = {"*"};
 
-                    postgresClient.get(ACCOUNTS_TABLE, Account.class, fieldList, cql,
+                    postgresClient.get(WAIVES_TABLE, Waife.class, fieldList, cql,
                             true, false, facetList, reply -> {
                                 try {
                                     if (reply.succeeded()) {
-                                        AccountdataCollection accountCollection = new AccountdataCollection();
-                                        List<Account> accounts = (List<Account>) reply.result().getResults();
-                                        accountCollection.setAccounts(accounts);
-                                        accountCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                                        accountCollection.setResultInfo(reply.result().getResultInfo());
+                                        WaivedataCollection waiveCollection = new WaivedataCollection();
+                                        List<Waife> waives = (List<Waife>) reply.result().getResults();
+                                        waiveCollection.setWaives(waives);
+                                        waiveCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                        waiveCollection.setResultInfo(reply.result().getResultInfo());
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsResponse.withJsonOK(accountCollection)));
+                                                GetWaivesResponse.withJsonOK(waiveCollection)));
                                     } else {
                                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                                GetAccountsResponse.withPlainInternalServerError(
+                                                GetWaivesResponse.withPlainInternalServerError(
                                                         reply.cause().getMessage())));
                                     }
                                 } catch (Exception e) {
                                     logger.debug(e.getLocalizedMessage());
                                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                            GetAccountsResponse.withPlainInternalServerError(
+                                            GetWaivesResponse.withPlainInternalServerError(
                                                     reply.cause().getMessage())));
                                 }
                             });
@@ -87,11 +87,11 @@ public class AccountsAPI implements AccountsResource {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                         logger.debug("BAD CQL");
-                        asyncResultHandler.handle(Future.succeededFuture(GetAccountsResponse.withPlainBadRequest(
+                        asyncResultHandler.handle(Future.succeededFuture(GetWaivesResponse.withPlainBadRequest(
                                 "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                     } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                GetAccountsResponse.withPlainInternalServerError(
+                                GetWaivesResponse.withPlainInternalServerError(
                                         messages.getMessage(lang,
                                                 MessageConsts.InternalServerError))));
                     }
@@ -101,11 +101,11 @@ public class AccountsAPI implements AccountsResource {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
-                asyncResultHandler.handle(Future.succeededFuture(GetAccountsResponse.withPlainBadRequest(
+                asyncResultHandler.handle(Future.succeededFuture(GetWaivesResponse.withPlainBadRequest(
                         "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
             } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                        GetAccountsResponse.withPlainInternalServerError(
+                        GetWaivesResponse.withPlainInternalServerError(
                                 messages.getMessage(lang,
                                         MessageConsts.InternalServerError))));
             }
@@ -113,7 +113,7 @@ public class AccountsAPI implements AccountsResource {
     }
 
     @Override
-    public void postAccounts(String lang, Account entity, Map<String, String> okapiHeaders,
+    public void postWaives(String lang, Waife entity, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
             vertxContext.runOnContext(v -> {
@@ -122,45 +122,45 @@ public class AccountsAPI implements AccountsResource {
 
                 postgresClient.startTx(beginTx -> {
                     try {
-                        postgresClient.save(beginTx, ACCOUNTS_TABLE, entity, reply -> {
+                        postgresClient.save(beginTx, WAIVES_TABLE, entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
-                                    final Account account = entity;
-                                    account.setId(entity.getId());
+                                    final Waife waive = entity;
+                                    waive.setId(entity.getId());
                                     OutStream stream = new OutStream();
-                                    stream.setData(account);
+                                    stream.setData(waive);
                                     postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostAccountsResponse.withJsonCreated(
+                                        asyncResultHandler.handle(Future.succeededFuture(PostWaivesResponse.withJsonCreated(
                                                 reply.result(), stream)));
                                     });
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PostAccountsResponse.withPlainBadRequest(
+                                            PostWaivesResponse.withPlainBadRequest(
                                                     messages.getMessage(
                                                             lang, MessageConsts.UnableToProcessRequest))));
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
-                                        PostAccountsResponse.withPlainInternalServerError(
+                                        PostWaivesResponse.withPlainInternalServerError(
                                                 e.getMessage())));
                             }
                         });
                     } catch (Exception e) {
                         asyncResultHandler.handle(Future.succeededFuture(
-                                PostAccountsResponse.withPlainInternalServerError(
+                                PostWaivesResponse.withPlainInternalServerError(
                                         e.getMessage())));
                     }
                 });
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostAccountsResponse.withPlainInternalServerError(
+                    PostWaivesResponse.withPlainInternalServerError(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void getAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
+    public void getWaivesByWaiveId(String waiveId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
             vertxContext.runOnContext(v -> {
@@ -168,83 +168,83 @@ public class AccountsAPI implements AccountsResource {
 
                 try {
                     Criteria idCrit = new Criteria();
-                    idCrit.addField(ACCOUNT_ID_FIELD);
+                    idCrit.addField(WAIVE_ID_FIELD);
                     idCrit.setOperation("=");
-                    idCrit.setValue(accountId);
+                    idCrit.setValue(waiveId);
                     Criterion criterion = new Criterion(idCrit);
 
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(ACCOUNTS_TABLE, Account.class, criterion,
+                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(WAIVES_TABLE, Waife.class, criterion,
                             true, false, getReply -> {
                                 if (getReply.failed()) {
                                     logger.error(getReply.result());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            GetAccountsByAccountIdResponse.withPlainInternalServerError(
+                                            GetWaivesByWaiveIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Account> accountList = (List<Account>) getReply.result().getResults();
-                                    if (accountList.size() < 1) {
+                                    List<Waife> waiveList = (List<Waife>) getReply.result().getResults();
+                                    if (waiveList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.withPlainNotFound("Account"
+                                                GetWaivesByWaiveIdResponse.withPlainNotFound("Waive"
                                                         + messages.getMessage(lang,
                                                                 MessageConsts.ObjectDoesNotExist))));
-                                    } else if (accountList.size() > 1) {
-                                        logger.error("Multiple accounts found with the same id");
+                                    } else if (waiveList.size() > 1) {
+                                        logger.error("Multiple waives found with the same id");
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.withPlainInternalServerError(
+                                                GetWaivesByWaiveIdResponse.withPlainInternalServerError(
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.withJsonOK(accountList.get(0))));
+                                                GetWaivesByWaiveIdResponse.withJsonOK(waiveList.get(0))));
                                     }
                                 }
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(Future.succeededFuture(
-                            GetAccountsResponse.withPlainInternalServerError(messages.getMessage(
+                            GetWaivesResponse.withPlainInternalServerError(messages.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetAccountsResponse.withPlainInternalServerError(messages.getMessage(
+                    GetWaivesResponse.withPlainInternalServerError(messages.getMessage(
                             lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void deleteAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
+    public void deleteWaivesByWaiveId(String waiveId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
                 Criteria idCrit = new Criteria();
-                idCrit.addField(ACCOUNT_ID_FIELD);
+                idCrit.addField(WAIVE_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(accountId);
+                idCrit.setValue(waiveId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
-                            ACCOUNTS_TABLE, criterion, deleteReply -> {
+                            WAIVES_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteAccountsByAccountIdResponse.withNoContent()));
+                                                DeleteWaivesByWaiveIdResponse.withNoContent()));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteAccountsByAccountIdResponse.withPlainNotFound("Record Not Found")));
+                                                DeleteWaivesByWaiveIdResponse.withPlainNotFound("Record Not Found")));
                                     }
                                 } else {
                                     logger.error(deleteReply.result());
                                     String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
                                     logger.error(error, deleteReply.cause());
                                     if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteAccountsByAccountIdResponse.withPlainInternalServerError(
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteWaivesByWaiveIdResponse.withPlainInternalServerError(
                                                 messages.getMessage(lang, MessageConsts.InternalServerError))));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteAccountsByAccountIdResponse.withPlainBadRequest(error)));
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteWaivesByWaiveIdResponse.withPlainBadRequest(error)));
                                     }
                                 }
                             });
@@ -252,7 +252,7 @@ public class AccountsAPI implements AccountsResource {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(
                             Future.succeededFuture(
-                                    DeleteAccountsByAccountIdResponse.withPlainInternalServerError(
+                                    DeleteWaivesByWaiveIdResponse.withPlainInternalServerError(
                                             messages.getMessage(lang,
                                                     MessageConsts.InternalServerError))));
                 }
@@ -261,37 +261,37 @@ public class AccountsAPI implements AccountsResource {
             logger.error(e.getMessage());
             asyncResultHandler.handle(
                     Future.succeededFuture(
-                            DeleteAccountsByAccountIdResponse.withPlainInternalServerError(
+                            DeleteWaivesByWaiveIdResponse.withPlainInternalServerError(
                                     messages.getMessage(lang,
                                             MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void putAccountsByAccountId(String accountId, String lang, Account account,
+    public void putWaivesByWaiveId(String waiveId, String lang, Waife waive,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
-            if (accountId == null) {
-                logger.error("accountId is missing");
-                asyncResultHandler.handle(Future.succeededFuture(PutAccountsByAccountIdResponse.withPlainBadRequest("accountId is missing")));
+            if (waiveId == null) {
+                logger.error("waiveId is missing");
+                asyncResultHandler.handle(Future.succeededFuture(PutWaivesByWaiveIdResponse.withPlainBadRequest("waiveId is missing")));
             }
 
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 Criteria idCrit = new Criteria();
-                idCrit.addField(ACCOUNT_ID_FIELD);
+                idCrit.addField(WAIVE_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(accountId);
+                idCrit.setValue(waiveId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(ACCOUNTS_TABLE,
-                            Account.class, criterion, true, false, getReply -> {
+                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(WAIVES_TABLE,
+                            Waife.class, criterion, true, false, getReply -> {
                                 if (getReply.failed()) {
                                     logger.error(getReply.cause().getLocalizedMessage());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PutAccountsByAccountIdResponse.withPlainInternalServerError(
+                                            PutWaivesByWaiveIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                 } else {
@@ -300,23 +300,23 @@ public class AccountsAPI implements AccountsResource {
                                     } else {
                                         try {
                                             PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    ACCOUNTS_TABLE, account, criterion, true, putReply -> {
+                                                    WAIVES_TABLE, waive, criterion, true, putReply -> {
                                                         if (putReply.failed()) {
                                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutAccountsByAccountIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
+                                                                    PutWaivesByWaiveIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
                                                         } else {
                                                             if (putReply.result().getUpdated() == 1) {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutAccountsByAccountIdResponse.withNoContent()));
+                                                                        PutWaivesByWaiveIdResponse.withNoContent()));
                                                             } else {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutAccountsByAccountIdResponse.withPlainNotFound("Record Not Found")));
+                                                                        PutWaivesByWaiveIdResponse.withPlainNotFound("Record Not Found")));
                                                             }
                                                         }
                                                     });
                                         } catch (Exception e) {
                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutAccountsByAccountIdResponse.withPlainInternalServerError(messages.getMessage(lang,
+                                                    PutWaivesByWaiveIdResponse.withPlainInternalServerError(messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                         }
                                     }
@@ -325,14 +325,14 @@ public class AccountsAPI implements AccountsResource {
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     asyncResultHandler.handle(Future.succeededFuture(
-                            PutAccountsByAccountIdResponse.withPlainInternalServerError(
+                            PutWaivesByWaiveIdResponse.withPlainInternalServerError(
                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PutAccountsByAccountIdResponse.withPlainInternalServerError(
+                    PutWaivesByWaiveIdResponse.withPlainInternalServerError(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }

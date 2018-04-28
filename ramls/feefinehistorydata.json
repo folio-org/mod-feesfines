@@ -44,7 +44,10 @@
     "feeFineOwner": {
       "type": "string"
     },
-    "comments": {
+    "location": {
+      "type": "string"
+    },
+    "itemId": {
       "type": "string"
     },
     "loanId": {

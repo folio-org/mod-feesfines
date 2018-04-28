@@ -1,0 +1,27 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "Waives Schema",
+  "type": "object",
+  "properties": {
+    "requireComment": {
+      "type": "boolean"
+    },
+    "nameReason": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref" : "raml-util/schemas/metadata.schema"
+    },
+    "accounId": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+   ]
+}
