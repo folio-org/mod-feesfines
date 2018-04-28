@@ -1,0 +1,17 @@
+{
+  "name": "Employee",
+  "conditions": {
+    "never": false,
+    "inmediatly": false,
+    "totalOwed": false,
+    "feeFineOwed": false
+  },
+  "interval": {
+    "minute": false,
+    "hour": false,
+    "day": false,
+    "week": false,
+    "month": false
+  }, 
+  "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434351"
+}
