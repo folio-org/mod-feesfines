@@ -12,7 +12,8 @@
   "itemType": "Equipment",
   "callNumber": "Equip Shelf 1 Spot 42",
   "feeFineOwner": "Main Library Circulation Desk",
-  "comments": "This is a comment",
+  "location": "Main Library",
+  "itemId": "e9f9bc2f-bad5-4613-9d6c-f55efa5805e7",
   "loanId": "2b6f7b11-4447-40d5-a049-f8b333988b61",
   "userId": "04d830a8-810c-415c-aa50-4d09c1fee133",
   "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434378"
