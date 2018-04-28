@@ -35,7 +35,7 @@ public class AccountsAPI implements AccountsResource {
     private static final String ACCOUNT_ID_FIELD = "'id'";
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Messages messages = Messages.getInstance();
-    private final Logger logger = LoggerFactory.getLogger(FeeFinesAPI.class);
+    private final Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
 
     public AccountsAPI(Vertx vertx, String tenantId) {
         PostgresClient.getInstance(vertx, tenantId).setIdField("id");
