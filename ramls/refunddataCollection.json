@@ -1,0 +1,25 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "type":"object",
+  "properties":{
+    "refunds":{
+      "type":"array",
+      "id":"refundsData",
+      "items":{
+        "type":"object",
+        "$ref":"refunddata.json"
+      }
+    },
+    "totalRecords":{
+      "type":"integer"
+    },
+    "resultInfo":{
+      "$ref":"raml-util/schemas/resultInfo.schema",
+      "readonly":true
+    }
+  },
+  "required":[
+    "refunds",
+    "totalRecords"
+  ]
+}
