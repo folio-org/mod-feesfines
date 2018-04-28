@@ -1,0 +1,25 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "type":"object",
+  "properties":{
+    "waives":{
+      "type":"array",
+      "id":"waivesData",
+      "items":{
+        "type":"object",
+        "$ref":"waivedata.json"
+      }
+    },
+    "totalRecords":{
+      "type":"integer"
+    },
+    "resultInfo":{
+      "$ref":"raml-util/schemas/resultInfo.schema",
+      "readonly":true
+    }
+  },
+  "required":[
+    "waives",
+    "totalRecords"
+  ]
+}
