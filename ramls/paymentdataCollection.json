@@ -1,0 +1,25 @@
+{
+  "$schema":"http://json-schema.org/draft-04/schema#",
+  "type":"object",
+  "properties":{
+    "payments":{
+      "type":"array",
+      "id":"paymentsData",
+      "items":{
+        "type":"object",
+        "$ref":"paymentdata.json"
+      }
+    },
+    "totalRecords":{
+      "type":"integer"
+    },
+    "resultInfo":{
+      "$ref":"raml-util/schemas/resultInfo.schema",
+      "readonly":true
+    }
+  },
+  "required":[
+    "payments",
+    "totalRecords"
+  ]
+}
