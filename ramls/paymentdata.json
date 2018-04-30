@@ -1,0 +1,30 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "Payments Schema",
+  "type": "object",
+  "properties": {
+    "requireComment": {
+      "type": "boolean"
+    },
+    "nameMethod": {
+      "type": "string"
+    },
+    "allowedRefundMethod": {
+      "type": "boolean"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref" : "raml-util/schemas/metadata.schema"
+    },
+    "accounId": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+   ]
+}

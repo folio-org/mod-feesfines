@@ -10,9 +10,9 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.AccountdataCollection;
-import org.folio.rest.jaxrs.resource.AccountsResource;
+import org.folio.rest.jaxrs.model.Payment;
+import org.folio.rest.jaxrs.model.PaymentdataCollection;
+import org.folio.rest.jaxrs.resource.PaymentsResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -29,25 +29,25 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-public class AccountsAPI implements AccountsResource {
+public class PaymentsAPI implements PaymentsResource {
 
-    private static final String ACCOUNTS_TABLE = "accounts";
-    private static final String ACCOUNT_ID_FIELD = "'id'";
+    private static final String PAYMENTS_TABLE = "payments";
+    private static final String PAYMENT_ID_FIELD = "'id'";
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Messages messages = Messages.getInstance();
-    private final Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+    private final Logger logger = LoggerFactory.getLogger(PaymentsAPI.class);
 
-    public AccountsAPI(Vertx vertx, String tenantId) {
+    public PaymentsAPI(Vertx vertx, String tenantId) {
         PostgresClient.getInstance(vertx, tenantId).setIdField("id");
     }
 
     private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON(ACCOUNTS_TABLE + ".jsonb");
+        CQL2PgJSON cql2pgJson = new CQL2PgJSON(PAYMENTS_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
     @Override
-    public void getAccounts(String query, String orderBy, Order order, int offset, int limit, List<String> facets, String lang,
+    public void getPayments(String query, String orderBy, Order order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) throws Exception {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -60,26 +60,26 @@ public class AccountsAPI implements AccountsResource {
                             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
                     String[] fieldList = {"*"};
 
-                    postgresClient.get(ACCOUNTS_TABLE, Account.class, fieldList, cql,
+                    postgresClient.get(PAYMENTS_TABLE, Payment.class, fieldList, cql,
                             true, false, facetList, reply -> {
                                 try {
                                     if (reply.succeeded()) {
-                                        AccountdataCollection accountCollection = new AccountdataCollection();
-                                        List<Account> accounts = (List<Account>) reply.result().getResults();
-                                        accountCollection.setAccounts(accounts);
-                                        accountCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                                        accountCollection.setResultInfo(reply.result().getResultInfo());
+                                        PaymentdataCollection paymentCollection = new PaymentdataCollection();
+                                        List<Payment> payments = (List<Payment>) reply.result().getResults();
+                                        paymentCollection.setPayments(payments);
+                                        paymentCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                        paymentCollection.setResultInfo(reply.result().getResultInfo());
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsResponse.withJsonOK(accountCollection)));
+                                                GetPaymentsResponse.withJsonOK(paymentCollection)));
                                     } else {
                                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                                GetAccountsResponse.withPlainInternalServerError(
+                                                GetPaymentsResponse.withPlainInternalServerError(
                                                         reply.cause().getMessage())));
                                     }
                                 } catch (Exception e) {
                                     logger.debug(e.getLocalizedMessage());
                                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                            GetAccountsResponse.withPlainInternalServerError(
+                                            GetPaymentsResponse.withPlainInternalServerError(
                                                     reply.cause().getMessage())));
                                 }
                             });
@@ -87,11 +87,11 @@ public class AccountsAPI implements AccountsResource {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                         logger.debug("BAD CQL");
-                        asyncResultHandler.handle(Future.succeededFuture(GetAccountsResponse.withPlainBadRequest(
+                        asyncResultHandler.handle(Future.succeededFuture(GetPaymentsResponse.withPlainBadRequest(
                                 "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                     } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                GetAccountsResponse.withPlainInternalServerError(
+                                GetPaymentsResponse.withPlainInternalServerError(
                                         messages.getMessage(lang,
                                                 MessageConsts.InternalServerError))));
                     }
@@ -101,11 +101,11 @@ public class AccountsAPI implements AccountsResource {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
-                asyncResultHandler.handle(Future.succeededFuture(GetAccountsResponse.withPlainBadRequest(
+                asyncResultHandler.handle(Future.succeededFuture(GetPaymentsResponse.withPlainBadRequest(
                         "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
             } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                        GetAccountsResponse.withPlainInternalServerError(
+                        GetPaymentsResponse.withPlainInternalServerError(
                                 messages.getMessage(lang,
                                         MessageConsts.InternalServerError))));
             }
@@ -113,7 +113,7 @@ public class AccountsAPI implements AccountsResource {
     }
 
     @Override
-    public void postAccounts(String lang, Account entity, Map<String, String> okapiHeaders,
+    public void postPayments(String lang, Payment entity, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
             vertxContext.runOnContext(v -> {
@@ -122,45 +122,45 @@ public class AccountsAPI implements AccountsResource {
 
                 postgresClient.startTx(beginTx -> {
                     try {
-                        postgresClient.save(beginTx, ACCOUNTS_TABLE, entity, reply -> {
+                        postgresClient.save(beginTx, PAYMENTS_TABLE, entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
-                                    final Account account = entity;
-                                    account.setId(entity.getId());
+                                    final Payment payment = entity;
+                                    payment.setId(entity.getId());
                                     OutStream stream = new OutStream();
-                                    stream.setData(account);
+                                    stream.setData(payment);
                                     postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostAccountsResponse.withJsonCreated(
+                                        asyncResultHandler.handle(Future.succeededFuture(PostPaymentsResponse.withJsonCreated(
                                                 reply.result(), stream)));
                                     });
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PostAccountsResponse.withPlainBadRequest(
+                                            PostPaymentsResponse.withPlainBadRequest(
                                                     messages.getMessage(
                                                             lang, MessageConsts.UnableToProcessRequest))));
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
-                                        PostAccountsResponse.withPlainInternalServerError(
+                                        PostPaymentsResponse.withPlainInternalServerError(
                                                 e.getMessage())));
                             }
                         });
                     } catch (Exception e) {
                         asyncResultHandler.handle(Future.succeededFuture(
-                                PostAccountsResponse.withPlainInternalServerError(
+                                PostPaymentsResponse.withPlainInternalServerError(
                                         e.getMessage())));
                     }
                 });
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostAccountsResponse.withPlainInternalServerError(
+                    PostPaymentsResponse.withPlainInternalServerError(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void getAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
+    public void getPaymentsByPaymentId(String paymentId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
             vertxContext.runOnContext(v -> {
@@ -168,83 +168,83 @@ public class AccountsAPI implements AccountsResource {
 
                 try {
                     Criteria idCrit = new Criteria();
-                    idCrit.addField(ACCOUNT_ID_FIELD);
+                    idCrit.addField(PAYMENT_ID_FIELD);
                     idCrit.setOperation("=");
-                    idCrit.setValue(accountId);
+                    idCrit.setValue(paymentId);
                     Criterion criterion = new Criterion(idCrit);
 
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(ACCOUNTS_TABLE, Account.class, criterion,
+                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(PAYMENTS_TABLE, Payment.class, criterion,
                             true, false, getReply -> {
                                 if (getReply.failed()) {
                                     logger.error(getReply.result());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            GetAccountsByAccountIdResponse.withPlainInternalServerError(
+                                            GetPaymentsByPaymentIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Account> accountList = (List<Account>) getReply.result().getResults();
-                                    if (accountList.size() < 1) {
+                                    List<Payment> paymentList = (List<Payment>) getReply.result().getResults();
+                                    if (paymentList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.withPlainNotFound("Account"
+                                                GetPaymentsByPaymentIdResponse.withPlainNotFound("Payment"
                                                         + messages.getMessage(lang,
                                                                 MessageConsts.ObjectDoesNotExist))));
-                                    } else if (accountList.size() > 1) {
-                                        logger.error("Multiple accounts found with the same id");
+                                    } else if (paymentList.size() > 1) {
+                                        logger.error("Multiple payments found with the same id");
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.withPlainInternalServerError(
+                                                GetPaymentsByPaymentIdResponse.withPlainInternalServerError(
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.withJsonOK(accountList.get(0))));
+                                                GetPaymentsByPaymentIdResponse.withJsonOK(paymentList.get(0))));
                                     }
                                 }
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(Future.succeededFuture(
-                            GetAccountsResponse.withPlainInternalServerError(messages.getMessage(
+                            GetPaymentsResponse.withPlainInternalServerError(messages.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetAccountsResponse.withPlainInternalServerError(messages.getMessage(
+                    GetPaymentsResponse.withPlainInternalServerError(messages.getMessage(
                             lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void deleteAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
+    public void deletePaymentsByPaymentId(String paymentId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
                 Criteria idCrit = new Criteria();
-                idCrit.addField(ACCOUNT_ID_FIELD);
+                idCrit.addField(PAYMENT_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(accountId);
+                idCrit.setValue(paymentId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
-                            ACCOUNTS_TABLE, criterion, deleteReply -> {
+                            PAYMENTS_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteAccountsByAccountIdResponse.withNoContent()));
+                                                DeletePaymentsByPaymentIdResponse.withNoContent()));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteAccountsByAccountIdResponse.withPlainNotFound("Record Not Found")));
+                                                DeletePaymentsByPaymentIdResponse.withPlainNotFound("Record Not Found")));
                                     }
                                 } else {
                                     logger.error(deleteReply.result());
                                     String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
                                     logger.error(error, deleteReply.cause());
                                     if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteAccountsByAccountIdResponse.withPlainInternalServerError(
+                                        asyncResultHandler.handle(Future.succeededFuture(DeletePaymentsByPaymentIdResponse.withPlainInternalServerError(
                                                 messages.getMessage(lang, MessageConsts.InternalServerError))));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteAccountsByAccountIdResponse.withPlainBadRequest(error)));
+                                        asyncResultHandler.handle(Future.succeededFuture(DeletePaymentsByPaymentIdResponse.withPlainBadRequest(error)));
                                     }
                                 }
                             });
@@ -252,7 +252,7 @@ public class AccountsAPI implements AccountsResource {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(
                             Future.succeededFuture(
-                                    DeleteAccountsByAccountIdResponse.withPlainInternalServerError(
+                                    DeletePaymentsByPaymentIdResponse.withPlainInternalServerError(
                                             messages.getMessage(lang,
                                                     MessageConsts.InternalServerError))));
                 }
@@ -261,37 +261,37 @@ public class AccountsAPI implements AccountsResource {
             logger.error(e.getMessage());
             asyncResultHandler.handle(
                     Future.succeededFuture(
-                            DeleteAccountsByAccountIdResponse.withPlainInternalServerError(
+                            DeletePaymentsByPaymentIdResponse.withPlainInternalServerError(
                                     messages.getMessage(lang,
                                             MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void putAccountsByAccountId(String accountId, String lang, Account account,
+    public void putPaymentsByPaymentId(String paymentId, String lang, Payment payment,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
-            if (accountId == null) {
-                logger.error("accountId is missing");
-                asyncResultHandler.handle(Future.succeededFuture(PutAccountsByAccountIdResponse.withPlainBadRequest("accountId is missing")));
+            if (paymentId == null) {
+                logger.error("paymentId is missing");
+                asyncResultHandler.handle(Future.succeededFuture(PutPaymentsByPaymentIdResponse.withPlainBadRequest("paymentId is missing")));
             }
 
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 Criteria idCrit = new Criteria();
-                idCrit.addField(ACCOUNT_ID_FIELD);
+                idCrit.addField(PAYMENT_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(accountId);
+                idCrit.setValue(paymentId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(ACCOUNTS_TABLE,
-                            Account.class, criterion, true, false, getReply -> {
+                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(PAYMENTS_TABLE,
+                            Payment.class, criterion, true, false, getReply -> {
                                 if (getReply.failed()) {
                                     logger.error(getReply.cause().getLocalizedMessage());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PutAccountsByAccountIdResponse.withPlainInternalServerError(
+                                            PutPaymentsByPaymentIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                 } else {
@@ -300,23 +300,23 @@ public class AccountsAPI implements AccountsResource {
                                     } else {
                                         try {
                                             PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    ACCOUNTS_TABLE, account, criterion, true, putReply -> {
+                                                    PAYMENTS_TABLE, payment, criterion, true, putReply -> {
                                                         if (putReply.failed()) {
                                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutAccountsByAccountIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
+                                                                    PutPaymentsByPaymentIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
                                                         } else {
                                                             if (putReply.result().getUpdated() == 1) {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutAccountsByAccountIdResponse.withNoContent()));
+                                                                        PutPaymentsByPaymentIdResponse.withNoContent()));
                                                             } else {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutAccountsByAccountIdResponse.withPlainNotFound("Record Not Found")));
+                                                                        PutPaymentsByPaymentIdResponse.withPlainNotFound("Record Not Found")));
                                                             }
                                                         }
                                                     });
                                         } catch (Exception e) {
                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutAccountsByAccountIdResponse.withPlainInternalServerError(messages.getMessage(lang,
+                                                    PutPaymentsByPaymentIdResponse.withPlainInternalServerError(messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                         }
                                     }
@@ -325,14 +325,14 @@ public class AccountsAPI implements AccountsResource {
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     asyncResultHandler.handle(Future.succeededFuture(
-                            PutAccountsByAccountIdResponse.withPlainInternalServerError(
+                            PutPaymentsByPaymentIdResponse.withPlainInternalServerError(
                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PutAccountsByAccountIdResponse.withPlainInternalServerError(
+                    PutPaymentsByPaymentIdResponse.withPlainInternalServerError(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }

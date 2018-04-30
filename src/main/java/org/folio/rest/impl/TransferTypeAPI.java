@@ -10,9 +10,9 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.AccountdataCollection;
-import org.folio.rest.jaxrs.resource.AccountsResource;
+import org.folio.rest.jaxrs.model.Transfertype;
+import org.folio.rest.jaxrs.model.TransferTypedataCollection;
+import org.folio.rest.jaxrs.resource.TransfertypesResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -20,8 +20,6 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.persist.facets.FacetField;
-import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
@@ -29,30 +27,30 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-public class AccountsAPI implements AccountsResource {
+public class TransferTypeAPI implements TransfertypesResource {
 
-    private static final String ACCOUNTS_TABLE = "accounts";
-    private static final String ACCOUNT_ID_FIELD = "'id'";
-    private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
+    public static final String TRANSFERTYPES_TABLE  = "transfer_type";
+
     private final Messages messages = Messages.getInstance();
-    private final Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+    private static final String TRANSFERTYPE_ID_FIELD = "'id'";
+    private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
+    private final Logger logger = LoggerFactory.getLogger(TransferTypeAPI.class);
 
-    public AccountsAPI(Vertx vertx, String tenantId) {
+    public TransferTypeAPI(Vertx vertx, String tenantId) {
         PostgresClient.getInstance(vertx, tenantId).setIdField("id");
     }
 
     private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON(ACCOUNTS_TABLE + ".jsonb");
+        CQL2PgJSON cql2pgJson = new CQL2PgJSON(TRANSFERTYPES_TABLE + ".jsonb"
+        );
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
     @Override
-    public void getAccounts(String query, String orderBy, Order order, int offset, int limit, List<String> facets, String lang,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext) throws Exception {
+    public void getTransfertypes(String query, String orderBy, Order order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
         CQLWrapper cql = getCQL(query, limit, offset);
-        List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
+
         try {
             vertxContext.runOnContext(v -> {
                 try {
@@ -60,52 +58,53 @@ public class AccountsAPI implements AccountsResource {
                             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
                     String[] fieldList = {"*"};
 
-                    postgresClient.get(ACCOUNTS_TABLE, Account.class, fieldList, cql,
-                            true, false, facetList, reply -> {
-                                try {
-                                    if (reply.succeeded()) {
-                                        AccountdataCollection accountCollection = new AccountdataCollection();
-                                        List<Account> accounts = (List<Account>) reply.result().getResults();
-                                        accountCollection.setAccounts(accounts);
-                                        accountCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                                        accountCollection.setResultInfo(reply.result().getResultInfo());
-                                        asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsResponse.withJsonOK(accountCollection)));
-                                    } else {
-                                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                                GetAccountsResponse.withPlainInternalServerError(
-                                                        reply.cause().getMessage())));
-                                    }
-                                } catch (Exception e) {
-                                    logger.debug(e.getLocalizedMessage());
-                                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                            GetAccountsResponse.withPlainInternalServerError(
-                                                    reply.cause().getMessage())));
-                                }
-                            });
+                    postgresClient.get(TRANSFERTYPES_TABLE, Transfertype.class, fieldList, cql,
+                            true, false, reply -> {
+                        try {
+                            if (reply.succeeded()) {
+                                TransferTypedataCollection transfertypeCollection = new TransferTypedataCollection();
+                                List<Transfertype> transfertypes = (List<Transfertype>) reply.result().getResults();
+                                transfertypeCollection.setTransfertypes(transfertypes);
+                                transfertypeCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                asyncResultHandler.handle(Future.succeededFuture(
+                                        GetTransfertypesResponse.withJsonOK(transfertypeCollection)));
+                            } else {
+                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                                        GetTransfertypesResponse.withPlainInternalServerError(
+                                                reply.cause().getMessage())));
+                            }
+                        } catch (Exception e) {
+                            logger.debug(e.getLocalizedMessage());
+                            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                                    GetTransfertypesResponse.withPlainInternalServerError(
+                                            reply.cause().getMessage())));
+                        }
+                    }
+                 );
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                         logger.debug("BAD CQL");
-                        asyncResultHandler.handle(Future.succeededFuture(GetAccountsResponse.withPlainBadRequest(
+                        asyncResultHandler.handle(Future.succeededFuture(GetTransfertypesResponse.withPlainBadRequest(
                                 "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                     } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                GetAccountsResponse.withPlainInternalServerError(
+                                GetTransfertypesResponse.withPlainInternalServerError(
                                         messages.getMessage(lang,
                                                 MessageConsts.InternalServerError))));
                     }
                 }
             });
         } catch (Exception e) {
+
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
-                asyncResultHandler.handle(Future.succeededFuture(GetAccountsResponse.withPlainBadRequest(
+                asyncResultHandler.handle(Future.succeededFuture(GetTransfertypesResponse.withPlainBadRequest(
                         "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
             } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                        GetAccountsResponse.withPlainInternalServerError(
+                        GetTransfertypesResponse.withPlainInternalServerError(
                                 messages.getMessage(lang,
                                         MessageConsts.InternalServerError))));
             }
@@ -113,8 +112,7 @@ public class AccountsAPI implements AccountsResource {
     }
 
     @Override
-    public void postAccounts(String lang, Account entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void postTransfertypes(String lang, Transfertype entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -122,129 +120,128 @@ public class AccountsAPI implements AccountsResource {
 
                 postgresClient.startTx(beginTx -> {
                     try {
-                        postgresClient.save(beginTx, ACCOUNTS_TABLE, entity, reply -> {
+                        postgresClient.save(beginTx, TRANSFERTYPES_TABLE, entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
-                                    final Account account = entity;
-                                    account.setId(entity.getId());
+                                    final Transfertype transfertype = entity;
+                                    transfertype.setId(entity.getId());
                                     OutStream stream = new OutStream();
-                                    stream.setData(account);
+                                    stream.setData(transfertype);
                                     postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostAccountsResponse.withJsonCreated(
+                                        asyncResultHandler.handle(Future.succeededFuture(PostTransfertypesResponse.withJsonCreated(
                                                 reply.result(), stream)));
                                     });
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PostAccountsResponse.withPlainBadRequest(
+                                            PostTransfertypesResponse.withPlainBadRequest(
                                                     messages.getMessage(
                                                             lang, MessageConsts.UnableToProcessRequest))));
+
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
-                                        PostAccountsResponse.withPlainInternalServerError(
+                                        PostTransfertypesResponse.withPlainInternalServerError(
                                                 e.getMessage())));
                             }
                         });
                     } catch (Exception e) {
                         asyncResultHandler.handle(Future.succeededFuture(
-                                PostAccountsResponse.withPlainInternalServerError(
+                                PostTransfertypesResponse.withPlainInternalServerError(
                                         e.getMessage())));
                     }
                 });
+
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostAccountsResponse.withPlainInternalServerError(
+                    PostTransfertypesResponse.withPlainInternalServerError(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void getAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void getTransfertypesByTransfertypeId(String transfertypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 try {
                     Criteria idCrit = new Criteria();
-                    idCrit.addField(ACCOUNT_ID_FIELD);
+                    idCrit.addField(TRANSFERTYPE_ID_FIELD);
                     idCrit.setOperation("=");
-                    idCrit.setValue(accountId);
+                    idCrit.setValue(transfertypeId);
                     Criterion criterion = new Criterion(idCrit);
-
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(ACCOUNTS_TABLE, Account.class, criterion,
+                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(TRANSFERTYPES_TABLE, Transfertype.class, criterion,
                             true, false, getReply -> {
                                 if (getReply.failed()) {
                                     logger.error(getReply.result());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            GetAccountsByAccountIdResponse.withPlainInternalServerError(
+                                            GetTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Account> accountList = (List<Account>) getReply.result().getResults();
-                                    if (accountList.size() < 1) {
+                                    List<Transfertype> transfertypeList = (List<Transfertype>) getReply.result().getResults();
+                                    if (transfertypeList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.withPlainNotFound("Account"
+                                                GetTransfertypesByTransfertypeIdResponse.withPlainNotFound("Transfertype"
                                                         + messages.getMessage(lang,
                                                                 MessageConsts.ObjectDoesNotExist))));
-                                    } else if (accountList.size() > 1) {
-                                        logger.error("Multiple accounts found with the same id");
+                                    } else if (transfertypeList.size() > 1) {
+                                        logger.error("Multiple transfertypes found with the same id");
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.withPlainInternalServerError(
+                                                GetTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.withJsonOK(accountList.get(0))));
+                                                GetTransfertypesByTransfertypeIdResponse.withJsonOK(transfertypeList.get(0))));
                                     }
                                 }
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(Future.succeededFuture(
-                            GetAccountsResponse.withPlainInternalServerError(messages.getMessage(
+                            GetTransfertypesResponse.withPlainInternalServerError(messages.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetAccountsResponse.withPlainInternalServerError(messages.getMessage(
+                    GetTransfertypesResponse.withPlainInternalServerError(messages.getMessage(
                             lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void deleteAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void deleteTransfertypesByTransfertypeId(String transfertypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
+
                 Criteria idCrit = new Criteria();
-                idCrit.addField(ACCOUNT_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(accountId);
+                idCrit.setValue(transfertypeId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
-                            ACCOUNTS_TABLE, criterion, deleteReply -> {
+                            TRANSFERTYPES_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteAccountsByAccountIdResponse.withNoContent()));
+                                                DeleteTransfertypesByTransfertypeIdResponse.withNoContent()));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteAccountsByAccountIdResponse.withPlainNotFound("Record Not Found")));
+                                                DeleteTransfertypesByTransfertypeIdResponse.withPlainNotFound("Record Not Found")));
                                     }
                                 } else {
                                     logger.error(deleteReply.result());
                                     String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
                                     logger.error(error, deleteReply.cause());
                                     if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteAccountsByAccountIdResponse.withPlainInternalServerError(
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
                                                 messages.getMessage(lang, MessageConsts.InternalServerError))));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteAccountsByAccountIdResponse.withPlainBadRequest(error)));
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfertypesByTransfertypeIdResponse.withPlainBadRequest(error)));
                                     }
                                 }
                             });
@@ -252,46 +249,46 @@ public class AccountsAPI implements AccountsResource {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(
                             Future.succeededFuture(
-                                    DeleteAccountsByAccountIdResponse.withPlainInternalServerError(
+                                    DeleteTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
                                             messages.getMessage(lang,
                                                     MessageConsts.InternalServerError))));
                 }
+
             });
         } catch (Exception e) {
             logger.error(e.getMessage());
             asyncResultHandler.handle(
                     Future.succeededFuture(
-                            DeleteAccountsByAccountIdResponse.withPlainInternalServerError(
+                            DeleteTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
                                     messages.getMessage(lang,
                                             MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void putAccountsByAccountId(String accountId, String lang, Account account,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void putTransfertypesByTransfertypeId(String transfertypeId, String lang, Transfertype transfertype, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
         try {
-            if (accountId == null) {
-                logger.error("accountId is missing");
-                asyncResultHandler.handle(Future.succeededFuture(PutAccountsByAccountIdResponse.withPlainBadRequest("accountId is missing")));
+            if (transfertypeId == null) {
+                logger.error("transfertypeId is missing");
+                asyncResultHandler.handle(Future.succeededFuture(PutTransfertypesByTransfertypeIdResponse.withPlainBadRequest("transfertypeId is missing")));
             }
 
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 Criteria idCrit = new Criteria();
-                idCrit.addField(ACCOUNT_ID_FIELD);
+                idCrit.addField(TRANSFERTYPE_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(accountId);
+                idCrit.setValue(transfertypeId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(ACCOUNTS_TABLE,
-                            Account.class, criterion, true, false, getReply -> {
+                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(TRANSFERTYPES_TABLE,
+                            Transfertype.class, criterion, true, false, getReply -> {
                                 if (getReply.failed()) {
                                     logger.error(getReply.cause().getLocalizedMessage());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PutAccountsByAccountIdResponse.withPlainInternalServerError(
+                                            PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                 } else {
@@ -300,23 +297,23 @@ public class AccountsAPI implements AccountsResource {
                                     } else {
                                         try {
                                             PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    ACCOUNTS_TABLE, account, criterion, true, putReply -> {
+                                                    TRANSFERTYPES_TABLE, transfertype, criterion, true, putReply -> {
                                                         if (putReply.failed()) {
                                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutAccountsByAccountIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
+                                                                    PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
                                                         } else {
                                                             if (putReply.result().getUpdated() == 1) {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutAccountsByAccountIdResponse.withNoContent()));
+                                                                        DeleteTransfertypesByTransfertypeIdResponse.withNoContent()));
                                                             } else {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutAccountsByAccountIdResponse.withPlainNotFound("Record Not Found")));
+                                                                        DeleteTransfertypesByTransfertypeIdResponse.withPlainNotFound("Record Not Found")));
                                                             }
                                                         }
                                                     });
                                         } catch (Exception e) {
                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutAccountsByAccountIdResponse.withPlainInternalServerError(messages.getMessage(lang,
+                                                    PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                         }
                                     }
@@ -325,15 +322,16 @@ public class AccountsAPI implements AccountsResource {
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     asyncResultHandler.handle(Future.succeededFuture(
-                            PutAccountsByAccountIdResponse.withPlainInternalServerError(
+                            PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PutAccountsByAccountIdResponse.withPlainInternalServerError(
+                    PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
+
     }
 }
