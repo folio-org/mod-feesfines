@@ -7,11 +7,11 @@
     "feeFineOwed": false
   },
   "interval": {
-    "minute": false,
-    "hour": false,
-    "day": false,
-    "week": false,
-    "month": false
+    "minute": "minute(s)",
+    "hour": "hour(s)",
+    "day": "day(s)",
+    "week": "week(s)",
+    "month": "month(s)"
   }, 
   "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434351"
 }
