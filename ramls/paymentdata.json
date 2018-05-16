@@ -16,7 +16,7 @@
       "type": "object",
       "$ref" : "raml-util/schemas/metadata.schema"
     },
-    "accounId": {
+    "accountId": {
       "type": "string"
     },
     "id": {
