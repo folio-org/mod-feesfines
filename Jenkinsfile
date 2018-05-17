@@ -1,7 +1,8 @@
+
+
 buildMvn {
   publishModDescriptor = 'yes'
-  publishAPI = 'no'
-  mvnDeploy = 'yes'
+  publishAPI = 'yes'
 
   doDocker = {
     buildJavaDocker {
