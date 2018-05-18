@@ -1,5 +1,5 @@
 {
-  "transfers":[
+  "transfertypes":[
     {
       "name":"Employee",
       "conditions":{
@@ -9,28 +9,28 @@
         "feeFineOwed":false
       },
       "interval":{
-        "minute":false,
-        "hour":false,
-        "day":false,
-        "week":false,
-        "month":false
+        "minute": "minute(s)",
+        "hour": "hour(s)",
+        "day": "day(s)",
+        "week": "week(s)",
+        "month": "month(s)"
       },
       "id":"0bab56e5-1ab6-4ac2-afdf-8b2df0434341"
     },
     {
       "name":"STUDENT",
       "conditions":{
-        "never":false,
-        "inmediatly":false,
-        "totalOwed":false,
-        "feeFineOwed":false
+        "never": false,
+        "inmediatly": false,
+        "totalOwed": false,
+        "feeFineOwed": false
       },
       "interval":{
-        "minute":false,
-        "hour":false,
-        "day":false,
-        "week":false,
-        "month":false
+        "minute": "minute(s)",
+        "hour": "hour(s)",
+        "day": "day(s)",
+        "week": "week(s)",
+        "month": "month(s)"
       },
       "id":"0bab56e5-1ab6-4ac2-afdf-8b2df0434342"
     }

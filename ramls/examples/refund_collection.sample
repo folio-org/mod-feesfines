@@ -1,5 +1,5 @@
 {
-  "payments" : [ {
+  "refunds" : [ {
     "requireComment": true,
     "nameReason": "Overpaid",
     "metadata": {
