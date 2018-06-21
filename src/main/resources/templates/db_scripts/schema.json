@@ -67,11 +67,27 @@
       "pkColumnName":"id"
     },
     {
+      "tableName":"comments",
+      "generateId":true,
+      "fromModuleVersion":"14.2",
+      "populateJsonWithId":false,
+      "withMetadata":true,
+      "pkColumnName":"id"
+    },
+    {
       "tableName":"transfer_type",
       "generateId":true,
       "fromModuleVersion":"14.2",
       "populateJsonWithId":false,
       "withMetadata":false,
+      "pkColumnName":"id"
+    },
+    {
+      "tableName":"feesfines",
+      "generateId":true,
+      "fromModuleVersion":"14.2",
+      "populateJsonWithId":true,
+      "withMetadata":true,
       "pkColumnName":"id"
     }
   ]
