@@ -116,7 +116,6 @@ public class RestVerticleIT {
                 .put("id", "1234567")
                 .put("feeFineType", "por credencial")
                 .put("defaultAmount", "10.00")
-                .put("allowManualCreation", "false")
                 .put("taxVat", "15")
                 .put("ownerId", "Biblioteca postFeefine");
         HttpClient client = vertx.createHttpClient();
@@ -178,7 +177,6 @@ public class RestVerticleIT {
                 .put("id", "1234567")
                 .put("feeFineType", "por Perdidad de libro")
                 .put("defaultAmount", "10.00")
-                .put("allowManualCreation", false)
                 .put("taxVat", "15")
                 .put("ownerId", "Biblioteca Central");
 
@@ -205,7 +203,6 @@ public class RestVerticleIT {
                 .put("id", "1234567")
                 .put("feeFineType", "por credencial")
                 .put("defaultAmount", "10.00")
-                .put("allowManualCreation", false)
                 .put("taxVat", "15")
                 .put("ownerId", "Biblioteca Central");
 
@@ -270,7 +267,6 @@ public class RestVerticleIT {
                 .put("id", "1234567")
                 .put("feeFineType", "por credencial")
                 .put("defaultAmount", "10.00")
-                .put("allowManualCreation", false)
                 .put("taxVat", "15")
                 .put("ownerId", "Biblioteca Central");
 
@@ -472,7 +468,6 @@ public class RestVerticleIT {
         }
         feefine.put("feeFineType", typefeefine)
                 .put("defaultAmount", "10.00")
-                .put("allowManualCreation", "true")
                 .put("taxVat", "15")
                 .put("ownerId", ownerId);
 
