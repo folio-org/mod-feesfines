@@ -44,7 +44,7 @@
     },
     "feeFineType": {
       "type": "string"
-    }, 
+    },
     "feeFineOwner": {
       "type": "string"
     },
