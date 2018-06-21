@@ -11,6 +11,7 @@ refund.json
 transfer.json
 waive.json
 transfer-type.json
+comment.json
 #Test
 TestOutOkapi
 #Module
