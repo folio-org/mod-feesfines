@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "comments": {
+      "type": "array",
+      "id": "commentsData",
+      "items": {
+        "type": "object",
+        "$ref": "commentdata.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    },
+    "resultInfo":{
+      "$ref": "raml-util/schemas/resultInfo.schema",
+      "readonly":true
+    }
+  },
+  "required": [
+    "comments",
+    "totalRecords"
+  ]
+}
