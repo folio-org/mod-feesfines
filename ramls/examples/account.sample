@@ -10,6 +10,16 @@
   "paymentStatus": {
     "name": "Paid Partially"
   },
+  "feeFineType": "Damaged Book Fee",
+  "feeFineOwner": "Shared",
+  "title": "Statistical sketches of Upper Canada, for the use of emigrants, by a backwoodsman",
+  "callNumber": "QH365.02 1966",
+  "barcode": "87378389382402",
+  "materialType": "Book",
+  "itemStatus": {
+    "name": "Available"
+  },
+  "location": "Main Library",
   "metadata": {
     "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce01",
     "createdDate": "2018-01-31T21:21:02Z"
