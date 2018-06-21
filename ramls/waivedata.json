@@ -3,10 +3,10 @@
   "title": "Waives Schema",
   "type": "object",
   "properties": {
-    "requireComment": {
-      "type": "boolean"
-    },
     "nameReason": {
+      "type": "string"
+    },
+    "description": {
       "type": "string"
     },
     "metadata": {
