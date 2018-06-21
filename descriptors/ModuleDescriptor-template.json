@@ -153,24 +153,6 @@
           "methods":[
             "GET"
           ],
-          "pathPattern":"/feefinehistory",
-          "permissionsRequired":[
-            "feefinehistory.collection.get"
-          ]
-        },
-        {
-          "methods":[
-            "GET"
-          ],
-          "pathPattern":"/feefinehistory/{id}",
-          "permissionsRequired":[
-            "feefinehistory.item.get"
-          ]
-        },
-        {
-          "methods":[
-            "GET"
-          ],
           "pathPattern":"/feefineactions",
           "permissionsRequired":[
             "feefineactions.collection.get"
@@ -210,24 +192,6 @@
           "pathPattern":"/feefineactions/{id}",
           "permissionsRequired":[
             "feefineactions.item.delete"
-          ]
-        },
-        {
-          "methods":[
-            "GET"
-          ],
-          "pathPattern":"/chargeitem",
-          "permissionsRequired":[
-            "chargeitem.collection.get"
-          ]
-        },
-        {
-          "methods":[
-            "GET"
-          ],
-          "pathPattern":"/chargeitem/{id}",
-          "permissionsRequired":[
-            "chargeitem.item.get"
           ]
         },
         {
@@ -414,6 +378,51 @@
           "methods":[
             "GET"
           ],
+          "pathPattern":"/comments",
+          "permissionsRequired":[
+            "comments.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/comments/{id}",
+          "permissionsRequired":[
+            "comments.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/comments",
+          "permissionsRequired":[
+            "comments.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/comments/{id}",
+          "permissionsRequired":[
+            "comments.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/comments/{id}",
+          "permissionsRequired":[
+            "comments.item.delete"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
           "pathPattern":"/transfertypes",
           "permissionsRequired":[
             "transfertypes.collection.get"
@@ -559,16 +568,6 @@
       "description":"Delete an account record"
     },
     {
-      "permissionName":"feefinehistory.collection.get",
-      "displayName":"feefinehistory collection get",
-      "description":"Get a collection of feefinehistory records"
-    },
-    {
-      "permissionName":"feefinehistory.item.get",
-      "displayName":"feefinehistory item get",
-      "description":"Read an individual record in the feefinehistory module"
-    },
-    {
       "permissionName":"feefineactions.collection.get",
       "displayName":"feefineactions collection get",
       "description":"Get a list of feefineaction records"
@@ -592,16 +591,6 @@
       "permissionName":"feefineactions.item.delete",
       "displayName":"feefineactions item delete",
       "description":"Delete an feefineaction record"
-    },
-    {
-      "permissionName":"chargeitem.collection.get",
-      "displayName":"chargeitem collection get",
-      "description":"Get a list of chargeitem records"
-    },
-    {
-      "permissionName":"chargeitem.item.get",
-      "displayName":"chargeitem item get",
-      "description":"Get a single chargeitem record"
     },
     {
       "permissionName":"payments.collection.get",
@@ -704,6 +693,31 @@
       "description":"Delete an transfer record"
     },
     {
+      "permissionName":"comments.collection.get",
+      "displayName":"comments collection get",
+      "description":"Get a list of comment records"
+    },
+    {
+      "permissionName":"comments.item.get",
+      "displayName":"comments item get",
+      "description":"Get a single comment record"
+    },
+    {
+      "permissionName":"comments.item.post",
+      "displayName":"comments item post",
+      "description":"Create a new comment record"
+    },
+    {
+      "permissionName":"comments.item.put",
+      "displayName":"comments item put",
+      "description":"Edit an comment record"
+    },
+    {
+      "permissionName":"comments.item.delete",
+      "displayName":"comments item delete",
+      "description":"Delete an comment record"
+    },
+    {
       "permissionName":"transfertypes.collection.get",
       "displayName":"transfertypes collection get",
       "description":"Get a list of transfertype records"
@@ -755,10 +769,6 @@
         "feefineactions.item.post",
         "feefineactions.item.put",
         "feefineactions.item.delete",
-        "feefinehistory.collection.get",
-        "feefinehistory.item.get",
-        "chargeitem.collection.get",
-        "chargeitem.item.get",
         "payments.collection.get",
         "payments.item.get",
         "payments.item.post",
@@ -779,6 +789,11 @@
         "transfers.item.post",
         "transfers.item.put",
         "transfers.item.delete",
+        "comments.collection.get",
+        "comments.item.get",
+        "comments.item.post",
+        "comments.item.put",
+        "comments.item.delete",
         "transfertypes.collection.get",
         "transfertypes.item.get",
         "transfertypes.item.post",

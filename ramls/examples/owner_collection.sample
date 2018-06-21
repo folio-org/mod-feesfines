@@ -2,8 +2,16 @@
   "owners": [
    {
     "owner": "Main Admin",
-    "id": "7261ecaae3a74dc68b468e12a70b1aed",
-    "desc": "Main Library Administration Office"
+    "desc": "Main Library Administration Office",
+    "metadata": {
+      "createdDate": "2018-05-22T21:21:02Z",
+      "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce02",
+      "createdByUsername": "Doe",
+      "updatedDate": "2018-05-22T21:21:02Z",
+      "updatedByUserId": "695540df-cf63-4c67-91c1-d8746920d1dd",
+      "updatedByUsername": "robertjones"
+    },
+    "id": "7261ecaae3a74dc68b468e12a70b1aed"
    }
   ],
   "totalRecords": 1

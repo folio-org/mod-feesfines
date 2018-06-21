@@ -1,20 +1,23 @@
 {
   "$schema" : "http://json-schema.org/draft-04/schema#",
-  "title": "Payments Schema",
+  "title": "Accounts Schema",
   "type": "object",
   "properties": {
-    "nameMethod": {
-      "type": "string"
+    "paid": {
+      "type": "boolean"
     },
-    "allowedRefundMethod": {
+    "waived": {
+      "type": "boolean"
+    },
+    "refunded": {
+      "type": "boolean"
+    },
+    "transferredManually": {
       "type": "boolean"
     },
     "metadata": {
       "type": "object",
       "$ref" : "raml-util/schemas/metadata.schema"
-    },
-    "accountId": {
-      "type": "string"
     },
     "id": {
       "type": "string"

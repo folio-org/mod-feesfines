@@ -6,14 +6,8 @@
     "feeFineType": {
       "type": "string"
     },
-    "id": {
-      "type": "string"
-    },
     "defaultAmount": {
       "type": "number"
-    },
-    "allowManualCreation": {
-      "type": "boolean"
     },
     "taxVat": {
       "type": "number"
@@ -24,6 +18,9 @@
     "metadata" : {
       "type" : "object",
       "$ref" : "raml-util/schemas/metadata.schema"
+    },
+    "id": {
+      "type": "string"
     }
   },
   "additionalProperties": false,

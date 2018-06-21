@@ -1,18 +1,19 @@
 #%RAML 0.8
-title: Owners
+title: Comments
 version: v1
 baseUri: http://github.com/org/folio/mod-feesfines
 
 documentation:
-  - title: Owners API
-    content: This documents the API calls that can be made to query and manage owner of the system
+  - title: Comments API
+    content: This documents the API calls that can be made to query and manage feefine of the system
 
 schemas:
-  - ownerdata.json: !include ownerdata.json
-  - ownerdataCollection: !include ownerdataCollection.json
+  - commentdata.json: !include commentdata.json
+  - commentdataCollection: !include commentdataCollection.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
+  - raml-util/schemas/resultInfo.schema: !include raml-util/schemas/resultInfo.schema
   - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
@@ -22,6 +23,7 @@ traits:
   - searchable: !include raml-util/traits/searchable.raml
   - language: !include raml-util/traits/language.raml
   - validate: !include raml-util/traits/validation.raml
+  - facets: !include raml-util/traits/facets.raml
 
 resourceTypes:
   - collection: !include raml-util/rtypes/collection.raml
@@ -29,27 +31,29 @@ resourceTypes:
   - get-only: !include raml-util/rtypes/get-only.raml
   - post-empty-body: !include raml-util/rtypes/post-empty-body.raml
 
-/owners:
+/comments:
   type:
     collection:
-      exampleCollection: !include examples/owner_collection.sample
-      exampleItem: !include examples/owner.sample
-      schemaCollection: ownerdataCollection
-      schemaItem: ownerdata.json
+      exampleCollection: !include examples/comment_collection.sample
+      exampleItem: !include examples/comment.sample
+      schemaCollection: commentdataCollection
+      schemaItem: commentdata.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
       orderable: {fieldsList: "field A, field B"},
-      pageable
+      pageable,
+      facets
     ]
-    description: Return a list of owners
+    description: Return a list of comments
   post:
 #    is: [validate]
-    description: Create a owner
-  /{ownerId}:
+    description: Create a comment
+  /{commentId}:
     type:
       collection-item:
-        exampleItem: !include examples/owner.sample
-        schema: ownerdata.json
+        exampleItem: !include examples/comment.sample
+        schema: commentdata.json
     get:
-      description: Get a single owner
+      description: Get a single comment
+
