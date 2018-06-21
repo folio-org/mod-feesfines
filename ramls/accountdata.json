@@ -42,6 +42,38 @@
         "name"
       ]
     },
+    "feeFineType": {
+      "type": "string"
+    }, 
+    "feeFineOwner": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "callNumber": {
+      "type": "string"
+    },
+    "barcode": {
+      "type": "string"
+    },
+    "materialType": {
+      "type": "string"
+    },
+    "itemStatus": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "location": {
+      "type": "string"
+    },
     "metadata": {
       "type": "object",
       "$ref" : "raml-util/schemas/metadata.schema"
