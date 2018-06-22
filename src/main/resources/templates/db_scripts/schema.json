@@ -81,14 +81,6 @@
       "populateJsonWithId":false,
       "withMetadata":false,
       "pkColumnName":"id"
-    },
-    {
-      "tableName":"feesfines",
-      "generateId":true,
-      "fromModuleVersion":"14.2",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
     }
   ]
 }
