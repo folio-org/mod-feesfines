@@ -743,8 +743,8 @@
       "description":"Delete an transfertype record"
     },
     {
-      "permissionName":"feefines.all",
-      "displayName":"feefines all",
+      "permissionName":"feesfines.all",
+      "displayName":"feesfines all",
       "description":"All permissions for the mod-feesfines module",
       "subPermissions":[
         "feefines.collection.get",
