@@ -2,6 +2,5 @@
   "feeFineType": "overdue",
   "id": "7261ecaae3a74dc68b468e12a70b1aec",
   "defaultAmount": 100,
-  "taxVat": 15,
   "ownerId": "03ece16e-3fc6-4390-8511-ca7a7882c5c6"
 }

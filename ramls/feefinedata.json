@@ -9,9 +9,6 @@
     "defaultAmount": {
       "type": "number"
     },
-    "taxVat": {
-      "type": "number"
-    },
     "ownerId": {
       "type": "string"
     },

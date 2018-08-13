@@ -116,7 +116,6 @@ public class RestVerticleIT {
                 .put("id", "1234567")
                 .put("feeFineType", "por credencial")
                 .put("defaultAmount", "10.00")
-                .put("taxVat", "15")
                 .put("ownerId", "Biblioteca postFeefine");
         HttpClient client = vertx.createHttpClient();
         client.post(port, "localhost", "/feefines", res -> {
@@ -177,7 +176,6 @@ public class RestVerticleIT {
                 .put("id", "1234567")
                 .put("feeFineType", "por Perdidad de libro")
                 .put("defaultAmount", "10.00")
-                .put("taxVat", "15")
                 .put("ownerId", "Biblioteca Central");
 
         HttpClient client = vertx.createHttpClient();
@@ -203,7 +201,6 @@ public class RestVerticleIT {
                 .put("id", "1234567")
                 .put("feeFineType", "por credencial")
                 .put("defaultAmount", "10.00")
-                .put("taxVat", "15")
                 .put("ownerId", "Biblioteca Central");
 
         HttpClient client = vertx.createHttpClient();
@@ -267,7 +264,6 @@ public class RestVerticleIT {
                 .put("id", "1234567")
                 .put("feeFineType", "por credencial")
                 .put("defaultAmount", "10.00")
-                .put("taxVat", "15")
                 .put("ownerId", "Biblioteca Central");
 
         HttpClient client = vertx.createHttpClient();
@@ -468,7 +464,6 @@ public class RestVerticleIT {
         }
         feefine.put("feeFineType", typefeefine)
                 .put("defaultAmount", "10.00")
-                .put("taxVat", "15")
                 .put("ownerId", ownerId);
 
         return feefine;
