@@ -26,11 +26,7 @@
     "createdDate": "2018-01-31T21:21:02Z"
     },
     "loanId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434378",
-    "materialTypeId": "2b94c631-fca9-a892-c730-03ee529ffe27",
     "userId": "fc45c606-410d-4a7c-9f95-1a3fea2eef42",
-    "itemId": "23fdb0bc-ab58-442a-b326-577a96204487",
-    "feeFineId": "3a0d8d79-7f28-4795-aa92-2f5d67140e6b",
-    "ownerId": "cfebe06e-d4f8-4d4e-8f5c-4d70595d74f8",
     "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434379"
   }, {
     "amount": 5.0,
@@ -59,11 +55,7 @@
     "createdDate": "2018-01-31T21:21:02Z"
     },
     "loanId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434378",
-    "materialTypeId": "2b94c631-fca9-a892-c730-03ee529ffe27",
     "userId": "fc45c606-410d-4a7c-9f95-1a3fea2eef42",
-    "itemId": "23fdb0bc-ab58-442a-b326-577a96204487",
-    "ownerId": "cfebe06e-d4f8-4d4e-8f5c-4d70595d74f8",
-    "feeFineId": "d7549eed-bc92-4dac-8900-0cf3c8396794",
     "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434379"
   } ],
   "totalRecords" : 2
