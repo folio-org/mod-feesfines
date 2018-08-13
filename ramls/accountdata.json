@@ -81,19 +81,7 @@
     "loanId": {
       "type": "string"
     },
-    "materialTypeId": {
-      "type": "string"
-    },
     "userId": {
-      "type": "string"
-    },
-    "itemId": {
-      "type": "string"
-    },
-    "feeFineId": {
-      "type": "string"
-    },
-    "ownerId": {
       "type": "string"
     },
     "id": {
@@ -102,11 +90,7 @@
   },
   "additionalProperties": false,
   "required": [
-    "materialTypeId",
     "userId",
-    "itemId",
-    "feeFineId",
-    "ownerId",
     "id"
    ]
 }
