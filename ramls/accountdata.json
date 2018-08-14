@@ -84,6 +84,18 @@
     "userId": {
       "type": "string"
     },
+    "itemId": {
+      "type": "string"
+    },
+    "materialTypeId": {
+      "type": "string"
+    },
+    "feeFineId": {
+      "type": "string"
+    },
+    "ownerId": {
+      "type": "string"
+    },
     "id": {
       "type": "string"
     }
@@ -91,6 +103,10 @@
   "additionalProperties": false,
   "required": [
     "userId",
+    "itemId",
+    "materialTypeId",
+    "feeFineId",
+    "ownerId",
     "id"
    ]
 }

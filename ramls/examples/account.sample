@@ -11,10 +11,10 @@
     "name": "Paid Partially"
   },
   "feeFineType": "Damaged Book Fee",
-  "feeFineOwner": "Shared",
-  "title": "Statistical sketches of Upper Canada, for the use of emigrants, by a backwoodsman",
-  "callNumber": "QH365.02 1966",
-  "barcode": "87378389382402",
+  "feeFineOwner": "Main Admin",
+  "title": "Interesting Times",
+  "callNumber": "D15.H63 A3 2002",
+  "barcode": "326547658598",
   "materialType": "Book",
   "itemStatus": {
     "name": "Available"
@@ -24,7 +24,11 @@
     "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce01",
     "createdDate": "2018-01-31T21:21:02Z"
   },
-  "loanId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434378",
-  "userId": "fc45c606-410d-4a7c-9f95-1a3fea2eef42",
+  "loanId": "b74d7b62-0689-49d9-bd4c-38b44d17a250",
+  "userId": "77477611-ab44-4082-a0d8-42f7acdfde11",
+  "itemId": "bb5a6689-c008-4c96-8f8f-b666850ee12d",
+  "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+  "feeFineId": "57dbeeba-f26b-4dc0-abc8-21cce7659834",
+  "ownerId": "3c7b8695-b537-40b1-b0a3-948ad7e1fc09",
   "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434379"
 }
