@@ -78,6 +78,14 @@
       "type": "object",
       "$ref" : "raml-util/schemas/metadata.schema"
     },
+    "dueDate": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "returnedDate": {
+      "type": "string",
+      "format": "date-time"
+    },
     "loanId": {
       "type": "string"
     },
