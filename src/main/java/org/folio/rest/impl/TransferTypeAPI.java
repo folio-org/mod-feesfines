@@ -12,7 +12,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.Transfertype;
 import org.folio.rest.jaxrs.model.TransferTypedataCollection;
-import org.folio.rest.jaxrs.resource.TransfertypesResource;
+import org.folio.rest.jaxrs.resource.Transfertypes;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -22,12 +22,12 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.folio.rest.jaxrs.model.TransfertypesGetOrder;
 
-public class TransferTypeAPI implements TransfertypesResource {
+public class TransferTypeAPI implements Transfertypes {
 
     public static final String TRANSFERTYPES_TABLE  = "transfer_type";
 
@@ -47,11 +47,11 @@ public class TransferTypeAPI implements TransfertypesResource {
     }
 
     @Override
-    public void getTransfertypes(String query, String orderBy, Order order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void getTransfertypes(String query, String orderBy, TransfertypesGetOrder order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-        CQLWrapper cql = getCQL(query, limit, offset);
 
         try {
+        CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -67,16 +67,16 @@ public class TransferTypeAPI implements TransfertypesResource {
                                 transfertypeCollection.setTransfertypes(transfertypes);
                                 transfertypeCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                 asyncResultHandler.handle(Future.succeededFuture(
-                                        GetTransfertypesResponse.withJsonOK(transfertypeCollection)));
+                                        GetTransfertypesResponse.respond200WithApplicationJson(transfertypeCollection)));
                             } else {
                                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                        GetTransfertypesResponse.withPlainInternalServerError(
+                                        GetTransfertypesResponse.respond500WithTextPlain(
                                                 reply.cause().getMessage())));
                             }
                         } catch (Exception e) {
                             logger.debug(e.getLocalizedMessage());
                             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                    GetTransfertypesResponse.withPlainInternalServerError(
+                                    GetTransfertypesResponse.respond500WithTextPlain(
                                             reply.cause().getMessage())));
                         }
                     }
@@ -85,11 +85,11 @@ public class TransferTypeAPI implements TransfertypesResource {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                         logger.debug("BAD CQL");
-                        asyncResultHandler.handle(Future.succeededFuture(GetTransfertypesResponse.withPlainBadRequest(
+                        asyncResultHandler.handle(Future.succeededFuture(GetTransfertypesResponse.respond400WithTextPlain(
                                 "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                     } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                GetTransfertypesResponse.withPlainInternalServerError(
+                                GetTransfertypesResponse.respond500WithTextPlain(
                                         messages.getMessage(lang,
                                                 MessageConsts.InternalServerError))));
                     }
@@ -100,11 +100,11 @@ public class TransferTypeAPI implements TransfertypesResource {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
-                asyncResultHandler.handle(Future.succeededFuture(GetTransfertypesResponse.withPlainBadRequest(
+                asyncResultHandler.handle(Future.succeededFuture(GetTransfertypesResponse.respond400WithTextPlain(
                         "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
             } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                        GetTransfertypesResponse.withPlainInternalServerError(
+                        GetTransfertypesResponse.respond500WithTextPlain(
                                 messages.getMessage(lang,
                                         MessageConsts.InternalServerError))));
             }
@@ -112,7 +112,7 @@ public class TransferTypeAPI implements TransfertypesResource {
     }
 
     @Override
-    public void postTransfertypes(String lang, Transfertype entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void postTransfertypes(String lang, Transfertype entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -125,28 +125,26 @@ public class TransferTypeAPI implements TransfertypesResource {
                                 if (reply.succeeded()) {
                                     final Transfertype transfertype = entity;
                                     transfertype.setId(entity.getId());
-                                    OutStream stream = new OutStream();
-                                    stream.setData(transfertype);
                                     postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostTransfertypesResponse.withJsonCreated(
-                                                reply.result(), stream)));
+                                        asyncResultHandler.handle(Future.succeededFuture(PostTransfertypesResponse.respond201WithApplicationJson(transfertype,
+                                                PostTransfertypesResponse.headersFor201().withLocation(reply.result()))));
                                     });
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PostTransfertypesResponse.withPlainBadRequest(
+                                            PostTransfertypesResponse.respond400WithTextPlain(
                                                     messages.getMessage(
                                                             lang, MessageConsts.UnableToProcessRequest))));
 
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
-                                        PostTransfertypesResponse.withPlainInternalServerError(
+                                        PostTransfertypesResponse.respond500WithTextPlain(
                                                 e.getMessage())));
                             }
                         });
                     } catch (Exception e) {
                         asyncResultHandler.handle(Future.succeededFuture(
-                                PostTransfertypesResponse.withPlainInternalServerError(
+                                PostTransfertypesResponse.respond500WithTextPlain(
                                         e.getMessage())));
                     }
                 });
@@ -154,13 +152,13 @@ public class TransferTypeAPI implements TransfertypesResource {
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostTransfertypesResponse.withPlainInternalServerError(
+                    PostTransfertypesResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void getTransfertypesByTransfertypeId(String transfertypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void getTransfertypesByTransfertypeId(String transfertypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -176,43 +174,43 @@ public class TransferTypeAPI implements TransfertypesResource {
                                 if (getReply.failed()) {
                                     logger.error(getReply.result());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            GetTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
+                                            GetTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
                                     List<Transfertype> transfertypeList = (List<Transfertype>) getReply.result().getResults();
                                     if (transfertypeList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfertypesByTransfertypeIdResponse.withPlainNotFound("Transfertype"
+                                                GetTransfertypesByTransfertypeIdResponse.respond404WithTextPlain("Transfertype"
                                                         + messages.getMessage(lang,
                                                                 MessageConsts.ObjectDoesNotExist))));
                                     } else if (transfertypeList.size() > 1) {
                                         logger.error("Multiple transfertypes found with the same id");
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
+                                                GetTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfertypesByTransfertypeIdResponse.withJsonOK(transfertypeList.get(0))));
+                                                GetTransfertypesByTransfertypeIdResponse.respond200WithApplicationJson(transfertypeList.get(0))));
                                     }
                                 }
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(Future.succeededFuture(
-                            GetTransfertypesResponse.withPlainInternalServerError(messages.getMessage(
+                            GetTransfertypesResponse.respond500WithTextPlain(messages.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetTransfertypesResponse.withPlainInternalServerError(messages.getMessage(
+                    GetTransfertypesResponse.respond500WithTextPlain(messages.getMessage(
                             lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void deleteTransfertypesByTransfertypeId(String transfertypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void deleteTransfertypesByTransfertypeId(String transfertypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -228,20 +226,20 @@ public class TransferTypeAPI implements TransfertypesResource {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteTransfertypesByTransfertypeIdResponse.withNoContent()));
+                                                DeleteTransfertypesByTransfertypeIdResponse.respond204()));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteTransfertypesByTransfertypeIdResponse.withPlainNotFound("Record Not Found")));
+                                                DeleteTransfertypesByTransfertypeIdResponse.respond404WithTextPlain("Record Not Found")));
                                     }
                                 } else {
                                     logger.error(deleteReply.result());
                                     String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
                                     logger.error(error, deleteReply.cause());
                                     if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
                                                 messages.getMessage(lang, MessageConsts.InternalServerError))));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfertypesByTransfertypeIdResponse.withPlainBadRequest(error)));
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfertypesByTransfertypeIdResponse.respond400WithTextPlain(error)));
                                     }
                                 }
                             });
@@ -249,7 +247,7 @@ public class TransferTypeAPI implements TransfertypesResource {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(
                             Future.succeededFuture(
-                                    DeleteTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
+                                    DeleteTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
                                             messages.getMessage(lang,
                                                     MessageConsts.InternalServerError))));
                 }
@@ -259,18 +257,18 @@ public class TransferTypeAPI implements TransfertypesResource {
             logger.error(e.getMessage());
             asyncResultHandler.handle(
                     Future.succeededFuture(
-                            DeleteTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
+                            DeleteTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang,
                                             MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void putTransfertypesByTransfertypeId(String transfertypeId, String lang, Transfertype transfertype, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void putTransfertypesByTransfertypeId(String transfertypeId, String lang, Transfertype entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             if (transfertypeId == null) {
                 logger.error("transfertypeId is missing");
-                asyncResultHandler.handle(Future.succeededFuture(PutTransfertypesByTransfertypeIdResponse.withPlainBadRequest("transfertypeId is missing")));
+                asyncResultHandler.handle(Future.succeededFuture(PutTransfertypesByTransfertypeIdResponse.respond400WithTextPlain("transfertypeId is missing")));
             }
 
             vertxContext.runOnContext(v -> {
@@ -288,7 +286,7 @@ public class TransferTypeAPI implements TransfertypesResource {
                                 if (getReply.failed()) {
                                     logger.error(getReply.cause().getLocalizedMessage());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
+                                            PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                 } else {
@@ -297,23 +295,23 @@ public class TransferTypeAPI implements TransfertypesResource {
                                     } else {
                                         try {
                                             PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    TRANSFERTYPES_TABLE, transfertype, criterion, true, putReply -> {
+                                                    TRANSFERTYPES_TABLE, entity, criterion, true, putReply -> {
                                                         if (putReply.failed()) {
                                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
+                                                                    PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
                                                         } else {
                                                             if (putReply.result().getUpdated() == 1) {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        DeleteTransfertypesByTransfertypeIdResponse.withNoContent()));
+                                                                        DeleteTransfertypesByTransfertypeIdResponse.respond204()));
                                                             } else {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        DeleteTransfertypesByTransfertypeIdResponse.withPlainNotFound("Record Not Found")));
+                                                                        DeleteTransfertypesByTransfertypeIdResponse.respond404WithTextPlain("Record Not Found")));
                                                             }
                                                         }
                                                     });
                                         } catch (Exception e) {
                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(messages.getMessage(lang,
+                                                    PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                         }
                                     }
@@ -322,14 +320,14 @@ public class TransferTypeAPI implements TransfertypesResource {
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     asyncResultHandler.handle(Future.succeededFuture(
-                            PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
+                            PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PutTransfertypesByTransfertypeIdResponse.withPlainInternalServerError(
+                    PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
 

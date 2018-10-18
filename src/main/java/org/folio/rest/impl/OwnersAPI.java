@@ -12,7 +12,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.OwnerdataCollection;
-import org.folio.rest.jaxrs.resource.OwnersResource;
+import org.folio.rest.jaxrs.resource.Owners;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -22,12 +22,12 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.folio.rest.jaxrs.model.OwnersGetOrder;
 
-public class OwnersAPI implements OwnersResource {
+public class OwnersAPI implements Owners {
 
     public static final String OWNERS_TABLE = "owners";
 
@@ -46,11 +46,11 @@ public class OwnersAPI implements OwnersResource {
     }
 
     @Override
-    public void getOwners(String query, String orderBy, Order order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void getOwners(String query, String orderBy, OwnersGetOrder order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
-        CQLWrapper cql = getCQL(query, limit, offset);
         try {
+        CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -62,21 +62,21 @@ public class OwnersAPI implements OwnersResource {
                                 try {
                                     if (reply.succeeded()) {
                                         OwnerdataCollection OwnersCollection = new OwnerdataCollection();
-                                        List<Owner> owner = (List<Owner>) reply.result().getResults();
-                                        OwnersCollection.setOwners(owner);
+                                        List<Owner> ownerList = reply.result().getResults();
+                                        OwnersCollection.setOwners(ownerList);
                                         OwnersCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetOwnersResponse.withJsonOK(OwnersCollection)));
+                                                GetOwnersResponse.respond200WithApplicationJson(OwnersCollection)));
                                     } else {
                                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                                GetOwnersResponse.withPlainInternalServerError(
+                                                GetOwnersResponse.respond500WithTextPlain(
                                                         reply.cause().getMessage())));
                                     }
 
                                 } catch (Exception e) {
                                     logger.debug(e.getLocalizedMessage());
                                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                            GetOwnersResponse.withPlainInternalServerError(
+                                            GetOwnersResponse.respond500WithTextPlain(
                                                     reply.cause().getMessage())));
                                 }
                             });
@@ -84,11 +84,11 @@ public class OwnersAPI implements OwnersResource {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                         logger.debug("BAD CQL");
-                        asyncResultHandler.handle(Future.succeededFuture(GetOwnersResponse.withPlainBadRequest(
+                        asyncResultHandler.handle(Future.succeededFuture(GetOwnersResponse.respond400WithTextPlain(
                                 "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                     } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                GetOwnersResponse.withPlainInternalServerError(
+                                GetOwnersResponse.respond500WithTextPlain(
                                         messages.getMessage(lang,
                                                 MessageConsts.InternalServerError))));
                     }
@@ -99,11 +99,11 @@ public class OwnersAPI implements OwnersResource {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
-                asyncResultHandler.handle(Future.succeededFuture(GetOwnersResponse.withPlainBadRequest(
+                asyncResultHandler.handle(Future.succeededFuture(GetOwnersResponse.respond400WithTextPlain(
                         "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
             } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                        GetOwnersResponse.withPlainInternalServerError(
+                        GetOwnersResponse.respond500WithTextPlain(
                                 messages.getMessage(lang,
                                         MessageConsts.InternalServerError))));
             }
@@ -111,7 +111,7 @@ public class OwnersAPI implements OwnersResource {
     }
 
     @Override
-    public void postOwners(String lang, Owner entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void postOwners(String lang, Owner entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
         try {
             vertxContext.runOnContext(v -> {
@@ -126,28 +126,27 @@ public class OwnersAPI implements OwnersResource {
                                 if (reply.succeeded()) {
                                     final Owner owner = entity;
                                     owner.setId(entity.getId());
-                                    OutStream stream = new OutStream();
-                                    stream.setData(owner);
+                                    System.out.println("ID API"+entity.getId());
                                     postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostOwnersResponse.withJsonCreated(
-                                                reply.result(), stream)));
+                                        asyncResultHandler.handle(Future.succeededFuture(PostOwnersResponse.respond201WithApplicationJson(owner,
+                                                PostOwnersResponse.headersFor201().withLocation(reply.result()))));
                                     });
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PostOwnersResponse.withPlainBadRequest(
+                                            PostOwnersResponse.respond400WithTextPlain(
                                                     messages.getMessage(
                                                             lang, MessageConsts.UnableToProcessRequest))));
 
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
-                                        PostOwnersResponse.withPlainInternalServerError(
+                                        PostOwnersResponse.respond500WithTextPlain(
                                                 e.getMessage())));
                             }
                         });
                     } catch (Exception e) {
                         asyncResultHandler.handle(Future.succeededFuture(
-                                PostOwnersResponse.withPlainInternalServerError(
+                                PostOwnersResponse.respond500WithTextPlain(
                                         e.getMessage())));
                     }
                 });
@@ -156,14 +155,14 @@ public class OwnersAPI implements OwnersResource {
 
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostOwnersResponse.withPlainInternalServerError(
+                    PostOwnersResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
 
     }
 
     @Override
-    public void getOwnersByOwnerId(String ownerId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void getOwnersByOwnerId(String ownerId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -180,45 +179,45 @@ public class OwnersAPI implements OwnersResource {
                                 if (getReply.failed()) {
                                     logger.error(getReply.result());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            GetOwnersByOwnerIdResponse.withPlainInternalServerError(
+                                            GetOwnersByOwnerIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
                                     List<Owner> ownerList = (List<Owner>) getReply.result().getResults();
                                     if (ownerList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetOwnersByOwnerIdResponse.withPlainNotFound("Owner"
+                                                GetOwnersByOwnerIdResponse.respond404WithTextPlain("Owner"
                                                         + messages.getMessage(lang,
                                                                 MessageConsts.ObjectDoesNotExist))));
                                     } else if (ownerList.size() > 1) {
                                         logger.error("Multiple owners found with the same id");
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetOwnersByOwnerIdResponse.withPlainInternalServerError(
+                                                GetOwnersByOwnerIdResponse.respond500WithTextPlain(
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetOwnersByOwnerIdResponse.withJsonOK(ownerList.get(0))));
+                                                GetOwnersByOwnerIdResponse.respond200WithApplicationJson(ownerList.get(0))));
                                     }
                                 }
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(Future.succeededFuture(
-                            GetOwnersResponse.withPlainInternalServerError(messages.getMessage(
+                            GetOwnersResponse.respond500WithTextPlain(messages.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                 }
 
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetOwnersResponse.withPlainInternalServerError(messages.getMessage(
+                    GetOwnersResponse.respond500WithTextPlain(messages.getMessage(
                             lang, MessageConsts.InternalServerError))));
         }
 
     }
 
     @Override
-    public void deleteOwnersByOwnerId(String ownerId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void deleteOwnersByOwnerId(String ownerId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -235,21 +234,21 @@ public class OwnersAPI implements OwnersResource {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteOwnersByOwnerIdResponse.withNoContent()));
+                                                DeleteOwnersByOwnerIdResponse.respond204()));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteOwnersByOwnerIdResponse.withPlainNotFound("Record Not Found")));
+                                                DeleteOwnersByOwnerIdResponse.respond404WithTextPlain("Record Not Found")));
                                     }
                                 } else {
                                     logger.error(deleteReply.result());
                                     String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
                                     logger.error(error, deleteReply.cause());
                                     if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteOwnersByOwnerIdResponse.withPlainInternalServerError(
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteOwnersByOwnerIdResponse.respond500WithTextPlain(
                                                 messages.getMessage(lang, MessageConsts.InternalServerError))
                                         ));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteOwnersByOwnerIdResponse.withPlainBadRequest(error)
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteOwnersByOwnerIdResponse.respond400WithTextPlain(error)
                                         )
                                         );
                                     }
@@ -259,7 +258,7 @@ public class OwnersAPI implements OwnersResource {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(
                             Future.succeededFuture(
-                                    DeleteOwnersByOwnerIdResponse.withPlainInternalServerError(
+                                    DeleteOwnersByOwnerIdResponse.respond500WithTextPlain(
                                             messages.getMessage(lang,
                                                     MessageConsts.InternalServerError))));
                 }
@@ -268,18 +267,18 @@ public class OwnersAPI implements OwnersResource {
         } catch (Exception e) {
             asyncResultHandler.handle(
                     Future.succeededFuture(
-                            DeleteOwnersByOwnerIdResponse.withPlainInternalServerError(
+                            DeleteOwnersByOwnerIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang,
                                             MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void putOwnersByOwnerId(String ownerId, String lang, Owner owner, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void putOwnersByOwnerId(String ownerId, String lang, Owner entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             if (ownerId == null) {
                 logger.error("ownerId is missing ");
-                asyncResultHandler.handle(Future.succeededFuture(PutOwnersByOwnerIdResponse.withPlainBadRequest("ownerId is missing")));
+                asyncResultHandler.handle(Future.succeededFuture(PutOwnersByOwnerIdResponse.respond400WithTextPlain("ownerId is missing")));
             }
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -296,7 +295,7 @@ public class OwnersAPI implements OwnersResource {
                                 if (getReply.failed()) {
                                     logger.error(getReply.cause().getLocalizedMessage());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PutOwnersByOwnerIdResponse.withPlainInternalServerError(
+                                            PutOwnersByOwnerIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                 } else {
@@ -305,23 +304,23 @@ public class OwnersAPI implements OwnersResource {
                                     } else {
                                         try {
                                             PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    OWNERS_TABLE, owner, criterion, true, putReply -> {
+                                                    OWNERS_TABLE, entity, criterion, true, putReply -> {
                                                         if (putReply.failed()) {
                                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutOwnersByOwnerIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
+                                                                    PutOwnersByOwnerIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
                                                         } else {
                                                             if (putReply.result().getUpdated() == 1) {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutOwnersByOwnerIdResponse.withNoContent()));
+                                                                        PutOwnersByOwnerIdResponse.respond204()));
                                                             } else {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutOwnersByOwnerIdResponse.withPlainNotFound("Record Not Found")));
+                                                                        PutOwnersByOwnerIdResponse.respond404WithTextPlain("Record Not Found")));
                                                             }
                                                         }
                                                     });
                                         } catch (Exception e) {
                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutOwnersByOwnerIdResponse.withPlainInternalServerError(messages.getMessage(lang,
+                                                    PutOwnersByOwnerIdResponse.respond500WithTextPlain(messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                         }
                                     }
@@ -330,7 +329,7 @@ public class OwnersAPI implements OwnersResource {
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     asyncResultHandler.handle(Future.succeededFuture(
-                            PutOwnersByOwnerIdResponse.withPlainInternalServerError(
+                            PutOwnersByOwnerIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                 }
             });
@@ -338,7 +337,7 @@ public class OwnersAPI implements OwnersResource {
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PutOwnersByOwnerIdResponse.withPlainInternalServerError(
+                    PutOwnersByOwnerIdResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
 

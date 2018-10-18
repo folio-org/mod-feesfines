@@ -12,7 +12,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.Payment;
 import org.folio.rest.jaxrs.model.PaymentdataCollection;
-import org.folio.rest.jaxrs.resource.PaymentsResource;
+import org.folio.rest.jaxrs.resource.Payments;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -24,12 +24,12 @@ import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.folio.rest.jaxrs.model.PaymentsGetOrder;
 
-public class PaymentsAPI implements PaymentsResource {
+public class PaymentsAPI implements Payments {
 
     private static final String PAYMENTS_TABLE = "payments";
     private static final String PAYMENT_ID_FIELD = "'id'";
@@ -47,13 +47,13 @@ public class PaymentsAPI implements PaymentsResource {
     }
 
     @Override
-    public void getPayments(String query, String orderBy, Order order, int offset, int limit, List<String> facets, String lang,
+    public void getPayments(String query, String orderBy, PaymentsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext) throws Exception {
+            Context vertxContext)  {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-        CQLWrapper cql = getCQL(query, limit, offset);
         List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
+        CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -70,16 +70,16 @@ public class PaymentsAPI implements PaymentsResource {
                                         paymentCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         paymentCollection.setResultInfo(reply.result().getResultInfo());
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetPaymentsResponse.withJsonOK(paymentCollection)));
+                                                GetPaymentsResponse.respond200WithApplicationJson(paymentCollection)));
                                     } else {
                                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                                GetPaymentsResponse.withPlainInternalServerError(
+                                                GetPaymentsResponse.respond500WithTextPlain(
                                                         reply.cause().getMessage())));
                                     }
                                 } catch (Exception e) {
                                     logger.debug(e.getLocalizedMessage());
                                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                            GetPaymentsResponse.withPlainInternalServerError(
+                                            GetPaymentsResponse.respond500WithTextPlain(
                                                     reply.cause().getMessage())));
                                 }
                             });
@@ -87,11 +87,11 @@ public class PaymentsAPI implements PaymentsResource {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                         logger.debug("BAD CQL");
-                        asyncResultHandler.handle(Future.succeededFuture(GetPaymentsResponse.withPlainBadRequest(
+                        asyncResultHandler.handle(Future.succeededFuture(GetPaymentsResponse.respond400WithTextPlain(
                                 "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                     } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                GetPaymentsResponse.withPlainInternalServerError(
+                                GetPaymentsResponse.respond500WithTextPlain(
                                         messages.getMessage(lang,
                                                 MessageConsts.InternalServerError))));
                     }
@@ -101,11 +101,11 @@ public class PaymentsAPI implements PaymentsResource {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
-                asyncResultHandler.handle(Future.succeededFuture(GetPaymentsResponse.withPlainBadRequest(
+                asyncResultHandler.handle(Future.succeededFuture(GetPaymentsResponse.respond400WithTextPlain(
                         "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
             } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                        GetPaymentsResponse.withPlainInternalServerError(
+                        GetPaymentsResponse.respond500WithTextPlain(
                                 messages.getMessage(lang,
                                         MessageConsts.InternalServerError))));
             }
@@ -114,7 +114,7 @@ public class PaymentsAPI implements PaymentsResource {
 
     @Override
     public void postPayments(String lang, Payment entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -127,41 +127,39 @@ public class PaymentsAPI implements PaymentsResource {
                                 if (reply.succeeded()) {
                                     final Payment payment = entity;
                                     payment.setId(entity.getId());
-                                    OutStream stream = new OutStream();
-                                    stream.setData(payment);
                                     postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostPaymentsResponse.withJsonCreated(
-                                                reply.result(), stream)));
+                                        asyncResultHandler.handle(Future.succeededFuture(PostPaymentsResponse.respond201WithApplicationJson(payment,
+                                                PostPaymentsResponse.headersFor201().withLocation(reply.result()))));
                                     });
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PostPaymentsResponse.withPlainBadRequest(
+                                            PostPaymentsResponse.respond400WithTextPlain(
                                                     messages.getMessage(
                                                             lang, MessageConsts.UnableToProcessRequest))));
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
-                                        PostPaymentsResponse.withPlainInternalServerError(
+                                        PostPaymentsResponse.respond500WithTextPlain(
                                                 e.getMessage())));
                             }
                         });
                     } catch (Exception e) {
                         asyncResultHandler.handle(Future.succeededFuture(
-                                PostPaymentsResponse.withPlainInternalServerError(
+                                PostPaymentsResponse.respond500WithTextPlain(
                                         e.getMessage())));
                     }
                 });
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostPaymentsResponse.withPlainInternalServerError(
+                    PostPaymentsResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
     public void getPaymentsByPaymentId(String paymentId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -178,44 +176,44 @@ public class PaymentsAPI implements PaymentsResource {
                                 if (getReply.failed()) {
                                     logger.error(getReply.result());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            GetPaymentsByPaymentIdResponse.withPlainInternalServerError(
+                                            GetPaymentsByPaymentIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
                                     List<Payment> paymentList = (List<Payment>) getReply.result().getResults();
                                     if (paymentList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetPaymentsByPaymentIdResponse.withPlainNotFound("Payment"
+                                                GetPaymentsByPaymentIdResponse.respond404WithTextPlain("Payment"
                                                         + messages.getMessage(lang,
                                                                 MessageConsts.ObjectDoesNotExist))));
                                     } else if (paymentList.size() > 1) {
                                         logger.error("Multiple payments found with the same id");
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetPaymentsByPaymentIdResponse.withPlainInternalServerError(
+                                                GetPaymentsByPaymentIdResponse.respond500WithTextPlain(
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetPaymentsByPaymentIdResponse.withJsonOK(paymentList.get(0))));
+                                                GetPaymentsByPaymentIdResponse.respond200WithApplicationJson(paymentList.get(0))));
                                     }
                                 }
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(Future.succeededFuture(
-                            GetPaymentsResponse.withPlainInternalServerError(messages.getMessage(
+                            GetPaymentsResponse.respond500WithTextPlain(messages.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetPaymentsResponse.withPlainInternalServerError(messages.getMessage(
+                    GetPaymentsResponse.respond500WithTextPlain(messages.getMessage(
                             lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
     public void deletePaymentsByPaymentId(String paymentId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -231,20 +229,20 @@ public class PaymentsAPI implements PaymentsResource {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeletePaymentsByPaymentIdResponse.withNoContent()));
+                                                DeletePaymentsByPaymentIdResponse.respond204()));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeletePaymentsByPaymentIdResponse.withPlainNotFound("Record Not Found")));
+                                                DeletePaymentsByPaymentIdResponse.respond404WithTextPlain("Record Not Found")));
                                     }
                                 } else {
                                     logger.error(deleteReply.result());
                                     String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
                                     logger.error(error, deleteReply.cause());
                                     if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeletePaymentsByPaymentIdResponse.withPlainInternalServerError(
+                                        asyncResultHandler.handle(Future.succeededFuture(DeletePaymentsByPaymentIdResponse.respond500WithTextPlain(
                                                 messages.getMessage(lang, MessageConsts.InternalServerError))));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeletePaymentsByPaymentIdResponse.withPlainBadRequest(error)));
+                                        asyncResultHandler.handle(Future.succeededFuture(DeletePaymentsByPaymentIdResponse.respond400WithTextPlain(error)));
                                     }
                                 }
                             });
@@ -252,7 +250,7 @@ public class PaymentsAPI implements PaymentsResource {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(
                             Future.succeededFuture(
-                                    DeletePaymentsByPaymentIdResponse.withPlainInternalServerError(
+                                    DeletePaymentsByPaymentIdResponse.respond500WithTextPlain(
                                             messages.getMessage(lang,
                                                     MessageConsts.InternalServerError))));
                 }
@@ -261,19 +259,19 @@ public class PaymentsAPI implements PaymentsResource {
             logger.error(e.getMessage());
             asyncResultHandler.handle(
                     Future.succeededFuture(
-                            DeletePaymentsByPaymentIdResponse.withPlainInternalServerError(
+                            DeletePaymentsByPaymentIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang,
                                             MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void putPaymentsByPaymentId(String paymentId, String lang, Payment payment,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void putPaymentsByPaymentId(String paymentId, String lang, Payment entity,
+            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             if (paymentId == null) {
                 logger.error("paymentId is missing");
-                asyncResultHandler.handle(Future.succeededFuture(PutPaymentsByPaymentIdResponse.withPlainBadRequest("paymentId is missing")));
+                asyncResultHandler.handle(Future.succeededFuture(PutPaymentsByPaymentIdResponse.respond400WithTextPlain("paymentId is missing")));
             }
 
             vertxContext.runOnContext(v -> {
@@ -291,7 +289,7 @@ public class PaymentsAPI implements PaymentsResource {
                                 if (getReply.failed()) {
                                     logger.error(getReply.cause().getLocalizedMessage());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PutPaymentsByPaymentIdResponse.withPlainInternalServerError(
+                                            PutPaymentsByPaymentIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                 } else {
@@ -300,23 +298,23 @@ public class PaymentsAPI implements PaymentsResource {
                                     } else {
                                         try {
                                             PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    PAYMENTS_TABLE, payment, criterion, true, putReply -> {
+                                                    PAYMENTS_TABLE, entity, criterion, true, putReply -> {
                                                         if (putReply.failed()) {
                                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutPaymentsByPaymentIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
+                                                                    PutPaymentsByPaymentIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
                                                         } else {
                                                             if (putReply.result().getUpdated() == 1) {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutPaymentsByPaymentIdResponse.withNoContent()));
+                                                                        PutPaymentsByPaymentIdResponse.respond204()));
                                                             } else {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutPaymentsByPaymentIdResponse.withPlainNotFound("Record Not Found")));
+                                                                        PutPaymentsByPaymentIdResponse.respond404WithTextPlain("Record Not Found")));
                                                             }
                                                         }
                                                     });
                                         } catch (Exception e) {
                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutPaymentsByPaymentIdResponse.withPlainInternalServerError(messages.getMessage(lang,
+                                                    PutPaymentsByPaymentIdResponse.respond500WithTextPlain(messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                         }
                                     }
@@ -325,14 +323,14 @@ public class PaymentsAPI implements PaymentsResource {
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     asyncResultHandler.handle(Future.succeededFuture(
-                            PutPaymentsByPaymentIdResponse.withPlainInternalServerError(
+                            PutPaymentsByPaymentIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PutPaymentsByPaymentIdResponse.withPlainInternalServerError(
+                    PutPaymentsByPaymentIdResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }

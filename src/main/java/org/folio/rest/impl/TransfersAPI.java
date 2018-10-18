@@ -12,7 +12,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.Transfer;
 import org.folio.rest.jaxrs.model.TransferdataCollection;
-import org.folio.rest.jaxrs.resource.TransfersResource;
+import org.folio.rest.jaxrs.resource.Transfers;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -24,12 +24,12 @@ import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.folio.rest.jaxrs.model.TransfersGetOrder;
 
-public class TransfersAPI implements TransfersResource {
+public class TransfersAPI implements Transfers {
 
     private static final String TRANSFERS_TABLE = "transfers";
     private static final String TRANSFER_ID_FIELD = "'id'";
@@ -47,13 +47,13 @@ public class TransfersAPI implements TransfersResource {
     }
 
     @Override
-    public void getTransfers(String query, String orderBy, Order order, int offset, int limit, List<String> facets, String lang,
+    public void getTransfers(String query, String orderBy, TransfersGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext) throws Exception {
+            Context vertxContext)  {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-        CQLWrapper cql = getCQL(query, limit, offset);
         List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
+        CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -70,16 +70,16 @@ public class TransfersAPI implements TransfersResource {
                                         transferCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         transferCollection.setResultInfo(reply.result().getResultInfo());
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfersResponse.withJsonOK(transferCollection)));
+                                                GetTransfersResponse.respond200WithApplicationJson(transferCollection)));
                                     } else {
                                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                                GetTransfersResponse.withPlainInternalServerError(
+                                                GetTransfersResponse.respond500WithTextPlain(
                                                         reply.cause().getMessage())));
                                     }
                                 } catch (Exception e) {
                                     logger.debug(e.getLocalizedMessage());
                                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                            GetTransfersResponse.withPlainInternalServerError(
+                                            GetTransfersResponse.respond500WithTextPlain(
                                                     reply.cause().getMessage())));
                                 }
                             });
@@ -87,11 +87,11 @@ public class TransfersAPI implements TransfersResource {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                         logger.debug("BAD CQL");
-                        asyncResultHandler.handle(Future.succeededFuture(GetTransfersResponse.withPlainBadRequest(
+                        asyncResultHandler.handle(Future.succeededFuture(GetTransfersResponse.respond400WithTextPlain(
                                 "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                     } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                GetTransfersResponse.withPlainInternalServerError(
+                                GetTransfersResponse.respond500WithTextPlain(
                                         messages.getMessage(lang,
                                                 MessageConsts.InternalServerError))));
                     }
@@ -101,11 +101,11 @@ public class TransfersAPI implements TransfersResource {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
-                asyncResultHandler.handle(Future.succeededFuture(GetTransfersResponse.withPlainBadRequest(
+                asyncResultHandler.handle(Future.succeededFuture(GetTransfersResponse.respond400WithTextPlain(
                         "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
             } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                        GetTransfersResponse.withPlainInternalServerError(
+                        GetTransfersResponse.respond500WithTextPlain(
                                 messages.getMessage(lang,
                                         MessageConsts.InternalServerError))));
             }
@@ -114,7 +114,7 @@ public class TransfersAPI implements TransfersResource {
 
     @Override
     public void postTransfers(String lang, Transfer entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -127,41 +127,39 @@ public class TransfersAPI implements TransfersResource {
                                 if (reply.succeeded()) {
                                     final Transfer transfer = entity;
                                     transfer.setId(entity.getId());
-                                    OutStream stream = new OutStream();
-                                    stream.setData(transfer);
                                     postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostTransfersResponse.withJsonCreated(
-                                                reply.result(), stream)));
+                                        asyncResultHandler.handle(Future.succeededFuture(PostTransfersResponse.respond201WithApplicationJson(transfer,
+                                                PostTransfersResponse.headersFor201().withLocation(reply.result()))));
                                     });
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PostTransfersResponse.withPlainBadRequest(
+                                            PostTransfersResponse.respond400WithTextPlain(
                                                     messages.getMessage(
                                                             lang, MessageConsts.UnableToProcessRequest))));
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
-                                        PostTransfersResponse.withPlainInternalServerError(
+                                        PostTransfersResponse.respond500WithTextPlain(
                                                 e.getMessage())));
                             }
                         });
                     } catch (Exception e) {
                         asyncResultHandler.handle(Future.succeededFuture(
-                                PostTransfersResponse.withPlainInternalServerError(
+                                PostTransfersResponse.respond500WithTextPlain(
                                         e.getMessage())));
                     }
                 });
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostTransfersResponse.withPlainInternalServerError(
+                    PostTransfersResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
     public void getTransfersByTransferId(String transferId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -178,44 +176,44 @@ public class TransfersAPI implements TransfersResource {
                                 if (getReply.failed()) {
                                     logger.error(getReply.result());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            GetTransfersByTransferIdResponse.withPlainInternalServerError(
+                                            GetTransfersByTransferIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
                                     List<Transfer> transferList = (List<Transfer>) getReply.result().getResults();
                                     if (transferList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfersByTransferIdResponse.withPlainNotFound("Transfer"
+                                                GetTransfersByTransferIdResponse.respond404WithTextPlain("Transfer"
                                                         + messages.getMessage(lang,
                                                                 MessageConsts.ObjectDoesNotExist))));
                                     } else if (transferList.size() > 1) {
                                         logger.error("Multiple transfers found with the same id");
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfersByTransferIdResponse.withPlainInternalServerError(
+                                                GetTransfersByTransferIdResponse.respond500WithTextPlain(
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfersByTransferIdResponse.withJsonOK(transferList.get(0))));
+                                                GetTransfersByTransferIdResponse.respond200WithApplicationJson(transferList.get(0))));
                                     }
                                 }
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(Future.succeededFuture(
-                            GetTransfersResponse.withPlainInternalServerError(messages.getMessage(
+                            GetTransfersResponse.respond500WithTextPlain(messages.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetTransfersResponse.withPlainInternalServerError(messages.getMessage(
+                    GetTransfersResponse.respond500WithTextPlain(messages.getMessage(
                             lang, MessageConsts.InternalServerError))));
         }
     }
 
     @Override
     public void deleteTransfersByTransferId(String transferId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -231,20 +229,20 @@ public class TransfersAPI implements TransfersResource {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteTransfersByTransferIdResponse.withNoContent()));
+                                                DeleteTransfersByTransferIdResponse.respond204()));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteTransfersByTransferIdResponse.withPlainNotFound("Record Not Found")));
+                                                DeleteTransfersByTransferIdResponse.respond404WithTextPlain("Record Not Found")));
                                     }
                                 } else {
                                     logger.error(deleteReply.result());
                                     String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
                                     logger.error(error, deleteReply.cause());
                                     if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfersByTransferIdResponse.withPlainInternalServerError(
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfersByTransferIdResponse.respond500WithTextPlain(
                                                 messages.getMessage(lang, MessageConsts.InternalServerError))));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfersByTransferIdResponse.withPlainBadRequest(error)));
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfersByTransferIdResponse.respond400WithTextPlain(error)));
                                     }
                                 }
                             });
@@ -252,7 +250,7 @@ public class TransfersAPI implements TransfersResource {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(
                             Future.succeededFuture(
-                                    DeleteTransfersByTransferIdResponse.withPlainInternalServerError(
+                                    DeleteTransfersByTransferIdResponse.respond500WithTextPlain(
                                             messages.getMessage(lang,
                                                     MessageConsts.InternalServerError))));
                 }
@@ -261,19 +259,19 @@ public class TransfersAPI implements TransfersResource {
             logger.error(e.getMessage());
             asyncResultHandler.handle(
                     Future.succeededFuture(
-                            DeleteTransfersByTransferIdResponse.withPlainInternalServerError(
+                            DeleteTransfersByTransferIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang,
                                             MessageConsts.InternalServerError))));
         }
     }
 
     @Override
-    public void putTransfersByTransferId(String transferId, String lang, Transfer transfer,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    public void putTransfersByTransferId(String transferId, String lang, Transfer entity,
+            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
             if (transferId == null) {
                 logger.error("transferId is missing");
-                asyncResultHandler.handle(Future.succeededFuture(PutTransfersByTransferIdResponse.withPlainBadRequest("transferId is missing")));
+                asyncResultHandler.handle(Future.succeededFuture(PutTransfersByTransferIdResponse.respond400WithTextPlain("transferId is missing")));
             }
 
             vertxContext.runOnContext(v -> {
@@ -291,7 +289,7 @@ public class TransfersAPI implements TransfersResource {
                                 if (getReply.failed()) {
                                     logger.error(getReply.cause().getLocalizedMessage());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PutTransfersByTransferIdResponse.withPlainInternalServerError(
+                                            PutTransfersByTransferIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                 } else {
@@ -300,23 +298,23 @@ public class TransfersAPI implements TransfersResource {
                                     } else {
                                         try {
                                             PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    TRANSFERS_TABLE, transfer, criterion, true, putReply -> {
+                                                    TRANSFERS_TABLE, entity, criterion, true, putReply -> {
                                                         if (putReply.failed()) {
                                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutTransfersByTransferIdResponse.withPlainInternalServerError(putReply.cause().getMessage())));
+                                                                    PutTransfersByTransferIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
                                                         } else {
                                                             if (putReply.result().getUpdated() == 1) {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutTransfersByTransferIdResponse.withNoContent()));
+                                                                        PutTransfersByTransferIdResponse.respond204()));
                                                             } else {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutTransfersByTransferIdResponse.withPlainNotFound("Record Not Found")));
+                                                                        PutTransfersByTransferIdResponse.respond404WithTextPlain("Record Not Found")));
                                                             }
                                                         }
                                                     });
                                         } catch (Exception e) {
                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutTransfersByTransferIdResponse.withPlainInternalServerError(messages.getMessage(lang,
+                                                    PutTransfersByTransferIdResponse.respond500WithTextPlain(messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                         }
                                     }
@@ -325,14 +323,14 @@ public class TransfersAPI implements TransfersResource {
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     asyncResultHandler.handle(Future.succeededFuture(
-                            PutTransfersByTransferIdResponse.withPlainInternalServerError(
+                            PutTransfersByTransferIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PutTransfersByTransferIdResponse.withPlainInternalServerError(
+                    PutTransfersByTransferIdResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }
