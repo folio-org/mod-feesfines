@@ -19,8 +19,8 @@
     "balance": {
       "type": "number"
     },
-    "transactionNumber": {
-      "type": "integer"
+    "transactionInformation": {
+      "type": "string"
     },
     "createdAt": {
       "type": "string"

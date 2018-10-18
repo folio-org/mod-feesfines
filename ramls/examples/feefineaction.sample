@@ -1,9 +1,9 @@
 {
   "dateAction": "2017-07-24T01:24:01Z",
   "typeAction": "Payment-ckeck",
-  "amountAction": -200.00,
+  "amountAction": 200.00,
   "balance": 50.00,
-  "transactionNumber": 3452,
+  "transactionInformation": "Department ENG-345",
   "comments": "This a comment",
   "createdAt": "Main Library",
   "source": "Doe,Jane",
