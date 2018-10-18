@@ -92,7 +92,7 @@ public class RestVerticleIT {
         DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
         vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
             try {
-                tenantClient.post(null, res2 -> {
+                tenantClient.postTenant(null, res2 -> {
                     async.complete();
                 });
             } catch (Exception e) {
@@ -291,7 +291,6 @@ public class RestVerticleIT {
         String accountUrl = "http://localhost:" + port + "/accounts";
 
         try {
-            int inc = 0;
 
             CompletableFuture<Response> addOwnerCF = new CompletableFuture();
             String addOwnerURL = ownerUrl;
@@ -314,17 +313,32 @@ public class RestVerticleIT {
 
             CompletableFuture<Response> addOwnerCF3 = new CompletableFuture();
 
-            send(addOwnerURL, context, HttpMethod.POST, createOwner("3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Shared", "Shared").encode(),
+            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Shared", "Shared").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF3));
             Response addOwnerResponse3 = addOwnerCF3.get(5, TimeUnit.SECONDS);
             context.assertEquals(addOwnerResponse3.code, HttpURLConnection.HTTP_CREATED);
             System.out.println(addOwnerResponse3.body
                     + "\nStatus -POST " + addOwnerResponse3.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
 
+           // get owners 
+            
+            CompletableFuture<Response> cfo =  new CompletableFuture();
+            String cqlURLo = ownerUrl;
+
+            send(cqlURLo, context, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF, 200,
+              new HTTPResponseHandler(cfo));
+            Response cqlResponseo = cfo.get(5, TimeUnit.SECONDS);
+
+            context.assertEquals(cqlResponseo.code, HttpURLConnection.HTTP_OK);
+            System.out.println(cqlResponseo.body +
+              "\nStatus - " + cqlResponseo.code + " at " + System.currentTimeMillis() + " for " + cqlURLo                    + cqlResponseo.body.toString());
+            String ownerIdL = cqlResponseo.body.getJsonArray("owners").getJsonObject(2).getString("id");
+            context.assertNotNull(ownerIdL);
+
             CompletableFuture<Response> addFeefineCF = new CompletableFuture();
             String addFeefineURL = feefineUrl;
             // createFeefine create the object json to the DB
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Damaged Book Fee").encode(),
+            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, ownerIdL, "Damaged Book Fee").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF));
             Response addFeefineResponse = addFeefineCF.get(5, TimeUnit.SECONDS);
             context.assertEquals(addFeefineResponse.code, HttpURLConnection.HTTP_CREATED);
@@ -333,7 +347,7 @@ public class RestVerticleIT {
 
             CompletableFuture<Response> addFeefineCF2 = new CompletableFuture();
 
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Late").encode(),
+            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, ownerIdL, "Late").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF2));
             Response addFeefineResponse2 = addFeefineCF2.get(5, TimeUnit.SECONDS);
             context.assertEquals(addFeefineResponse2.code, HttpURLConnection.HTTP_CREATED);
@@ -342,14 +356,13 @@ public class RestVerticleIT {
 
             CompletableFuture<Response> addFeefineCF3 = new CompletableFuture();
 
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, "3c7b8695-b537-40b1-b0a3-948ad7e1fc09", "Item Lost Fee").encode(),
+            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, ownerIdL, "Item Lost Fee").encode(),
                     SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF3));
             Response addFeefineResponse3 = addFeefineCF3.get(5, TimeUnit.SECONDS);
             context.assertEquals(addFeefineResponse3.code, HttpURLConnection.HTTP_CREATED);
             System.out.println(addFeefineResponse3.body
                     + "\nStatus -POST " + addFeefineResponse3.code + " time " + System.currentTimeMillis() + " for " + addFeefineURL);
 
-            System.out.println("");
             String url1 = url + URLEncoder.encode("id=*", "UTF-8");
             String url6 = url + URLEncoder.encode("id=*", "UTF-8");
 
@@ -362,12 +375,12 @@ public class RestVerticleIT {
             for (int i = 0; i < 2; i++) {
                 CompletableFuture<Response> cf = cqlCF[i];
                 String cqlURL = urls[i];
-                System.out.println("Dentro del for  " + cqlURL);
                 send(cqlURL, context, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF, 200,
                         new HTTPResponseHandler(cf));
                 Response cqlResponse = cf.get(5, TimeUnit.SECONDS);
                 context.assertEquals(cqlResponse.code, HttpURLConnection.HTTP_OK);
                 context.assertEquals(3, cqlResponse.body.getInteger("totalRecords"));
+                System.out.println(cqlResponse.body.getInteger("totalRecords")); 
             }
         } catch (Exception e) {
             context.fail(e.getMessage());
@@ -378,7 +391,6 @@ public class RestVerticleIT {
             String contentType, int errorCode, Handler<HttpClientResponse> handler) {
         HttpClient client = vertx.createHttpClient();
         HttpClientRequest request;
-        // System.out.println("valor en send  " + url);
         if (content == null) {
             content = "";
         }
@@ -398,9 +410,9 @@ public class RestVerticleIT {
         })
                 .handler(handler);
         request.putHeader("Authorization", "diku");
-        request.putHeader("x-okapi-tenant", "diku");
-        request.putHeader("Accept", "application/json,text/plain");
-        request.putHeader("Content-type", contentType);
+        request.putHeader("X-Okapi-Tenant", "diku");
+        request.putHeader("accept", "application/json");
+        request.putHeader("content-type", "application/json");
         request.end(buffer);
     }
 
@@ -454,7 +466,6 @@ public class RestVerticleIT {
 
     private static JsonObject createFeefine(String id, String ownerId, String typefeefine) {
 
-        int inc = 0;
         JsonObject feefine = new JsonObject();
         if (id != null) {
             feefine.put("id", id);
@@ -471,7 +482,6 @@ public class RestVerticleIT {
 
     private static JsonObject createOwner(String id, String owner, String desc) {
 
-        int inc = 0;
         JsonObject ownerJO = new JsonObject();
         if (id != null) {
             ownerJO.put("id", id);
