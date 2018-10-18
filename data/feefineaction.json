@@ -1,0 +1,14 @@
+{
+  "dateAction": "2017-07-24T01:24:01Z",
+  "typeAction": "Payment-ckeck",
+  "amountAction": 200.00,
+  "balance": 50.00,
+  "transactionInformation": "Department ENG-345",
+  "comments": "This a comment",
+  "createdAt": "Main Library",
+  "source": "Doe,Jane",
+  "paymentMethod": "Check",
+  "accountId": "fc8a995f-f076-465e-b108-6b5d528d0d38",
+  "userId": "1ad737b0-d847-11e6-bf26-cec0c932ce01",
+  "id": "bcb9b1d9-b967-41c4-a476-a4c282527cea"
+}
