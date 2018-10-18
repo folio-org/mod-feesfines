@@ -9,9 +9,6 @@
     "remaining": {
       "type": "number"
     },
-    "accountTransaction": {
-      "type": "integer"
-    },
     "dateCreated": {
       "type": "string",
       "format": "date-time"

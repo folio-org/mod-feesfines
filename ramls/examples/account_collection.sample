@@ -2,7 +2,6 @@
   "accounts" : [ {
     "amount": 15.0,
     "remaining": 15.0,
-    "accountTransaction": 1,
     "dateCreated": "2018-01-31T00:00:01Z",
     "dateUpdated": "2018-01-31T00:00:01Z",
     "status": {
@@ -37,7 +36,6 @@
   }, {
     "amount": 5.0,
     "remaining": 5.0,
-    "accountTransaction": 2,
     "dateCreated": "2018-01-31T00:00:01Z",
     "dateUpdated": "2018-01-31T00:00:01Z",
     "status": {
