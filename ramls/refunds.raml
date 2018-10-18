@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Refunds
 version: v1
 baseUri: http://github.com/org/folio/mod-feesfines
@@ -7,29 +7,24 @@ documentation:
   - title: Refunds API
     content: This documents the API calls that can be made to query and manage feefine of the system
 
-schemas:
-  - refunddata.json: !include refunddata.json
-  - refunddataCollection: !include refunddataCollection.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/resultInfo.schema: !include raml-util/schemas/resultInfo.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  refund: !include refunddata.json
+  refunddataCollection: !include refunddataCollection.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - orderable: !include raml-util/traits/orderable.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - language: !include raml-util/traits/language.raml
-  - validate: !include raml-util/traits/validation.raml
-  - facets: !include raml-util/traits/facets.raml
+  orderable: !include raml-util/traits/orderable.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+  facets: !include raml-util/traits/facets.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
-  - get-only: !include raml-util/rtypes/get-only.raml
-  - post-empty-body: !include raml-util/rtypes/post-empty-body.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-only: !include raml-util/rtypes/get-only.raml
+  post-empty-body: !include raml-util/rtypes/post-empty-body.raml
 
 /refunds:
   type:
@@ -37,7 +32,7 @@ resourceTypes:
       exampleCollection: !include examples/refund_collection.sample
       exampleItem: !include examples/refund.sample
       schemaCollection: refunddataCollection
-      schemaItem: refunddata.json
+      schemaItem: refund
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
@@ -53,7 +48,7 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/refund.sample
-        schema: refunddata.json
+        schema: refund
     get:
       description: Get a single refund
 

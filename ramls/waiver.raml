@@ -1,15 +1,15 @@
 #%RAML 1.0
-title: Transfers type
+title: Waives
 version: v1
 baseUri: http://github.com/org/folio/mod-feesfines
 
 documentation:
-  - title: Transfers type API
-    content: This documents the API calls that can be made to query and manage feefine of the system
+  - title: Waives API
+    content: This documents the API calls that can be made to query and manage waive of the system
 
 types:
-  transfertype: !include transfer-typedata.json
-  transfer-typedataCollection: !include transfer-typedataCollection.json
+  waiver: !include waivedata.json
+  waivedataCollection: !include waivedataCollection.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -18,6 +18,7 @@ traits:
   searchable: !include raml-util/traits/searchable.raml
   language: !include raml-util/traits/language.raml
   validate: !include raml-util/traits/validation.raml
+  facets: !include raml-util/traits/facets.raml
 
 resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
@@ -25,27 +26,29 @@ resourceTypes:
   get-only: !include raml-util/rtypes/get-only.raml
   post-empty-body: !include raml-util/rtypes/post-empty-body.raml
 
-/transfertypes:
+/waives:
   type:
     collection:
-      exampleCollection: !include examples/transfer-type_collection.sample
-      exampleItem: !include examples/transfer-type.sample
-      schemaCollection: transfer-typedataCollection
-      schemaItem: transfertype
+      exampleCollection: !include examples/waive_collection.sample
+      exampleItem: !include examples/waive.sample
+      schemaCollection: waivedataCollection
+      schemaItem: waiver
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
       orderable: {fieldsList: "field A, field B"},
-      pageable
+      pageable,
+      facets
     ]
-    description: Return a list of transfer-types
+    description: Return a list of waive
   post:
 #    is: [validate]
-    description: Create a transfer-type
-  /{transfertypeId}:
+    description: Create a waive
+  /{waiveId}:
     type:
       collection-item:
-        exampleItem: !include examples/transfer-type.sample
-        schema: transfertype
+        exampleItem: !include examples/waive.sample
+        schema: waiver
     get:
-      description: Get a single transfer-type
+      description: Get a single waive
+
