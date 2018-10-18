@@ -6,7 +6,7 @@
       "tableName":"owners",
       "generateId":true,
       "fromModuleVersion":"14.2",
-      "populateJsonWithId":false,
+      "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
     },
@@ -16,13 +16,20 @@
       "fromModuleVersion":"14.2",
       "populateJsonWithId":true,
       "withMetadata":true,
-      "pkColumnName":"id"
+      "pkColumnName":"id",
+      "foreignKeys": [
+        {
+          "fieldName": "ownerId",
+          "targetTable": "owners",
+          "tOps": "ADD"
+        }
+      ]
     },
     {
       "tableName":"accounts",
       "generateId":true,
       "fromModuleVersion":"14.2",
-      "populateJsonWithId":false,
+      "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
     },
@@ -38,7 +45,7 @@
       "tableName":"payments",
       "generateId":true,
       "fromModuleVersion":"14.2",
-      "populateJsonWithId":false,
+      "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
     },
@@ -46,7 +53,7 @@
       "tableName":"waives",
       "generateId":true,
       "fromModuleVersion":"14.2",
-      "populateJsonWithId":false,
+      "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
     },
@@ -54,7 +61,7 @@
       "tableName":"refunds",
       "generateId":true,
       "fromModuleVersion":"14.2",
-      "populateJsonWithId":false,
+      "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
     },
@@ -62,7 +69,7 @@
       "tableName":"transfers",
       "generateId":true,
       "fromModuleVersion":"14.2",
-      "populateJsonWithId":false,
+      "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
     },
@@ -70,15 +77,23 @@
       "tableName":"comments",
       "generateId":true,
       "fromModuleVersion":"14.2",
-      "populateJsonWithId":false,
+      "populateJsonWithId":true,
       "withMetadata":true,
+      "pkColumnName":"id"
+    },
+    {
+      "tableName":"manualblocks",
+      "generateId":true,
+      "fromModuleVersion":"14.2",
+      "populateJsonWithId":true,
+      "withMetadata":false,
       "pkColumnName":"id"
     },
     {
       "tableName":"transfer_type",
       "generateId":true,
       "fromModuleVersion":"14.2",
-      "populateJsonWithId":false,
+      "populateJsonWithId":true,
       "withMetadata":false,
       "pkColumnName":"id"
     }
