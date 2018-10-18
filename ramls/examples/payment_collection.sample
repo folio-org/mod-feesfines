@@ -8,7 +8,7 @@
       "createdByUsername": "Doe",
       "updatedDate": "2018-03-19T14:22:07Z"
     },
-    "accountId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434373",
+    "ownerId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434373",
     "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434371"
   }, {
     "nameMethod": "Credit",
@@ -19,7 +19,7 @@
       "createdByUsername": "Doe",
       "updatedDate": "2018-03-19T14:22:07Z"
     },
-    "accountId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434374",
+    "ownerId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434374",
     "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434372"
   } ],
   "totalRecords" : 2
