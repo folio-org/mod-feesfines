@@ -463,6 +463,51 @@
           "permissionsRequired":[
             "transfertypes.item.delete"
           ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/manualblocks",
+          "permissionsRequired":[
+            "manualblocks.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/manualblocks/{id}",
+          "permissionsRequired":[
+            "manualblocks.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/manualblocks",
+          "permissionsRequired":[
+            "manualblocks.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/manualblocks/{id}",
+          "permissionsRequired":[
+            "manualblocks.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/manualblocks/{id}",
+          "permissionsRequired":[
+            "manualblocks.item.delete"
+          ]
         }
       ]
     },
@@ -743,6 +788,31 @@
       "description":"Delete an transfertype record"
     },
     {
+      "permissionName":"manualblocks.collection.get",
+      "displayName":"manualblocks collection get",
+      "description":"Get a list of manualblock records"
+    },
+    {
+      "permissionName":"manualblocks.item.get",
+      "displayName":"manualblocks item get",
+      "description":"Get a single manualblock record"
+    },
+    {
+      "permissionName":"manualblocks.item.post",
+      "displayName":"manualblocks item post",
+      "description":"Create a new manualblock record"
+    },
+    {
+      "permissionName":"manualblocks.item.put",
+      "displayName":"manualblocks item put",
+      "description":"Edit an manualblock record"
+    },
+    {
+      "permissionName":"manualblocks.item.delete",
+      "displayName":"manualblocks item delete",
+      "description":"Delete an manualblock record"
+    },
+    {
       "permissionName":"feesfines.all",
       "displayName":"feesfines all",
       "description":"All permissions for the mod-feesfines module",
@@ -798,7 +868,12 @@
         "transfertypes.item.get",
         "transfertypes.item.post",
         "transfertypes.item.put",
-        "transfertypes.item.delete"
+        "transfertypes.item.delete",
+	"manualblocks.collection.get",
+        "manualblocks.item.get",
+        "manualblocks.item.post",
+        "manualblocks.item.put",
+        "manualblocks.item.delete"
       ]
     }
   ],
