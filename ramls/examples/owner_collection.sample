@@ -3,6 +3,10 @@
    {
     "owner": "Main Admin",
     "desc": "Main Library Administration Office",
+    "servicePointOwner": {
+      "servicePointId": "3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
+      "servicePoint": "Main Lib Circ Desk"
+    },
     "metadata": {
       "createdDate": "2018-05-22T21:21:02Z",
       "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce02",
@@ -11,7 +15,7 @@
       "updatedByUserId": "695540df-cf63-4c67-91c1-d8746920d1dd",
       "updatedByUsername": "robertjones"
     },
-    "id": "7261ecaae3a74dc68b468e12a70b1aed"
+    "id": "8166df0e-36be-4bf8-8cb7-97b252d9989d"
    }
   ],
   "totalRecords": 1

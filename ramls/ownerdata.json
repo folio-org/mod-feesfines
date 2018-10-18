@@ -9,14 +9,28 @@
     "desc": {
       "type": "string"
     },
+    "servicePointOwner": {
+      "type": "object",
+      "properties": {
+        "servicePointId": {
+          "type": "string"
+        },
+        "servicePoint": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "servicePointId"
+      ]
+    },
     "metadata" : {
       "type" : "object",
       "$ref" : "raml-util/schemas/metadata.schema"
     },
     "id": {
       "type": "string"
-    }
-   },
+     }
+    },
   "additionalProperties": false,
   "required": [
      "id"
