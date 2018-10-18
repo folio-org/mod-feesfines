@@ -1,0 +1,52 @@
+#%RAML 1.0
+title: Manual Patron Blocks
+version: v1
+baseUri: http://github.com/org/folio/mod-feesfines
+
+documentation:
+  - title: Manual Patron Blocks API
+    content: This documents the API calls that can be made to query and manage manualblock of the system
+
+types:
+  manualblock: !include manualblockdata.json
+  manualblockdataCollection: !include manualblockdataCollection.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  secured: !include raml-util/traits/auth.raml
+  orderable: !include raml-util/traits/orderable.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-only: !include raml-util/rtypes/get-only.raml
+  post-empty-body: !include raml-util/rtypes/post-empty-body.raml
+
+/manualblocks:
+  type:
+    collection:
+      exampleCollection: !include examples/manualblock_collection.sample
+      exampleItem: !include examples/manualblock.sample
+      schemaCollection: manualblockdataCollection
+      schemaItem: manualblock
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "active=true"},
+      orderable: {fieldsList: "field A, field B"},
+      pageable
+    ]
+    description: Return a list of manualblocks
+  post:
+    is: [validate]
+    description: Create a manualblock
+  /{manualblockId}:
+    type:
+      collection-item:
+        exampleItem: !include examples/manualblock.sample
+        schema: manualblock
+    get:
+      description: Get a single manualblock
