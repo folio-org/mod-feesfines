@@ -10,18 +10,21 @@
       "type": "string"
     },
     "servicePointOwner": {
-      "type": "object",
-      "properties": {
-        "servicePointId": {
-          "type": "string"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
         },
-        "servicePoint": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "servicePointId"
-      ]
+        "required": [
+          "value"
+        ]
+      }
     },
     "metadata" : {
       "type" : "object",
