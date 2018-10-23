@@ -869,7 +869,7 @@
         "transfertypes.item.post",
         "transfertypes.item.put",
         "transfertypes.item.delete",
-	"manualblocks.collection.get",
+        "manualblocks.collection.get",
         "manualblocks.item.get",
         "manualblocks.item.post",
         "manualblocks.item.put",
