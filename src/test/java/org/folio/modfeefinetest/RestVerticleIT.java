@@ -320,8 +320,8 @@ public class RestVerticleIT {
             System.out.println(addOwnerResponse3.body
                     + "\nStatus -POST " + addOwnerResponse3.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
 
-           // get owners 
-            
+           // get owners
+
             CompletableFuture<Response> cfo =  new CompletableFuture();
             String cqlURLo = ownerUrl;
 
@@ -380,7 +380,7 @@ public class RestVerticleIT {
                 Response cqlResponse = cf.get(5, TimeUnit.SECONDS);
                 context.assertEquals(cqlResponse.code, HttpURLConnection.HTTP_OK);
                 context.assertEquals(3, cqlResponse.body.getInteger("totalRecords"));
-                System.out.println(cqlResponse.body.getInteger("totalRecords")); 
+                System.out.println(cqlResponse.body.getInteger("totalRecords"));
             }
         } catch (Exception e) {
             context.fail(e.getMessage());
