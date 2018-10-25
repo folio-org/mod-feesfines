@@ -378,8 +378,8 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <raml-module-builder.version>21.0.4</raml-module-builder.version>
-    <vertx.version>3.5.1</vertx.version>
+    <raml-module-builder.version>23.0.0</raml-module-builder.version>
+    <vertx.version>3.5.4</vertx.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
     <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->
