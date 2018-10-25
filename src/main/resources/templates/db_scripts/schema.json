@@ -5,7 +5,7 @@
     {
       "tableName":"owners",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
@@ -13,7 +13,7 @@
     {
       "tableName":"feefines",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id",
@@ -28,15 +28,15 @@
     {
       "tableName":"accounts",
       "generateId":true,
-      "fromModuleVersion":"14.2",
-      "populateJsonWithId":true,
+      "fromModuleVersion":"15.0",
+      "populateJsonWithId":false,
       "withMetadata":true,
       "pkColumnName":"id"
     },
     {
       "tableName":"feefineactions",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
@@ -44,7 +44,7 @@
     {
       "tableName":"payments",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
@@ -52,7 +52,7 @@
     {
       "tableName":"waives",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
@@ -60,7 +60,7 @@
     {
       "tableName":"refunds",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
@@ -68,7 +68,7 @@
     {
       "tableName":"transfers",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
@@ -76,7 +76,7 @@
     {
       "tableName":"comments",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":true,
       "pkColumnName":"id"
@@ -84,7 +84,7 @@
     {
       "tableName":"manualblocks",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":false,
       "pkColumnName":"id"
@@ -92,7 +92,7 @@
     {
       "tableName":"transfer_type",
       "generateId":true,
-      "fromModuleVersion":"14.2",
+      "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
       "withMetadata":false,
       "pkColumnName":"id"
