@@ -10,7 +10,7 @@ curl -w '\n' -X POST -D -   \
     http://localhost:9130/_/proxy/modules
 
 curl -i -w '\n' -X GET http://localhost:9130/_/proxy/modules
-curl -i -w '\n' -X GET http://localhost:9130/_/proxy/modules/mod-feesfines-15.0.1-SNAPSHOT
+curl -i -w '\n' -X GET http://localhost:9130/_/proxy/modules/mod-feesfines-15.0.2-SNAPSHOT
 
 #**********************************Deploying the module
 curl -w '\n' -D - -s \
