@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-feesfines</artifactId>
-  <version>15.0.1-SNAPSHOT</version>
+  <version>15.0.1</version>
   <packaging>jar</packaging>
 
   <licenses>
