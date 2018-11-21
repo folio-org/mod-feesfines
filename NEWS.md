@@ -2,7 +2,7 @@
  * Upgrade to RMB 23.0.0, vertx 3.5.4.
  * Modify resource accounts.
  * Update interface version descriptor.
- * Remove id requered. Fix to MODFEE-2.
+ * Remove id required. Fix to MODFEE-2.
 ## 15.0.0 2018-10-18
  * Add field servicePointOwner for resource owners. Ref UIU-611.
  * Modify resource feefineactions. Ref UIU-646.
