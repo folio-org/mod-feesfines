@@ -23,7 +23,6 @@
   "additionalProperties": false,
   "required": [
     "feeFineType",
-    "ownerId",
-    "id"
+    "ownerId"
    ]
 }
