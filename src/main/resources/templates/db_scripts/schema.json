@@ -86,7 +86,7 @@
       "generateId":true,
       "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
-      "withMetadata":false,
+      "withMetadata":true,
       "pkColumnName":"id"
     },
     {
@@ -94,7 +94,7 @@
       "generateId":true,
       "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
-      "withMetadata":false,
+      "withMetadata":true,
       "pkColumnName":"id"
     }
   ]
