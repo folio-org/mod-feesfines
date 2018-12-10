@@ -1,8 +1,14 @@
-## 15.0.1 UNRELEASED
+## 15.1.0 2018-12-10
+
+ * Modify with Metdata (commit b682da5537b1fb35301156b6e48d66385a5828f1)
+ * Remove id required. Fix to MODFEE-2.
+ * Remove feesfines all permission (commit d883537a3b112ee8d84c617d9a8d25c89380c6b8)
+ * FOLIO-1609: Disable system class loader in surefire and failsafe plugins
+
+## 15.0.1 2018-09-25
  * Upgrade to RMB 23.0.0, vertx 3.5.4.
  * Modify resource accounts.
  * Update interface version descriptor.
- * Remove id required. Fix to MODFEE-2.
 ## 15.0.0 2018-10-18
  * Add field servicePointOwner for resource owners. Ref UIU-611.
  * Modify resource feefineactions. Ref UIU-646.
