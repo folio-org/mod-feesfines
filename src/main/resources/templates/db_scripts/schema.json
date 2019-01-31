@@ -90,7 +90,7 @@
       "pkColumnName":"id"
     },
     {
-      "tableName":"transfer_type",
+      "tableName":"transfer_criteria",
       "generateId":true,
       "fromModuleVersion":"15.0",
       "populateJsonWithId":true,
