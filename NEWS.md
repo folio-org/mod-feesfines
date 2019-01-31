@@ -1,3 +1,8 @@
+## 15.2.0 UNRELEASED
+ * Upgrade to RMB 23.5.0.
+ * Modify resource transfers and add transfer-criterias resource. Refs UIU-544.
+ * Fix validation. Fixes MODFEE-3, MODFEE-4, MODFEE-5, MODFEE-6, MODFEE-7
+
 ## 15.1.0 2018-12-10
 
  * Modify with Metdata (commit b682da5537b1fb35301156b6e48d66385a5828f1)
