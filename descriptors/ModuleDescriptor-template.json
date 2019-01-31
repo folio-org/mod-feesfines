@@ -423,45 +423,45 @@
           "methods":[
             "GET"
           ],
-          "pathPattern":"/transfertypes",
+          "pathPattern":"/transfer-criterias",
           "permissionsRequired":[
-            "transfertypes.collection.get"
+            "transfer-criterias.collection.get"
           ]
         },
         {
           "methods":[
             "GET"
           ],
-          "pathPattern":"/transfertypes/{id}",
+          "pathPattern":"/transfer-criterias/{id}",
           "permissionsRequired":[
-            "transfertypes.item.get"
+            "transfer-criterias.item.get"
           ]
         },
         {
           "methods":[
             "POST"
           ],
-          "pathPattern":"/transfertypes",
+          "pathPattern":"/transfer-criterias",
           "permissionsRequired":[
-            "transfertypes.item.post"
+            "transfer-criterias.item.post"
           ]
         },
         {
           "methods":[
             "PUT"
           ],
-          "pathPattern":"/transfertypes/{id}",
+          "pathPattern":"/transfer-criterias/{id}",
           "permissionsRequired":[
-            "transfertypes.item.put"
+            "transfer-criterias.item.put"
           ]
         },
         {
           "methods":[
             "DELETE"
           ],
-          "pathPattern":"/transfertypes/{id}",
+          "pathPattern":"/transfer-criterias/{id}",
           "permissionsRequired":[
-            "transfertypes.item.delete"
+            "transfer-criterias.item.delete"
           ]
         },
         {
@@ -763,29 +763,29 @@
       "description":"Delete an comment record"
     },
     {
-      "permissionName":"transfertypes.collection.get",
-      "displayName":"transfertypes collection get",
-      "description":"Get a list of transfertype records"
+      "permissionName":"transfer-criterias.collection.get",
+      "displayName":"transfer criteria collection get",
+      "description":"Get a list of transfer criteria records"
     },
     {
-      "permissionName":"transfertypes.item.get",
-      "displayName":"transfertypes item get",
-      "description":"Get a single transfertype record"
+      "permissionName":"transfer-criterias.item.get",
+      "displayName":"transfer criteria item get",
+      "description":"Get a single transfer criteria record"
     },
     {
-      "permissionName":"transfertypes.item.post",
-      "displayName":"transfertypes item post",
-      "description":"Create a new transfertype record"
+      "permissionName":"transfer-criterias.item.post",
+      "displayName":"transfer criteria item post",
+      "description":"Create a new transfer criteria record"
     },
     {
-      "permissionName":"transfertypes.item.put",
-      "displayName":"transfertypes item put",
-      "description":"Edit an transfertype record"
+      "permissionName":"transfer-criterias.item.put",
+      "displayName":"transfer criteria item put",
+      "description":"Edit an transfer criteria record"
     },
     {
-      "permissionName":"transfertypes.item.delete",
-      "displayName":"transfertypes item delete",
-      "description":"Delete an transfertype record"
+      "permissionName":"transfer-criterias.item.delete",
+      "displayName":"transfer criteria item delete",
+      "description":"Delete an transfer criteria record"
     },
     {
       "permissionName":"manualblocks.collection.get",
