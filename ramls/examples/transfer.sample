@@ -1,13 +1,12 @@
 {
-  "accountName": "Payroll",
-  "allowedRefundMethod": true,
-  "typeUser": "Student",
+  "accountName": "Bursar",
+  "desc": "Central University Bursar Office",
   "metadata": {
-    "createdDate": "2018-04-16T14:22:07Z",
+    "createdDate": "2019-01-14T14:22:07Z",
     "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce01",
     "createdByUsername": "diku_admin",
-    "updatedDate": "2018-04-16T14:22:07Z"
+    "updatedDate": "2019-01-14T14:22:07Z"
   },
-  "groupId": "1e20449e-e469-4c4d-9d9f-9c87a1c969d3",
-  "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434371"
+  "ownerId": "1e20449e-e469-4c4d-9d9f-9c87a1c969d6",
+  "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434482"
 }

@@ -6,17 +6,14 @@
     "accountName": {
       "type": "string"
     },
-    "allowedRefundMethod": {
-      "type": "boolean"
-    },
-    "typeUser": {
+    "desc": {
       "type": "string"
     },
     "metadata": {
       "type": "object",
       "$ref" : "raml-util/schemas/metadata.schema"
     },
-    "groupId": {
+    "ownerId": {
       "type": "string"
     },
     "id": {
