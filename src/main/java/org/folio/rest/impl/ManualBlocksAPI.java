@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.jaxrs.model.ManualblockdataCollection;
 import org.folio.rest.jaxrs.resource.Manualblocks;
@@ -45,6 +46,7 @@ public class ManualBlocksAPI implements Manualblocks {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
     public void getManualblocks(String query, String orderBy, ManualblocksGetOrder order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -110,6 +112,7 @@ public class ManualBlocksAPI implements Manualblocks {
         }
     }
 
+    @Validate
     @Override
     public void postManualblocks(String lang, Manualblock entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -161,6 +164,7 @@ public class ManualBlocksAPI implements Manualblocks {
 
     }
 
+    @Validate
     @Override
     public void getManualblocksByManualblockId(String manualblockId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
@@ -216,6 +220,7 @@ public class ManualBlocksAPI implements Manualblocks {
 
     }
 
+    @Validate
     @Override
     public void deleteManualblocksByManualblockId(String manualblockId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
@@ -273,6 +278,7 @@ public class ManualBlocksAPI implements Manualblocks {
         }
     }
 
+    @Validate
     @Override
     public void putManualblocksByManualblockId(String manualblockId, String lang, Manualblock entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {

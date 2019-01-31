@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.resource.Accounts;
@@ -47,6 +48,7 @@ public class AccountsAPI implements Accounts {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
     public void getAccounts(String query, String orderBy, AccountsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -113,6 +115,7 @@ public class AccountsAPI implements Accounts {
         }
     }
 
+    @Validate
     @Override
     public void postAccounts(String lang, Account entity, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -158,6 +161,7 @@ public class AccountsAPI implements Accounts {
         }
     }
 
+    @Validate
     @Override
     public void getAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -212,6 +216,7 @@ public class AccountsAPI implements Accounts {
         }
     }
 
+    @Validate
     @Override
     public void deleteAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -266,6 +271,7 @@ public class AccountsAPI implements Accounts {
         }
     }
 
+    @Validate
     @Override
     public void putAccountsByAccountId(String accountId, String lang, Account entity,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {

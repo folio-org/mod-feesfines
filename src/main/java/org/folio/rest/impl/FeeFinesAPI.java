@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.FeefinedataCollection;
 import org.folio.rest.jaxrs.resource.Feefines;
@@ -48,6 +49,7 @@ public class FeeFinesAPI implements Feefines {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
     public void getFeefines(String query, String orderBy, FeefinesGetOrder order, int offset, int limit, List<String> facets, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -114,6 +116,7 @@ public class FeeFinesAPI implements Feefines {
         }
     }
 
+    @Validate
     @Override
     public void postFeefines(String lang, Feefine entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
 
@@ -161,6 +164,7 @@ public class FeeFinesAPI implements Feefines {
         }
     }
 
+    @Validate
     @Override
     public void getFeefinesByFeefineId(String feefineId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
@@ -214,6 +218,7 @@ public class FeeFinesAPI implements Feefines {
         }
     }
 
+    @Validate
     @Override
     public void deleteFeefinesByFeefineId(String feefineId,
             String lang,
@@ -273,6 +278,7 @@ public class FeeFinesAPI implements Feefines {
         }
     }
 
+    @Validate
     @Override
     public void putFeefinesByFeefineId(String feefineId,
             String lang, Feefine entity,

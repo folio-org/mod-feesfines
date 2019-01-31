@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Comment;
 import org.folio.rest.jaxrs.model.CommentdataCollection;
 import org.folio.rest.jaxrs.resource.Comments;
@@ -46,6 +47,7 @@ public class CommentsAPI implements Comments {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
     public void getComments(String query, String orderBy, CommentsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -112,6 +114,7 @@ public class CommentsAPI implements Comments {
         }
     }
 
+    @Validate
     @Override
     public void postComments(String lang, Comment entity, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -157,6 +160,7 @@ public class CommentsAPI implements Comments {
         }
     }
 
+    @Validate
     @Override
     public void getCommentsByCommentId(String commentId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -211,6 +215,7 @@ public class CommentsAPI implements Comments {
         }
     }
 
+    @Validate
     @Override
     public void deleteCommentsByCommentId(String commentId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -265,6 +270,7 @@ public class CommentsAPI implements Comments {
         }
     }
 
+    @Validate
     @Override
     public void putCommentsByCommentId(String commentId, String lang, Comment entity,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {

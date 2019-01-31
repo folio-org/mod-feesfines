@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Waiver;
 import org.folio.rest.jaxrs.model.WaivedataCollection;
 import org.folio.rest.jaxrs.resource.Waives;
@@ -46,6 +47,7 @@ public class WaivesAPI implements Waives {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
     public void getWaives(String query, String orderBy, WaivesGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -112,6 +114,7 @@ public class WaivesAPI implements Waives {
         }
     }
 
+    @Validate
     @Override
     public void postWaives(String lang, Waiver entity, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -157,6 +160,7 @@ public class WaivesAPI implements Waives {
         }
     }
 
+    @Validate
     @Override
     public void getWaivesByWaiveId(String waiveId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -211,6 +215,7 @@ public class WaivesAPI implements Waives {
         }
     }
 
+    @Validate
     @Override
     public void deleteWaivesByWaiveId(String waiveId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -265,6 +270,7 @@ public class WaivesAPI implements Waives {
         }
     }
 
+    @Validate
     @Override
     public void putWaivesByWaiveId(String waiveId, String lang, Waiver entity,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {

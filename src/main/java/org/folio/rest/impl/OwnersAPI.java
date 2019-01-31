@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.OwnerdataCollection;
 import org.folio.rest.jaxrs.resource.Owners;
@@ -45,6 +46,7 @@ public class OwnersAPI implements Owners {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
     public void getOwners(String query, String orderBy, OwnersGetOrder order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -110,6 +112,7 @@ public class OwnersAPI implements Owners {
         }
     }
 
+    @Validate
     @Override
     public void postOwners(String lang, Owner entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -161,6 +164,7 @@ public class OwnersAPI implements Owners {
 
     }
 
+    @Validate
     @Override
     public void getOwnersByOwnerId(String ownerId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
@@ -216,6 +220,7 @@ public class OwnersAPI implements Owners {
 
     }
 
+    @Validate
     @Override
     public void deleteOwnersByOwnerId(String ownerId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
@@ -273,6 +278,7 @@ public class OwnersAPI implements Owners {
         }
     }
 
+    @Validate
     @Override
     public void putOwnersByOwnerId(String ownerId, String lang, Owner entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {

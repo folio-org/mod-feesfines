@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Transfer;
 import org.folio.rest.jaxrs.model.TransferdataCollection;
 import org.folio.rest.jaxrs.resource.Transfers;
@@ -46,6 +47,7 @@ public class TransfersAPI implements Transfers {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
     public void getTransfers(String query, String orderBy, TransfersGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -112,6 +114,7 @@ public class TransfersAPI implements Transfers {
         }
     }
 
+    @Validate
     @Override
     public void postTransfers(String lang, Transfer entity, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -157,6 +160,7 @@ public class TransfersAPI implements Transfers {
         }
     }
 
+    @Validate
     @Override
     public void getTransfersByTransferId(String transferId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -211,6 +215,7 @@ public class TransfersAPI implements Transfers {
         }
     }
 
+    @Validate
     @Override
     public void deleteTransfersByTransferId(String transferId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -265,6 +270,7 @@ public class TransfersAPI implements Transfers {
         }
     }
 
+    @Validate
     @Override
     public void putTransfersByTransferId(String transferId, String lang, Transfer entity,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {

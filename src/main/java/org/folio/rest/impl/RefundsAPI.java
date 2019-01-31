@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Refund;
 import org.folio.rest.jaxrs.model.RefunddataCollection;
 import org.folio.rest.jaxrs.resource.Refunds;
@@ -46,6 +47,7 @@ public class RefundsAPI implements Refunds {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
     public void getRefunds(String query, String orderBy, RefundsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -112,6 +114,7 @@ public class RefundsAPI implements Refunds {
         }
     }
 
+    @Validate
     @Override
     public void postRefunds(String lang, Refund entity, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -157,6 +160,7 @@ public class RefundsAPI implements Refunds {
         }
     }
 
+    @Validate
     @Override
     public void getRefundsByRefundId(String refundId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -211,6 +215,7 @@ public class RefundsAPI implements Refunds {
         }
     }
 
+    @Validate
     @Override
     public void deleteRefundsByRefundId(String refundId, String lang, Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
@@ -265,6 +270,7 @@ public class RefundsAPI implements Refunds {
         }
     }
 
+    @Validate
     @Override
     public void putRefundsByRefundId(String refundId, String lang, Refund entity,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {

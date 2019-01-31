@@ -10,6 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.FeefineactiondataCollection;
 import org.folio.rest.jaxrs.resource.Feefineactions;
@@ -46,6 +47,7 @@ public class FeeFineActionsAPI implements Feefineactions {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
     public void getFeefineactions(String query, String orderBy, FeefineactionsGetOrder order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -111,6 +113,7 @@ public class FeeFineActionsAPI implements Feefineactions {
         }
     }
 
+    @Validate
     @Override
     public void postFeefineactions(String lang, Feefineaction entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
@@ -157,6 +160,7 @@ public class FeeFineActionsAPI implements Feefineactions {
         }
     }
 
+    @Validate
     @Override
     public void getFeefineactionsByFeefineactionId(String feefineactionId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
@@ -209,6 +213,7 @@ public class FeeFineActionsAPI implements Feefineactions {
         }
     }
 
+    @Validate
     @Override
     public void deleteFeefineactionsByFeefineactionId(String feefineactionId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
@@ -263,6 +268,7 @@ public class FeeFineActionsAPI implements Feefineactions {
         }
     }
 
+    @Validate
     @Override
     public void putFeefineactionsByFeefineactionId(String feefineactionId, String lang, Feefineaction entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
         try {
