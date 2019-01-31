@@ -1,38 +1,18 @@
 {
-  "transfertypes":[
+  "transferCriterias":[
     {
-      "name":"Employee",
-      "conditions":{
-        "never":false,
-        "inmediatly":false,
-        "totalOwed":false,
-        "feeFineOwed":false
-      },
-      "interval":{
-        "minute": "minute(s)",
-        "hour": "hour(s)",
-        "day": "day(s)",
-        "week": "week(s)",
-        "month": "month(s)"
-      },
-      "id":"0bab56e5-1ab6-4ac2-afdf-8b2df0434341"
+      "criteria": "Transfer student fees/fines",
+      "type": "1",
+      "value": 14,
+      "interval": "days",
+      "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0438769"
     },
     {
-      "name":"STUDENT",
-      "conditions":{
-        "never": false,
-        "inmediatly": false,
-        "totalOwed": false,
-        "feeFineOwed": false
-      },
-      "interval":{
-        "minute": "minute(s)",
-        "hour": "hour(s)",
-        "day": "day(s)",
-        "week": "week(s)",
-        "month": "month(s)"
-      },
-      "id":"0bab56e5-1ab6-4ac2-afdf-8b2df0434342"
+      "criteria": "Transfer employee fees/fines",
+      "type": "2",
+      "value": 14,
+      "interval": "days",
+      "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434575"
     }
   ],
   "totalRecords":2

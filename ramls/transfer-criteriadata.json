@@ -1,47 +1,19 @@
 {
   "$schema":"http://json-schema.org/draft-04/schema#",
-  "title":"Transfer-types Schema",
+  "title":"Transfer-criteria Schema",
   "type":"object",
   "properties":{
-    "name":{
+    "criteria":{
       "type":"string"
     },
-    "conditions":{
-      "type":"object",
-      "properties":{
-        "never":{
-          "type":"boolean"
-        },
-        "inmediatly":{
-          "type":"boolean"
-        },
-        "totalOwed":{
-          "type":"boolean"
-        },
-        "feeFineOwed":{
-          "type":"boolean"
-        }
-      }
+    "type":{
+      "type":"string"
+    },
+    "value":{
+      "type":"number"
     },
     "interval":{
-      "type":"object",
-      "properties":{
-        "minute":{
-          "type":"string"
-        },
-        "hour":{
-          "type":"string"
-        },
-        "day":{
-          "type":"string"
-        },
-        "week":{
-          "type":"string"
-        },
-        "month":{
-          "type":"string"
-        }
-      }
+      "type":"string"
     },
     "id":{
       "type":"string"

@@ -1,15 +1,15 @@
 #%RAML 1.0
-title: Transfers type
+title: Transfers criteria
 version: v1
 baseUri: http://github.com/org/folio/mod-feesfines
 
 documentation:
-  - title: Transfers type API
-    content: This documents the API calls that can be made to query and manage feefine of the system
+  - title: Transfers criteria API
+    content: This documents the API calls that can be made to query and manage fee/fine of the system
 
 types:
-  transfertype: !include transfer-typedata.json
-  transfer-typedataCollection: !include transfer-typedataCollection.json
+  transferCriteria: !include transfer-criteriadata.json
+  transferCriteriaCollection: !include transfer-criteriadataCollection.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -25,27 +25,27 @@ resourceTypes:
   get-only: !include raml-util/rtypes/get-only.raml
   post-empty-body: !include raml-util/rtypes/post-empty-body.raml
 
-/transfertypes:
+/transfer-criterias:
   type:
     collection:
-      exampleCollection: !include examples/transfer-type_collection.sample
-      exampleItem: !include examples/transfer-type.sample
-      schemaCollection: transfer-typedataCollection
-      schemaItem: transfertype
+      exampleCollection: !include examples/transfer-criteria_collection.sample
+      exampleItem: !include examples/transfer-criteria.sample
+      schemaCollection: transferCriteriaCollection
+      schemaItem: transferCriteria
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
       orderable: {fieldsList: "field A, field B"},
       pageable
     ]
-    description: Return a list of transfer-types
+    description: Return a list of transfer criteria
   post:
-#    is: [validate]
-    description: Create a transfer-type
-  /{transfertypeId}:
+    is: [validate]
+    description: Create a transfer criteria
+  /{transferCriteriaId}:
     type:
       collection-item:
-        exampleItem: !include examples/transfer-type.sample
-        schema: transfertype
+        exampleItem: !include examples/transfer-criteria.sample
+        schema: transferCriteria
     get:
-      description: Get a single transfer-type
+      description: Get a single transfer criteria

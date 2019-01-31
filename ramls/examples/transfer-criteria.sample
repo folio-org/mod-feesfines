@@ -1,17 +1,7 @@
 {
-  "name": "Employee",
-  "conditions": {
-    "never": false,
-    "inmediatly": false,
-    "totalOwed": false,
-    "feeFineOwed": false
-  },
-  "interval": {
-    "minute": "minute(s)",
-    "hour": "hour(s)",
-    "day": "day(s)",
-    "week": "week(s)",
-    "month": "month(s)"
-  },
-  "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434351"
+  "criteria": "student",
+  "type": "1",
+  "value": 14,
+  "interval": "days",
+  "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0438769"
 }

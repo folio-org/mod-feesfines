@@ -2,21 +2,21 @@ package org.folio.rest.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.folio.rest.jaxrs.model.Transfertype;
-import org.folio.rest.jaxrs.model.TransferTypedataCollection;
-import org.folio.rest.jaxrs.resource.Transfertypes;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.TransferCriteria;
+import org.folio.rest.jaxrs.model.TransferCriteriaCollection;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -25,71 +25,76 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.folio.rest.jaxrs.model.TransfertypesGetOrder;
+import org.folio.rest.jaxrs.model.TransferCriteriasGetOrder;
+import org.folio.rest.jaxrs.resource.TransferCriterias;
 
-public class TransferTypeAPI implements Transfertypes {
+/**
+ *
+ * @author Lluvia
+ */
+public class TransferCriteriaAPI implements TransferCriterias {
 
-    public static final String TRANSFERTYPES_TABLE  = "transfer_type";
+    public static final String TRANSFER_CRITERIA_TABLE = "transfer_criteria";
 
     private final Messages messages = Messages.getInstance();
-    private static final String TRANSFERTYPE_ID_FIELD = "'id'";
+    private static final String TRANSFER_CRITERIA_ID_FIELD = "'id'";
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
-    private final Logger logger = LoggerFactory.getLogger(TransferTypeAPI.class);
+    private final Logger logger = LoggerFactory.getLogger(TransferCriteriaAPI.class);
 
-    public TransferTypeAPI(Vertx vertx, String tenantId) {
+    public TransferCriteriaAPI(Vertx vertx, String tenantId) {
         PostgresClient.getInstance(vertx, tenantId).setIdField("id");
     }
 
     private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON(TRANSFERTYPES_TABLE + ".jsonb"
-        );
+        CQL2PgJSON cql2pgJson = new CQL2PgJSON(TRANSFER_CRITERIA_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
+    @Validate
     @Override
-    public void getTransfertypes(String query, String orderBy, TransfertypesGetOrder order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void getTransferCriterias(String query, String orderBy, TransferCriteriasGetOrder order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
                             vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
                     String[] fieldList = {"*"};
 
-                    postgresClient.get(TRANSFERTYPES_TABLE, Transfertype.class, fieldList, cql,
+                    postgresClient.get(TRANSFER_CRITERIA_TABLE, TransferCriteria.class, fieldList, cql,
                             true, false, reply -> {
-                        try {
-                            if (reply.succeeded()) {
-                                TransferTypedataCollection transfertypeCollection = new TransferTypedataCollection();
-                                List<Transfertype> transfertypes = (List<Transfertype>) reply.result().getResults();
-                                transfertypeCollection.setTransfertypes(transfertypes);
-                                transfertypeCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                                asyncResultHandler.handle(Future.succeededFuture(
-                                        GetTransfertypesResponse.respond200WithApplicationJson(transfertypeCollection)));
-                            } else {
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                        GetTransfertypesResponse.respond500WithTextPlain(
-                                                reply.cause().getMessage())));
-                            }
-                        } catch (Exception e) {
-                            logger.debug(e.getLocalizedMessage());
-                            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                    GetTransfertypesResponse.respond500WithTextPlain(
-                                            reply.cause().getMessage())));
-                        }
-                    }
-                 );
+                                try {
+                                    if (reply.succeeded()) {
+                                        TransferCriteriaCollection TransferCriteriasCollection = new TransferCriteriaCollection();
+                                        List<TransferCriteria> transferCriteriaList = reply.result().getResults();
+                                        TransferCriteriasCollection.setTransferCriterias(transferCriteriaList);
+                                        TransferCriteriasCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                GetTransferCriteriasResponse.respond200WithApplicationJson(TransferCriteriasCollection)));
+                                    } else {
+                                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                                                GetTransferCriteriasResponse.respond500WithTextPlain(
+                                                        reply.cause().getMessage())));
+                                    }
+
+                                } catch (Exception e) {
+                                    logger.debug(e.getLocalizedMessage());
+                                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                                            GetTransferCriteriasResponse.respond500WithTextPlain(
+                                                    reply.cause().getMessage())));
+                                }
+                            });
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                         logger.debug("BAD CQL");
-                        asyncResultHandler.handle(Future.succeededFuture(GetTransfertypesResponse.respond400WithTextPlain(
+                        asyncResultHandler.handle(Future.succeededFuture(GetTransferCriteriasResponse.respond400WithTextPlain(
                                 "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                     } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                GetTransfertypesResponse.respond500WithTextPlain(
+                                GetTransferCriteriasResponse.respond500WithTextPlain(
                                         messages.getMessage(lang,
                                                 MessageConsts.InternalServerError))));
                     }
@@ -100,19 +105,20 @@ public class TransferTypeAPI implements Transfertypes {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
-                asyncResultHandler.handle(Future.succeededFuture(GetTransfertypesResponse.respond400WithTextPlain(
+                asyncResultHandler.handle(Future.succeededFuture(GetTransferCriteriasResponse.respond400WithTextPlain(
                         "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
             } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                        GetTransfertypesResponse.respond500WithTextPlain(
+                        GetTransferCriteriasResponse.respond500WithTextPlain(
                                 messages.getMessage(lang,
                                         MessageConsts.InternalServerError))));
             }
         }
     }
 
+    @Validate
     @Override
-    public void postTransfertypes(String lang, Transfertype entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void postTransferCriterias(String lang, TransferCriteria entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -120,126 +126,137 @@ public class TransferTypeAPI implements Transfertypes {
 
                 postgresClient.startTx(beginTx -> {
                     try {
-                        postgresClient.save(beginTx, TRANSFERTYPES_TABLE, entity, reply -> {
+
+                        postgresClient.save(beginTx, TRANSFER_CRITERIA_TABLE, entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
-                                    final Transfertype transfertype = entity;
-                                    transfertype.setId(entity.getId());
+                                    final TransferCriteria transferCriteria = entity;
+                                    transferCriteria.setId(entity.getId());
+                                    System.out.println("ID API" + entity.getId());
                                     postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostTransfertypesResponse.respond201WithApplicationJson(transfertype,
-                                                PostTransfertypesResponse.headersFor201().withLocation(reply.result()))));
+                                        asyncResultHandler.handle(Future.succeededFuture(PostTransferCriteriasResponse.respond201WithApplicationJson(transferCriteria,
+                                                PostTransferCriteriasResponse.headersFor201().withLocation(reply.result()))));
                                     });
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PostTransfertypesResponse.respond400WithTextPlain(
+                                            PostTransferCriteriasResponse.respond400WithTextPlain(
                                                     messages.getMessage(
                                                             lang, MessageConsts.UnableToProcessRequest))));
 
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
-                                        PostTransfertypesResponse.respond500WithTextPlain(
+                                        PostTransferCriteriasResponse.respond500WithTextPlain(
                                                 e.getMessage())));
                             }
                         });
                     } catch (Exception e) {
                         asyncResultHandler.handle(Future.succeededFuture(
-                                PostTransfertypesResponse.respond500WithTextPlain(
+                                PostTransferCriteriasResponse.respond500WithTextPlain(
                                         e.getMessage())));
                     }
                 });
 
             });
+
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostTransfertypesResponse.respond500WithTextPlain(
+                    PostTransferCriteriasResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
     }
 
+    @Validate
     @Override
-    public void getTransfertypesByTransfertypeId(String transfertypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void getTransferCriteriasByTransferCriteriaId(String transferCriteriaId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 try {
                     Criteria idCrit = new Criteria();
-                    idCrit.addField(TRANSFERTYPE_ID_FIELD);
+                    idCrit.addField(TRANSFER_CRITERIA_ID_FIELD);
                     idCrit.setOperation("=");
-                    idCrit.setValue(transfertypeId);
+                    idCrit.setValue(transferCriteriaId);
                     Criterion criterion = new Criterion(idCrit);
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(TRANSFERTYPES_TABLE, Transfertype.class, criterion,
+
+                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(TRANSFER_CRITERIA_TABLE, TransferCriteria.class, criterion,
                             true, false, getReply -> {
                                 if (getReply.failed()) {
                                     logger.error(getReply.result());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            GetTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
+                                            GetTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Transfertype> transfertypeList = (List<Transfertype>) getReply.result().getResults();
-                                    if (transfertypeList.size() < 1) {
+                                    List<TransferCriteria> transferCriteriaList = (List<TransferCriteria>) getReply.result().getResults();
+                                    if (transferCriteriaList.size() < 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfertypesByTransfertypeIdResponse.respond404WithTextPlain("Transfertype"
+                                                GetTransferCriteriasByTransferCriteriaIdResponse.respond404WithTextPlain("TransferCriteria"
                                                         + messages.getMessage(lang,
                                                                 MessageConsts.ObjectDoesNotExist))));
-                                    } else if (transfertypeList.size() > 1) {
-                                        logger.error("Multiple transfertypes found with the same id");
+                                    } else if (transferCriteriaList.size() > 1) {
+                                        logger.error("Multiple transferCriterias found with the same id");
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
+                                                GetTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransfertypesByTransfertypeIdResponse.respond200WithApplicationJson(transfertypeList.get(0))));
+                                                GetTransferCriteriasByTransferCriteriaIdResponse.respond200WithApplicationJson(transferCriteriaList.get(0))));
                                     }
                                 }
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(Future.succeededFuture(
-                            GetTransfertypesResponse.respond500WithTextPlain(messages.getMessage(
+                            GetTransferCriteriasResponse.respond500WithTextPlain(messages.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                 }
+
             });
         } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetTransfertypesResponse.respond500WithTextPlain(messages.getMessage(
+                    GetTransferCriteriasResponse.respond500WithTextPlain(messages.getMessage(
                             lang, MessageConsts.InternalServerError))));
         }
     }
 
+    @Validate
     @Override
-    public void deleteTransfertypesByTransfertypeId(String transfertypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void deleteTransferCriteriasByTransferCriteriaId(String transferCriteriaId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 Criteria idCrit = new Criteria();
+                idCrit.addField(TRANSFER_CRITERIA_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(transfertypeId);
+                idCrit.setValue(transferCriteriaId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
-                            TRANSFERTYPES_TABLE, criterion, deleteReply -> {
+                            TRANSFER_CRITERIA_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteTransfertypesByTransfertypeIdResponse.respond204()));
+                                                DeleteTransferCriteriasByTransferCriteriaIdResponse.respond204()));
                                     } else {
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteTransfertypesByTransfertypeIdResponse.respond404WithTextPlain("Record Not Found")));
+                                                DeleteTransferCriteriasByTransferCriteriaIdResponse.respond404WithTextPlain("Record Not Found")));
                                     }
                                 } else {
                                     logger.error(deleteReply.result());
                                     String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
                                     logger.error(error, deleteReply.cause());
                                     if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
-                                                messages.getMessage(lang, MessageConsts.InternalServerError))));
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
+                                                messages.getMessage(lang, MessageConsts.InternalServerError))
+                                        ));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransfertypesByTransfertypeIdResponse.respond400WithTextPlain(error)));
+                                        asyncResultHandler.handle(Future.succeededFuture(DeleteTransferCriteriasByTransferCriteriaIdResponse.respond400WithTextPlain(error)
+                                        )
+                                        );
                                     }
                                 }
                             });
@@ -247,46 +264,45 @@ public class TransferTypeAPI implements Transfertypes {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(
                             Future.succeededFuture(
-                                    DeleteTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
+                                    DeleteTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
                                             messages.getMessage(lang,
                                                     MessageConsts.InternalServerError))));
                 }
 
             });
         } catch (Exception e) {
-            logger.error(e.getMessage());
             asyncResultHandler.handle(
                     Future.succeededFuture(
-                            DeleteTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
+                            DeleteTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang,
                                             MessageConsts.InternalServerError))));
         }
     }
 
+    @Validate
     @Override
-    public void putTransfertypesByTransfertypeId(String transfertypeId, String lang, Transfertype entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void putTransferCriteriasByTransferCriteriaId(String transferCriteriaId, String lang, TransferCriteria entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
-            if (transfertypeId == null) {
-                logger.error("transfertypeId is missing");
-                asyncResultHandler.handle(Future.succeededFuture(PutTransfertypesByTransfertypeIdResponse.respond400WithTextPlain("transfertypeId is missing")));
+            if (transferCriteriaId == null) {
+                logger.error("transferCriteriaId is missing ");
+                asyncResultHandler.handle(Future.succeededFuture(PutTransferCriteriasByTransferCriteriaIdResponse.respond400WithTextPlain("transferCriteriaId is missing")));
             }
-
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 Criteria idCrit = new Criteria();
-                idCrit.addField(TRANSFERTYPE_ID_FIELD);
+                idCrit.addField(TRANSFER_CRITERIA_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(transfertypeId);
+                idCrit.setValue(transferCriteriaId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(TRANSFERTYPES_TABLE,
-                            Transfertype.class, criterion, true, false, getReply -> {
+                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(TRANSFER_CRITERIA_TABLE,
+                            TransferCriteria.class, criterion, true, false, getReply -> {
                                 if (getReply.failed()) {
                                     logger.error(getReply.cause().getLocalizedMessage());
                                     asyncResultHandler.handle(Future.succeededFuture(
-                                            PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
+                                            PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                 } else {
@@ -295,23 +311,23 @@ public class TransferTypeAPI implements Transfertypes {
                                     } else {
                                         try {
                                             PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    TRANSFERTYPES_TABLE, entity, criterion, true, putReply -> {
+                                                    TRANSFER_CRITERIA_TABLE, entity, criterion, true, putReply -> {
                                                         if (putReply.failed()) {
                                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                                    PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
                                                         } else {
                                                             if (putReply.result().getUpdated() == 1) {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        DeleteTransfertypesByTransfertypeIdResponse.respond204()));
+                                                                        PutTransferCriteriasByTransferCriteriaIdResponse.respond204()));
                                                             } else {
                                                                 asyncResultHandler.handle(Future.succeededFuture(
-                                                                        DeleteTransfertypesByTransfertypeIdResponse.respond404WithTextPlain("Record Not Found")));
+                                                                        PutTransferCriteriasByTransferCriteriaIdResponse.respond404WithTextPlain("Record Not Found")));
                                                             }
                                                         }
                                                     });
                                         } catch (Exception e) {
                                             asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                    PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
                                         }
                                     }
@@ -320,16 +336,17 @@ public class TransferTypeAPI implements Transfertypes {
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     asyncResultHandler.handle(Future.succeededFuture(
-                            PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
+                            PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                 }
             });
+
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PutTransfertypesByTransfertypeIdResponse.respond500WithTextPlain(
+                    PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
         }
-
     }
+
 }

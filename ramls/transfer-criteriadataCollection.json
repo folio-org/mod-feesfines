@@ -2,12 +2,12 @@
   "$schema":"http://json-schema.org/draft-04/schema#",
   "type":"object",
   "properties":{
-    "transfertypes":{
+    "transferCriterias":{
       "type":"array",
-      "id":"transfer-typesData",
+      "id":"transferCriteriaData",
       "items":{
         "type":"object",
-        "$ref":"transfer-typedata.json"
+        "$ref":"transfer-criteriadata.json"
       }
     },
     "totalRecords":{
@@ -15,7 +15,7 @@
     }
   },
   "required":[
-    "transfertypes",
+    "transferCriterias",
     "totalRecords"
   ]
 }
