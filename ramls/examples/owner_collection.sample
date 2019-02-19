@@ -7,6 +7,14 @@
       "value": "3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
       "label": "Main Lib Circ Desk"
     }],
+    "defaultChargeNotice": [{
+      "name": "Default charge notice",
+      "id": "194918b2-477b-4184-9563-53ea9feb5006"
+    }],
+    "defaultActionNotice": [{
+      "name": "Default action notice",
+      "id": "40c19f52-f2af-4019-bcda-d6d51ba6e3f2"
+    }],
     "metadata": {
       "createdDate": "2018-05-22T21:21:02Z",
       "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce02",
