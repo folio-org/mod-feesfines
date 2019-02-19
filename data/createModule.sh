@@ -10,7 +10,7 @@ curl -w '\n' -X POST -D -   \
     http://localhost:9130/_/proxy/modules
 
 curl -i -w '\n' -X GET http://localhost:9130/_/proxy/modules
-curl -i -w '\n' -X GET http://localhost:9130/_/proxy/modules/mod-feesfines-15.1.1-SNAPSHOT
+curl -i -w '\n' -X GET http://localhost:9130/_/proxy/modules/mod-feesfines-15.2.1-SNAPSHOT
 
 #**********************************Deploying the module
 curl -w '\n' -D - -s \
@@ -24,7 +24,7 @@ curl -w '\n' -D - -s \
 curl -i -w '\n' \
    -X POST \
    -H "Content-type: application/json" \
-   -d @okapi-enable-feefines.json \
+   -d @okapi-enable-feesfines.json \
    http://localhost:9130/_/proxy/tenants/diku/modules
 
 
