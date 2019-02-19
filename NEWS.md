@@ -1,4 +1,9 @@
-## 15.2.0 UNRELEASED
+## 15.2.1 UNRELEASED
+ * Add fields defaultChargeNotice and defaultActionNotice for resource owners. Ref UIU-713.
+ * Add fields chargeNotice and actionNotice for resource feefines. Ref UIU-713.
+ * Upgrade to RMB 23.6.0.
+
+## 15.2.0 2019-02-19
  * Upgrade to RMB 23.5.0.
  * Modify resource transfers and add transfer-criterias resource. Refs UIU-544.
  * Fix validation. Fixes MODFEE-3, MODFEE-4, MODFEE-5, MODFEE-6, MODFEE-7
