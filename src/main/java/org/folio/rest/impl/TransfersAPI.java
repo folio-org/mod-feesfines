@@ -51,11 +51,11 @@ public class TransfersAPI implements Transfers {
     @Override
     public void getTransfers(String query, String orderBy, TransfersGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext)  {
+            Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
         List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -67,7 +67,7 @@ public class TransfersAPI implements Transfers {
                                 try {
                                     if (reply.succeeded()) {
                                         TransferdataCollection transferCollection = new TransferdataCollection();
-                                        List<Transfer> transfers = (List<Transfer>) reply.result().getResults();
+                                        List<Transfer> transfers = reply.result().getResults();
                                         transferCollection.setTransfers(transfers);
                                         transferCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         transferCollection.setResultInfo(reply.result().getResultInfo());
@@ -117,7 +117,7 @@ public class TransfersAPI implements Transfers {
     @Validate
     @Override
     public void postTransfers(String lang, Transfer entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -130,10 +130,10 @@ public class TransfersAPI implements Transfers {
                                 if (reply.succeeded()) {
                                     final Transfer transfer = entity;
                                     transfer.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostTransfersResponse.respond201WithApplicationJson(transfer,
-                                                PostTransfersResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostTransfersResponse.respond201WithApplicationJson(transfer,
+                                                    PostTransfersResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostTransfersResponse.respond400WithTextPlain(
@@ -163,7 +163,7 @@ public class TransfersAPI implements Transfers {
     @Validate
     @Override
     public void getTransfersByTransferId(String transferId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -183,8 +183,8 @@ public class TransfersAPI implements Transfers {
                                             GetTransfersByTransferIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Transfer> transferList = (List<Transfer>) getReply.result().getResults();
-                                    if (transferList.size() < 1) {
+                                    List<Transfer> transferList = getReply.result().getResults();
+                                    if (transferList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetTransfersByTransferIdResponse.respond404WithTextPlain("Transfer"
                                                         + messages.getMessage(lang,
@@ -218,7 +218,7 @@ public class TransfersAPI implements Transfers {
     @Validate
     @Override
     public void deleteTransfersByTransferId(String transferId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -273,7 +273,7 @@ public class TransfersAPI implements Transfers {
     @Validate
     @Override
     public void putTransfersByTransferId(String transferId, String lang, Transfer entity,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             if (transferId == null) {
                 logger.error("transferId is missing");
@@ -298,32 +298,29 @@ public class TransfersAPI implements Transfers {
                                             PutTransfersByTransferIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    TRANSFERS_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutTransfersByTransferIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutTransfersByTransferIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutTransfersByTransferIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutTransfersByTransferIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                TRANSFERS_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutTransfersByTransferIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutTransfersByTransferIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutTransfersByTransferIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutTransfersByTransferIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutTransfersByTransferIdResponse.respond404WithTextPlain("Multiple account records")));
                                 }
                             });
                 } catch (Exception e) {

@@ -30,7 +30,7 @@ import org.folio.rest.jaxrs.model.FeefineactionsGetOrder;
 
 public class FeeFineActionsAPI implements Feefineactions {
 
-    public static final String FEEFINEACTIONS_TABLE  = "feefineactions";
+    public static final String FEEFINEACTIONS_TABLE = "feefineactions";
 
     private final Messages messages = Messages.getInstance();
     private static final String FEEFINEACTION_ID_FIELD = "'id'";
@@ -49,11 +49,11 @@ public class FeeFineActionsAPI implements Feefineactions {
 
     @Validate
     @Override
-    public void getFeefineactions(String query, String orderBy, FeefineactionsGetOrder order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void getFeefineactions(String query, String orderBy, FeefineactionsGetOrder order, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -62,27 +62,27 @@ public class FeeFineActionsAPI implements Feefineactions {
 
                     postgresClient.get(FEEFINEACTIONS_TABLE, Feefineaction.class, fieldList, cql,
                             true, false, reply -> {
-                        try {
-                            if (reply.succeeded()) {
-                                FeefineactiondataCollection feefineactionCollection = new FeefineactiondataCollection();
-                                List<Feefineaction> feefineactions = (List<Feefineaction>) reply.result().getResults();
-                                feefineactionCollection.setFeefineactions(feefineactions);
-                                feefineactionCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                                asyncResultHandler.handle(Future.succeededFuture(
-                                        GetFeefineactionsResponse.respond200WithApplicationJson(feefineactionCollection)));
-                            } else {
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                        GetFeefineactionsResponse.respond500WithTextPlain(
-                                                reply.cause().getMessage())));
+                                try {
+                                    if (reply.succeeded()) {
+                                        FeefineactiondataCollection feefineactionCollection = new FeefineactiondataCollection();
+                                        List<Feefineaction> feefineactions = reply.result().getResults();
+                                        feefineactionCollection.setFeefineactions(feefineactions);
+                                        feefineactionCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                GetFeefineactionsResponse.respond200WithApplicationJson(feefineactionCollection)));
+                                    } else {
+                                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                                                GetFeefineactionsResponse.respond500WithTextPlain(
+                                                        reply.cause().getMessage())));
+                                    }
+                                } catch (Exception e) {
+                                    logger.debug(e.getLocalizedMessage());
+                                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                                            GetFeefineactionsResponse.respond500WithTextPlain(
+                                                    reply.cause().getMessage())));
+                                }
                             }
-                        } catch (Exception e) {
-                            logger.debug(e.getLocalizedMessage());
-                            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                                    GetFeefineactionsResponse.respond500WithTextPlain(
-                                            reply.cause().getMessage())));
-                        }
-                    }
-                 );
+                    );
                 } catch (Exception e) {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
@@ -115,7 +115,7 @@ public class FeeFineActionsAPI implements Feefineactions {
 
     @Validate
     @Override
-    public void postFeefineactions(String lang, Feefineaction entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void postFeefineactions(String lang, Feefineaction entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -128,10 +128,10 @@ public class FeeFineActionsAPI implements Feefineactions {
                                 if (reply.succeeded()) {
                                     final Feefineaction feefineaction = entity;
                                     feefineaction.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostFeefineactionsResponse.respond201WithApplicationJson(feefineaction,
-                                                PostFeefineactionsResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostFeefineactionsResponse.respond201WithApplicationJson(feefineaction,
+                                                    PostFeefineactionsResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostFeefineactionsResponse.respond400WithTextPlain(
@@ -162,7 +162,7 @@ public class FeeFineActionsAPI implements Feefineactions {
 
     @Validate
     @Override
-    public void getFeefineactionsByFeefineactionId(String feefineactionId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void getFeefineactionsByFeefineactionId(String feefineactionId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -181,8 +181,8 @@ public class FeeFineActionsAPI implements Feefineactions {
                                             GetFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Feefineaction> feefineactionList = (List<Feefineaction>) getReply.result().getResults();
-                                    if (feefineactionList.size() < 1) {
+                                    List<Feefineaction> feefineactionList = getReply.result().getResults();
+                                    if (feefineactionList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetFeefineactionsByFeefineactionIdResponse.respond404WithTextPlain("Feefineaction"
                                                         + messages.getMessage(lang,
@@ -215,7 +215,7 @@ public class FeeFineActionsAPI implements Feefineactions {
 
     @Validate
     @Override
-    public void deleteFeefineactionsByFeefineactionId(String feefineactionId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void deleteFeefineactionsByFeefineactionId(String feefineactionId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -270,7 +270,7 @@ public class FeeFineActionsAPI implements Feefineactions {
 
     @Validate
     @Override
-    public void putFeefineactionsByFeefineactionId(String feefineactionId, String lang, Feefineaction entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void putFeefineactionsByFeefineactionId(String feefineactionId, String lang, Feefineaction entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             if (feefineactionId == null) {
                 logger.error("feefineactionId is missing");
@@ -295,32 +295,29 @@ public class FeeFineActionsAPI implements Feefineactions {
                                             PutFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    FEEFINEACTIONS_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        DeleteFeefineactionsByFeefineactionIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        DeleteFeefineactionsByFeefineactionIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                FEEFINEACTIONS_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutFeefineactionsByFeefineactionIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutFeefineactionsByFeefineactionIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutFeefineactionsByFeefineactionIdResponse.respond404WithTextPlain("Multiple fee/fine action records")));
                                 }
                             });
                 } catch (Exception e) {

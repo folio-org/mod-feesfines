@@ -10,38 +10,10 @@
       "type": "number"
     },
     "chargeNotice": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      }
+      "type": "string"
     },
     "actionNotice": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      }
+      "type": "string"
     },
     "ownerId": {
       "type": "string"

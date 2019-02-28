@@ -26,39 +26,11 @@
         ]
       }
     },
-    "defaultChargeNotice": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      }
+    "defaultChargeNoticeId": {
+      "type": "string"
     },
-    "defaultActionNotice": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      }
+    "defaultActionNoticeId": {
+      "type": "string"
     },
     "metadata" : {
       "type" : "object",

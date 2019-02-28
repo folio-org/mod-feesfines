@@ -25,7 +25,6 @@ import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
@@ -52,11 +51,11 @@ public class AccountsAPI implements Accounts {
     @Override
     public void getAccounts(String query, String orderBy, AccountsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext)  {
+            Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
         List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -68,7 +67,7 @@ public class AccountsAPI implements Accounts {
                                 try {
                                     if (reply.succeeded()) {
                                         AccountdataCollection accountCollection = new AccountdataCollection();
-                                        List<Account> accounts = (List<Account>) reply.result().getResults();
+                                        List<Account> accounts = reply.result().getResults();
                                         accountCollection.setAccounts(accounts);
                                         accountCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         accountCollection.setResultInfo(reply.result().getResultInfo());
@@ -118,7 +117,7 @@ public class AccountsAPI implements Accounts {
     @Validate
     @Override
     public void postAccounts(String lang, Account entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -131,10 +130,13 @@ public class AccountsAPI implements Accounts {
                                 if (reply.succeeded()) {
                                     final Account account = entity;
                                     account.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostAccountsResponse.respond201WithApplicationJson(account,
-                                                PostAccountsResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(
+                                                    Future.succeededFuture(
+                                                            PostAccountsResponse
+                                                                    .respond201WithApplicationJson(account,
+                                                                            PostAccountsResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostAccountsResponse.respond400WithTextPlain(
@@ -164,7 +166,7 @@ public class AccountsAPI implements Accounts {
     @Validate
     @Override
     public void getAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -184,8 +186,8 @@ public class AccountsAPI implements Accounts {
                                             GetAccountsByAccountIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Account> accountList = (List<Account>) getReply.result().getResults();
-                                    if (accountList.size() < 1) {
+                                    List<Account> accountList = getReply.result().getResults();
+                                    if (accountList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetAccountsByAccountIdResponse.respond404WithTextPlain("Account"
                                                         + messages.getMessage(lang,
@@ -219,7 +221,7 @@ public class AccountsAPI implements Accounts {
     @Validate
     @Override
     public void deleteAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -274,7 +276,7 @@ public class AccountsAPI implements Accounts {
     @Validate
     @Override
     public void putAccountsByAccountId(String accountId, String lang, Account entity,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             if (accountId == null) {
                 logger.error("accountId is missing");
@@ -299,32 +301,29 @@ public class AccountsAPI implements Accounts {
                                             PutAccountsByAccountIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    ACCOUNTS_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutAccountsByAccountIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutAccountsByAccountIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutAccountsByAccountIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutAccountsByAccountIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                ACCOUNTS_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutAccountsByAccountIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutAccountsByAccountIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutAccountsByAccountIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutAccountsByAccountIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutAccountsByAccountIdResponse.respond404WithTextPlain("Multiple account records")));
                                 }
                             });
                 } catch (Exception e) {

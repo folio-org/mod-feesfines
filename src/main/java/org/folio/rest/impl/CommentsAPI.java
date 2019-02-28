@@ -51,11 +51,11 @@ public class CommentsAPI implements Comments {
     @Override
     public void getComments(String query, String orderBy, CommentsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext)  {
+            Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
         List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -67,7 +67,7 @@ public class CommentsAPI implements Comments {
                                 try {
                                     if (reply.succeeded()) {
                                         CommentdataCollection commentCollection = new CommentdataCollection();
-                                        List<Comment> comments = (List<Comment>) reply.result().getResults();
+                                        List<Comment> comments = reply.result().getResults();
                                         commentCollection.setComments(comments);
                                         commentCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         commentCollection.setResultInfo(reply.result().getResultInfo());
@@ -117,7 +117,7 @@ public class CommentsAPI implements Comments {
     @Validate
     @Override
     public void postComments(String lang, Comment entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -130,10 +130,10 @@ public class CommentsAPI implements Comments {
                                 if (reply.succeeded()) {
                                     final Comment comment = entity;
                                     comment.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostCommentsResponse.respond201WithApplicationJson(comment,
-                                                PostCommentsResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostCommentsResponse.respond201WithApplicationJson(comment,
+                                                    PostCommentsResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostCommentsResponse.respond400WithTextPlain(
@@ -163,7 +163,7 @@ public class CommentsAPI implements Comments {
     @Validate
     @Override
     public void getCommentsByCommentId(String commentId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -183,8 +183,8 @@ public class CommentsAPI implements Comments {
                                             GetCommentsByCommentIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Comment> commentList = (List<Comment>) getReply.result().getResults();
-                                    if (commentList.size() < 1) {
+                                    List<Comment> commentList = getReply.result().getResults();
+                                    if (commentList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetCommentsByCommentIdResponse.respond404WithTextPlain("Comment"
                                                         + messages.getMessage(lang,
@@ -218,7 +218,7 @@ public class CommentsAPI implements Comments {
     @Validate
     @Override
     public void deleteCommentsByCommentId(String commentId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -273,7 +273,7 @@ public class CommentsAPI implements Comments {
     @Validate
     @Override
     public void putCommentsByCommentId(String commentId, String lang, Comment entity,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             if (commentId == null) {
                 logger.error("commentId is missing");
@@ -298,32 +298,30 @@ public class CommentsAPI implements Comments {
                                             PutCommentsByCommentIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    COMMENTS_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutCommentsByCommentIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutCommentsByCommentIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutCommentsByCommentIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutCommentsByCommentIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                COMMENTS_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutCommentsByCommentIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutCommentsByCommentIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        logger.error(e.getLocalizedMessage(), e);
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutCommentsByCommentIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutCommentsByCommentIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutCommentsByCommentIdResponse.respond404WithTextPlain("Multiple comment records")));
                                 }
                             });
                 } catch (Exception e) {

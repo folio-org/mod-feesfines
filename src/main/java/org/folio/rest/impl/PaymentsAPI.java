@@ -51,11 +51,11 @@ public class PaymentsAPI implements Payments {
     @Override
     public void getPayments(String query, String orderBy, PaymentsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext)  {
+            Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
         List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -67,7 +67,7 @@ public class PaymentsAPI implements Payments {
                                 try {
                                     if (reply.succeeded()) {
                                         PaymentdataCollection paymentCollection = new PaymentdataCollection();
-                                        List<Payment> payments = (List<Payment>) reply.result().getResults();
+                                        List<Payment> payments = reply.result().getResults();
                                         paymentCollection.setPayments(payments);
                                         paymentCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         paymentCollection.setResultInfo(reply.result().getResultInfo());
@@ -117,7 +117,7 @@ public class PaymentsAPI implements Payments {
     @Validate
     @Override
     public void postPayments(String lang, Payment entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -130,10 +130,10 @@ public class PaymentsAPI implements Payments {
                                 if (reply.succeeded()) {
                                     final Payment payment = entity;
                                     payment.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostPaymentsResponse.respond201WithApplicationJson(payment,
-                                                PostPaymentsResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostPaymentsResponse.respond201WithApplicationJson(payment,
+                                                    PostPaymentsResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostPaymentsResponse.respond400WithTextPlain(
@@ -163,7 +163,7 @@ public class PaymentsAPI implements Payments {
     @Validate
     @Override
     public void getPaymentsByPaymentId(String paymentId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -183,8 +183,8 @@ public class PaymentsAPI implements Payments {
                                             GetPaymentsByPaymentIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Payment> paymentList = (List<Payment>) getReply.result().getResults();
-                                    if (paymentList.size() < 1) {
+                                    List<Payment> paymentList = getReply.result().getResults();
+                                    if (paymentList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetPaymentsByPaymentIdResponse.respond404WithTextPlain("Payment"
                                                         + messages.getMessage(lang,
@@ -218,7 +218,7 @@ public class PaymentsAPI implements Payments {
     @Validate
     @Override
     public void deletePaymentsByPaymentId(String paymentId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -273,7 +273,7 @@ public class PaymentsAPI implements Payments {
     @Validate
     @Override
     public void putPaymentsByPaymentId(String paymentId, String lang, Payment entity,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             if (paymentId == null) {
                 logger.error("paymentId is missing");
@@ -298,32 +298,29 @@ public class PaymentsAPI implements Payments {
                                             PutPaymentsByPaymentIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    PAYMENTS_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutPaymentsByPaymentIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutPaymentsByPaymentIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutPaymentsByPaymentIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutPaymentsByPaymentIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                PAYMENTS_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutPaymentsByPaymentIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutPaymentsByPaymentIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutPaymentsByPaymentIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutPaymentsByPaymentIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutPaymentsByPaymentIdResponse.respond404WithTextPlain("Multiple account records")));
                                 }
                             });
                 } catch (Exception e) {

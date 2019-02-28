@@ -51,11 +51,11 @@ public class WaivesAPI implements Waives {
     @Override
     public void getWaives(String query, String orderBy, WaivesGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext)  {
+            Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
         List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -67,7 +67,7 @@ public class WaivesAPI implements Waives {
                                 try {
                                     if (reply.succeeded()) {
                                         WaivedataCollection waiveCollection = new WaivedataCollection();
-                                        List<Waiver> waives = (List<Waiver>) reply.result().getResults();
+                                        List<Waiver> waives = reply.result().getResults();
                                         waiveCollection.setWaiver(waives);
                                         waiveCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         waiveCollection.setResultInfo(reply.result().getResultInfo());
@@ -117,7 +117,7 @@ public class WaivesAPI implements Waives {
     @Validate
     @Override
     public void postWaives(String lang, Waiver entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -130,10 +130,10 @@ public class WaivesAPI implements Waives {
                                 if (reply.succeeded()) {
                                     final Waiver waive = entity;
                                     waive.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostWaivesResponse.respond201WithApplicationJson(waive,
-                                                PostWaivesResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostWaivesResponse.respond201WithApplicationJson(waive,
+                                                    PostWaivesResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostWaivesResponse.respond400WithTextPlain(
@@ -163,7 +163,7 @@ public class WaivesAPI implements Waives {
     @Validate
     @Override
     public void getWaivesByWaiveId(String waiveId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -183,8 +183,8 @@ public class WaivesAPI implements Waives {
                                             GetWaivesByWaiveIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Waiver> waiveList = (List<Waiver>) getReply.result().getResults();
-                                    if (waiveList.size() < 1) {
+                                    List<Waiver> waiveList = getReply.result().getResults();
+                                    if (waiveList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetWaivesByWaiveIdResponse.respond404WithTextPlain("Waive"
                                                         + messages.getMessage(lang,
@@ -218,7 +218,7 @@ public class WaivesAPI implements Waives {
     @Validate
     @Override
     public void deleteWaivesByWaiveId(String waiveId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -273,7 +273,7 @@ public class WaivesAPI implements Waives {
     @Validate
     @Override
     public void putWaivesByWaiveId(String waiveId, String lang, Waiver entity,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             if (waiveId == null) {
                 logger.error("waiveId is missing");
@@ -298,31 +298,22 @@ public class WaivesAPI implements Waives {
                                             PutWaivesByWaiveIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    WAIVES_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutWaivesByWaiveIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutWaivesByWaiveIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutWaivesByWaiveIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutWaivesByWaiveIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                WAIVES_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutWaivesByWaiveIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutWaivesByWaiveIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutWaivesByWaiveIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
                                 }
                             });
