@@ -51,11 +51,11 @@ public class RefundsAPI implements Refunds {
     @Override
     public void getRefunds(String query, String orderBy, RefundsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext)  {
+            Context vertxContext) {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
         List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -67,7 +67,7 @@ public class RefundsAPI implements Refunds {
                                 try {
                                     if (reply.succeeded()) {
                                         RefunddataCollection refundCollection = new RefunddataCollection();
-                                        List<Refund> refunds = (List<Refund>) reply.result().getResults();
+                                        List<Refund> refunds = reply.result().getResults();
                                         refundCollection.setRefunds(refunds);
                                         refundCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         refundCollection.setResultInfo(reply.result().getResultInfo());
@@ -117,7 +117,7 @@ public class RefundsAPI implements Refunds {
     @Validate
     @Override
     public void postRefunds(String lang, Refund entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -130,10 +130,10 @@ public class RefundsAPI implements Refunds {
                                 if (reply.succeeded()) {
                                     final Refund refund = entity;
                                     refund.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostRefundsResponse.respond201WithApplicationJson(refund,
-                                                PostRefundsResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostRefundsResponse.respond201WithApplicationJson(refund,
+                                                    PostRefundsResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostRefundsResponse.respond400WithTextPlain(
@@ -163,7 +163,7 @@ public class RefundsAPI implements Refunds {
     @Validate
     @Override
     public void getRefundsByRefundId(String refundId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -183,8 +183,8 @@ public class RefundsAPI implements Refunds {
                                             GetRefundsByRefundIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Refund> refundList = (List<Refund>) getReply.result().getResults();
-                                    if (refundList.size() < 1) {
+                                    List<Refund> refundList = getReply.result().getResults();
+                                    if (refundList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetRefundsByRefundIdResponse.respond404WithTextPlain("Refund"
                                                         + messages.getMessage(lang,
@@ -218,7 +218,7 @@ public class RefundsAPI implements Refunds {
     @Validate
     @Override
     public void deleteRefundsByRefundId(String refundId, String lang, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -273,7 +273,7 @@ public class RefundsAPI implements Refunds {
     @Validate
     @Override
     public void putRefundsByRefundId(String refundId, String lang, Refund entity,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             if (refundId == null) {
                 logger.error("refundId is missing");
@@ -298,32 +298,29 @@ public class RefundsAPI implements Refunds {
                                             PutRefundsByRefundIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    REFUNDS_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutRefundsByRefundIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutRefundsByRefundIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutRefundsByRefundIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutRefundsByRefundIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                REFUNDS_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutRefundsByRefundIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutRefundsByRefundIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutRefundsByRefundIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutRefundsByRefundIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutRefundsByRefundIdResponse.respond404WithTextPlain("Multiple account records")));
                                 }
                             });
                 } catch (Exception e) {

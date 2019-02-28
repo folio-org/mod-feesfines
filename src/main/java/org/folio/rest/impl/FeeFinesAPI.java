@@ -18,7 +18,6 @@ import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
@@ -55,7 +54,7 @@ public class FeeFinesAPI implements Feefines {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
         List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -67,7 +66,7 @@ public class FeeFinesAPI implements Feefines {
                                 try {
                                     if (reply.succeeded()) {
                                         FeefinedataCollection feefineCollection = new FeefinedataCollection();
-                                        List<Feefine> feefines = (List<Feefine>) reply.result().getResults();
+                                        List<Feefine> feefines = reply.result().getResults();
                                         feefineCollection.setFeefines(feefines);
                                         feefineCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         feefineCollection.setResultInfo(reply.result().getResultInfo());
@@ -118,7 +117,7 @@ public class FeeFinesAPI implements Feefines {
 
     @Validate
     @Override
-    public void postFeefines(String lang, Feefine entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void postFeefines(String lang, Feefine entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
         try {
             vertxContext.runOnContext(v -> {
@@ -132,10 +131,10 @@ public class FeeFinesAPI implements Feefines {
                                 if (reply.succeeded()) {
                                     final Feefine feefine = entity;
                                     feefine.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostFeefinesResponse.respond201WithApplicationJson(feefine,
-                                                PostFeefinesResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostFeefinesResponse.respond201WithApplicationJson(feefine,
+                                                    PostFeefinesResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostFeefinesResponse.respond400WithTextPlain(
@@ -166,7 +165,7 @@ public class FeeFinesAPI implements Feefines {
 
     @Validate
     @Override
-    public void getFeefinesByFeefineId(String feefineId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
+    public void getFeefinesByFeefineId(String feefineId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -185,8 +184,8 @@ public class FeeFinesAPI implements Feefines {
                                             GetFeefinesByFeefineIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Feefine> feefineList = (List<Feefine>) getReply.result().getResults();
-                                    if (feefineList.size() < 1) {
+                                    List<Feefine> feefineList = getReply.result().getResults();
+                                    if (feefineList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetFeefinesByFeefineIdResponse.respond404WithTextPlain("Feefine"
                                                         + messages.getMessage(lang,
@@ -224,7 +223,7 @@ public class FeeFinesAPI implements Feefines {
             String lang,
             Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext)  {
+            Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -284,7 +283,7 @@ public class FeeFinesAPI implements Feefines {
             String lang, Feefine entity,
             Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler,
-            Context vertxContext)  {
+            Context vertxContext) {
 
         try {
             if (feefineId == null) {
@@ -310,32 +309,29 @@ public class FeeFinesAPI implements Feefines {
                                             PutFeefinesByFeefineIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    FEEFINES_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutFeefinesByFeefineIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutFeefinesByFeefineIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutFeefinesByFeefineIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutFeefinesByFeefineIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                FEEFINES_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutFeefinesByFeefineIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutFeefinesByFeefineIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutFeefinesByFeefineIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutFeefinesByFeefineIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutFeefinesByFeefineIdResponse.respond404WithTextPlain("Multiple fee/fine records")));
                                 }
                             });
                 } catch (Exception e) {

@@ -67,12 +67,12 @@ public class TransferCriteriaAPI implements TransferCriterias {
                             true, false, reply -> {
                                 try {
                                     if (reply.succeeded()) {
-                                        TransferCriteriaCollection TransferCriteriasCollection = new TransferCriteriaCollection();
+                                        TransferCriteriaCollection transferCriteriasCollection = new TransferCriteriaCollection();
                                         List<TransferCriteria> transferCriteriaList = reply.result().getResults();
-                                        TransferCriteriasCollection.setTransferCriterias(transferCriteriaList);
-                                        TransferCriteriasCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                        transferCriteriasCollection.setTransferCriterias(transferCriteriaList);
+                                        transferCriteriasCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetTransferCriteriasResponse.respond200WithApplicationJson(TransferCriteriasCollection)));
+                                                GetTransferCriteriasResponse.respond200WithApplicationJson(transferCriteriasCollection)));
                                     } else {
                                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                                                 GetTransferCriteriasResponse.respond500WithTextPlain(
@@ -132,11 +132,11 @@ public class TransferCriteriaAPI implements TransferCriterias {
                                 if (reply.succeeded()) {
                                     final TransferCriteria transferCriteria = entity;
                                     transferCriteria.setId(entity.getId());
-                                    System.out.println("ID API" + entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostTransferCriteriasResponse.respond201WithApplicationJson(transferCriteria,
-                                                PostTransferCriteriasResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    logger.debug("ID API" + entity.getId());
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostTransferCriteriasResponse.respond201WithApplicationJson(transferCriteria,
+                                                    PostTransferCriteriasResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostTransferCriteriasResponse.respond400WithTextPlain(
@@ -188,8 +188,8 @@ public class TransferCriteriaAPI implements TransferCriterias {
                                             GetTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<TransferCriteria> transferCriteriaList = (List<TransferCriteria>) getReply.result().getResults();
-                                    if (transferCriteriaList.size() < 1) {
+                                    List<TransferCriteria> transferCriteriaList = getReply.result().getResults();
+                                    if (transferCriteriaList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetTransferCriteriasByTransferCriteriaIdResponse.respond404WithTextPlain("TransferCriteria"
                                                         + messages.getMessage(lang,
@@ -305,32 +305,29 @@ public class TransferCriteriaAPI implements TransferCriterias {
                                             PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    TRANSFER_CRITERIA_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutTransferCriteriasByTransferCriteriaIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutTransferCriteriasByTransferCriteriaIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                TRANSFER_CRITERIA_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutTransferCriteriasByTransferCriteriaIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutTransferCriteriasByTransferCriteriaIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutTransferCriteriasByTransferCriteriaIdResponse.respond404WithTextPlain("Multiple account records")));
                                 }
                             });
                 } catch (Exception e) {

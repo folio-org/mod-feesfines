@@ -52,7 +52,7 @@ public class OwnersAPI implements Owners {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -63,12 +63,12 @@ public class OwnersAPI implements Owners {
                             true, false, reply -> {
                                 try {
                                     if (reply.succeeded()) {
-                                        OwnerdataCollection OwnersCollection = new OwnerdataCollection();
+                                        OwnerdataCollection ownersCollection = new OwnerdataCollection();
                                         List<Owner> ownerList = reply.result().getResults();
-                                        OwnersCollection.setOwners(ownerList);
-                                        OwnersCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                        ownersCollection.setOwners(ownerList);
+                                        ownersCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetOwnersResponse.respond200WithApplicationJson(OwnersCollection)));
+                                                GetOwnersResponse.respond200WithApplicationJson(ownersCollection)));
                                     } else {
                                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                                                 GetOwnersResponse.respond500WithTextPlain(
@@ -129,11 +129,11 @@ public class OwnersAPI implements Owners {
                                 if (reply.succeeded()) {
                                     final Owner owner = entity;
                                     owner.setId(entity.getId());
-                                    System.out.println("ID API"+entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostOwnersResponse.respond201WithApplicationJson(owner,
-                                                PostOwnersResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    logger.debug("ID API" + entity.getId());
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostOwnersResponse.respond201WithApplicationJson(owner,
+                                                    PostOwnersResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostOwnersResponse.respond400WithTextPlain(
@@ -186,8 +186,8 @@ public class OwnersAPI implements Owners {
                                             GetOwnersByOwnerIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Owner> ownerList = (List<Owner>) getReply.result().getResults();
-                                    if (ownerList.size() < 1) {
+                                    List<Owner> ownerList = getReply.result().getResults();
+                                    if (ownerList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetOwnersByOwnerIdResponse.respond404WithTextPlain("Owner"
                                                         + messages.getMessage(lang,
@@ -304,32 +304,29 @@ public class OwnersAPI implements Owners {
                                             PutOwnersByOwnerIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    OWNERS_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutOwnersByOwnerIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutOwnersByOwnerIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutOwnersByOwnerIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutOwnersByOwnerIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                OWNERS_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutOwnersByOwnerIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutOwnersByOwnerIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutOwnersByOwnerIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutOwnersByOwnerIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutOwnersByOwnerIdResponse.respond404WithTextPlain("Multiple owner records")));
                                 }
                             });
                 } catch (Exception e) {

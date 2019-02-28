@@ -52,7 +52,7 @@ public class ManualBlocksAPI implements Manualblocks {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
         try {
-        CQLWrapper cql = getCQL(query, limit, offset);
+            CQLWrapper cql = getCQL(query, limit, offset);
             vertxContext.runOnContext(v -> {
                 try {
                     PostgresClient postgresClient = PostgresClient.getInstance(
@@ -63,12 +63,12 @@ public class ManualBlocksAPI implements Manualblocks {
                             true, false, reply -> {
                                 try {
                                     if (reply.succeeded()) {
-                                        ManualblockdataCollection ManualblocksCollection = new ManualblockdataCollection();
+                                        ManualblockdataCollection manualblocksCollection = new ManualblockdataCollection();
                                         List<Manualblock> manualblockList = reply.result().getResults();
-                                        ManualblocksCollection.setManualblocks(manualblockList);
-                                        ManualblocksCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                        manualblocksCollection.setManualblocks(manualblockList);
+                                        manualblocksCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         asyncResultHandler.handle(Future.succeededFuture(
-                                                GetManualblocksResponse.respond200WithApplicationJson(ManualblocksCollection)));
+                                                GetManualblocksResponse.respond200WithApplicationJson(manualblocksCollection)));
                                     } else {
                                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                                                 GetManualblocksResponse.respond500WithTextPlain(
@@ -129,11 +129,11 @@ public class ManualBlocksAPI implements Manualblocks {
                                 if (reply.succeeded()) {
                                     final Manualblock manualblock = entity;
                                     manualblock.setId(entity.getId());
-                                    System.out.println("ID API"+entity.getId());
-                                    postgresClient.endTx(beginTx, done -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(PostManualblocksResponse.respond201WithApplicationJson(manualblock,
-                                                PostManualblocksResponse.headersFor201().withLocation(reply.result()))));
-                                    });
+                                    logger.debug("ID API" + entity.getId());
+                                    postgresClient.endTx(beginTx, done
+                                            -> asyncResultHandler.handle(Future.succeededFuture(PostManualblocksResponse.respond201WithApplicationJson(manualblock,
+                                                    PostManualblocksResponse.headersFor201().withLocation(reply.result())))));
+
                                 } else {
                                     asyncResultHandler.handle(Future.succeededFuture(
                                             PostManualblocksResponse.respond400WithTextPlain(
@@ -186,8 +186,8 @@ public class ManualBlocksAPI implements Manualblocks {
                                             GetManualblocksByManualblockIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
-                                    List<Manualblock> manualblockList = (List<Manualblock>) getReply.result().getResults();
-                                    if (manualblockList.size() < 1) {
+                                    List<Manualblock> manualblockList = getReply.result().getResults();
+                                    if (manualblockList.isEmpty()) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 GetManualblocksByManualblockIdResponse.respond404WithTextPlain("Manualblock"
                                                         + messages.getMessage(lang,
@@ -304,32 +304,29 @@ public class ManualBlocksAPI implements Manualblocks {
                                             PutManualblocksByManualblockIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang,
                                                             MessageConsts.InternalServerError))));
-                                } else {
-                                    if (!getReply.succeeded()) {
-                                        logger.error(getReply.result());
-                                    } else {
-                                        try {
-                                            PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                    MANUALBLOCKS_TABLE, entity, criterion, true, putReply -> {
-                                                        if (putReply.failed()) {
-                                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                                    PutManualblocksByManualblockIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                        } else {
-                                                            if (putReply.result().getUpdated() == 1) {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutManualblocksByManualblockIdResponse.respond204()));
-                                                            } else {
-                                                                asyncResultHandler.handle(Future.succeededFuture(
-                                                                        PutManualblocksByManualblockIdResponse.respond404WithTextPlain("Record Not Found")));
-                                                            }
-                                                        }
-                                                    });
-                                        } catch (Exception e) {
-                                            asyncResultHandler.handle(Future.succeededFuture(
-                                                    PutManualblocksByManualblockIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                        }
+                                } else if (getReply.result().getResults().size() == 1) {
+                                    try {
+                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                                                MANUALBLOCKS_TABLE, entity, criterion, true, putReply -> {
+                                                    if (putReply.failed()) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutManualblocksByManualblockIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
+                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                                PutManualblocksByManualblockIdResponse.respond204()));
+                                                    }
+                                                });
+                                    } catch (Exception e) {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PutManualblocksByManualblockIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                                                        MessageConsts.InternalServerError))));
                                     }
+                                } else if (getReply.result().getResults().isEmpty()) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutManualblocksByManualblockIdResponse.respond404WithTextPlain("Record Not Found")));
+                                } else if (getReply.result().getResults().size() > 1) {
+                                    asyncResultHandler.handle(Future.succeededFuture(
+                                            PutManualblocksByManualblockIdResponse.respond404WithTextPlain("Multiple account records")));
                                 }
                             });
                 } catch (Exception e) {
