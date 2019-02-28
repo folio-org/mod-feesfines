@@ -1,4 +1,9 @@
-## 15.2.1 UNRELEASED
+## 15.3.0 UNRELEASED
+ * Upgrade to RMB 23.7.0.
+ * Fix code smell.
+ * Modify resources owners an feefines.Ref UIU-713.
+
+## 15.2.1 2019-02-27
  * Add fields defaultChargeNotice and defaultActionNotice for resource owners. Ref UIU-713.
  * Add fields chargeNotice and actionNotice for resource feefines. Ref UIU-713.
  * Upgrade to RMB 23.6.0.
@@ -10,7 +15,7 @@
 
 ## 15.1.0 2018-12-10
 
- * Modify with Metdata (commit b682da5537b1fb35301156b6e48d66385a5828f1)
+ * Modify with Metadata (commit b682da5537b1fb35301156b6e48d66385a5828f1)
  * Remove id required. Fix to MODFEE-2.
  * Remove feesfines all permission (commit d883537a3b112ee8d84c617d9a8d25c89380c6b8)
  * FOLIO-1609: Disable system class loader in surefire and failsafe plugins
