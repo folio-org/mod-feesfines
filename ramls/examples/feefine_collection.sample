@@ -3,14 +3,8 @@
     {
       "feeFineType":"overdue",
       "defaultAmount":100,
-      "actionNotice": [{
-        "name": "Fee receipt notice",
-        "id": "a8fcb171-5bd2-4913-97ef-4c7ed322b3ed"
-      }],
-      "actionNotice": [{
-        "name": "Fee receipt notice",
-        "id": "a8fcb171-5bd2-4913-97ef-4c7ed322b3ed"
-      }],
+      "chargeNotice": "09eb3fcb-eeec-4aca-a38e-3cbaac495cfc",
+      "actionNotice": "a8fcb171-5bd2-4913-97ef-4c7ed322b3ed",
       "ownerId":"03ece16e-3fc6-4390-8511-ca7a7882c5c6",
       "id":"39a14e03-c372-4659-860b-5423c970633e"
     }
