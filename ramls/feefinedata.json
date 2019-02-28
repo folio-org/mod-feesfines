@@ -9,10 +9,10 @@
     "defaultAmount": {
       "type": "number"
     },
-    "chargeNotice": {
+    "chargeNoticeId": {
       "type": "string"
     },
-    "actionNotice": {
+    "actionNoticeId": {
       "type": "string"
     },
     "ownerId": {
