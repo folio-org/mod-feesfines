@@ -1,8 +1,7 @@
-## 15.3.0 UNRELEASED
+## 15.3.0 2019-04-02
  * Upgrade to RMB 23.7.0.
  * Fix code smell.
  * Modify resources owners an feefines.Ref UIU-713.
- * Modify resource waives.
 
 ## 15.2.1 2019-02-27
  * Add fields defaultChargeNotice and defaultActionNotice for resource owners. Ref UIU-713.

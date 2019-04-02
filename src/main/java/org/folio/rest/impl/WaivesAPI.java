@@ -68,7 +68,7 @@ public class WaivesAPI implements Waives {
                                     if (reply.succeeded()) {
                                         WaivedataCollection waiveCollection = new WaivedataCollection();
                                         List<Waiver> waives = reply.result().getResults();
-                                        waiveCollection.setWaivers(waives);
+                                        waiveCollection.setWaiver(waives);
                                         waiveCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                         waiveCollection.setResultInfo(reply.result().getResultInfo());
                                         asyncResultHandler.handle(Future.succeededFuture(

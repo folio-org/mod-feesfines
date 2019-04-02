@@ -1,5 +1,5 @@
 {
-  "waivers" : [ {
+  "waiver" : [ {
     "nameReason": "First time offender",
     "description": "Penalty abatement",
     "metadata": {
