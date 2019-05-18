@@ -1,3 +1,6 @@
+## 15.3.1 UNRELEASED
+ * Modify resource waives.
+
 ## 15.3.0 2019-04-02
  * Upgrade to RMB 23.7.0.
  * Fix code smell.
