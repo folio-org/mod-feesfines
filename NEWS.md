@@ -1,5 +1,8 @@
-## 15.3.1 UNRELEASED
+## 15.3.2 UNRELEASED
+
+## 15.3.1 2019-06-05
  * Modify resource waives.
+ * Upgrade to RMB 24.0.0.
 
 ## 15.3.0 2019-04-02
  * Upgrade to RMB 23.7.0.
