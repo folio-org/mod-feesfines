@@ -138,10 +138,10 @@ public class AccountsAPI implements Accounts {
                                                                             PostAccountsResponse.headersFor201().withLocation(reply.result())))));
 
                                 } else {
-                                    asyncResultHandler.handle(Future.succeededFuture(
-                                            PostAccountsResponse.respond400WithTextPlain(
-                                                    messages.getMessage(
-                                                            lang, MessageConsts.UnableToProcessRequest))));
+                                    postgresClient.rollbackTx(beginTx, rollback -> {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PostAccountsResponse.respond400WithTextPlain(messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                                    });
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
@@ -150,9 +150,11 @@ public class AccountsAPI implements Accounts {
                             }
                         });
                     } catch (Exception e) {
-                        asyncResultHandler.handle(Future.succeededFuture(
-                                PostAccountsResponse.respond500WithTextPlain(
-                                        e.getMessage())));
+                        postgresClient.rollbackTx(beginTx, rollback -> {
+                            asyncResultHandler.handle(Future.succeededFuture(
+                                    PostAccountsResponse.respond500WithTextPlain(
+                                            e.getMessage())));
+                        });
                     }
                 });
             });

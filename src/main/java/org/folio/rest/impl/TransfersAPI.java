@@ -135,10 +135,10 @@ public class TransfersAPI implements Transfers {
                                                     PostTransfersResponse.headersFor201().withLocation(reply.result())))));
 
                                 } else {
-                                    asyncResultHandler.handle(Future.succeededFuture(
-                                            PostTransfersResponse.respond400WithTextPlain(
-                                                    messages.getMessage(
-                                                            lang, MessageConsts.UnableToProcessRequest))));
+                                    postgresClient.rollbackTx(beginTx, rollback -> {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PostTransfersResponse.respond400WithTextPlain(messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                                    });
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
@@ -147,9 +147,11 @@ public class TransfersAPI implements Transfers {
                             }
                         });
                     } catch (Exception e) {
-                        asyncResultHandler.handle(Future.succeededFuture(
-                                PostTransfersResponse.respond500WithTextPlain(
-                                        e.getMessage())));
+                        postgresClient.rollbackTx(beginTx, rollback -> {
+                            asyncResultHandler.handle(Future.succeededFuture(
+                                    PostTransfersResponse.respond500WithTextPlain(
+                                            e.getMessage())));
+                        });
                     }
                 });
             });
