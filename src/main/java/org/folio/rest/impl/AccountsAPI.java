@@ -1,5 +1,32 @@
 package org.folio.rest.impl;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.core.Response;
+
+import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.AccountdataCollection;
+import org.folio.rest.jaxrs.model.AccountsGetOrder;
+import org.folio.rest.jaxrs.resource.Accounts;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.persist.facets.FacetField;
+import org.folio.rest.persist.facets.FacetManager;
+import org.folio.rest.service.PatronNoticeService;
+import org.folio.rest.tools.messages.MessageConsts;
+import org.folio.rest.tools.messages.Messages;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -7,28 +34,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import java.util.List;
-import java.util.Map;
-import javax.ws.rs.core.Response;
-import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.AccountdataCollection;
-import org.folio.rest.jaxrs.resource.Accounts;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PgExceptionUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.persist.facets.FacetField;
-import org.folio.rest.persist.facets.FacetManager;
-import org.folio.rest.tools.messages.MessageConsts;
-import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.folio.rest.jaxrs.model.AccountsGetOrder;
 
 public class AccountsAPI implements Accounts {
 
@@ -116,51 +121,20 @@ public class AccountsAPI implements Accounts {
 
     @Validate
     @Override
-    public void postAccounts(String lang, Account entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-        try {
-            vertxContext.runOnContext(v -> {
-                String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-                PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+    public void postAccounts(String lang,
+                             Account entity,
+                             Map<String, String> okapiHeaders,
+                             Handler<AsyncResult<Response>> asyncResultHandler,
+                             Context vertxContext) {
 
-                postgresClient.startTx(beginTx -> {
-                    try {
-                        postgresClient.save(beginTx, ACCOUNTS_TABLE, entity, reply -> {
-                            try {
-                                if (reply.succeeded()) {
-                                    final Account account = entity;
-                                    account.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done
-                                            -> asyncResultHandler.handle(
-                                                    Future.succeededFuture(
-                                                            PostAccountsResponse
-                                                                    .respond201WithApplicationJson(account,
-                                                                            PostAccountsResponse.headersFor201().withLocation(reply.result())))));
+      PatronNoticeService patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
+      Future<Response> postCompleted = Future.future();
+      PgUtil.post(ACCOUNTS_TABLE, entity, okapiHeaders, vertxContext, PostAccountsResponse.class, postCompleted);
 
-                                } else {
-                                    asyncResultHandler.handle(Future.succeededFuture(
-                                            PostAccountsResponse.respond400WithTextPlain(
-                                                    messages.getMessage(
-                                                            lang, MessageConsts.UnableToProcessRequest))));
-                                }
-                            } catch (Exception e) {
-                                asyncResultHandler.handle(Future.succeededFuture(
-                                        PostAccountsResponse.respond500WithTextPlain(
-                                                e.getMessage())));
-                            }
-                        });
-                    } catch (Exception e) {
-                        asyncResultHandler.handle(Future.succeededFuture(
-                                PostAccountsResponse.respond500WithTextPlain(
-                                        e.getMessage())));
-                    }
-                });
-            });
-        } catch (Exception e) {
-            asyncResultHandler.handle(Future.succeededFuture(
-                    PostAccountsResponse.respond500WithTextPlain(
-                            messages.getMessage(lang, MessageConsts.InternalServerError))));
-        }
+      postCompleted.map(response -> {
+          patronNoticeService.sendManualChargeNotice(entity);
+          return response;
+        }).setHandler(asyncResultHandler);
     }
 
     @Validate
