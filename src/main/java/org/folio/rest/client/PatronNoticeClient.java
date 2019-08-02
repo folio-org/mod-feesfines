@@ -18,7 +18,7 @@ import io.vertx.ext.web.client.WebClient;
 
 public class PatronNoticeClient {
 
-  private static final String OKAPI_URL_HEADER = "X-Okapi-Url";
+  private static final String OKAPI_URL_HEADER = "x-okapi-url";
 
   private WebClient webClient;
   private String okapiUrl;
