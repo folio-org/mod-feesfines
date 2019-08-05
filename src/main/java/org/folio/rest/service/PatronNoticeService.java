@@ -1,14 +1,19 @@
 package org.folio.rest.service;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
+import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.PatronNotice;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.FeeFineRepository;
+import org.folio.rest.repository.OwnerRepository;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -19,16 +24,20 @@ public class PatronNoticeService {
   private static final Logger logger = LoggerFactory.getLogger(PatronNoticeService.class);
 
   private FeeFineRepository feeFineRepository;
+  private OwnerRepository ownerRepository;
   private PatronNoticeClient patronNoticeClient;
 
   public PatronNoticeService(Vertx vertx, Map<String, String> okapiHeaders) {
-    feeFineRepository = new FeeFineRepository(PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders));
+    PostgresClient pgClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
+    feeFineRepository = new FeeFineRepository(pgClient);
+    ownerRepository = new OwnerRepository(pgClient);
     patronNoticeClient = new PatronNoticeClient(WebClient.create(vertx), okapiHeaders);
   }
 
   public void sendManualChargeNotice(Account account) {
     feeFineRepository.getById(account.getFeeFineId())
-      .map(feefine -> createManualChargeNotice(account.getUserId(), feefine))
+      .compose(this::fetchChargeTemplateId)
+      .map(templateId -> createManualChargeNotice(account.getUserId(), templateId))
       .compose(patronNoticeClient::postPatronNotice)
       .setHandler(send -> {
         if (send.failed()) {
@@ -39,8 +48,15 @@ public class PatronNoticeService {
       });
   }
 
-  private PatronNotice createManualChargeNotice(String userId, Feefine feefine) {
-    return createNotice(userId, feefine.getChargeNoticeId());
+  private Future<String> fetchChargeTemplateId(Feefine feefine) {
+    return Optional.ofNullable(feefine.getChargeNoticeId())
+      .map(Future::succeededFuture)
+      .orElseGet(() -> ownerRepository.getById(feefine.getOwnerId())
+        .map(Owner::getDefaultChargeNoticeId));
+  }
+
+  private PatronNotice createManualChargeNotice(String userId, String chargeTemplateId) {
+    return createNotice(userId, chargeTemplateId);
   }
 
   private PatronNotice createNotice(String userId, String templateId) {
