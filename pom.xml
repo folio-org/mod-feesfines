@@ -381,7 +381,7 @@
     <url>https://github.com/folio-org/mod-feesfines</url>
     <connection>scm:git:git://github.com:folio-org/mod-feesfines.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-feesfines.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v15.4.0</tag>
   </scm>
 
   <properties>
