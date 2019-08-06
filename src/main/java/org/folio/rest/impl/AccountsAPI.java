@@ -249,69 +249,22 @@ public class AccountsAPI implements Accounts {
 
     @Validate
     @Override
-    public void putAccountsByAccountId(String accountId, String lang, Account entity,
-            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-        try {
-            if (accountId == null) {
-                logger.error("accountId is missing");
-                asyncResultHandler.handle(Future.succeededFuture(PutAccountsByAccountIdResponse.respond400WithTextPlain("accountId is missing")));
-            }
+    public void putAccountsByAccountId(String accountId,
+                                       String lang,
+                                       Account entity,
+                                       Map<String, String> okapiHeaders,
+                                       Handler<AsyncResult<Response>> asyncResultHandler,
+                                       Context vertxContext) {
 
-            vertxContext.runOnContext(v -> {
-                String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
+      PatronNoticeService patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
+      Future<Response> putCompleted = Future.future();
 
-                Criteria idCrit = new Criteria();
-                idCrit.addField(ACCOUNT_ID_FIELD);
-                idCrit.setOperation("=");
-                idCrit.setValue(accountId);
-                Criterion criterion = new Criterion(idCrit);
+      PgUtil.put(ACCOUNTS_TABLE, entity, accountId, okapiHeaders, vertxContext,
+        PutAccountsByAccountIdResponse.class, putCompleted);
 
-                try {
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(ACCOUNTS_TABLE,
-                            Account.class, criterion, true, false, getReply -> {
-                                if (getReply.failed()) {
-                                    logger.error(getReply.cause().getLocalizedMessage());
-                                    asyncResultHandler.handle(Future.succeededFuture(
-                                            PutAccountsByAccountIdResponse.respond500WithTextPlain(
-                                                    messages.getMessage(lang,
-                                                            MessageConsts.InternalServerError))));
-                                } else if (getReply.result().getResults().size() == 1) {
-                                    try {
-                                        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                                                ACCOUNTS_TABLE, entity, criterion, true, putReply -> {
-                                                    if (putReply.failed()) {
-                                                        asyncResultHandler.handle(Future.succeededFuture(
-                                                                PutAccountsByAccountIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                    } else if (putReply.result().getUpdated() == 1) {
-                                                        asyncResultHandler.handle(Future.succeededFuture(
-                                                                PutAccountsByAccountIdResponse.respond204()));
-                                                    }
-                                                });
-                                    } catch (Exception e) {
-                                        asyncResultHandler.handle(Future.succeededFuture(
-                                                PutAccountsByAccountIdResponse.respond500WithTextPlain(messages.getMessage(lang,
-                                                        MessageConsts.InternalServerError))));
-                                    }
-                                } else if (getReply.result().getResults().isEmpty()) {
-                                    asyncResultHandler.handle(Future.succeededFuture(
-                                            PutAccountsByAccountIdResponse.respond404WithTextPlain("Record Not Found")));
-                                } else if (getReply.result().getResults().size() > 1) {
-                                    asyncResultHandler.handle(Future.succeededFuture(
-                                            PutAccountsByAccountIdResponse.respond404WithTextPlain("Multiple account records")));
-                                }
-                            });
-                } catch (Exception e) {
-                    logger.error(e.getLocalizedMessage(), e);
-                    asyncResultHandler.handle(Future.succeededFuture(
-                            PutAccountsByAccountIdResponse.respond500WithTextPlain(
-                                    messages.getMessage(lang, MessageConsts.InternalServerError))));
-                }
-            });
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-            asyncResultHandler.handle(Future.succeededFuture(
-                    PutAccountsByAccountIdResponse.respond500WithTextPlain(
-                            messages.getMessage(lang, MessageConsts.InternalServerError))));
-        }
+      putCompleted.map(response -> {
+        patronNoticeService.sendActionNotice(entity);
+        return response;
+      }).setHandler(asyncResultHandler);
     }
 }

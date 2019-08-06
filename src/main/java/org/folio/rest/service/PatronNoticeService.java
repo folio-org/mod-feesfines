@@ -37,7 +37,21 @@ public class PatronNoticeService {
   public void sendManualChargeNotice(Account account) {
     feeFineRepository.getById(account.getFeeFineId())
       .compose(this::fetchChargeTemplateId)
-      .map(templateId -> createManualChargeNotice(account.getUserId(), templateId))
+      .map(templateId -> createNotice(account.getUserId(), templateId))
+      .compose(patronNoticeClient::postPatronNotice)
+      .setHandler(send -> {
+        if (send.failed()) {
+          logger.error("Failed to send patron notice", send.cause());
+        } else {
+          logger.info("Patron notice has been successfully sent");
+        }
+      });
+  }
+
+  public void sendActionNotice(Account account) {
+    feeFineRepository.getById(account.getFeeFineId())
+      .compose(this::fetchActionTemplateId)
+      .map(templateId -> createNotice(account.getUserId(), templateId))
       .compose(patronNoticeClient::postPatronNotice)
       .setHandler(send -> {
         if (send.failed()) {
@@ -55,8 +69,11 @@ public class PatronNoticeService {
         .map(Owner::getDefaultChargeNoticeId));
   }
 
-  private PatronNotice createManualChargeNotice(String userId, String chargeTemplateId) {
-    return createNotice(userId, chargeTemplateId);
+  private Future<String> fetchActionTemplateId(Feefine feefine) {
+    return Optional.ofNullable(feefine.getActionNoticeId())
+      .map(Future::succeededFuture)
+      .orElseGet(() -> ownerRepository.getById(feefine.getOwnerId())
+        .map(Owner::getDefaultActionNoticeId));
   }
 
   private PatronNotice createNotice(String userId, String templateId) {
