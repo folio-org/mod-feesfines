@@ -1,4 +1,6 @@
-## 15.5.0 UNRELEASED
+## 15.5.1 UNRELEASED
+
+## 15.5.0 2019-08-06
  * Fix unclosed transaction. Refs MODFEE-10.
 
 ## 15.4.0 2019-06-05
