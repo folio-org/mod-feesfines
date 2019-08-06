@@ -52,7 +52,9 @@ class PatronNoticeTest {
   private static final String USER_ID = "ff4acb6f-dcb3-4535-a81d-e2cac77f6a01";
   private static final String OWNER_ID = "6c67a895-f293-476f-9354-8923851b1ebd";
   private static final String CHARGE_TEMPLATE_ID = "2374fd04-5611-4db2-b949-cffbd7ec13b8";
+  private static final String ACTION_TEMPLATE_ID = "dfcb9bf2-8577-468b-9edd-9f025372955b";
   private static final String DEFAULT_CHARGE_TEMPLATE_ID = "5e7315f4-93fb-4fe0-b9a4-a6abfd22b1cd";
+  private static final String DEFAULT_ACTION_TEMPLATE_ID = "0c26781c-7f6d-4024-9e42-7542aeb08e18";
 
   private static Vertx vertx;
   private static String okapiUrl;
@@ -85,7 +87,8 @@ class PatronNoticeTest {
 
     Owner owner = new Owner()
       .withId(OWNER_ID)
-      .withDefaultChargeNoticeId(DEFAULT_CHARGE_TEMPLATE_ID);
+      .withDefaultChargeNoticeId(DEFAULT_CHARGE_TEMPLATE_ID)
+      .withDefaultActionNoticeId(DEFAULT_ACTION_TEMPLATE_ID);
 
     deployRestVerticle(okapiPort)
       .compose(deploy -> postTenant())
@@ -114,7 +117,11 @@ class PatronNoticeTest {
       .put("itemId", UUID.randomUUID().toString())
       .put("materialTypeId", UUID.randomUUID().toString())
       .put("feeFineId", feefine.getId())
-      .put("ownerId", OWNER_ID);
+      .put("ownerId", OWNER_ID)
+      .put("amount", 10.0)
+      .put("remaining", 10.0)
+      .put("paymentStatus", new JsonObject()
+        .put("name", "Outstanding"));
 
     RestAssured.given()
       .spec(spec)
@@ -154,7 +161,11 @@ class PatronNoticeTest {
       .put("itemId", UUID.randomUUID().toString())
       .put("materialTypeId", UUID.randomUUID().toString())
       .put("feeFineId", feefine.getId())
-      .put("ownerId", OWNER_ID);
+      .put("ownerId", OWNER_ID)
+      .put("amount", 10.0)
+      .put("remaining", 10.0)
+      .put("paymentStatus", new JsonObject()
+        .put("name", "Outstanding"));
 
     RestAssured.given()
       .spec(spec)
@@ -168,6 +179,119 @@ class PatronNoticeTest {
       .put("recipientId", USER_ID)
       .put("deliveryChannel", "email")
       .put("templateId", CHARGE_TEMPLATE_ID)
+      .put("outputFormat", "text/html")
+      .put("lang", "en");
+
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS)
+      .untilAsserted(() -> wireMockServer.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
+        .withRequestBody(equalToJson(notice.encode()))
+      ));
+  }
+
+  @Test
+  void actionNoticeShouldBeSentWithSpecificTemplate()
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    Feefine feefine = new Feefine()
+      .withId(UUID.randomUUID().toString())
+      .withOwnerId(OWNER_ID)
+      .withActionNoticeId(ACTION_TEMPLATE_ID);
+    persistFeeFine(feefine).get(5, TimeUnit.SECONDS);
+
+    String accountId = UUID.randomUUID().toString();
+    JsonObject account = new JsonObject()
+      .put("id", accountId)
+      .put("userId", USER_ID)
+      .put("itemId", UUID.randomUUID().toString())
+      .put("materialTypeId", UUID.randomUUID().toString())
+      .put("feeFineId", feefine.getId())
+      .put("ownerId", OWNER_ID)
+      .put("amount", 10.0)
+      .put("remaining", 10.0)
+      .put("paymentStatus", new JsonObject()
+        .put("name", "Outstanding"));
+
+    RestAssured.given()
+      .spec(spec)
+      .body(account.encode())
+      .when()
+      .post("/accounts")
+      .then()
+      .statusCode(201);
+
+    account.put("remaining", 0.0);
+    account.put("paymentStatus", new JsonObject()
+      .put("name", "Paid fully"));
+
+    RestAssured.given()
+      .spec(spec)
+      .body(account.encode())
+      .when()
+      .put("/accounts/" + accountId)
+      .then()
+      .statusCode(204);
+
+    JsonObject notice = new JsonObject()
+      .put("recipientId", USER_ID)
+      .put("deliveryChannel", "email")
+      .put("templateId", ACTION_TEMPLATE_ID)
+      .put("outputFormat", "text/html")
+      .put("lang", "en");
+
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS)
+      .untilAsserted(() -> wireMockServer.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
+        .withRequestBody(equalToJson(notice.encode()))
+      ));
+  }
+
+  @Test
+  void actionNoticeShouldBeSentWithDefaultTemplate()
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    Feefine feefine = new Feefine()
+      .withId(UUID.randomUUID().toString())
+      .withOwnerId(OWNER_ID);
+    persistFeeFine(feefine).get(5, TimeUnit.SECONDS);
+
+    String accountId = UUID.randomUUID().toString();
+    JsonObject account = new JsonObject()
+      .put("id", accountId)
+      .put("userId", USER_ID)
+      .put("itemId", UUID.randomUUID().toString())
+      .put("materialTypeId", UUID.randomUUID().toString())
+      .put("feeFineId", feefine.getId())
+      .put("ownerId", OWNER_ID)
+      .put("amount", 10.0)
+      .put("remaining", 10.0)
+      .put("paymentStatus", new JsonObject()
+        .put("name", "Outstanding"));
+
+    RestAssured.given()
+      .spec(spec)
+      .body(account.encode())
+      .when()
+      .post("/accounts")
+      .then()
+      .statusCode(201);
+
+    account.put("remaining", 0.0);
+    account.put("paymentStatus", new JsonObject()
+      .put("name", "Paid fully"));
+
+    RestAssured.given()
+      .spec(spec)
+      .body(account.encode())
+      .when()
+      .put("/accounts/" + accountId)
+      .then()
+      .statusCode(204);
+
+    JsonObject notice = new JsonObject()
+      .put("recipientId", USER_ID)
+      .put("deliveryChannel", "email")
+      .put("templateId", DEFAULT_ACTION_TEMPLATE_ID)
       .put("outputFormat", "text/html")
       .put("lang", "en");
 
