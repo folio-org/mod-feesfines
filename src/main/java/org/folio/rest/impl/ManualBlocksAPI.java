@@ -135,11 +135,10 @@ public class ManualBlocksAPI implements Manualblocks {
                                                     PostManualblocksResponse.headersFor201().withLocation(reply.result())))));
 
                                 } else {
-                                    asyncResultHandler.handle(Future.succeededFuture(
-                                            PostManualblocksResponse.respond400WithTextPlain(
-                                                    messages.getMessage(
-                                                            lang, MessageConsts.UnableToProcessRequest))));
-
+                                    postgresClient.rollbackTx(beginTx, rollback -> {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PostManualblocksResponse.respond400WithTextPlain(messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                                    });
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
@@ -148,9 +147,11 @@ public class ManualBlocksAPI implements Manualblocks {
                             }
                         });
                     } catch (Exception e) {
-                        asyncResultHandler.handle(Future.succeededFuture(
-                                PostManualblocksResponse.respond500WithTextPlain(
-                                        e.getMessage())));
+                        postgresClient.rollbackTx(beginTx, rollback -> {
+                            asyncResultHandler.handle(Future.succeededFuture(
+                                    PostManualblocksResponse.respond500WithTextPlain(
+                                            e.getMessage())));
+                        });
                     }
                 });
 

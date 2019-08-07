@@ -1,17 +1,20 @@
-## 15.4.0 UNRELEASED
+## 15.5.1 UNRELEASED
 
-## 15.3.1 2019-06-05
+## 15.5.0 2019-08-06
+ * Fix unclosed transaction. Refs MODFEE-10.
+
+## 15.4.0 2019-06-05
  * Modify resource waives.
  * Upgrade to RMB 24.0.0.
 
 ## 15.3.0 2019-04-02
  * Upgrade to RMB 23.7.0.
  * Fix code smell.
- * Modify resources owners an feefines.Ref UIU-713.
+ * Modify resources owners an feefines.Refs UIU-713.
 
 ## 15.2.1 2019-02-27
- * Add fields defaultChargeNotice and defaultActionNotice for resource owners. Ref UIU-713.
- * Add fields chargeNotice and actionNotice for resource feefines. Ref UIU-713.
+ * Add fields defaultChargeNotice and defaultActionNotice for resource owners. Refs UIU-713.
+ * Add fields chargeNotice and actionNotice for resource feefines. Refs UIU-713.
  * Upgrade to RMB 23.6.0.
 
 ## 15.2.0 2019-02-19
@@ -31,13 +34,13 @@
  * Modify resource accounts.
  * Update interface version descriptor.
 ## 15.0.0 2018-10-18
- * Add field servicePointOwner for resource owners. Ref UIU-611.
- * Modify resource feefineactions. Ref UIU-646.
- * Modify resource payments. Ref UIU-612.
+ * Add field servicePointOwner for resource owners. Refs UIU-611.
+ * Modify resource feefineactions. Refs UIU-646.
+ * Modify resource payments. Refs UIU-612.
  * Add field ownerId as required for resource feefines. Fix to MODFEE-8.
- * Modify resource feefines. Ref UIU-610.
+ * Modify resource feefines. Refs UIU-610.
  * Upgrade to RMB 21.0.4, use RAML 1.0.
  * Update shared raml-util.
- * Add new resource manualblocks. Ref UIU-674.
+ * Add new resource manualblocks. Refs UIU-674.
 ## 14.2.4 2018-09-11
  * Provide the management of the manual fees and fines.

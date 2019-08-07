@@ -133,10 +133,10 @@ public class FeeFineActionsAPI implements Feefineactions {
                                                     PostFeefineactionsResponse.headersFor201().withLocation(reply.result())))));
 
                                 } else {
-                                    asyncResultHandler.handle(Future.succeededFuture(
-                                            PostFeefineactionsResponse.respond400WithTextPlain(
-                                                    messages.getMessage(
-                                                            lang, MessageConsts.UnableToProcessRequest))));
+                                    postgresClient.rollbackTx(beginTx, rollback -> {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PostFeefineactionsResponse.respond400WithTextPlain(messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                                    });
 
                                 }
                             } catch (Exception e) {
@@ -146,9 +146,11 @@ public class FeeFineActionsAPI implements Feefineactions {
                             }
                         });
                     } catch (Exception e) {
-                        asyncResultHandler.handle(Future.succeededFuture(
-                                PostFeefineactionsResponse.respond500WithTextPlain(
-                                        e.getMessage())));
+                        postgresClient.rollbackTx(beginTx, rollback -> {
+                            asyncResultHandler.handle(Future.succeededFuture(
+                                    PostFeefineactionsResponse.respond500WithTextPlain(
+                                            e.getMessage())));
+                        });
                     }
                 });
 

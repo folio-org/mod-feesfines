@@ -135,10 +135,10 @@ public class WaivesAPI implements Waives {
                                                     PostWaivesResponse.headersFor201().withLocation(reply.result())))));
 
                                 } else {
-                                    asyncResultHandler.handle(Future.succeededFuture(
-                                            PostWaivesResponse.respond400WithTextPlain(
-                                                    messages.getMessage(
-                                                            lang, MessageConsts.UnableToProcessRequest))));
+                                    postgresClient.rollbackTx(beginTx, rollback -> {
+                                        asyncResultHandler.handle(Future.succeededFuture(
+                                                PostWaivesResponse.respond400WithTextPlain(messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                                    });
                                 }
                             } catch (Exception e) {
                                 asyncResultHandler.handle(Future.succeededFuture(
@@ -147,9 +147,11 @@ public class WaivesAPI implements Waives {
                             }
                         });
                     } catch (Exception e) {
-                        asyncResultHandler.handle(Future.succeededFuture(
-                                PostWaivesResponse.respond500WithTextPlain(
-                                        e.getMessage())));
+                        postgresClient.rollbackTx(beginTx, rollback -> {
+                            asyncResultHandler.handle(Future.succeededFuture(
+                                    PostWaivesResponse.respond500WithTextPlain(
+                                            e.getMessage())));
+                        });
                     }
                 });
             });
