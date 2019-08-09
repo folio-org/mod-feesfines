@@ -4,15 +4,18 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.jaxrs.model.ManualblockdataCollection;
+import org.folio.rest.jaxrs.model.ManualblocksGetOrder;
 import org.folio.rest.jaxrs.resource.Manualblocks;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -24,9 +27,6 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.folio.rest.jaxrs.model.ManualblocksGetOrder;
 
 public class ManualBlocksAPI implements Manualblocks {
 
@@ -37,11 +37,7 @@ public class ManualBlocksAPI implements Manualblocks {
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Logger logger = LoggerFactory.getLogger(ManualBlocksAPI.class);
 
-    public ManualBlocksAPI(Vertx vertx, String tenantId) {
-        PostgresClient.getInstance(vertx, tenantId).setIdField("id");
-    }
-
-    private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
+    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException  {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(MANUALBLOCKS_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
@@ -96,7 +92,7 @@ public class ManualBlocksAPI implements Manualblocks {
                     }
                 }
             });
-        } catch (Exception e) {
+        } catch (IOException | CQL2PgJSONException e) {
 
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
@@ -176,7 +172,7 @@ public class ManualBlocksAPI implements Manualblocks {
                     Criteria idCrit = new Criteria();
                     idCrit.addField(MANUALBLOCK_ID_FIELD);
                     idCrit.setOperation("=");
-                    idCrit.setValue(manualblockId);
+                    idCrit.setVal(manualblockId);
                     Criterion criterion = new Criterion(idCrit);
 
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(MANUALBLOCKS_TABLE, Manualblock.class, criterion,
@@ -231,7 +227,7 @@ public class ManualBlocksAPI implements Manualblocks {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(MANUALBLOCK_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(manualblockId);
+                idCrit.setVal(manualblockId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
@@ -293,7 +289,7 @@ public class ManualBlocksAPI implements Manualblocks {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(MANUALBLOCK_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(manualblockId);
+                idCrit.setVal(manualblockId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {

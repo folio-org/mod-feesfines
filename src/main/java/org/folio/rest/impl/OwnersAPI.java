@@ -7,12 +7,16 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.OwnerdataCollection;
+import org.folio.rest.jaxrs.model.OwnersGetOrder;
 import org.folio.rest.jaxrs.resource.Owners;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -24,9 +28,6 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.folio.rest.jaxrs.model.OwnersGetOrder;
 
 public class OwnersAPI implements Owners {
 
@@ -37,11 +38,7 @@ public class OwnersAPI implements Owners {
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Logger logger = LoggerFactory.getLogger(OwnersAPI.class);
 
-    public OwnersAPI(Vertx vertx, String tenantId) {
-        PostgresClient.getInstance(vertx, tenantId).setIdField("id");
-    }
-
-    private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
+    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException  {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(OWNERS_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
@@ -96,7 +93,7 @@ public class OwnersAPI implements Owners {
                     }
                 }
             });
-        } catch (Exception e) {
+        } catch (IOException | CQL2PgJSONException e) {
 
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
@@ -176,7 +173,7 @@ public class OwnersAPI implements Owners {
                     Criteria idCrit = new Criteria();
                     idCrit.addField(OWNER_ID_FIELD);
                     idCrit.setOperation("=");
-                    idCrit.setValue(ownerId);
+                    idCrit.setVal(ownerId);
                     Criterion criterion = new Criterion(idCrit);
 
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(OWNERS_TABLE, Owner.class, criterion,
@@ -231,7 +228,7 @@ public class OwnersAPI implements Owners {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(OWNER_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(ownerId);
+                idCrit.setVal(ownerId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
@@ -293,7 +290,7 @@ public class OwnersAPI implements Owners {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(OWNER_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(ownerId);
+                idCrit.setVal(ownerId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
