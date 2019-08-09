@@ -7,12 +7,16 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Payment;
 import org.folio.rest.jaxrs.model.PaymentdataCollection;
+import org.folio.rest.jaxrs.model.PaymentsGetOrder;
 import org.folio.rest.jaxrs.resource.Payments;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -26,9 +30,6 @@ import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.folio.rest.jaxrs.model.PaymentsGetOrder;
 
 public class PaymentsAPI implements Payments {
 
@@ -38,11 +39,7 @@ public class PaymentsAPI implements Payments {
     private final Messages messages = Messages.getInstance();
     private final Logger logger = LoggerFactory.getLogger(PaymentsAPI.class);
 
-    public PaymentsAPI(Vertx vertx, String tenantId) {
-        PostgresClient.getInstance(vertx, tenantId).setIdField("id");
-    }
-
-    private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
+    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException  {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(PAYMENTS_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
@@ -99,7 +96,7 @@ public class PaymentsAPI implements Payments {
                     }
                 }
             });
-        } catch (Exception e) {
+        } catch (IOException | CQL2PgJSONException e) {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
@@ -174,7 +171,7 @@ public class PaymentsAPI implements Payments {
                     Criteria idCrit = new Criteria();
                     idCrit.addField(PAYMENT_ID_FIELD);
                     idCrit.setOperation("=");
-                    idCrit.setValue(paymentId);
+                    idCrit.setVal(paymentId);
                     Criterion criterion = new Criterion(idCrit);
 
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(PAYMENTS_TABLE, Payment.class, criterion,
@@ -227,7 +224,7 @@ public class PaymentsAPI implements Payments {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(PAYMENT_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(paymentId);
+                idCrit.setVal(paymentId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
@@ -288,7 +285,7 @@ public class PaymentsAPI implements Payments {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(PAYMENT_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(paymentId);
+                idCrit.setVal(paymentId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {

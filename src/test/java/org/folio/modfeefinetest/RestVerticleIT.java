@@ -1,7 +1,6 @@
 package org.folio.modfeefinetest;
 
 import java.net.HttpURLConnection;
-import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -11,7 +10,6 @@ import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.joda.time.DateTime;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -19,7 +17,6 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -31,24 +28,18 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.ISODateTimeFormat;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-import org.joda.time.format.DateTimeFormatter;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RunWith(VertxUnitRunner.class)
 public class RestVerticleIT {
 
     private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-    private static final String SUPPORTED_CONTENT_TYPE_TEXT_DEF = "text/plain";
 
-    private static String postRequest = "{\"feefines\": \"librarianPOST\",\"desc\": \"basic lib feefines\"}";
-    private static String putRequest = "{\"feefines\": \"librarianPUT\",\"desc\": \"basic lib feefines\"}";
+   private static final String MANUAL_BLOCK = "{\"type\": \"Manual\",\"desc\": \"Show not expiration!\",\"borrowing\": true,\"renewals\": true,\"requests\": true,\"userId\": \"9d68864b-ee65-4ab0-9d2d-1677f8503f64\"}";
 
     private static Vertx vertx;
     static int port;
@@ -61,7 +52,7 @@ public class RestVerticleIT {
         PostgresClient postgres = PostgresClient.getInstance(vertx);
         try {
             postgres.startEmbeddedPostgres();
-        } catch (Exception e) {
+        } catch (IOException e) {
             context.fail(e);
             return;
         }
@@ -110,281 +101,36 @@ public class RestVerticleIT {
         }));
     }
 
-    private Future<Void> postFeefine(TestContext context) {
-        Future future = Future.future();
-        JsonObject feefineObject = new JsonObject()
-                .put("id", "1234567")
-                .put("feeFineType", "por credencial")
-                .put("defaultAmount", "10.00")
-                .put("ownerId", "Biblioteca postFeefine");
-        HttpClient client = vertx.createHttpClient();
-        client.post(port, "localhost", "/feefines", res -> {
-            if (res.statusCode() >= 200 && res.statusCode() < 300) {
-                future.complete();
-            } else {
-                future.fail("Got status code: " + res.statusCode());
-            }
-        })
-                .putHeader("X-Okapi-Tenant", "diku")
-                .putHeader("content-type", "application/json")
-                .putHeader("accept", "application/json")
-                .end(feefineObject.encode());
-        return future;
-    }
-
-    private Future<Void> getFeefine(TestContext context) {
-        Future future = Future.future();
-        HttpClient client = vertx.createHttpClient();
-        client.get(port, "localhost", "/feefines", res -> {
-            if (res.statusCode() == 200) {
-                res.bodyHandler(buf -> {
-                    JsonObject feefineObject = buf.toJsonObject();
-                    if (feefineObject.getString("id").equals("joeblock")) {
-                        DateFormat gmtFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS\'Z\'");
-                        Date createdDate = null;
-                        try {
-                            //createdDate = DatatypeConverter.parseDateTime(feefineObject.getString("createdDate")).getTime();
-                            createdDate = new DateTime(feefineObject.getString("createdDate")).toDate();
-                        } catch (Exception e) {
-                            future.fail(e);
-                            return;
-                        }
-                        Date now = new Date();
-                        if (createdDate.before(now)) {
-                            future.complete();
-                        } else {
-                            future.fail("Bad value for createdDate");
-                        }
-                    } else {
-                        future.fail("Unable to read UNAM proper data from JSON return value: " + buf.toString());
-                    }
-                });
-            } else {
-                future.fail("Bad response: " + res.statusCode());
-            }
-        })
-                .putHeader("X-Okapi-Tenant", "diku")
-                .putHeader("content-type", "application/json")
-                .putHeader("accept", "application/json")
-                .end();
-        return future;
-    }
-
-    private Future<Void> postAnotherFeefine(TestContext context) {
-        Future future = Future.future();
-        JsonObject feefineObject = new JsonObject()
-                .put("id", "1234567")
-                .put("feeFineType", "por Perdidad de libro")
-                .put("defaultAmount", "10.00")
-                .put("ownerId", "Biblioteca Central");
-
-        HttpClient client = vertx.createHttpClient();
-        client.post(port, "localhost", "/feefines", res -> {
-            if (res.statusCode() == 201) {
-                future.complete();
-            } else {
-                res.bodyHandler(body -> {
-                    future.fail("Error adding new feefine: Got status code: " + res.statusCode() + ": " + body.toString());
-                });
-            }
-        })
-                .putHeader("X-Okapi-Tenant", "diku")
-                .putHeader("content-type", "application/json")
-                .putHeader("accept", "application/json")
-                .end(feefineObject.encode());
-        return future;
-    }
-
-    private Future<Void> putFeefineGood(TestContext context) {
-        Future future = Future.future();
-        JsonObject feefineObject = new JsonObject()
-                .put("id", "1234567")
-                .put("feeFineType", "por credencial")
-                .put("defaultAmount", "10.00")
-                .put("ownerId", "Biblioteca Central");
-
-        HttpClient client = vertx.createHttpClient();
-        client.put(port, "localhost", "/feefines/2345678", res -> {
-            if (res.statusCode() == 204) {
-                future.complete();
-            } else {
-                res.bodyHandler(body -> {
-                    future.fail("Error adding putting feefine (good): Got status code: " + res.statusCode() + ": " + body.toString());
-                });
-            }
-        })
-                .putHeader("X-Okapi-Tenant", "diku")
-                .putHeader("content-type", "application/json")
-                .putHeader("accept", "text/plain")
-                .end(feefineObject.encode());
-        return future;
-    }
-
-    private Future<Void> getGoodFeefine(TestContext context) {
-        Future future = Future.future();
-        HttpClient client = vertx.createHttpClient();
-        client.get(port, "localhost", "/feefines/2345678", res -> {
-            if (res.statusCode() == 200) {
-                res.bodyHandler(buf -> {
-                    JsonObject feefineObject = buf.toJsonObject();
-                    if (feefineObject.getString("feefinename").equals("bobcircle")) {
-                        Date createdDate = null;
-                        Date updatedDate = null;
-                        try {
-                            createdDate = new DateTime(feefineObject.getString("createdDate")).toDate();
-                            updatedDate = new DateTime(feefineObject.getString("updatedDate")).toDate();
-                        } catch (Exception e) {
-                            future.fail(e);
-                            return;
-                        }
-                        Date now = new Date();
-                        if (createdDate.before(now) && updatedDate.before(now) && createdDate.before(updatedDate)) {
-                            future.complete();
-                        } else {
-                            future.fail("Bad value for createdDate and/or updatedDate");
-                        }
-                    } else {
-                        future.fail("Unable to read proper data from JSON return value: " + buf.toString());
-                    }
-                });
-            } else {
-                future.fail("Bad response: " + res.statusCode());
-            }
-        })
-                .putHeader("X-Okapi-Tenant", "diku")
-                .putHeader("content-type", "application/json")
-                .putHeader("accept", "application/json")
-                .end();
-        return future;
-    }
-
-    private Future<Void> putFeefineBadFeefinename(TestContext context) {
-        Future future = Future.future();
-        JsonObject feefineObject = new JsonObject()
-                .put("id", "1234567")
-                .put("feeFineType", "por credencial")
-                .put("defaultAmount", "10.00")
-                .put("ownerId", "Biblioteca Central");
-
-        HttpClient client = vertx.createHttpClient();
-        client.put(port, "localhost", "/feefines/2345678", res -> {
-            if (res.statusCode() == 400) {
-                future.complete();
-            } else {
-                res.bodyHandler(body -> {
-                    future.fail("Error adding putting feefine (bad feefinename): Got status code: " + res.statusCode() + ": " + body.toString());
-                });
-            }
-        })
-                .putHeader("X-Okapi-Tenant", "diku")
-                .putHeader("content-type", "application/json")
-                .putHeader("accept", "text/plain")
-                .end(feefineObject.encode());
-        return future;
-    }
-
     @Test
-    public void testCrossTableQueries(TestContext context) {
-        String url = "http://localhost:" + port + "/feefines?query=";
-        String feefineUrl = "http://localhost:" + port + "/feefines";
-        String ownerUrl = "http://localhost:" + port + "/owners";
-        String accountUrl = "http://localhost:" + port + "/accounts";
-
+    public void testManualBlock(TestContext context) {
         try {
+            String manualBlockURL = "http://localhost:" + port + "/manualblocks";
 
-            CompletableFuture<Response> addOwnerCF = new CompletableFuture();
-            String addOwnerURL = ownerUrl;
+            /**
+             * add a manualblock - should return 201
+             */
+            CompletableFuture<Response> addManualBlockCF = new CompletableFuture();
+            String addManualBlockURL = manualBlockURL;
+            send(addManualBlockURL, context, HttpMethod.POST, MANUAL_BLOCK,
+                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addManualBlockCF));
+            Response addManualBlockResponse = addManualBlockCF.get(5, TimeUnit.SECONDS);
+            context.assertEquals(addManualBlockResponse.code, HttpURLConnection.HTTP_CREATED);
+            String manualBlockId = addManualBlockResponse.body.getString("id");
 
-            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Main Admin", "Main Library Administration Office").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF));
-            Response addOwnerResponse = addOwnerCF.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addOwnerResponse.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addOwnerResponse.body
-                    + "\nStatus -POST " + addOwnerResponse.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
-
-            CompletableFuture<Response> addOwnerCF2 = new CompletableFuture();
-
-            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Main Circ", "Main Library Circulation Desk").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF2));
-            Response addOwnerResponse2 = addOwnerCF2.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addOwnerResponse2.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addOwnerResponse2.body
-                    + "\nStatus -POST " + addOwnerResponse2.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
-
-            CompletableFuture<Response> addOwnerCF3 = new CompletableFuture();
-
-            send(addOwnerURL, context, HttpMethod.POST, createOwner(null, "Shared", "Shared").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addOwnerCF3));
-            Response addOwnerResponse3 = addOwnerCF3.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addOwnerResponse3.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addOwnerResponse3.body
-                    + "\nStatus -POST " + addOwnerResponse3.code + " time " + System.currentTimeMillis() + " for " + addOwnerURL);
-
-           // get owners
-
-            CompletableFuture<Response> cfo =  new CompletableFuture();
-            String cqlURLo = ownerUrl;
-
-            send(cqlURLo, context, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF, 200,
-              new HTTPResponseHandler(cfo));
-            Response cqlResponseo = cfo.get(5, TimeUnit.SECONDS);
-
-            context.assertEquals(cqlResponseo.code, HttpURLConnection.HTTP_OK);
-            System.out.println(cqlResponseo.body +
-              "\nStatus - " + cqlResponseo.code + " at " + System.currentTimeMillis() + " for " + cqlURLo                    + cqlResponseo.body.toString());
-            String ownerIdL = cqlResponseo.body.getJsonArray("owners").getJsonObject(2).getString("id");
-            context.assertNotNull(ownerIdL);
-
-            CompletableFuture<Response> addFeefineCF = new CompletableFuture();
-            String addFeefineURL = feefineUrl;
-            // createFeefine create the object json to the DB
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, ownerIdL, "Damaged Book Fee").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF));
-            Response addFeefineResponse = addFeefineCF.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addFeefineResponse.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addFeefineResponse.body
-                    + "\nStatus -POST " + addFeefineResponse.code + " time " + System.currentTimeMillis() + " for " + addFeefineURL);
-
-            CompletableFuture<Response> addFeefineCF2 = new CompletableFuture();
-
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, ownerIdL, "Late").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF2));
-            Response addFeefineResponse2 = addFeefineCF2.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addFeefineResponse2.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addFeefineResponse2.body
-                    + "\nStatus -POST " + addFeefineResponse2.code + " time " + System.currentTimeMillis() + " for " + addFeefineURL);
-
-            CompletableFuture<Response> addFeefineCF3 = new CompletableFuture();
-
-            send(addFeefineURL, context, HttpMethod.POST, createFeefine(null, ownerIdL, "Item Lost Fee").encode(),
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addFeefineCF3));
-            Response addFeefineResponse3 = addFeefineCF3.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addFeefineResponse3.code, HttpURLConnection.HTTP_CREATED);
-            System.out.println(addFeefineResponse3.body
-                    + "\nStatus -POST " + addFeefineResponse3.code + " time " + System.currentTimeMillis() + " for " + addFeefineURL);
-
-            String url1 = url + URLEncoder.encode("id=*", "UTF-8");
-            String url6 = url + URLEncoder.encode("id=*", "UTF-8");
-
-            CompletableFuture<Response> cqlCF6 = new CompletableFuture();
-            CompletableFuture<Response> cqlCF1 = new CompletableFuture();
-
-            String[] urls = new String[]{url1, url6};
-            CompletableFuture<Response>[] cqlCF = new CompletableFuture[]{cqlCF1, cqlCF6};
-
-            for (int i = 0; i < 2; i++) {
-                CompletableFuture<Response> cf = cqlCF[i];
-                String cqlURL = urls[i];
-                send(cqlURL, context, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF, 200,
-                        new HTTPResponseHandler(cf));
-                Response cqlResponse = cf.get(5, TimeUnit.SECONDS);
-                context.assertEquals(cqlResponse.code, HttpURLConnection.HTTP_OK);
-                context.assertEquals(3, cqlResponse.body.getInteger("totalRecords"));
-                System.out.println(cqlResponse.body.getInteger("totalRecords"));
-            }
-        } catch (Exception e) {
-            context.fail(e.getMessage());
+            /**
+             * get all manualBlocks in manualBlocks table - should return 200
+             */
+            CompletableFuture<Response> getAllManualBlocksCF = new CompletableFuture();
+            String getAllManualBlocksURL = manualBlockURL;
+            send(getAllManualBlocksURL, context, HttpMethod.GET, null,
+                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 200, new HTTPResponseHandler(getAllManualBlocksCF));
+            Response getAllManualBlocksResponse = getAllManualBlocksCF.get(5, TimeUnit.SECONDS);
+            context.assertEquals(getAllManualBlocksResponse.code, HttpURLConnection.HTTP_OK);
+            context.assertTrue(isSizeMatch(getAllManualBlocksResponse, 1));
+        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+            Logger.getLogger(RestVerticleIT.class.getName()).log(Level.SEVERE, null, ex);
         }
+
     }
 
     private void send(String url, TestContext context, HttpMethod method, String content,
@@ -396,14 +142,23 @@ public class RestVerticleIT {
         }
         Buffer buffer = Buffer.buffer(content);
 
-        if (method == HttpMethod.POST) {
-            request = client.postAbs(url);
-        } else if (method == HttpMethod.DELETE) {
-            request = client.deleteAbs(url);
-        } else if (method == HttpMethod.GET) {
-            request = client.getAbs(url);
-        } else {
+        if (null == method) {
             request = client.putAbs(url);
+        } else {
+            switch (method) {
+                case POST:
+                    request = client.postAbs(url);
+                    break;
+                case DELETE:
+                    request = client.deleteAbs(url);
+                    break;
+                case GET:
+                    request = client.getAbs(url);
+                    break;
+                default:
+                    request = client.putAbs(url);
+                    break;
+            }
         }
         request.exceptionHandler(error -> {
             context.fail(error.getMessage());
@@ -411,7 +166,7 @@ public class RestVerticleIT {
                 .handler(handler);
         request.putHeader("Authorization", "diku");
         request.putHeader("X-Okapi-Tenant", "diku");
-        request.putHeader("accept", "application/json");
+        request.putHeader("accept", "application/json,text/plain");
         request.putHeader("content-type", "application/json");
         request.end(buffer);
     }
@@ -458,13 +213,59 @@ public class RestVerticleIT {
     }
 
     private boolean isSizeMatch(Response r, int size) {
-        if (r.body.getInteger("totalRecords") == size) {
-            return true;
-        }
-        return false;
+        return r.body.getInteger("totalRecords") == size;
     }
 
-    private static JsonObject createFeefine(String id, String ownerId, String typefeefine) {
+    private static JsonObject createFeeFineAction(String id, String accountId, String userId) {
+
+        JsonObject feeFineAction = new JsonObject();
+        if (id != null) {
+            feeFineAction.put("id", id);
+        } else {
+            id = UUID.randomUUID().toString();
+            feeFineAction.put("id", id);
+        }
+        feeFineAction.put("typeAction", "Payment-ckeck")
+                .put("amountAction", "15.00")
+                .put("balance", "10.00")
+                .put("transactionInformation", "Department ENG-345")
+                .put("comments", "This a comment")
+                .put("createdAt", "Main Library")
+                .put("source", "Doe,Jane")
+                .put("paymentMethod", "Check")
+                .put("accountId", accountId)
+                .put("userId", userId);
+
+        return feeFineAction;
+    }
+
+    private static JsonObject createAccount(String id, String ownerId, String feeFineId, String feeFineType, String materialTypeId, String itemId, String userId) {
+
+        JsonObject account = new JsonObject();
+        if (id != null) {
+            account.put("id", id);
+        } else {
+            id = UUID.randomUUID().toString();
+            account.put("id", id);
+        }
+        account.put("amount", "15.00")
+                .put("remaining", "15.00")
+                .put("feeFineType", feeFineType)
+                .put("feeFineOwner", "Main Admin")
+                .put("status", new JsonObject()
+                        .put("name", "Open"))
+                .put("paymentStatus", new JsonObject()
+                        .put("name", "Outstanding"))
+                .put("ownerId", ownerId)
+                .put("feeFineId", feeFineId)
+                .put("materialTypeId", materialTypeId)
+                .put("itemId", itemId)
+                .put("userId", userId);
+
+        return account;
+    }
+
+    private static JsonObject createFeeFine(String id, String ownerId, String typeFeeFine) {
 
         JsonObject feefine = new JsonObject();
         if (id != null) {
@@ -473,7 +274,7 @@ public class RestVerticleIT {
             id = UUID.randomUUID().toString();
             feefine.put("id", id);
         }
-        feefine.put("feeFineType", typefeefine)
+        feefine.put("feeFineType", typeFeeFine)
                 .put("defaultAmount", "10.00")
                 .put("ownerId", ownerId);
 
@@ -494,4 +295,3 @@ public class RestVerticleIT {
         return ownerJO;
     }
 }
-

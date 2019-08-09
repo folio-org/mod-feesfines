@@ -23,8 +23,5 @@
       "type": "string"
     }
   },
-  "additionalProperties": false,
-  "required": [
-    "id"
-   ]
+  "additionalProperties": false
 }

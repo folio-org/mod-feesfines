@@ -4,19 +4,13 @@
   "tables":[
     {
       "tableName":"owners",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     },
     {
       "tableName":"feefines",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
       "withMetadata":true,
-      "pkColumnName":"id",
       "foreignKeys": [
         {
           "fieldName": "ownerId",
@@ -27,75 +21,48 @@
     },
     {
       "tableName":"accounts",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":false,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     },
     {
       "tableName":"feefineactions",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     },
     {
       "tableName":"payments",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     },
     {
       "tableName":"waives",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     },
     {
       "tableName":"refunds",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     },
     {
       "tableName":"transfers",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     },
     {
       "tableName":"comments",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     },
     {
       "tableName":"manualblocks",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     },
     {
       "tableName":"transfer_criteria",
-      "generateId":true,
       "fromModuleVersion":"15.0",
-      "populateJsonWithId":true,
-      "withMetadata":true,
-      "pkColumnName":"id"
+      "withMetadata":true
     }
   ]
 }
