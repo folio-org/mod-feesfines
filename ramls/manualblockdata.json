@@ -42,7 +42,6 @@
   "additionalProperties": false,
   "required": [
     "desc",
-    "userId",
-    "id"
+    "userId"
    ]
 }
