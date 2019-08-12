@@ -1,11 +1,21 @@
 package org.folio.rest.impl;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.FeefinedataCollection;
+import org.folio.rest.jaxrs.model.FeefinesGetOrder;
 import org.folio.rest.jaxrs.resource.Feefines;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -19,16 +29,6 @@ import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.jaxrs.model.FeefinesGetOrder;
 
 public class FeeFinesAPI implements Feefines {
 
@@ -39,11 +39,7 @@ public class FeeFinesAPI implements Feefines {
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Logger logger = LoggerFactory.getLogger(FeeFinesAPI.class);
 
-    public FeeFinesAPI(Vertx vertx, String tenantId) {
-        PostgresClient.getInstance(vertx, tenantId).setIdField("id");
-    }
-
-    private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
+    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(FEEFINES_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
@@ -99,7 +95,7 @@ public class FeeFinesAPI implements Feefines {
                     }
                 }
             });
-        } catch (Exception e) {
+        } catch (IOException | CQL2PgJSONException e) {
 
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
@@ -175,7 +171,7 @@ public class FeeFinesAPI implements Feefines {
                     Criteria idCrit = new Criteria();
                     idCrit.addField(FEEFINE_ID_FIELD);
                     idCrit.setOperation("=");
-                    idCrit.setValue(feefineId);
+                    idCrit.setVal(feefineId);
                     Criterion criterion = new Criterion(idCrit);
 
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(FEEFINES_TABLE, Feefine.class, criterion,
@@ -232,7 +228,7 @@ public class FeeFinesAPI implements Feefines {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(FEEFINE_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(feefineId);
+                idCrit.setVal(feefineId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
@@ -298,7 +294,7 @@ public class FeeFinesAPI implements Feefines {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(FEEFINE_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(feefineId);
+                idCrit.setVal(feefineId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
