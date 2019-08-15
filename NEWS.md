@@ -1,4 +1,5 @@
 ## 15.5.1 UNRELEASED
+* Update 26.2.4 RMB version. Refs Upgrading Version 25.
 
 ## 15.5.0 2019-08-06
  * Fix unclosed transaction. Refs MODFEE-10.

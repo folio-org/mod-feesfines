@@ -7,12 +7,16 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Waiver;
 import org.folio.rest.jaxrs.model.WaivedataCollection;
+import org.folio.rest.jaxrs.model.WaivesGetOrder;
 import org.folio.rest.jaxrs.resource.Waives;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -26,9 +30,6 @@ import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.folio.rest.jaxrs.model.WaivesGetOrder;
 
 public class WaivesAPI implements Waives {
 
@@ -38,11 +39,7 @@ public class WaivesAPI implements Waives {
     private final Messages messages = Messages.getInstance();
     private final Logger logger = LoggerFactory.getLogger(WaivesAPI.class);
 
-    public WaivesAPI(Vertx vertx, String tenantId) {
-        PostgresClient.getInstance(vertx, tenantId).setIdField("id");
-    }
-
-    private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
+    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException  {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(WAIVES_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
@@ -174,7 +171,7 @@ public class WaivesAPI implements Waives {
                     Criteria idCrit = new Criteria();
                     idCrit.addField(WAIVE_ID_FIELD);
                     idCrit.setOperation("=");
-                    idCrit.setValue(waiveId);
+                    idCrit.setVal(waiveId);
                     Criterion criterion = new Criterion(idCrit);
 
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(WAIVES_TABLE, Waiver.class, criterion,
@@ -227,7 +224,7 @@ public class WaivesAPI implements Waives {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(WAIVE_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(waiveId);
+                idCrit.setVal(waiveId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
@@ -288,7 +285,7 @@ public class WaivesAPI implements Waives {
                 Criteria idCrit = new Criteria();
                 idCrit.addField(WAIVE_ID_FIELD);
                 idCrit.setOperation("=");
-                idCrit.setValue(waiveId);
+                idCrit.setVal(waiveId);
                 Criterion criterion = new Criterion(idCrit);
 
                 try {
