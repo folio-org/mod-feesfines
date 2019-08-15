@@ -83,7 +83,6 @@ class PatronNoticeTest {
 
     PostgresClient.getInstance(vertx).startEmbeddedPostgres();
     pgClient = PostgresClient.getInstance(vertx, TENANT);
-    pgClient.setIdField("id");
 
     Owner owner = new Owner()
       .withId(OWNER_ID)
