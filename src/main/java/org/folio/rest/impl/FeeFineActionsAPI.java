@@ -9,6 +9,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
@@ -112,6 +113,9 @@ public class FeeFineActionsAPI implements Feefineactions {
     @Validate
     @Override
     public void postFeefineactions(String lang, Feefineaction entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+        if (entity.getId() == null) {
+            entity.setId(UUID.randomUUID().toString());
+        }
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -119,7 +123,7 @@ public class FeeFineActionsAPI implements Feefineactions {
 
                 postgresClient.startTx(beginTx -> {
                     try {
-                        postgresClient.save(beginTx, FEEFINEACTIONS_TABLE, entity, reply -> {
+                        postgresClient.save(beginTx, FEEFINEACTIONS_TABLE, entity.getId(), entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
                                     final Feefineaction feefineaction = entity;

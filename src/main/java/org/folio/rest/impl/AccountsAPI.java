@@ -112,8 +112,7 @@ public class AccountsAPI implements Accounts {
 
     @Validate
     @Override
-    public void postAccounts(String lang, Account entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    public void postAccounts(String lang, Account entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -121,7 +120,7 @@ public class AccountsAPI implements Accounts {
 
                 postgresClient.startTx(beginTx -> {
                     try {
-                        postgresClient.save(beginTx, ACCOUNTS_TABLE, entity, reply -> {
+                        postgresClient.save(beginTx, ACCOUNTS_TABLE, entity.getId(), entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
                                     final Account account = entity;

@@ -4,12 +4,12 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
@@ -42,7 +42,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Logger logger = LoggerFactory.getLogger(TransferCriteriaAPI.class);
 
-    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException  {
+    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(TRANSFER_CRITERIA_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
@@ -97,7 +97,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
                     }
                 }
             });
-        } catch (Exception e) {
+        } catch (IOException | CQL2PgJSONException e) {
 
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
@@ -116,6 +116,9 @@ public class TransferCriteriaAPI implements TransferCriterias {
     @Validate
     @Override
     public void postTransferCriterias(String lang, TransferCriteria entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+        if (entity.getId() == null) {
+            entity.setId(UUID.randomUUID().toString());
+        }
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -123,13 +126,12 @@ public class TransferCriteriaAPI implements TransferCriterias {
 
                 postgresClient.startTx(beginTx -> {
                     try {
-
-                        postgresClient.save(beginTx, TRANSFER_CRITERIA_TABLE, entity, reply -> {
+                        postgresClient.save(beginTx, TRANSFER_CRITERIA_TABLE, entity.getId(), entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
                                     final TransferCriteria transferCriteria = entity;
                                     transferCriteria.setId(entity.getId());
-                                    logger.debug("ID API" + entity.getId());
+                                    //logger.debug("ID API" + entity.getId());
                                     postgresClient.endTx(beginTx, done
                                             -> asyncResultHandler.handle(Future.succeededFuture(PostTransferCriteriasResponse.respond201WithApplicationJson(transferCriteria,
                                                     PostTransferCriteriasResponse.headersFor201().withLocation(reply.result())))));
