@@ -9,6 +9,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
@@ -37,7 +38,7 @@ public class ManualBlocksAPI implements Manualblocks {
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Logger logger = LoggerFactory.getLogger(ManualBlocksAPI.class);
 
-    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException  {
+    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(MANUALBLOCKS_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
@@ -111,7 +112,9 @@ public class ManualBlocksAPI implements Manualblocks {
     @Validate
     @Override
     public void postManualblocks(String lang, Manualblock entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
+        if (entity.getId() == null) {
+            entity.setId(UUID.randomUUID().toString());
+        }
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -120,7 +123,7 @@ public class ManualBlocksAPI implements Manualblocks {
                 postgresClient.startTx(beginTx -> {
                     try {
 
-                        postgresClient.save(beginTx, MANUALBLOCKS_TABLE, entity, reply -> {
+                        postgresClient.save(beginTx, MANUALBLOCKS_TABLE, entity.getId(), entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
                                     final Manualblock manualblock = entity;
