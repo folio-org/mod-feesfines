@@ -111,6 +111,7 @@
     "itemId",
     "materialTypeId",
     "feeFineId",
-    "ownerId"
+    "ownerId",
+    "id"
    ]
 }

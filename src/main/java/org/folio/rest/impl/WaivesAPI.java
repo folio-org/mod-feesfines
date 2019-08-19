@@ -4,12 +4,12 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
@@ -39,7 +39,7 @@ public class WaivesAPI implements Waives {
     private final Messages messages = Messages.getInstance();
     private final Logger logger = LoggerFactory.getLogger(WaivesAPI.class);
 
-    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException  {
+    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(WAIVES_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
@@ -96,7 +96,7 @@ public class WaivesAPI implements Waives {
                     }
                 }
             });
-        } catch (Exception e) {
+        } catch (IOException | CQL2PgJSONException e) {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
@@ -113,8 +113,10 @@ public class WaivesAPI implements Waives {
 
     @Validate
     @Override
-    public void postWaives(String lang, Waiver entity, Map<String, String> okapiHeaders,
-            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    public void postWaives(String lang, Waiver entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+        if (entity.getId() == null) {
+            entity.setId(UUID.randomUUID().toString());
+        }
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -122,7 +124,7 @@ public class WaivesAPI implements Waives {
 
                 postgresClient.startTx(beginTx -> {
                     try {
-                        postgresClient.save(beginTx, WAIVES_TABLE, entity, reply -> {
+                        postgresClient.save(beginTx, WAIVES_TABLE, entity.getId(), entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
                                     final Waiver waive = entity;

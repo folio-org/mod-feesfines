@@ -4,12 +4,12 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
@@ -38,7 +38,7 @@ public class OwnersAPI implements Owners {
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Logger logger = LoggerFactory.getLogger(OwnersAPI.class);
 
-    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException  {
+    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(OWNERS_TABLE + ".jsonb");
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
@@ -112,7 +112,9 @@ public class OwnersAPI implements Owners {
     @Validate
     @Override
     public void postOwners(String lang, Owner entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
+        if (entity.getId() == null) {
+            entity.setId(UUID.randomUUID().toString());
+        }
         try {
             vertxContext.runOnContext(v -> {
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -120,13 +122,12 @@ public class OwnersAPI implements Owners {
 
                 postgresClient.startTx(beginTx -> {
                     try {
-
-                        postgresClient.save(beginTx, OWNERS_TABLE, entity, reply -> {
+                        postgresClient.save(beginTx, OWNERS_TABLE, entity.getId(), entity, reply -> {
                             try {
                                 if (reply.succeeded()) {
                                     final Owner owner = entity;
                                     owner.setId(entity.getId());
-                                    logger.debug("ID API" + entity.getId());
+                                    //logger.info("ID API " + entity.getId());
                                     postgresClient.endTx(beginTx, done
                                             -> asyncResultHandler.handle(Future.succeededFuture(PostOwnersResponse.respond201WithApplicationJson(owner,
                                                     PostOwnersResponse.headersFor201().withLocation(reply.result())))));
