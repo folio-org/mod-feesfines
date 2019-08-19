@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "Patron Notice",
+  "additionalProperties": false,
+  "properties": {
+    "recipientId": {
+      "description": "The UUID of the receiving user",
+      "type": "string"
+    },
+    "deliveryChannel": {
+      "description": "delivery channel",
+      "type": "string"
+    },
+    "templateId": {
+      "description": "The UUID of the notice template",
+      "type": "string"
+    },
+    "outputFormat": {
+      "description": "Output format e.g email",
+      "type": "string",
+      "default": "text/html"
+    },
+    "lang": {
+      "description": "Notice language",
+      "type": "string",
+      "default": "en"
+    },
+    "context": {
+      "type": "object",
+      "description": "Context object"
+    }
+  },
+  "required": [
+    "recipientId",
+    "templateId",
+    "deliveryChannel",
+    "outputFormat"
+  ]
+}
