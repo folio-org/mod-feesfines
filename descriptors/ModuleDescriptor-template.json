@@ -10,7 +10,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"16.0",
+      "version":"15.1",
       "handlers":[
         {
           "methods":[
@@ -135,6 +135,9 @@
           "pathPattern":"/accounts",
           "permissionsRequired":[
             "accounts.item.post"
+          ],
+          "modulePermissions": [
+            "patron-notice.post"
           ]
         },
         {
@@ -144,6 +147,9 @@
           "pathPattern":"/accounts/{id}",
           "permissionsRequired":[
             "accounts.item.put"
+          ],
+          "modulePermissions": [
+            "patron-notice.post"
           ]
         },
         {
