@@ -1,6 +1,12 @@
 {
   "id":"${artifactId}-${version}",
   "name":"feesfines",
+  "requires":[
+    {
+      "id": "patron-notice",
+      "version": "1.0"
+    }
+  ],
   "provides":[
     {
       "id":"feesfines",
