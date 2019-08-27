@@ -1,16 +1,11 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+
 import javax.ws.rs.core.Response;
+
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
@@ -23,11 +18,20 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class FeeFineActionsAPI implements Feefineactions {
 
@@ -112,54 +116,21 @@ public class FeeFineActionsAPI implements Feefineactions {
 
     @Validate
     @Override
-    public void postFeefineactions(String lang, Feefineaction entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-        if (entity.getId() == null) {
-            entity.setId(UUID.randomUUID().toString());
-        }
-        try {
-            vertxContext.runOnContext(v -> {
-                String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-                PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+    public void postFeefineactions(String lang,
+                                   Feefineaction entity,
+                                   Map<String, String> okapiHeaders,
+                                   Handler<AsyncResult<Response>> asyncResultHandler,
+                                   Context vertxContext) {
 
-                postgresClient.startTx(beginTx -> {
-                    try {
-                        postgresClient.save(beginTx, FEEFINEACTIONS_TABLE, entity.getId(), entity, reply -> {
-                            try {
-                                if (reply.succeeded()) {
-                                    final Feefineaction feefineaction = entity;
-                                    feefineaction.setId(entity.getId());
-                                    postgresClient.endTx(beginTx, done
-                                            -> asyncResultHandler.handle(Future.succeededFuture(PostFeefineactionsResponse.respond201WithApplicationJson(feefineaction,
-                                                    PostFeefineactionsResponse.headersFor201().withLocation(reply.result())))));
+      Future<Response> postCompleted = Future.future();
+      PgUtil.post(FEEFINEACTIONS_TABLE, entity, okapiHeaders, vertxContext, PostFeefineactionsResponse.class, postCompleted);
 
-                                } else {
-                                    postgresClient.rollbackTx(beginTx, rollback -> {
-                                        asyncResultHandler.handle(Future.succeededFuture(
-                                                PostFeefineactionsResponse.respond400WithTextPlain(messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
-                                    });
+      PatronNoticeService patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
 
-                                }
-                            } catch (Exception e) {
-                                asyncResultHandler.handle(Future.succeededFuture(
-                                        PostFeefineactionsResponse.respond500WithTextPlain(
-                                                e.getMessage())));
-                            }
-                        });
-                    } catch (Exception e) {
-                        postgresClient.rollbackTx(beginTx, rollback -> {
-                            asyncResultHandler.handle(Future.succeededFuture(
-                                    PostFeefineactionsResponse.respond500WithTextPlain(
-                                            e.getMessage())));
-                        });
-                    }
-                });
-
-            });
-        } catch (Exception e) {
-            asyncResultHandler.handle(Future.succeededFuture(
-                    PostFeefineactionsResponse.respond500WithTextPlain(
-                            messages.getMessage(lang, MessageConsts.InternalServerError))));
-        }
+      postCompleted.map(response -> {
+        patronNoticeService.sendPatronNotice(entity);
+        return response;
+      }).setHandler(asyncResultHandler);
     }
 
     @Validate

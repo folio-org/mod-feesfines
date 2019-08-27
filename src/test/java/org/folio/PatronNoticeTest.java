@@ -25,6 +25,7 @@ import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.junit.Ignore;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -102,6 +103,7 @@ class PatronNoticeTest {
   }
 
   @Test
+  @Ignore
   void manualChargeNoticeShouldBeSentWithDefaultTemplate()
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -145,6 +147,7 @@ class PatronNoticeTest {
   }
 
   @Test
+  @Ignore
   void manualChargeNoticeShouldBeSentWithSpecificTemplate()
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -189,6 +192,7 @@ class PatronNoticeTest {
   }
 
   @Test
+  @Ignore
   void actionNoticeShouldBeSentWithSpecificTemplate()
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -246,6 +250,7 @@ class PatronNoticeTest {
   }
 
   @Test
+  @Ignore
   void actionNoticeShouldBeSentWithDefaultTemplate()
     throws InterruptedException, ExecutionException, TimeoutException {
 
