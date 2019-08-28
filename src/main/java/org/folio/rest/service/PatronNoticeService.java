@@ -3,7 +3,11 @@ package org.folio.rest.service;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 
+import java.text.SimpleDateFormat;
+import java.time.ZoneOffset;
 import java.util.Map;
+import java.util.Optional;
+import java.util.TimeZone;
 
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
@@ -58,7 +62,14 @@ public class PatronNoticeService {
   }
 
   private PatronNotice createNotice(FeeFineNoticeContext ctx) {
+    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
+
     Feefineaction feefineaction = ctx.getFeefineaction();
+    String actionDateTime = Optional.ofNullable(feefineaction.getDateAction())
+      .map(df::format)
+      .orElse(null);
+
     return new PatronNotice()
       .withDeliveryChannel("email")
       .withOutputFormat("text/html")
@@ -71,7 +82,7 @@ public class PatronNoticeService {
           .put("amount", ctx.getAccount().getAmount())
           .put("actionType", feefineaction.getTypeAction())
           .put("actionAmount", feefineaction.getAmountAction())
-          .put("actionDateTime", feefineaction.getDateAction().toString())
+          .put("actionDateTime", actionDateTime)
           .put("balance", feefineaction.getBalance())));
   }
 
