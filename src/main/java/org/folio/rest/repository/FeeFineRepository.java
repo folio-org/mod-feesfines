@@ -1,6 +1,7 @@
 package org.folio.rest.repository;
 
 
+import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.persist.PostgresClient;
 
@@ -16,9 +17,9 @@ public class FeeFineRepository {
     this.pgClient = pgClient;
   }
 
-  public Future<Feefine> getById(String id) {
+  public Future<FeeFineNoticeContext> loadFeefine(FeeFineNoticeContext context) {
     Future<Feefine> future = Future.future();
-    pgClient.getById(FEEFINES_TABLE, id, Feefine.class, future);
-    return future;
+    pgClient.getById(FEEFINES_TABLE, context.getAccount().getFeeFineId(), Feefine.class, future);
+    return future.map(context::withFeefine);
   }
 }

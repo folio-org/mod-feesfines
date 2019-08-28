@@ -1,5 +1,6 @@
 package org.folio.rest.repository;
 
+import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.persist.PostgresClient;
 
@@ -15,9 +16,9 @@ public class OwnerRepository {
     this.pgClient = pgClient;
   }
 
-  public Future<Owner> getById(String id) {
+  public Future<FeeFineNoticeContext> loadOwner(FeeFineNoticeContext context) {
     Future<Owner> future = Future.future();
-    pgClient.getById(OWNERS_TABLE, id, Owner.class, future);
-    return future;
+    pgClient.getById(OWNERS_TABLE, context.getFeefine().getOwnerId(), Owner.class, future);
+    return future.map(context::withOwner);
   }
 }
