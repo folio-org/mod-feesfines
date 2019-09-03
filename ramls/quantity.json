@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "quantity": {
+      "type": "number",
+      "minimum": 1.0,
+      "description": "Quantity of the number of times the interval repeats"
+    },
+    "intervalId": {
+      "type": "string",
+      "description": "Interval for the period, e.g. hour, day, week, month or year",
+      "enum":[
+        "minute",
+        "hour",
+        "day",
+        "week",
+        "month",
+        "year"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

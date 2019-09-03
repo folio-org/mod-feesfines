@@ -1,0 +1,118 @@
+#%RAML 1.0
+title: Overdue Fine Policies
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Overdue Fine Policies API
+    content: <b>Overdue Fine Policies</b>
+
+types:
+  overdue-fine-policy: !include overdue-fine-policy.json
+  overdue-fine-policies: !include overdue-fine-policies.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  orderable: !include raml-util/traits/orderable.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-only: !include raml-util/rtypes/get-only.raml
+  post-empty-body: !include raml-util/rtypes/post-empty-body.raml
+
+/overdue-fines-policies:
+  type:
+    collection:
+      exampleCollection: !include examples/overdue-fine-policies.json
+      exampleItem: !include examples/overdue-fine-policy.json
+      schemaCollection: overdue-fine-policies
+      schemaItem: overdue-fine-policy
+  get:
+    is: [
+      searchable: {description: "searchable using CQL", example: "name=\"undergrad*\""},
+      orderable: {fieldsList: "field A, field B"},
+      pageable,
+    ]
+    description: "Get Overdue Fine Policy list"
+    responses:
+      200:
+        description: "Return Overdue Fine Policy list"
+        body:
+          application/json:
+            type: overdue-fine-policies
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+  post:
+    is: [validate]
+    description: "Create new Overdue Fine Policy"
+    body:
+      application/json:
+        type: overdue-fine-policy
+    responses:
+      201:
+        description: "Overdue fine policy created"
+        body:
+          application/json:
+            type: overdue-fine-policy
+      422:
+        description: "Unprocessable entity"
+        body:
+          application/json:
+            type: errors
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+  /{overdueFinePolicyId}:
+    type:
+      collection-item:
+        exampleItem: !include examples/overdue-fine-policy.json
+        schema: overdue-fine-policy
+    get:
+      description: "Get Overdue Fine Policy by id"
+      responses:
+        200:
+          description: "Return Overdue Fine Policy"
+          body:
+            application/json:
+              type: overdue-fine-policy
+        404:
+          description: "Not found"
+          body:
+            text/plain:
+              example: "Not found"
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
+    delete:
+      description: "Delete Overdue Fine Policy by id"
+      responses:
+        204:
+          description: "Source record deleted"
+        400:
+          description: "Bad request, e.g. malformed request body, query parameter or constraint violation."
+          body:
+            text/plain:
+              example: "Cannot delete in use fine policy"
+        404:
+          description: "There is no source record for that overdueFinePolicyId"
+          body:
+            text/plain:
+              example: "Not found"
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
