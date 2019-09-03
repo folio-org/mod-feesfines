@@ -117,7 +117,8 @@ class PatronNoticeTest {
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
       .put("balance", 10.0)
-      .put("dateAction", "2019-09-17T08:43:15.000+0000"));
+      .put("dateAction", "2019-09-17T08:43:15.000+0000")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
 
     JsonObject noticeContext = new JsonObject()
       .put("fee", new JsonObject()
@@ -127,7 +128,8 @@ class PatronNoticeTest {
         .put("actionType", typeAction)
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
-        .put("balance", 10.0));
+        .put("balance", 10.0)
+        .put("actionAdditionalInfo", "patron comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
@@ -181,7 +183,8 @@ class PatronNoticeTest {
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
       .put("balance", 10.0)
-      .put("dateAction", "2019-09-17T08:43:15.000+0000"));
+      .put("dateAction", "2019-09-17T08:43:15.000+0000")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
 
     JsonObject noticeContext = new JsonObject()
       .put("fee", new JsonObject()
@@ -191,7 +194,8 @@ class PatronNoticeTest {
         .put("actionType", typeAction)
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
-        .put("balance", 10.0));
+        .put("balance", 10.0)
+        .put("actionAdditionalInfo", "patron comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
@@ -244,7 +248,8 @@ class PatronNoticeTest {
       .put("amountAction", 10.0)
       .put("balance", 0.0)
       .put("dateAction", "2019-09-17T08:43:15.000+0000")
-      .put("paymentMethod", "credit card"));
+      .put("paymentMethod", "credit card")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
 
     JsonObject noticeContext = new JsonObject()
       .put("fee", new JsonObject()
@@ -254,7 +259,8 @@ class PatronNoticeTest {
         .put("actionType", typeAction)
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
-        .put("balance", 0.0));
+        .put("balance", 0.0)
+        .put("actionAdditionalInfo", "patron comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
@@ -310,7 +316,8 @@ class PatronNoticeTest {
       .put("amountAction", 10.0)
       .put("balance", 0.0)
       .put("dateAction", "2019-09-17T08:43:15.000+0000")
-      .put("paymentMethod", "credit card"));
+      .put("paymentMethod", "credit card")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
 
     JsonObject noticeContext = new JsonObject()
       .put("fee", new JsonObject()
@@ -320,7 +327,8 @@ class PatronNoticeTest {
         .put("actionType", typeAction)
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
-        .put("balance", 0.0));
+        .put("balance", 0.0)
+        .put("actionAdditionalInfo", "patron comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)

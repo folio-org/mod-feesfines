@@ -5,10 +5,15 @@ import static io.vertx.core.Future.succeededFuture;
 
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Context;
@@ -31,6 +36,8 @@ import io.vertx.ext.web.client.WebClient;
 public class PatronNoticeService {
 
   private static final Logger logger = LoggerFactory.getLogger(PatronNoticeService.class);
+
+  private static final String PATRON_COMMENTS_KEY = "PATRON";
 
   private FeeFineRepository feeFineRepository;
   private OwnerRepository ownerRepository;
@@ -83,7 +90,21 @@ public class PatronNoticeService {
           .put("actionType", feefineaction.getTypeAction())
           .put("actionAmount", feefineaction.getAmountAction())
           .put("actionDateTime", actionDateTime)
-          .put("balance", feefineaction.getBalance())));
+          .put("balance", feefineaction.getBalance())
+          .put("actionAdditionalInfo", getAdditionalInfoForPatronFromFeeFineAction(feefineaction))));
+  }
+
+  private String getAdditionalInfoForPatronFromFeeFineAction(Feefineaction feefineaction) {
+    String comments = Optional.ofNullable(feefineaction.getComments()).orElse(StringUtils.EMPTY);
+    return parseFeeFineComments(comments).getOrDefault(PATRON_COMMENTS_KEY, StringUtils.EMPTY);
+  }
+
+  private Map<String, String> parseFeeFineComments(String comments) {
+    return Arrays.stream(comments.split(" \n "))
+      .map(s -> s.split(" : "))
+      .map(strings -> strings.length == 2 ? Pair.of(strings[0], strings[1]) : null)
+      .filter(Objects::nonNull)
+      .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (s, s2) -> s));
   }
 
   private void handleSendPatronNoticeResult(AsyncResult<Void> post) {
