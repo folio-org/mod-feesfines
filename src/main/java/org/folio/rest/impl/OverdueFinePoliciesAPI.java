@@ -16,8 +16,6 @@ import org.folio.rest.persist.PgUtil;
 
 public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
 
-    private static final Logger logger = LoggerFactory.getLogger(OverdueFinePoliciesAPI.class);
-
     public static final String OVERDUE_FINE_POLICY_TABLE = "overdue_fine_policy";
     private static final Class<OverdueFinePolicy> OVERDUE_FINE_POLICY = OverdueFinePolicy.class;
 
