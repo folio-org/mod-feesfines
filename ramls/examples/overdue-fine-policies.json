@@ -5,14 +5,14 @@
       "description": "This is description for Faculty standard",
       "overdueFine": {
         "quantity": 5.0,
-        "intervalId": "Days"
+        "intervalId": "day"
        },
       "countClosed": true,
       "maxOverdueFine": 50.00,
       "forgiveOverdueFine": true,
       "overdueRecallFine": {
         "quantity": 1.0,
-        "intervalId": "Hours"
+        "intervalId": "hour"
       },
       "gracePeriodRecall": false,
       "maxOverdueRecallFine": 50.00,
