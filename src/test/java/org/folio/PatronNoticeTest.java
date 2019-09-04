@@ -13,18 +13,14 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.awaitility.Awaitility;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
-import org.folio.rest.jaxrs.model.Feefine;
-import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.junit.Ignore;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -49,22 +45,14 @@ class PatronNoticeTest {
   private static final String OKAPI_URL_HEADER = "x-okapi-url";
   private static final String TENANT = "test_tenant";
   private static final String TOKEN = "dummy-TOKEN";
-  private static final String USER_ID = "ff4acb6f-dcb3-4535-a81d-e2cac77f6a01";
-  private static final String OWNER_ID = "6c67a895-f293-476f-9354-8923851b1ebd";
-  private static final String CHARGE_TEMPLATE_ID = "2374fd04-5611-4db2-b949-cffbd7ec13b8";
-  private static final String ACTION_TEMPLATE_ID = "dfcb9bf2-8577-468b-9edd-9f025372955b";
-  private static final String DEFAULT_CHARGE_TEMPLATE_ID = "5e7315f4-93fb-4fe0-b9a4-a6abfd22b1cd";
-  private static final String DEFAULT_ACTION_TEMPLATE_ID = "0c26781c-7f6d-4024-9e42-7542aeb08e18";
 
   private static Vertx vertx;
   private static String okapiUrl;
   private static WireMockServer wireMockServer;
   private static RequestSpecification spec;
-  private static PostgresClient pgClient;
 
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext context) throws IOException {
-
     PatronNoticeTest.vertx = vertx;
     wireMockServer = new WireMockServer();
     wireMockServer.start();
@@ -82,17 +70,10 @@ class PatronNoticeTest {
       .build();
 
     PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-    pgClient = PostgresClient.getInstance(vertx, TENANT);
-
-    Owner owner = new Owner()
-      .withId(OWNER_ID)
-      .withDefaultChargeNoticeId(DEFAULT_CHARGE_TEMPLATE_ID)
-      .withDefaultActionNoticeId(DEFAULT_ACTION_TEMPLATE_ID);
 
     deployRestVerticle(okapiPort)
       .compose(deploy -> postTenant())
-      .compose(post -> persistOwner(owner))
-      .setHandler(persist -> context.completeNow());
+      .setHandler(post -> context.completeNow());
   }
 
   @AfterAll
@@ -102,141 +83,61 @@ class PatronNoticeTest {
   }
 
   @Test
-  void manualChargeNoticeShouldBeSentWithDefaultTemplate()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    Feefine feefine = new Feefine()
-      .withOwnerId(OWNER_ID)
-      .withId(UUID.randomUUID().toString());
-    persistFeeFine(feefine).get(5, TimeUnit.SECONDS);
-
-    JsonObject account = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("userId", USER_ID)
-      .put("itemId", UUID.randomUUID().toString())
-      .put("materialTypeId", UUID.randomUUID().toString())
-      .put("feeFineId", feefine.getId())
-      .put("ownerId", OWNER_ID)
-      .put("amount", 10.0)
-      .put("remaining", 10.0)
-      .put("paymentStatus", new JsonObject()
-        .put("name", "Outstanding"));
-
-    RestAssured.given()
-      .spec(spec)
-      .body(account.encode())
-      .when()
-      .post("/accounts")
-      .then()
-      .statusCode(201);
-
-    JsonObject notice = new JsonObject()
-      .put("recipientId", USER_ID)
-      .put("deliveryChannel", "email")
-      .put("templateId", DEFAULT_CHARGE_TEMPLATE_ID)
-      .put("outputFormat", "text/html")
-      .put("lang", "en");
-
-    Awaitility.await()
-      .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> wireMockServer.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
-        .withRequestBody(equalToJson(notice.encode()))
-      ));
-  }
-
-  @Test
-  void manualChargeNoticeShouldBeSentWithSpecificTemplate()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    Feefine feefine = new Feefine()
-      .withId(UUID.randomUUID().toString())
-      .withOwnerId(OWNER_ID)
-      .withChargeNoticeId(CHARGE_TEMPLATE_ID);
-    persistFeeFine(feefine).get(5, TimeUnit.SECONDS);
-
-    JsonObject account = new JsonObject()
-      .put("id", UUID.randomUUID().toString())
-      .put("userId", USER_ID)
-      .put("itemId", UUID.randomUUID().toString())
-      .put("materialTypeId", UUID.randomUUID().toString())
-      .put("feeFineId", feefine.getId())
-      .put("ownerId", OWNER_ID)
-      .put("amount", 10.0)
-      .put("remaining", 10.0)
-      .put("paymentStatus", new JsonObject()
-        .put("name", "Outstanding"));
-
-    RestAssured.given()
-      .spec(spec)
-      .body(account.encode())
-      .when()
-      .post("/accounts")
-      .then()
-      .statusCode(201);
-
-    JsonObject notice = new JsonObject()
-      .put("recipientId", USER_ID)
-      .put("deliveryChannel", "email")
-      .put("templateId", CHARGE_TEMPLATE_ID)
-      .put("outputFormat", "text/html")
-      .put("lang", "en");
-
-    Awaitility.await()
-      .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> wireMockServer.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
-        .withRequestBody(equalToJson(notice.encode()))
-      ));
-  }
-
-  @Test
-  void actionNoticeShouldBeSentWithSpecificTemplate()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    Feefine feefine = new Feefine()
-      .withId(UUID.randomUUID().toString())
-      .withOwnerId(OWNER_ID)
-      .withActionNoticeId(ACTION_TEMPLATE_ID);
-    persistFeeFine(feefine).get(5, TimeUnit.SECONDS);
-
+  void manualChargeNoticeShouldBeSentWithDefaultTemplate() {
+    String ownerId = UUID.randomUUID().toString();
+    String feeFineId = UUID.randomUUID().toString();
     String accountId = UUID.randomUUID().toString();
-    JsonObject account = new JsonObject()
+    String defaultChargeTemplateId = UUID.randomUUID().toString();
+    String userId = UUID.randomUUID().toString();
+    String feeFineType = "damaged book";
+    String typeAction = "damaged book";
+
+    createEntity("/owners", new JsonObject()
+      .put("id", ownerId)
+      .put("owner", "library")
+      .put("defaultChargeNoticeId", defaultChargeTemplateId));
+
+    createEntity("/accounts", new JsonObject()
       .put("id", accountId)
-      .put("userId", USER_ID)
+      .put("userId", userId)
       .put("itemId", UUID.randomUUID().toString())
       .put("materialTypeId", UUID.randomUUID().toString())
-      .put("feeFineId", feefine.getId())
-      .put("ownerId", OWNER_ID)
-      .put("amount", 10.0)
-      .put("remaining", 10.0)
-      .put("paymentStatus", new JsonObject()
-        .put("name", "Outstanding"));
+      .put("feeFineId", feeFineId)
+      .put("ownerId", ownerId)
+      .put("amount", 10.0));
 
-    RestAssured.given()
-      .spec(spec)
-      .body(account.encode())
-      .when()
-      .post("/accounts")
-      .then()
-      .statusCode(201);
+    createEntity("/feefines", new JsonObject()
+      .put("id", feeFineId)
+      .put("feeFineType", feeFineType)
+      .put("ownerId", ownerId));
 
-    account.put("remaining", 0.0);
-    account.put("paymentStatus", new JsonObject()
-      .put("name", "Paid fully"));
+    createEntity("/feefineactions", new JsonObject()
+      .put("userId", userId)
+      .put("accountId", accountId)
+      .put("typeAction", typeAction)
+      .put("amountAction", 10.0)
+      .put("balance", 10.0)
+      .put("dateAction", "2019-09-17T08:43:15.000+0000")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
 
-    RestAssured.given()
-      .spec(spec)
-      .body(account.encode())
-      .when()
-      .put("/accounts/" + accountId)
-      .then()
-      .statusCode(204);
+    JsonObject noticeContext = new JsonObject()
+      .put("fee", new JsonObject()
+        .put("owner", "library")
+        .put("type", feeFineType)
+        .put("amount", 10.0)
+        .put("actionType", typeAction)
+        .put("actionAmount", 10.0)
+        .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
+        .put("balance", 10.0)
+        .put("actionAdditionalInfo", "patron comment"));
 
     JsonObject notice = new JsonObject()
-      .put("recipientId", USER_ID)
+      .put("recipientId", userId)
       .put("deliveryChannel", "email")
-      .put("templateId", ACTION_TEMPLATE_ID)
+      .put("templateId", defaultChargeTemplateId)
       .put("outputFormat", "text/html")
-      .put("lang", "en");
+      .put("lang", "en")
+      .put("context", noticeContext);
 
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
@@ -246,53 +147,196 @@ class PatronNoticeTest {
   }
 
   @Test
-  void actionNoticeShouldBeSentWithDefaultTemplate()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    Feefine feefine = new Feefine()
-      .withId(UUID.randomUUID().toString())
-      .withOwnerId(OWNER_ID);
-    persistFeeFine(feefine).get(5, TimeUnit.SECONDS);
-
+  void manualChargeNoticeShouldBeSentWithSpecificTemplate() {
+    String ownerId = UUID.randomUUID().toString();
+    String feeFineId = UUID.randomUUID().toString();
     String accountId = UUID.randomUUID().toString();
-    JsonObject account = new JsonObject()
+    String defaultChargeTemplateId = UUID.randomUUID().toString();
+    String specificChargeTemplateId = UUID.randomUUID().toString();
+    String userId = UUID.randomUUID().toString();
+    String feeFineType = "damaged book";
+    String typeAction = "damaged book";
+
+    createEntity("/owners", new JsonObject()
+      .put("id", ownerId)
+      .put("owner", "library")
+      .put("defaultChargeNoticeId", defaultChargeTemplateId));
+
+    createEntity("/accounts", new JsonObject()
       .put("id", accountId)
-      .put("userId", USER_ID)
+      .put("userId", userId)
       .put("itemId", UUID.randomUUID().toString())
       .put("materialTypeId", UUID.randomUUID().toString())
-      .put("feeFineId", feefine.getId())
-      .put("ownerId", OWNER_ID)
-      .put("amount", 10.0)
-      .put("remaining", 10.0)
-      .put("paymentStatus", new JsonObject()
-        .put("name", "Outstanding"));
+      .put("feeFineId", feeFineId)
+      .put("ownerId", ownerId)
+      .put("amount", 10.0));
 
-    RestAssured.given()
-      .spec(spec)
-      .body(account.encode())
-      .when()
-      .post("/accounts")
-      .then()
-      .statusCode(201);
+    createEntity("/feefines", new JsonObject()
+      .put("id", feeFineId)
+      .put("feeFineType", feeFineType)
+      .put("ownerId", ownerId)
+      .put("chargeNoticeId", specificChargeTemplateId));
 
-    account.put("remaining", 0.0);
-    account.put("paymentStatus", new JsonObject()
-      .put("name", "Paid fully"));
+    createEntity("/feefineactions", new JsonObject()
+      .put("userId", userId)
+      .put("accountId", accountId)
+      .put("typeAction", typeAction)
+      .put("amountAction", 10.0)
+      .put("balance", 10.0)
+      .put("dateAction", "2019-09-17T08:43:15.000+0000")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
 
-    RestAssured.given()
-      .spec(spec)
-      .body(account.encode())
-      .when()
-      .put("/accounts/" + accountId)
-      .then()
-      .statusCode(204);
+    JsonObject noticeContext = new JsonObject()
+      .put("fee", new JsonObject()
+        .put("owner", "library")
+        .put("type", feeFineType)
+        .put("amount", 10.0)
+        .put("actionType", typeAction)
+        .put("actionAmount", 10.0)
+        .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
+        .put("balance", 10.0)
+        .put("actionAdditionalInfo", "patron comment"));
 
     JsonObject notice = new JsonObject()
-      .put("recipientId", USER_ID)
+      .put("recipientId", userId)
       .put("deliveryChannel", "email")
-      .put("templateId", DEFAULT_ACTION_TEMPLATE_ID)
+      .put("templateId", specificChargeTemplateId)
       .put("outputFormat", "text/html")
-      .put("lang", "en");
+      .put("lang", "en")
+      .put("context", noticeContext);
+
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS)
+      .untilAsserted(() -> wireMockServer.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
+        .withRequestBody(equalToJson(notice.encode()))
+      ));
+  }
+
+  @Test
+  void actionNoticeShouldBeSentWithDefaultTemplate() {
+    String ownerId = UUID.randomUUID().toString();
+    String feeFineId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String defaultActionTemplateId = UUID.randomUUID().toString();
+    String userId = UUID.randomUUID().toString();
+    String feeFineType = "damaged book";
+    String typeAction = "Paid fully";
+
+    createEntity("/owners", new JsonObject()
+      .put("id", ownerId)
+      .put("owner", "library")
+      .put("defaultActionNoticeId", defaultActionTemplateId));
+
+    createEntity("/accounts", new JsonObject()
+      .put("id", accountId)
+      .put("userId", userId)
+      .put("itemId", UUID.randomUUID().toString())
+      .put("materialTypeId", UUID.randomUUID().toString())
+      .put("feeFineId", feeFineId)
+      .put("ownerId", ownerId)
+      .put("amount", 10.0));
+
+    createEntity("/feefines", new JsonObject()
+      .put("id", feeFineId)
+      .put("feeFineType", feeFineType)
+      .put("ownerId", ownerId));
+
+    createEntity("/feefineactions", new JsonObject()
+      .put("userId", userId)
+      .put("accountId", accountId)
+      .put("typeAction", typeAction)
+      .put("amountAction", 10.0)
+      .put("balance", 0.0)
+      .put("dateAction", "2019-09-17T08:43:15.000+0000")
+      .put("paymentMethod", "credit card")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
+
+    JsonObject noticeContext = new JsonObject()
+      .put("fee", new JsonObject()
+        .put("owner", "library")
+        .put("type", feeFineType)
+        .put("amount", 10.0)
+        .put("actionType", typeAction)
+        .put("actionAmount", 10.0)
+        .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
+        .put("balance", 0.0)
+        .put("actionAdditionalInfo", "patron comment"));
+
+    JsonObject notice = new JsonObject()
+      .put("recipientId", userId)
+      .put("deliveryChannel", "email")
+      .put("templateId", defaultActionTemplateId)
+      .put("outputFormat", "text/html")
+      .put("lang", "en")
+      .put("context", noticeContext);
+
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS)
+      .untilAsserted(() -> wireMockServer.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
+        .withRequestBody(equalToJson(notice.encode()))
+      ));
+  }
+
+  @Test
+  @Ignore
+  void actionNoticeShouldBeSentWithSpecificTemplate() {
+    String ownerId = UUID.randomUUID().toString();
+    String feeFineId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String defaultActionTemplateId = UUID.randomUUID().toString();
+    String specificActionTemplateId = UUID.randomUUID().toString();
+    String userId = UUID.randomUUID().toString();
+    String feeFineType = "damaged book";
+    String typeAction = "Paid fully";
+
+    createEntity("/owners", new JsonObject()
+      .put("id", ownerId)
+      .put("owner", "library")
+      .put("defaultActionNoticeId", defaultActionTemplateId));
+
+    createEntity("/accounts", new JsonObject()
+      .put("id", accountId)
+      .put("userId", userId)
+      .put("itemId", UUID.randomUUID().toString())
+      .put("materialTypeId", UUID.randomUUID().toString())
+      .put("feeFineId", feeFineId)
+      .put("ownerId", ownerId)
+      .put("amount", 10.0));
+
+    createEntity("/feefines", new JsonObject()
+      .put("id", feeFineId)
+      .put("feeFineType", feeFineType)
+      .put("ownerId", ownerId)
+      .put("actionNoticeId", specificActionTemplateId));
+
+    createEntity("/feefineactions", new JsonObject()
+      .put("userId", userId)
+      .put("accountId", accountId)
+      .put("typeAction", typeAction)
+      .put("amountAction", 10.0)
+      .put("balance", 0.0)
+      .put("dateAction", "2019-09-17T08:43:15.000+0000")
+      .put("paymentMethod", "credit card")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
+
+    JsonObject noticeContext = new JsonObject()
+      .put("fee", new JsonObject()
+        .put("owner", "library")
+        .put("type", feeFineType)
+        .put("amount", 10.0)
+        .put("actionType", typeAction)
+        .put("actionAmount", 10.0)
+        .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
+        .put("balance", 0.0)
+        .put("actionAdditionalInfo", "patron comment"));
+
+    JsonObject notice = new JsonObject()
+      .put("recipientId", userId)
+      .put("deliveryChannel", "email")
+      .put("templateId", specificActionTemplateId)
+      .put("outputFormat", "text/html")
+      .put("lang", "en")
+      .put("context", noticeContext);
 
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
@@ -322,12 +366,6 @@ class PatronNoticeTest {
     return future;
   }
 
-  private static Future<String> persistOwner(Owner owner) {
-    Future<String> future = Future.future();
-    pgClient.save("owners", owner.getId(), owner, future);
-    return future;
-  }
-
   private static void setupStub() {
     wireMockServer.stubFor(post(urlPathEqualTo("/patron-notice"))
       .withHeader(ACCEPT, matching(APPLICATION_JSON))
@@ -337,9 +375,13 @@ class PatronNoticeTest {
       .willReturn(ok()));
   }
 
-  private CompletableFuture<Void> persistFeeFine(Feefine feefine) {
-    CompletableFuture<Void> future = new CompletableFuture<>();
-    pgClient.save("feefines", feefine.getId(), feefine, save -> future.complete(null));
-    return future;
+  private void createEntity(String path, JsonObject entity) {
+    RestAssured.given()
+      .spec(spec)
+      .body(entity.encode())
+      .when()
+      .post(path)
+      .then()
+      .statusCode(201);
   }
 }

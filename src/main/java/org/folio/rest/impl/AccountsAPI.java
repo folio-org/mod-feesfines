@@ -23,7 +23,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
-import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -123,14 +122,8 @@ public class AccountsAPI implements Accounts {
                              Handler<AsyncResult<Response>> asyncResultHandler,
                              Context vertxContext) {
 
-      PatronNoticeService patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
-      Future<Response> postCompleted = Future.future();
-      PgUtil.post(ACCOUNTS_TABLE, entity, okapiHeaders, vertxContext, PostAccountsResponse.class, postCompleted);
-
-      postCompleted.map(response -> {
-          patronNoticeService.sendManualChargeNotice(entity);
-          return response;
-        }).setHandler(asyncResultHandler);
+      PgUtil.post(ACCOUNTS_TABLE, entity, okapiHeaders, vertxContext,
+        PostAccountsResponse.class, asyncResultHandler);
     }
 
     @Validate
@@ -252,15 +245,7 @@ public class AccountsAPI implements Accounts {
                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                        Context vertxContext) {
 
-      PatronNoticeService patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
-      Future<Response> putCompleted = Future.future();
-
       PgUtil.put(ACCOUNTS_TABLE, entity, accountId, okapiHeaders, vertxContext,
-        PutAccountsByAccountIdResponse.class, putCompleted);
-
-      putCompleted.map(response -> {
-        patronNoticeService.sendActionNotice(entity);
-        return response;
-      }).setHandler(asyncResultHandler);
+        PutAccountsByAccountIdResponse.class, asyncResultHandler);
     }
 }

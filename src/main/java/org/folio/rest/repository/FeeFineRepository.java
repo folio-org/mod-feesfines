@@ -1,6 +1,10 @@
 package org.folio.rest.repository;
 
 
+import java.util.Optional;
+
+import org.folio.rest.domain.FeeFineNoticeContext;
+import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.persist.PostgresClient;
 
@@ -16,9 +20,17 @@ public class FeeFineRepository {
     this.pgClient = pgClient;
   }
 
-  public Future<Feefine> getById(String id) {
+  public Future<FeeFineNoticeContext> loadFeefine(FeeFineNoticeContext context) {
+    Optional<String> optionalFeeFineId = Optional.ofNullable(context)
+      .map(FeeFineNoticeContext::getAccount)
+      .map(Account::getFeeFineId);
+
+    if (!optionalFeeFineId.isPresent()) {
+      return Future.failedFuture(new IllegalArgumentException("Fee fine id is not present"));
+    }
+
     Future<Feefine> future = Future.future();
-    pgClient.getById(FEEFINES_TABLE, id, Feefine.class, future);
-    return future;
+    pgClient.getById(FEEFINES_TABLE, optionalFeeFineId.get(), Feefine.class, future);
+    return future.map(context::withFeefine);
   }
 }
