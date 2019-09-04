@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of overdue fine policies",
+  "type": "object",
+  "properties": {
+    "overdueFinePolicies": {
+      "description": "List of overdue fine policies",
+      "id": "overdueFinePolicies",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "overdue-fine-policy.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "overdueFinePolicies",
+    "totalRecords"
+  ]
+}

@@ -1,6 +1,7 @@
-## 15.5.1 UNRELEASED
+## 15.6.0 UNRELEASED
 * Update 26.2.4 RMB version. Refs Upgrading Version 25.
 * Fix POST to resources. Fixes MODFEE-2, UIU-1150.
+* CRUD Fee/Fine Overdue Fine Policies. Refs UIU-1146.
 
 ## 15.5.0 2019-08-06
  * Fix unclosed transaction. Refs MODFEE-10.

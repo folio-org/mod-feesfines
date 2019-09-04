@@ -520,6 +520,51 @@
           "permissionsRequired":[
             "manualblocks.item.delete"
           ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/overdue-fines-policies",
+          "permissionsRequired":[
+            "overdue-fines-policies.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/overdue-fines-policies/{id}",
+          "permissionsRequired":[
+            "overdue-fines-policies.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/overdue-fines-policies",
+          "permissionsRequired":[
+            "overdue-fines-policies.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/overdue-fines-policies/{id}",
+          "permissionsRequired":[
+            "overdue-fines-policies.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/overdue-fines-policies/{id}",
+          "permissionsRequired":[
+            "overdue-fines-policies.item.delete"
+          ]
         }
       ]
     },
@@ -823,6 +868,31 @@
       "permissionName":"manualblocks.item.delete",
       "displayName":"manualblocks item delete",
       "description":"Delete an manualblock record"
+    },
+    {
+      "permissionName":"overdue-fines-policies.collection.get",
+      "displayName":"Overdue-fines-policies collection get",
+      "description":"Get a list of overdue-fines-policies records"
+    },
+    {
+      "permissionName":"overdue-fines-policies.item.get",
+      "displayName":"Overdue-fines-policies item get",
+      "description":"Get a single overdue-fines-policies record"
+    },
+    {
+      "permissionName":"overdue-fines-policies.item.post",
+      "displayName":"Overdue-fines-policies item post",
+      "description":"Create a new overdue-fines-policies record"
+    },
+    {
+      "permissionName":"overdue-fines-policies.item.put",
+      "displayName":"Overdue-fines-policies item put",
+      "description":"Edit an overdue-fines-policies record"
+    },
+    {
+      "permissionName":"overdue-fines-policies.item.delete",
+      "displayName":"Overdue-fines-policies item delete",
+      "description":"Delete an overdue-fines-policies record"
     }
   ],
   "metadata": {

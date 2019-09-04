@@ -63,6 +63,17 @@
       "tableName":"transfer_criteria",
       "fromModuleVersion":"15.0",
       "withMetadata":true
+    },
+    {
+      "tableName":"overdue_fine_policy",
+      "fromModuleVersion":"15.1",
+      "withMetadata":true,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
     }
   ]
 }
