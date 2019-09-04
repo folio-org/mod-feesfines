@@ -2,18 +2,15 @@ package org.folio.rest.service;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.utils.FeeFineActionCommentsParser.parseFeeFineComments;
 
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Context;
@@ -97,14 +94,6 @@ public class PatronNoticeService {
   private String getAdditionalInfoForPatronFromFeeFineAction(Feefineaction feefineaction) {
     String comments = Optional.ofNullable(feefineaction.getComments()).orElse(StringUtils.EMPTY);
     return parseFeeFineComments(comments).getOrDefault(PATRON_COMMENTS_KEY, StringUtils.EMPTY);
-  }
-
-  private Map<String, String> parseFeeFineComments(String comments) {
-    return Arrays.stream(comments.split(" \n "))
-      .map(s -> s.split(" : "))
-      .map(strings -> strings.length == 2 ? Pair.of(strings[0], strings[1]) : null)
-      .filter(Objects::nonNull)
-      .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (s, s2) -> s));
   }
 
   private void handleSendPatronNoticeResult(AsyncResult<Void> post) {
