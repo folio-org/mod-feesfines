@@ -29,18 +29,34 @@ public class FeeFineNoticeContext {
   }
 
   public String getTemplateId() {
-    String templateId = null;
-
-    if (feefineaction.getPaymentMethod() == null) {
-      templateId = feefine.getChargeNoticeId() != null ?
-        feefine.getChargeNoticeId() : owner.getDefaultChargeNoticeId();
-    } else if (feefineaction.getTypeAction().equals(PAID_FULLY) ||
-      feefineaction.getTypeAction().equals(PAID_PARTIALLY)) {
-      templateId = feefine.getActionNoticeId() != null ?
-        feefine.getActionNoticeId() : owner.getDefaultActionNoticeId();
+    if (isCharge()) {
+      return getChargeNoticeTemplateId();
     }
+    if (isFeeFineActon()) {
+      return getActionNoticeTemplateId();
+    }
+    return null;
+  }
 
-    return templateId;
+  private boolean isCharge() {
+    return feefineaction.getPaymentMethod() == null;
+  }
+
+  private boolean isFeeFineActon() {
+    return feefineaction.getTypeAction().equals(PAID_FULLY) ||
+      feefineaction.getTypeAction().equals(PAID_PARTIALLY);
+  }
+
+  private String getChargeNoticeTemplateId() {
+    return feefine.getChargeNoticeId() != null
+      ? feefine.getChargeNoticeId()
+      : owner.getDefaultChargeNoticeId();
+  }
+
+  private String getActionNoticeTemplateId() {
+    return feefine.getActionNoticeId() != null
+      ? feefine.getActionNoticeId()
+      : owner.getDefaultActionNoticeId();
   }
 
   public String getUserId() {
