@@ -1,23 +1,29 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "Owner Schema",
+  "title": "CRUD Owner schema",
+  "description": "CRUD functions for Fee/Fine Owners",
   "type": "object",
   "properties": {
     "owner": {
+      "description": "Service desk (known as a fee/fine owner) is library-defined and is associated with specific fees/fines",
       "type": "string"
     },
     "desc": {
+      "description": "Owner description",
       "type": "string"
     },
     "servicePointOwner": {
+      "description": "Service points associated to a Owner",
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
           "value": {
+            "description": "ID of the service-point",
             "type": "string"
           },
           "label": {
+            "description": "Service-point name label",
             "type": "string"
           }
         },
@@ -27,16 +33,20 @@
       }
     },
     "defaultChargeNoticeId": {
+      "description": "ID of the fee/fine charge template",
       "type": "string"
     },
     "defaultActionNoticeId": {
+      "description": "ID of the fee/fine action template",
       "type": "string"
     },
     "metadata" : {
+      "description": "Metadata about creation to owner, provided by the server",
       "type" : "object",
       "$ref" : "raml-util/schemas/metadata.schema"
     },
     "id": {
+      "description": "Owner id, UUID",
       "type": "string"
      }
     },

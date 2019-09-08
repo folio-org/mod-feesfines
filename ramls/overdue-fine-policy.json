@@ -1,54 +1,55 @@
 {
   "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "Overdue fine policies schema",
+  "description": "Overdue fine policy to be associated with a loan policy by the Circulation Rules Editor",
   "type": "object",
-  "description": "Overdue fines policies Schema",
   "properties": {
     "name": {
-      "type": "string",
-      "description": "Overdue fine policy name"
+      "description": "Overdue fine policy name",
+      "type": "string"
     },
     "description": {
-      "type": "string",
-      "description": "Overdue fine policy description"
+      "description": "Overdue fine policy description",
+      "type": "string"
     },
     "overdueFine": {
+      "description": "Fine for overdue",
       "type": "object",
-      "$ref": "quantity.json",
-      "description": "Fine for overdue"
+      "$ref": "quantity.json"
     },
     "countClosed": {
-      "type": "boolean",
-      "description": "A flag to determine if a fine is count closed"
+      "description": "A flag to determine if a fine is count closed",
+      "type": "boolean"
     },
     "maxOverdueFine": {
-      "type": "number",
-      "description": "Maximum overdue fine"
+      "description": "Maximum overdue fine",
+      "type": "number"
     },
     "forgiveOverdueFine": {
-      "type": "boolean",
-      "description": "A flag to determine forgive overdue fine if item renewed"
+      "description": "A flag to determine forgive overdue fine if item renewed",
+      "type": "boolean"
     },
     "overdueRecallFine": {
+      "description": "Fine overdue recall fine",
       "type": "object",
-      "$ref": "quantity.json",
-      "description": "Fine overdue recall fine"
+      "$ref": "quantity.json"
     },
     "gracePeriodRecall": {
-      "type": "boolean",
-      "description": "Grace period for recall"
+      "description": "Grace period for recall",
+      "type": "boolean"
     },
     "maxOverdueRecallFine": {
-      "type": "number",
-      "description": "Maximum overdue recall fine"
+      "description": "Maximum overdue recall fine",
+      "type": "number"
     },
     "metadata": {
+      "description": "Metadata about creation to overdue fine policy, provided by the server",
       "type": "object",
-      "description": "Metadata about creation to  overdue fine policy, provided by the server",
       "$ref": "raml-util/schemas/metadata.schema"
     },
     "id": {
-      "type": "string",
-      "description": "Overdue fine policy id, UUID"
+      "description": "Overdue fine policy id, UUID",
+      "type": "string"
     }
   },
   "additionalProperties": false,
