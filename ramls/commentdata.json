@@ -1,25 +1,32 @@
 {
   "$schema" : "http://json-schema.org/draft-04/schema#",
-  "title": "Accounts Schema",
+  "title": "Comment required Settings schema",
+  "description": "Comment required for additional information on fees/fine transactions",
   "type": "object",
   "properties": {
     "paid": {
+      "description": "A flag to determine when paying if it is mandatory to add additional information",
       "type": "boolean"
     },
     "waived": {
+      "description": "A flag to determine when waiving if it is mandatory to add additional information",
       "type": "boolean"
     },
     "refunded": {
+      "description": "A flag to determine when refunding if it is mandatory to add additional information",
       "type": "boolean"
     },
     "transferredManually": {
+      "description": "A flag to determine when transferring if it is mandatory to add additional information",
       "type": "boolean"
     },
     "metadata": {
+      "description": "Metadata about creation to comment required, provided by the server",
       "type": "object",
       "$ref" : "raml-util/schemas/metadata.schema"
     },
     "id": {
+      "description": "Comment required id, UUID",
       "type": "string"
     }
   },

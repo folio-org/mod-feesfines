@@ -1,28 +1,36 @@
 {
   "$schema" : "http://json-schema.org/draft-04/schema#",
-  "title": "Fee/Fine Schema",
+  "title": "Manual Fees/Fines Table Settings schema",
+  "description": "Fees/fines that are used by the entire library system. They can be a set of fees / fines shared throughout the library or fees / fines that are unique to a specific customer service",
   "type": "object",
   "properties": {
     "feeFineType": {
+      "description": "Description of fee/fine that is up to the desecration of the user",
       "type": "string"
     },
     "defaultAmount": {
+      "description": "Amount of fee or fine, which may be overridden. ",
       "type": "number"
     },
     "chargeNoticeId": {
+      "description": "ID of the charge notice template",
       "type": "string"
     },
     "actionNoticeId": {
+      "description": "ID of the action notice template",
       "type": "string"
     },
     "ownerId": {
+      "description": "ID of the owner",
       "type": "string"
     },
     "metadata" : {
+      "description": "Metadata about creation to fee/fine, provided by the server",
       "type" : "object",
       "$ref" : "raml-util/schemas/metadata.schema"
     },
     "id": {
+      "description": "Fee/fine id, UUID",
       "type": "string"
     }
   },

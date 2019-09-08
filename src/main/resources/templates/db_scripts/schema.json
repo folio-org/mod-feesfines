@@ -74,6 +74,17 @@
           "tOps": "ADD"
         }
       ]
+    },
+    {
+      "tableName":"lost_item_fee_policy",
+      "fromModuleVersion":"15.1",
+      "withMetadata":true,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
     }
   ]
 }

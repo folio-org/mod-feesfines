@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "CRUD lost item fee policy schema",
+  "description": "CRUD to lost item fee policies",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Lost item fee policy name, is a required field",
+      "type": "string"
+    },
+    "description": {
+      "description": "Lost item fee policy description",
+      "type": "string"
+    },
+    "itemAgedLostOverdue": {
+      "description": "Items aged to lost after overdue entered, must be 0 or > 0 and, if > 0 must have interval selected",
+      "type": "object",
+      "$ref": "period.json"
+    },
+    "patronBilledAfterAgedLost": {
+      "description": "Patron billed after aged to lost entered, must be 0 or > 0 and, if > 0 must have interval selected",
+      "type": "object",
+      "$ref": "period.json"
+    },
+    "chargeAmountItem": {
+      "description": "Option to charge amount for item",
+      "type": "object",
+      "$ref": "charge.json"
+    },
+    "lostItemProcessingFee": {
+      "description": "Lost item processing fee, must be = 0 or > 0",
+      "type": "number"
+    },
+    "chargeAmountItemPatron": {
+      "description": "A flag to determine charge lost item processing fee if item declared lost by patron must be Yes or No, with default set to Yes",
+      "type": "boolean"
+    },
+    "chargeAmountItemSystem": {
+      "description": "A flag to determine charge lost item processing fee if item aged to lost by system must be Yes or No, with default set to Yes",
+      "type": "boolean"
+    },
+    "lostItemChargeFeeFine": {
+      "description": "For items not charged a fee/fine, close the loan after entered, must be 0 or > 0 and, if > 0 must have interval selected",
+      "type": "object",
+      "$ref": "period.json"
+    },
+    "returnedLostItemProcessingFee": {
+      "description": "A flag to determine if lost item returned, remove lost item processing fee",
+      "type": "boolean"
+    },
+    "replacedLostItemProcessingFee": {
+      "description": "A flag to determine if lost item replaced, remove lost item processing fee",
+      "type": "boolean"
+    },
+    "replacementProcessingFee": {
+      "description": "Amount for replacement process fee",
+      "type": "number"
+    },
+    "replacementAllowed": {
+      "description": "A flag to determine replacement allowed",
+      "type": "boolean"
+    },
+    "lostItemReturned": {
+      "description": "Option to lost item returned may be Charge overdues based on returned date up to maximum (if applicable) or Remove overdue fines, with a default of _Charge overdues based on returned date up to maximum (if applicable)",
+      "type": "string"
+    },
+    "feesFinesShallRefunded": {
+      "description": "Fees/fines shall be refunded if a lost item is returned more than entered, must be 0 or > 0 and, if > 0 must have interval selected",
+      "type": "object",
+      "$ref": "period.json"
+    },
+    "metadata": {
+      "description": "Metadata about creation to lost item fee policy, provided by the server",
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    },
+    "id": {
+      "description": "Lost item fee policy id, UUID",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name"
+  ]
+}

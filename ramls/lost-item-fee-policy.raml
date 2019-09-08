@@ -1,0 +1,118 @@
+#%RAML 1.0
+title: Lost Item Fee Policies
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9130
+
+documentation:
+  - title: Lost Item Fee Policies API
+    content: <b>Lost Item Fee Policies</b>
+
+types:
+  lost-item-fee-policy: !include lost-item-fee-policy.json
+  lost-item-fee-policies: !include lost-item-fee-policies.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  orderable: !include raml-util/traits/orderable.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-only: !include raml-util/rtypes/get-only.raml
+  post-empty-body: !include raml-util/rtypes/post-empty-body.raml
+
+/lost-item-fees-policies:
+  type:
+    collection:
+      exampleCollection: !include examples/lost-item-fee-policies.json
+      exampleItem: !include examples/lost-item-fee-policy.json
+      schemaCollection: lost-item-fee-policies
+      schemaItem: lost-item-fee-policy
+  get:
+    is: [
+      searchable: {description: "searchable using CQL", example: "name=\"undergrad*\""},
+      orderable: {fieldsList: "field A, field B"},
+      pageable,
+    ]
+    description: "Get Lost Item Fee Policy list"
+    responses:
+      200:
+        description: "Return Lost Item Fee Policy list"
+        body:
+          application/json:
+            type: lost-item-fee-policies
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+  post:
+    is: [validate]
+    description: "Create new Lost Item Fee Policy"
+    body:
+      application/json:
+        type: lost-item-fee-policy
+    responses:
+      201:
+        description: "Lost Item Fee policy created"
+        body:
+          application/json:
+            type: lost-item-fee-policy
+      422:
+        description: "Unprocessable entity"
+        body:
+          application/json:
+            type: errors
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+  /{lostItemFeePolicyId}:
+    type:
+      collection-item:
+        exampleItem: !include examples/lost-item-fee-policy.json
+        schema: lost-item-fee-policy
+    get:
+      description: "Get Lost Item Fee Policy by id"
+      responses:
+        200:
+          description: "Return Lost Item Fee Policy"
+          body:
+            application/json:
+              type: lost-item-fee-policy
+        404:
+          description: "Not found"
+          body:
+            text/plain:
+              example: "Not found"
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
+    delete:
+      description: "Delete Lost Item Fee Policy by id"
+      responses:
+        204:
+          description: "Source record deleted"
+        400:
+          description: "Bad request, e.g. malformed request body, query parameter or constraint violation."
+          body:
+            text/plain:
+              example: "Cannot delete in use fine policy"
+        404:
+          description: "There is no source record for that lostItemFeePolicyId"
+          body:
+            text/plain:
+              example: "Not found"
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"

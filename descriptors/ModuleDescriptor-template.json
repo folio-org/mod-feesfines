@@ -565,6 +565,51 @@
           "permissionsRequired":[
             "overdue-fines-policies.item.delete"
           ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/lost-item-fees-policies",
+          "permissionsRequired":[
+            "lost-item-fees-policies.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/lost-item-fees-policies/{id}",
+          "permissionsRequired":[
+            "lost-item-fees-policies.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/lost-item-fees-policies",
+          "permissionsRequired":[
+            "lost-item-fees-policies.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/lost-item-fees-policies/{id}",
+          "permissionsRequired":[
+            "lost-item-fees-policies.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/lost-item-fees-policies/{id}",
+          "permissionsRequired":[
+            "lost-item-fees-policies.item.delete"
+          ]
         }
       ]
     },
@@ -893,6 +938,31 @@
       "permissionName":"overdue-fines-policies.item.delete",
       "displayName":"Overdue-fines-policies item delete",
       "description":"Delete an overdue-fines-policies record"
+    },
+    {
+      "permissionName":"lost-item-fees-policies.collection.get",
+      "displayName":"Lost-item-fees-policies collection get",
+      "description":"Get a list of lost-item-fees-policies records"
+    },
+    {
+      "permissionName":"lost-item-fees-policies.item.get",
+      "displayName":"Lost-item-fees-policies item get",
+      "description":"Get a single lost-item-fees-policies record"
+    },
+    {
+      "permissionName":"lost-item-fees-policies.item.post",
+      "displayName":"Lost-item-fees-policies item post",
+      "description":"Create a new lost-item-feess-policies record"
+    },
+    {
+      "permissionName":"lost-item-feess-policies.item.put",
+      "displayName":"Lost-item-fees-policies item put",
+      "description":"Edit an lost-item-fees-policies record"
+    },
+    {
+      "permissionName":"lost-item-fees-policies.item.delete",
+      "displayName":"Lost-item-fees-policies item delete",
+      "description":"Delete an lost-item-fees-policies record"
     }
   ],
   "metadata": {

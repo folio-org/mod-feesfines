@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of lost item fee policies",
+  "type": "object",
+  "properties": {
+    "lostItemFeePolicies": {
+      "description": "List of lost item fee policies",
+      "id": "lostItemFeePolicies",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "lost-item-fee-policy.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "lostItemFeePolicies",
+    "totalRecords"
+  ]
+}
