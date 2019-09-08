@@ -1,7 +1,11 @@
-## 15.6.0 UNRELEASED
+## 15.6.0 2019-09-08
 * Update 26.2.4 RMB version. Refs Upgrading Version 25.
+* Add patron notice for payment of fee/fine charge. Refs MODFEE-11.
+* Add patron notice for manual fee/fine charge. Refs MODFEE-12.
 * Fix POST to resources. Fixes MODFEE-2, UIU-1150.
+* Add fee/fine tokens to patron notices. Refs MODFEE-13.
 * CRUD Fee/Fine Overdue Fine Policies. Refs UIU-1146.
+* CRUD Fee/Fine Lost Item Fee Policies. Refs UIU-1156.
 
 ## 15.5.0 2019-08-06
  * Fix unclosed transaction. Refs MODFEE-10.
