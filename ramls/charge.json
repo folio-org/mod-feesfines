@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Charge amount for item",
+  "type": "object",
+  "properties": {
+    "chargeType": {
+      "description": "Charge type amount for item may be Actual cost or an amount",
+      "type": "string"
+    },
+    "amount": {
+      "description": "Charge amount for item may be Actual cost or an amount",
+      "type": "number"
+    }
+  },
+  "additionalProperties": false
+}

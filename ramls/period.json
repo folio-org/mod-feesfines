@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Period to lost item",
+  "type": "object",
+  "properties": {
+    "duration": {
+      "description": "Duration of the number of times the interval repeats",
+      "type": "integer",
+      "minimum": 1
+    },
+    "intervalId": {
+      "type": "string",
+      "description": "Interval for the period, e.g. hours, days or weeks",
+      "enum": [
+        "minutes",
+        "hours",
+        "days",
+        "weeks",
+        "months",
+        "years"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
