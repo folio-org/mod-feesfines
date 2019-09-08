@@ -1,8 +1,10 @@
 {
   "$schema":"http://json-schema.org/draft-04/schema#",
+  "description": "Collection of payments",
   "type":"object",
   "properties":{
     "payments":{
+      "description": "List of payment items",
       "type":"array",
       "id":"paymentsData",
       "items":{

@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of accounts",
   "type": "object",
   "properties": {
     "accounts": {
+      "description": "List of account items",
       "type": "array",
       "id": "accountsData",
       "items": {

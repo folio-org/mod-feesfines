@@ -1,8 +1,10 @@
 {
   "$schema":"http://json-schema.org/draft-04/schema#",
+  "description": "Collection of tranfer criterias",
   "type":"object",
   "properties":{
     "transferCriterias":{
+      "description": "List of transfer criteria items",
       "type":"array",
       "id":"transferCriteriaData",
       "items":{

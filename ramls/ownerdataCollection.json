@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of owners",
   "type": "object",
   "properties": {
     "owners": {
+      "description": "List of owner items",
       "type": "array",
       "id": "ownersData",
       "items": {

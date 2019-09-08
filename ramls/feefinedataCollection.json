@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of feesfines",
   "type": "object",
   "properties": {
     "feefines": {
+      "description": "List of fee/fine items",
       "type": "array",
       "id": "feefinesData",
       "items": {
