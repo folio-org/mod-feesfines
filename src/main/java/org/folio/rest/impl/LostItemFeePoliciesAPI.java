@@ -52,7 +52,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.getById(LOST_ITEM_FEE_TABLE, LOST_ITEM_FEE_POLICY, LostItemFeePolicyId, okapiHeaders, vertxContext,
+        PgUtil.getById(LOST_ITEM_FEE_TABLE, LOST_ITEM_FEE_POLICY, lostItemFeePolicyId, okapiHeaders, vertxContext,
                 GetLostItemFeesPoliciesByLostItemFeePolicyIdResponse.class, asyncResultHandler);
     }
 
@@ -64,7 +64,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.deleteById(LOST_ITEM_FEE_TABLE, LostItemFeePolicyId, okapiHeaders, vertxContext,
+        PgUtil.deleteById(LOST_ITEM_FEE_TABLE, lostItemFeePolicyId, okapiHeaders, vertxContext,
                 DeleteLostItemFeesPoliciesByLostItemFeePolicyIdResponse.class, asyncResultHandler);
     }
 
@@ -77,7 +77,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.put(LOST_ITEM_FEE_TABLE, entity, LostItemFeePolicyId, okapiHeaders, vertxContext,
+        PgUtil.put(LOST_ITEM_FEE_TABLE, entity, lostItemFeePolicyId, okapiHeaders, vertxContext,
                 PutLostItemFeesPoliciesByLostItemFeePolicyIdResponse.class, asyncResultHandler);
     }
 }
