@@ -46,7 +46,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
     @Validate
     @Override
-    public void getLostItemFeesPoliciesByLostItemFeePolicyId(String LostItemFeePolicyId,
+    public void getLostItemFeesPoliciesByLostItemFeePolicyId(String lostItemFeePolicyId,
             String lang,
             Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler,
@@ -58,7 +58,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
     @Validate
     @Override
-    public void deleteLostItemFeesPoliciesByLostItemFeePolicyId(String LostItemFeePolicyId,
+    public void deleteLostItemFeesPoliciesByLostItemFeePolicyId(String lostItemFeePolicyId,
             String lang,
             Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler,
@@ -70,7 +70,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
     @Validate
     @Override
-    public void putLostItemFeesPoliciesByLostItemFeePolicyId(String LostItemFeePolicyId,
+    public void putLostItemFeesPoliciesByLostItemFeePolicyId(String lostItemFeePolicyId,
             String lang,
             LostItemFeePolicy entity,
             Map<String, String> okapiHeaders,
