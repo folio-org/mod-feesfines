@@ -54,7 +54,7 @@ class PatronNoticeTest {
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext context) throws IOException {
     PatronNoticeTest.vertx = vertx;
-    wireMockServer = new WireMockServer();
+    wireMockServer = new WireMockServer(NetworkUtils.nextFreePort());
     wireMockServer.start();
     setupStub();
 
