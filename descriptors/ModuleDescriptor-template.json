@@ -952,10 +952,10 @@
     {
       "permissionName":"lost-item-fees-policies.item.post",
       "displayName":"Lost-item-fees-policies item post",
-      "description":"Create a new lost-item-feess-policies record"
+      "description":"Create a new lost-item-fees-policies record"
     },
     {
-      "permissionName":"lost-item-feess-policies.item.put",
+      "permissionName":"lost-item-fees-policies.item.put",
       "displayName":"Lost-item-fees-policies item put",
       "description":"Edit an lost-item-fees-policies record"
     },
