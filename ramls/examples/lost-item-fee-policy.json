@@ -3,11 +3,11 @@
   "description": "This is description for undergrad standard",
   "itemAgedLostOverdue": {
     "duration": 12,
-    "intervalId": "months"
+    "intervalId": "Months"
   },
   "patronBilledAfterAgedLost": {
     "duration": 12,
-    "intervalId": "months"
+    "intervalId": "Months"
   },
   "chargeAmountItem": {
     "chargeType": "Actual cost",
@@ -18,7 +18,7 @@
   "chargeAmountItemSystem": true,
   "lostItemChargeFeeFine": {
     "duration": 6,
-    "intervalId": "months"
+    "intervalId": "Months"
   },
   "returnedLostItemProcessingFee": true,
   "replacedLostItemProcessingFee": true,
