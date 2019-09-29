@@ -19,10 +19,6 @@
           "pathPattern":"/feefines",
           "permissionsRequired":[
             "feefines.collection.get"
-          ],
-          "permissionsDesired":[
-            "feefines.read.basic",
-            "feefines.read.restricted"
           ]
         },
         {
@@ -32,10 +28,6 @@
           "pathPattern":"/feefines/{id}",
           "permissionsRequired":[
             "feefines.item.get"
-          ],
-          "permissionsDesired":[
-            "feefines.read.basic",
-            "feefines.read.restricted"
           ]
         },
         {
@@ -638,16 +630,6 @@
       "permissionName":"feefines.item.get",
       "displayName":"feefines item get",
       "description":"Read an individual record in the Feefine module"
-    },
-    {
-      "permissionName":"feefines.read.basic",
-      "displayName":"feefines read-basic",
-      "description":"Read non-restricted Feefine data information"
-    },
-    {
-      "permissionName":"feefines.read.restricted",
-      "displayName":"feefines read-restricted",
-      "description":"Read restricted Feefine data information"
     },
     {
       "permissionName":"feefines.item.post",
