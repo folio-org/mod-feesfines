@@ -10,14 +10,14 @@
     },
     "intervalId": {
       "type": "string",
-      "description": "Interval for the period, e.g. hours, days or weeks",
+      "description": "Interval for the period, e.g. Hours, Days or Weeks",
       "enum": [
-        "minutes",
-        "hours",
-        "days",
-        "weeks",
-        "months",
-        "years"
+        "Minutes",
+        "Hours",
+        "Days",
+        "Weeks",
+        "Months",
+        "Years"
       ]
     }
   },
