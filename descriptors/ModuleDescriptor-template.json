@@ -19,10 +19,6 @@
           "pathPattern":"/feefines",
           "permissionsRequired":[
             "feefines.collection.get"
-          ],
-          "permissionsDesired":[
-            "feefines.read.basic",
-            "feefines.read.restricted"
           ]
         },
         {
@@ -32,10 +28,6 @@
           "pathPattern":"/feefines/{id}",
           "permissionsRequired":[
             "feefines.item.get"
-          ],
-          "permissionsDesired":[
-            "feefines.read.basic",
-            "feefines.read.restricted"
           ]
         },
         {
@@ -640,16 +632,6 @@
       "description":"Read an individual record in the Feefine module"
     },
     {
-      "permissionName":"feefines.read.basic",
-      "displayName":"feefines read-basic",
-      "description":"Read non-restricted Feefine data information"
-    },
-    {
-      "permissionName":"feefines.read.restricted",
-      "displayName":"feefines read-restricted",
-      "description":"Read restricted Feefine data information"
-    },
-    {
       "permissionName":"feefines.item.post",
       "displayName":"feefines item post",
       "description":"Create new records in the Feefine module"
@@ -952,10 +934,10 @@
     {
       "permissionName":"lost-item-fees-policies.item.post",
       "displayName":"Lost-item-fees-policies item post",
-      "description":"Create a new lost-item-feess-policies record"
+      "description":"Create a new lost-item-fees-policies record"
     },
     {
-      "permissionName":"lost-item-feess-policies.item.put",
+      "permissionName":"lost-item-fees-policies.item.put",
       "displayName":"Lost-item-fees-policies item put",
       "description":"Edit an lost-item-fees-policies record"
     },
