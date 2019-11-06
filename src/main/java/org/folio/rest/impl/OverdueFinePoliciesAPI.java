@@ -24,6 +24,8 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
     static final String DUPLICATE_ERROR_CODE = "feesfines.policy.overdue.duplicate";
     private static final String PRIMARY_KEY = "overdue_fine_policy_pkey";
     private static final Class<OverdueFinePolicy> OVERDUE_FINE_POLICY = OverdueFinePolicy.class;
+    private static final String DUPLICATE_ENTITY_MESSAGE =
+            "An overdue fine policy with this name already exists. Please choose a different name.";
 
     @Validate
     @Override
@@ -48,19 +50,19 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-    PgUtil.post(OVERDUE_FINE_POLICY_TABLE, entity, okapiHeaders, vertxContext, PostOverdueFinesPoliciesResponse.class,
-      r -> {
-        Response response = r.result();
-        if (ErrorHelper.didUniqueConstraintViolationOccur(response, PRIMARY_KEY)) {
-          Error error = new Error()
-            .withMessage("An overdue fine policy with this name already exists. Please choose a different name.")
-            .withCode(DUPLICATE_ERROR_CODE);
-          Errors errors = new Errors().withErrors(Collections.singletonList(error));
-          response = PostOverdueFinesPoliciesResponse.respond422WithApplicationJson(errors);
-        }
-        asyncResultHandler.handle(Future.succeededFuture(response));
-      });
-  }
+        PgUtil.post(OVERDUE_FINE_POLICY_TABLE, entity, okapiHeaders, vertxContext,
+                PostOverdueFinesPoliciesResponse.class, r -> {
+                    Response response = r.result();
+                    if (ErrorHelper.didUniqueConstraintViolationOccur(response, PRIMARY_KEY)) {
+                        Error error = new Error()
+                                .withMessage(DUPLICATE_ENTITY_MESSAGE)
+                                .withCode(DUPLICATE_ERROR_CODE);
+                        Errors errors = new Errors().withErrors(Collections.singletonList(error));
+                        response = PostOverdueFinesPoliciesResponse.respond422WithApplicationJson(errors);
+                    }
+                    asyncResultHandler.handle(Future.succeededFuture(response));
+                });
+    }
 
     @Validate
     @Override
