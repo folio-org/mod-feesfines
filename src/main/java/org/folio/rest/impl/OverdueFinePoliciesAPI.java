@@ -20,10 +20,10 @@ import java.util.Map;
 
 public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
 
-  static final String OVERDUE_FINE_POLICY_TABLE = "overdue_fine_policy";
-  static final String DUPLICATE_ERROR_CODE = "feesfines.policy.overdue.duplicate";
-  private static final String PRIMARY_KEY = "overdue_fine_policy_pkey";
-  private static final Class<OverdueFinePolicy> OVERDUE_FINE_POLICY = OverdueFinePolicy.class;
+    static final String OVERDUE_FINE_POLICY_TABLE = "overdue_fine_policy";
+    static final String DUPLICATE_ERROR_CODE = "feesfines.policy.overdue.duplicate";
+    private static final String PRIMARY_KEY = "overdue_fine_policy_pkey";
+    private static final Class<OverdueFinePolicy> OVERDUE_FINE_POLICY = OverdueFinePolicy.class;
 
     @Validate
     @Override
