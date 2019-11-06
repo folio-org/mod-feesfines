@@ -48,7 +48,6 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-
     PgUtil.post(OVERDUE_FINE_POLICY_TABLE, entity, okapiHeaders, vertxContext, PostOverdueFinesPoliciesResponse.class,
       r -> {
         Response response = r.result();
