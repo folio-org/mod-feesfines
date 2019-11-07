@@ -22,7 +22,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
     static final String DUPLICATE_ERROR_CODE = "feesfines.policy.lost.duplicate";
     private static final Class<LostItemFeePolicy> LOST_ITEM_FEE_POLICY = LostItemFeePolicy.class;
     private static final String PRIMARY_KEY = "lost_item_fee_policy_pkey";
-    private static final String DUPLICATE_ENTITY_MESSAGE =
+    private static final String DUPLICATE_ENTITY_MSG =
             "A lost item fee policy with this name already exists. Please choose a different name.";
 
     @Validate
@@ -52,7 +52,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
                 PostLostItemFeesPoliciesResponse.class, r -> {
                     if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), PRIMARY_KEY)) {
                         Error error = new Error()
-                                .withMessage(DUPLICATE_ENTITY_MESSAGE)
+                                .withMessage(DUPLICATE_ENTITY_MSG)
                                 .withCode(DUPLICATE_ERROR_CODE);
                         asyncResultHandler.handle(
                                 r.map(PostLostItemFeesPoliciesResponse.respond422WithApplicationJson(createErrors(error))));
