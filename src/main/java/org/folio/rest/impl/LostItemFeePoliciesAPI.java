@@ -14,7 +14,7 @@ import org.folio.rest.persist.PgUtil;
 
 public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
-    public static final String LOST_ITEM_FEE_TABLE = "lost_item_fee_policyy";
+    public static final String LOST_ITEM_FEE_TABLE = "lost_item_fee_policy";
     private static final Class<LostItemFeePolicy> LOST_ITEM_FEE_POLICY = LostItemFeePolicy.class;
 
     @Validate
