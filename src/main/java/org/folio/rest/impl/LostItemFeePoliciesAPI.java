@@ -11,16 +11,11 @@ import org.folio.rest.jaxrs.model.LostItemFeesPoliciesGetOrder;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.resource.LostItemFeesPolicies;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.utils.ErrorHelper;
 
 public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
     public static final String LOST_ITEM_FEE_TABLE = "lost_item_fee_policy";
     private static final Class<LostItemFeePolicy> LOST_ITEM_FEE_POLICY = LostItemFeePolicy.class;
-    private static final String PRIMARY_KEY = "lost_item_fee_policy_pkey";
-    static final String DUPLICATE_ERROR_CODE = "feesfines.policy.lost.duplicate";
-    private static final String DUPLICATE_ENTITY_MESSAGE =
-            "A lost item fee policy with this name already exists. Please choose a different name.";
 
     @Validate
     @Override
@@ -46,18 +41,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
             Context vertxContext) {
 
         PgUtil.post(LOST_ITEM_FEE_TABLE, entity, okapiHeaders, vertxContext,
-                PostLostItemFeesPoliciesResponse.class, r -> {
-                    if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), PRIMARY_KEY)) {
-                      org.folio.rest.jaxrs.model.Error error = new org.folio.rest.jaxrs.model.Error()
-                                .withMessage(DUPLICATE_ENTITY_MESSAGE)
-                                .withCode(DUPLICATE_ERROR_CODE);
-                        asyncResultHandler.handle(
-                                r.map(PostLostItemFeesPoliciesResponse.respond422WithApplicationJson(
-                                  org.folio.rest.utils.ErrorHelper.createErrors(error))));
-                        return;
-                    }
-                    asyncResultHandler.handle(r);
-                });
+                PostLostItemFeesPoliciesResponse.class, asyncResultHandler);
     }
 
     @Validate
