@@ -14,8 +14,6 @@ import org.folio.rest.jaxrs.resource.LostItemFeesPolicies;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.utils.ErrorHelper;
 
-import static org.folio.rest.utils.ErrorHelper.createErrors;
-
 public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
     public static final String LOST_ITEM_FEE_TABLE = "lost_item_fee_policy";
@@ -55,7 +53,8 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
                                 .withMessage(DUPLICATE_ENTITY_MESSAGE)
                                 .withCode(DUPLICATE_ERROR_CODE);
                         asyncResultHandler.handle(
-                                r.map(PostLostItemFeesPoliciesResponse.respond422WithApplicationJson(createErrors(error))));
+                                r.map(PostLostItemFeesPoliciesResponse.respond422WithApplicationJson(
+                                  org.folio.rest.utils.ErrorHelper.createErrors(error))));
                         return;
                     }
                     asyncResultHandler.handle(r);
