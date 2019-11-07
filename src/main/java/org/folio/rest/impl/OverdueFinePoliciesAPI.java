@@ -1,11 +1,16 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.utils.ErrorHelper.createErrors;
+
+import java.util.Map;
+
+import javax.ws.rs.core.Response;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
+
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
@@ -13,10 +18,6 @@ import org.folio.rest.jaxrs.model.OverdueFinesPoliciesGetOrder;
 import org.folio.rest.jaxrs.resource.OverdueFinesPolicies;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.utils.ErrorHelper;
-
-import javax.ws.rs.core.Response;
-import java.util.Collections;
-import java.util.Map;
 
 public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
 
@@ -51,17 +52,17 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
             Context vertxContext) {
 
         PgUtil.post(OVERDUE_FINE_POLICY_TABLE, entity, okapiHeaders, vertxContext,
-                PostOverdueFinesPoliciesResponse.class, r -> {
-                    Response response = r.result();
-                    if (ErrorHelper.didUniqueConstraintViolationOccur(response, PRIMARY_KEY)) {
-                        Error error = new Error()
-                                .withMessage(DUPLICATE_ENTITY_MESSAGE)
-                                .withCode(DUPLICATE_ERROR_CODE);
-                        Errors errors = new Errors().withErrors(Collections.singletonList(error));
-                        response = PostOverdueFinesPoliciesResponse.respond422WithApplicationJson(errors);
-                    }
-                    asyncResultHandler.handle(Future.succeededFuture(response));
-                });
+          PostOverdueFinesPoliciesResponse.class, r -> {
+            if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), PRIMARY_KEY)) {
+              Error error = new Error()
+                .withMessage(DUPLICATE_ENTITY_MESSAGE)
+                .withCode(DUPLICATE_ERROR_CODE);
+              asyncResultHandler.handle(
+                r.map(PostOverdueFinesPoliciesResponse.respond422WithApplicationJson(createErrors(error))));
+              return;
+            }
+            asyncResultHandler.handle(r);
+          });
     }
 
     @Validate
