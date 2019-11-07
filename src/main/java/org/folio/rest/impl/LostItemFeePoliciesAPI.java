@@ -6,7 +6,6 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.LostItemFeesPoliciesGetOrder;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
@@ -49,7 +48,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
         PgUtil.post(LOST_ITEM_FEE_TABLE, entity, okapiHeaders, vertxContext,
                 PostLostItemFeesPoliciesResponse.class, r -> {
                     if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), PRIMARY_KEY)) {
-                        Error error = new Error()
+                      org.folio.rest.jaxrs.model.Error error = new org.folio.rest.jaxrs.model.Error()
                                 .withMessage(DUPLICATE_ENTITY_MESSAGE)
                                 .withCode(DUPLICATE_ERROR_CODE);
                         asyncResultHandler.handle(
