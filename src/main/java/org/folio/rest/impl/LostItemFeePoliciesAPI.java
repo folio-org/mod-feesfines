@@ -18,10 +18,10 @@ import static org.folio.rest.utils.ErrorHelper.createErrors;
 
 public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
-    static final String LOST_ITEM_FEE_TABLE = "lost_item_fee_policy";
-    static final String DUPLICATE_ERROR_CODE = "feesfines.policy.lost.duplicate";
+    public static final String LOST_ITEM_FEE_TABLE = "lost_item_fee_policy";
     private static final Class<LostItemFeePolicy> LOST_ITEM_FEE_POLICY = LostItemFeePolicy.class;
     private static final String PRIMARY_KEY = "lost_item_fee_policy_pkey";
+    static final String DUPLICATE_ERROR_CODE = "feesfines.policy.lost.duplicate";
     private static final String DUPLICATE_ENTITY_MESSAGE =
             "A lost item fee policy with this name already exists. Please choose a different name.";
 
