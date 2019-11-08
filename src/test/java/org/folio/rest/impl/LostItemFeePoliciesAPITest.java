@@ -69,7 +69,6 @@ public class LostItemFeePoliciesAPITest {
         port = NetworkUtils.nextFreePort();
         lostItemFeePolicyEntity = createEntity();
 
-        PostgresClient.setIsEmbedded(true);
         PostgresClient.getInstance(vertx).startEmbeddedPostgres();
 
         TenantClient tenantClient =
