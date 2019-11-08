@@ -125,7 +125,7 @@ public class LostItemFeePoliciesAPITest {
         post(lostItemFeePolicyEntity);
 
         JsonObject errorJson = new JsonObject()
-                .put("message", "A lost item fee policy with this name already exists. Please choose a different name.")
+                .put("message", "The Lost item fee policy name entered already exists. Please enter a different name.")
                 .put("code", LostItemFeePoliciesAPI.DUPLICATE_ERROR_CODE)
                 .put("parameters", new JsonArray());
 

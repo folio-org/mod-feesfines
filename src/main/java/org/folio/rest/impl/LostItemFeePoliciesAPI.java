@@ -23,7 +23,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
     private static final Class<LostItemFeePolicy> LOST_ITEM_FEE_POLICY = LostItemFeePolicy.class;
     private static final String PRIMARY_KEY = "lost_item_fee_policy_pkey";
     private static final String DUPLICATE_ENTITY_MSG =
-            "A lost item fee policy with this name already exists. Please choose a different name.";
+            "The Lost item fee policy name entered already exists. Please enter a different name.";
 
     @Validate
     @Override
