@@ -126,7 +126,7 @@ public class OverdueFinePoliciesAPITest {
     post(overdueFinePolicyEntity);
 
     JsonObject errorJson = new JsonObject()
-      .put("message", "An overdue fine policy with this name already exists. Please choose a different name.")
+      .put("message", "The Overdue fine policy name entered already exists. Please enter a different name.")
       .put("code", OverdueFinePoliciesAPI.DUPLICATE_ERROR_CODE)
       .put("parameters", new JsonArray());
 
