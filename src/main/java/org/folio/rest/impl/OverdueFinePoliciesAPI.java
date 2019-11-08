@@ -26,7 +26,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
     private static final String PRIMARY_KEY = "overdue_fine_policy_pkey";
     private static final Class<OverdueFinePolicy> OVERDUE_FINE_POLICY = OverdueFinePolicy.class;
     private static final String DUPLICATE_ENTITY_MESSAGE =
-            "An overdue fine policy with this name already exists. Please choose a different name.";
+            "The Overdue fine policy name entered already exists. Please enter a different name.";
 
     @Validate
     @Override
