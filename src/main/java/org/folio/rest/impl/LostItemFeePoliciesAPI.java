@@ -21,7 +21,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
     static final String LOST_ITEM_FEE_TABLE = "lost_item_fee_policy";
     static final String DUPLICATE_ERROR_CODE = "feesfines.policy.lost.duplicate";
     private static final Class<LostItemFeePolicy> LOST_ITEM_FEE_POLICY = LostItemFeePolicy.class;
-    private static final String PRIMARY_KEY = "lost_item_fee_policy_pkey";
+    private static final String INDEX_NAME = "lost_item_fee_policy_name_idx_unique";
     private static final String DUPLICATE_ENTITY_MSG =
             "The Lost item fee policy name entered already exists. Please enter a different name.";
 
@@ -50,7 +50,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
         PgUtil.post(LOST_ITEM_FEE_TABLE, entity, okapiHeaders, vertxContext,
                 PostLostItemFeesPoliciesResponse.class, r -> {
-                    if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), PRIMARY_KEY)) {
+                    if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), INDEX_NAME)) {
                         Error error = new Error()
                                 .withMessage(DUPLICATE_ENTITY_MSG)
                                 .withCode(DUPLICATE_ERROR_CODE);
