@@ -51,7 +51,6 @@ public class LostItemFeePoliciesAPITest {
 
     private static Vertx vertx;
     private static int port;
-    private static String lostItemFeePolicyEntity;
     private static String okapiTenant = "test_tenant";
 
     private String okapiUrl;
@@ -67,7 +66,6 @@ public class LostItemFeePoliciesAPITest {
         Async async = context.async();
         vertx = Vertx.vertx();
         port = NetworkUtils.nextFreePort();
-        lostItemFeePolicyEntity = createEntity();
 
         PostgresClient.getInstance(vertx).startEmbeddedPostgres();
 
@@ -112,16 +110,17 @@ public class LostItemFeePoliciesAPITest {
 
     @Test
     public void postLostItemFeesPoliciesSuccess() {
-        post(lostItemFeePolicyEntity)
+        String entity = createEntity();
+        post(entity)
                 .then()
                 .statusCode(HttpStatus.SC_CREATED)
                 .contentType(ContentType.JSON)
-                .body(equalTo(lostItemFeePolicyEntity));
+                .body(equalTo(entity));
     }
 
     @Test
     public void postLostItemFeesPoliciesDuplicate() {
-        post(lostItemFeePolicyEntity);
+        post(createEntity());
 
         JsonObject errorJson = new JsonObject()
                 .put("message", "The Lost item fee policy name entered already exists. Please enter a different name.")
@@ -132,7 +131,7 @@ public class LostItemFeePoliciesAPITest {
                 .put("errors", new JsonArray(Collections.singletonList(errorJson)))
                 .encodePrettily();
 
-        post(lostItemFeePolicyEntity)
+        post(createEntity())
                 .then()
                 .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
                 .contentType(ContentType.JSON)
@@ -167,7 +166,7 @@ public class LostItemFeePoliciesAPITest {
 
     @Test
     public void postLostItemFeesPoliciesMalformedJson() {
-        post(lostItemFeePolicyEntity.substring(1))
+        post(createEntity().substring(1))
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .contentType(ContentType.TEXT)
@@ -194,7 +193,7 @@ public class LostItemFeePoliciesAPITest {
         String originalTenant = okapiTenant;
         okapiTenant = "test_breaker";
 
-        post(lostItemFeePolicyEntity)
+        post(createEntity())
                 .then()
                 .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
                 .body(containsString("password authentication failed for user \"test_breaker_mod_feesfines\""));
@@ -242,7 +241,7 @@ public class LostItemFeePoliciesAPITest {
                 .put("replacementProcessingFee", 0.00)
                 .put("replacementAllowed", true)
                 .put("lostItemReturned", "Charge")
-                .put("id", "0c340536-8ed7-409e-8940-e65f2330d4d7");
+                .put("id", UUID.randomUUID().toString());
     }
 
 }
