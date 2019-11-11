@@ -23,7 +23,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
 
     static final String OVERDUE_FINE_POLICY_TABLE = "overdue_fine_policy";
     static final String DUPLICATE_ERROR_CODE = "feesfines.policy.overdue.duplicate";
-    private static final String PRIMARY_KEY = "overdue_fine_policy_pkey";
+    private static final String INDEX_NAME = "overdue_fine_policy_name_idx_unique";
     private static final Class<OverdueFinePolicy> OVERDUE_FINE_POLICY = OverdueFinePolicy.class;
     private static final String DUPLICATE_ENTITY_MESSAGE =
             "The Overdue fine policy name entered already exists. Please enter a different name.";
@@ -53,7 +53,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
 
         PgUtil.post(OVERDUE_FINE_POLICY_TABLE, entity, okapiHeaders, vertxContext,
           PostOverdueFinesPoliciesResponse.class, r -> {
-            if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), PRIMARY_KEY)) {
+            if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), INDEX_NAME)) {
               Error error = new Error()
                 .withMessage(DUPLICATE_ENTITY_MESSAGE)
                 .withCode(DUPLICATE_ERROR_CODE);

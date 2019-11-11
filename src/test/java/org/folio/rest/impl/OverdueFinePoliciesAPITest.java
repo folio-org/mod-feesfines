@@ -52,7 +52,6 @@ public class OverdueFinePoliciesAPITest {
 
   private static Vertx vertx;
   private static int port;
-  private static String overdueFinePolicyEntity;
   private static String okapiTenant = "test_tenant";
 
   private String okapiUrl;
@@ -68,7 +67,6 @@ public class OverdueFinePoliciesAPITest {
     Async async = context.async();
     vertx = Vertx.vertx();
     port = NetworkUtils.nextFreePort();
-    overdueFinePolicyEntity = createEntity();
 
     PostgresClient.setIsEmbedded(true);
     PostgresClient.getInstance(vertx).startEmbeddedPostgres();
@@ -114,16 +112,17 @@ public class OverdueFinePoliciesAPITest {
 
   @Test
   public void postOverdueFinesPoliciesSuccess() {
-    post(overdueFinePolicyEntity)
+    String entity = createEntity();
+    post(entity)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON)
-      .body(equalTo(overdueFinePolicyEntity));
+      .body(equalTo(entity));
   }
 
   @Test
   public void postOverdueFinesPoliciesDuplicate() {
-    post(overdueFinePolicyEntity);
+    post(createEntity());
 
     JsonObject errorJson = new JsonObject()
       .put("message", "The Overdue fine policy name entered already exists. Please enter a different name.")
@@ -134,7 +133,7 @@ public class OverdueFinePoliciesAPITest {
       .put("errors", new JsonArray(Collections.singletonList(errorJson)))
       .encodePrettily();
 
-    post(overdueFinePolicyEntity)
+    post(createEntity())
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(ContentType.JSON)
@@ -169,7 +168,7 @@ public class OverdueFinePoliciesAPITest {
 
   @Test
   public void postOverdueFinesPoliciesMalformedJson() {
-    post(overdueFinePolicyEntity.substring(1))
+    post(createEntity().substring(1))
       .then()
       .statusCode(HttpStatus.SC_BAD_REQUEST)
       .contentType(ContentType.TEXT)
@@ -196,7 +195,7 @@ public class OverdueFinePoliciesAPITest {
     String originalTenant = okapiTenant;
     okapiTenant = "test_breaker";
 
-    post(overdueFinePolicyEntity)
+    post(createEntity())
       .then()
       .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
       .body(containsString("password authentication failed for user \"test_breaker_mod_feesfines\""));
@@ -239,7 +238,7 @@ public class OverdueFinePoliciesAPITest {
       .put("overdueRecallFine", new JsonObject().put("quantity", 1.0).put("intervalId", "hour"))
       .put("gracePeriodRecall", false)
       .put("maxOverdueRecallFine", 50.00)
-      .put("id", "b712dffc-c107-4e88-b3d5-fba2fb35755e");
+      .put("id", UUID.randomUUID().toString());
   }
 
 }
