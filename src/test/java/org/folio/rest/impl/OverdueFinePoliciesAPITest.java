@@ -68,7 +68,6 @@ public class OverdueFinePoliciesAPITest {
     vertx = Vertx.vertx();
     port = NetworkUtils.nextFreePort();
 
-    PostgresClient.setIsEmbedded(true);
     PostgresClient.getInstance(vertx).startEmbeddedPostgres();
 
     TenantClient tenantClient =
