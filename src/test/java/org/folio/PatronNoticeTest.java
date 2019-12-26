@@ -117,6 +117,7 @@ class PatronNoticeTest {
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
       .put("balance", 10.0)
+      .put("notify", true)
       .put("dateAction", "2019-09-17T08:43:15.000+0000")
       .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
 
@@ -183,6 +184,7 @@ class PatronNoticeTest {
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
       .put("balance", 10.0)
+      .put("notify", true)
       .put("dateAction", "2019-09-17T08:43:15.000+0000")
       .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
 
@@ -247,6 +249,7 @@ class PatronNoticeTest {
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
       .put("balance", 0.0)
+      .put("notify", true)
       .put("dateAction", "2019-09-17T08:43:15.000+0000")
       .put("paymentMethod", "credit card")
       .put("comments", "STAFF : staff comment \n PATRON : patron comment"));
@@ -315,6 +318,7 @@ class PatronNoticeTest {
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
       .put("balance", 0.0)
+      .put("notify", true)
       .put("dateAction", "2019-09-17T08:43:15.000+0000")
       .put("paymentMethod", "credit card")
       .put("comments", "STAFF : staff comment \n PATRON : patron comment"));

@@ -5,6 +5,7 @@
   "balance": 50.00,
   "transactionInformation": "Department ENG-345",
   "comments": "This a comment",
+  "notify": true,
   "createdAt": "Main Library",
   "source": "Doe,Jane",
   "paymentMethod": "Check",
