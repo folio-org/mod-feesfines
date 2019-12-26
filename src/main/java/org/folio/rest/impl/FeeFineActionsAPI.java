@@ -125,15 +125,25 @@ public class FeeFineActionsAPI implements Feefineactions {
       Future<Response> postCompleted = Future.future();
       PgUtil.post(FEEFINEACTIONS_TABLE, entity, okapiHeaders, vertxContext, PostFeefineactionsResponse.class, postCompleted);
 
-      PatronNoticeService patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
-
-      postCompleted.map(response -> {
-        patronNoticeService.sendPatronNotice(entity);
-        return response;
-      }).setHandler(asyncResultHandler);
+      postCompleted.map(response ->
+        sendPatronNoticeIfNeedBe(entity, okapiHeaders, vertxContext, response))
+        .setHandler(asyncResultHandler);
     }
 
-    @Validate
+  private Response sendPatronNoticeIfNeedBe(Feefineaction entity, Map<String, String> okapiHeaders,
+                                    Context vertxContext, Response response) {
+    if (needToNotifyPatron(entity.getNotify())) {
+      PatronNoticeService patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
+      patronNoticeService.sendPatronNotice(entity);
+    }
+    return response;
+  }
+
+  private boolean needToNotifyPatron(Boolean notify) {
+    return notify != null && notify;
+  }
+
+  @Validate
     @Override
     public void getFeefineactionsByFeefineactionId(String feefineactionId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
         try {
