@@ -1,0 +1,10 @@
+{
+  "id" : "cd3f6cac-fa17-4079-9fae-2fb28e521412",
+  "name" : "Overdue fine policy",
+  "description" : "Test overdue fine policy",
+  "countClosed" : true,
+  "maxOverdueFine" : 0.0,
+  "forgiveOverdueFine" : true,
+  "gracePeriodRecall" : true,
+  "maxOverdueRecallFine" : 0.0
+}
