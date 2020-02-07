@@ -1,8 +1,12 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 
 import java.util.Collections;
+
+import javax.ws.rs.core.MediaType;
 
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
@@ -20,6 +24,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import io.restassured.RestAssured;
+import io.restassured.http.Header;
+import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -98,6 +105,26 @@ public class TenantRefAPITest {
         // circulation rules must be updated as well
         context.assertEquals(lostItemFeePolicy.getId(),
           "ed892c0e-52e0-4cd9-8133-c0ef07b4a709");
+        return context;
+      }).setHandler(context.asyncAssertSuccess());
+  }
+
+  @Test
+  public void shouldFailIfNoOkapiUrlHeaderSpecified(TestContext context) {
+    final RequestSpecification spec = RestAssured.given()
+      .port(PORT)
+      .contentType(MediaType.APPLICATION_JSON)
+      .header(new Header(OKAPI_HEADER_TENANT, "test_tenant"))
+      .header(new Header(OKAPI_HEADER_TOKEN, "test_token"))
+      .body(getTenantAttributes());
+
+    succeededFuture(spec.post("/_/tenant"))
+      .map(response -> {
+        context.assertEquals(response.getStatusCode(), 500);
+        context.assertNotNull(response.getBody().asString());
+        context.assertTrue(response.getBody().asString()
+          .contains("No X-Okapi-Url header"));
+
         return context;
       }).setHandler(context.asyncAssertSuccess());
   }
