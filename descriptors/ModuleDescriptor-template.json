@@ -606,16 +606,16 @@
       ]
     },
     {
-      "id":"_tenant",
-      "version":"1.0",
-      "interfaceType":"system",
-      "handlers":[
+      "id" : "_tenant",
+      "version" : "1.2",
+      "interfaceType": "system",
+      "handlers": [
         {
-          "methods":[
-            "POST",
-            "DELETE"
-          ],
-          "pathPattern":"/_/tenant"
+          "methods": ["POST"],
+          "pathPattern": "/_/tenant"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/_/tenant"
         }
       ]
     }
