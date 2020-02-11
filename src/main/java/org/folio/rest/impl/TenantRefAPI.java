@@ -11,6 +11,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -23,6 +24,8 @@ public class TenantRefAPI extends TenantAPI {
                          Handler<AsyncResult<Response>> handler, Context context) {
 
     log.info("postTenant");
+    log.info("Tenant attributes: {}", JsonObject.mapFrom(tenantAttributes));
+
     Vertx vertx = context.owner();
     super.postTenant(tenantAttributes, headers, res -> {
       if (res.failed()) {
