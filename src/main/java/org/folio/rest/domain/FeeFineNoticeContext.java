@@ -9,6 +9,8 @@ public class FeeFineNoticeContext {
 
   private static final String PAID_FULLY = "Paid fully";
   private static final String PAID_PARTIALLY = "Paid partially";
+  private static final String WAIVED_FULLY = "Waived fully";
+  private static final String WAIVED_PARTIALLY = "Waived partially";
 
   private Owner owner;
   private Feefine feefine;
@@ -44,7 +46,9 @@ public class FeeFineNoticeContext {
 
   private boolean isFeeFineActon() {
     return feefineaction.getTypeAction().equals(PAID_FULLY) ||
-      feefineaction.getTypeAction().equals(PAID_PARTIALLY);
+      feefineaction.getTypeAction().equals(PAID_PARTIALLY) ||
+      feefineaction.getTypeAction().equals(WAIVED_FULLY) ||
+      feefineaction.getTypeAction().equals(WAIVED_PARTIALLY);
   }
 
   private String getChargeNoticeTemplateId() {

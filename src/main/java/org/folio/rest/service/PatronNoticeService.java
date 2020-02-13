@@ -88,7 +88,7 @@ public class PatronNoticeService {
           .put("actionAmount", feefineaction.getAmountAction())
           .put("actionDateTime", actionDateTime)
           .put("balance", feefineaction.getBalance())
-          .put("actionAdditionalInfo", getAdditionalInfoForPatronFromFeeFineAction(feefineaction))));
+          .put("actionAdditionalInfoForPatron", getAdditionalInfoForPatronFromFeeFineAction(feefineaction))));
   }
 
   private String getAdditionalInfoForPatronFromFeeFineAction(Feefineaction feefineaction) {
