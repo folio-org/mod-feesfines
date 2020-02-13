@@ -130,7 +130,7 @@ class PatronNoticeTest {
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 10.0)
-        .put("actionAdditionalInfoForPatron", "patron comment"));
+        .put("additionalInfoForPatron", "patron comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
@@ -197,7 +197,7 @@ class PatronNoticeTest {
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 10.0)
-        .put("actionAdditionalInfoForPatron", "patron comment"));
+        .put("additionalInfoForPatron", "patron comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
@@ -263,7 +263,7 @@ class PatronNoticeTest {
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 0.0)
-        .put("actionAdditionalInfoForPatron", "patron comment"));
+        .put("additionalInfoForPatron", "patron comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
@@ -332,7 +332,7 @@ class PatronNoticeTest {
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 0.0)
-        .put("actionAdditionalInfoForPatron", "patron comment"));
+        .put("additionalInfoForPatron", "patron comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
