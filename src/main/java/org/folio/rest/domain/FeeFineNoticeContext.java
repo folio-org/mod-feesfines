@@ -1,5 +1,8 @@
 package org.folio.rest.domain;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -7,10 +10,8 @@ import org.folio.rest.jaxrs.model.Owner;
 
 public class FeeFineNoticeContext {
 
-  private static final String PAID_FULLY = "Paid fully";
-  private static final String PAID_PARTIALLY = "Paid partially";
-  private static final String WAIVED_FULLY = "Waived fully";
-  private static final String WAIVED_PARTIALLY = "Waived partially";
+  private static final List<String> FEE_FINE_ACTION_TYPES = Arrays.asList("Paid fully",
+    "Paid partially", "Waived fully", "Waived partially");
 
   private Owner owner;
   private Feefine feefine;
@@ -45,10 +46,7 @@ public class FeeFineNoticeContext {
   }
 
   private boolean isFeeFineActon() {
-    return feefineaction.getTypeAction().equals(PAID_FULLY) ||
-      feefineaction.getTypeAction().equals(PAID_PARTIALLY) ||
-      feefineaction.getTypeAction().equals(WAIVED_FULLY) ||
-      feefineaction.getTypeAction().equals(WAIVED_PARTIALLY);
+    return FEE_FINE_ACTION_TYPES.contains(feefineaction.getTypeAction());
   }
 
   private String getChargeNoticeTemplateId() {
