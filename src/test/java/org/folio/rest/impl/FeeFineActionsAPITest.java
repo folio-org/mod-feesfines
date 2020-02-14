@@ -247,7 +247,7 @@ public class FeeFineActionsAPITest {
         .put("actionAmount", amountAction)
         .put("actionDateTime", dateAction)
         .put("balance", balance)
-        .put("additionalInfoForPatron", ""));
+        .put("actionAdditionalInfo", ""));
   }
 
   private String createFeeFineActionJson(String dateAction, String typeAction,
