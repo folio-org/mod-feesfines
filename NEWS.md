@@ -1,3 +1,6 @@
+## 15.6.1 2020-02-17
+* Fix json-schema for lost item fee policy. Refs UIU-1156.
+
 ## 15.6.0 2019-09-08
 * Update 26.2.4 RMB version. Refs Upgrading Version 25.
 * Add patron notice for payment of fee/fine charge. Refs MODFEE-11.
