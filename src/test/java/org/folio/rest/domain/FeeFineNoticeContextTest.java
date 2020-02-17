@@ -26,7 +26,8 @@ public class FeeFineNoticeContextTest {
   private Feefineaction feeFineAction;
   private String correctNoticeId;
 
-  public FeeFineNoticeContextTest(Owner owner, Feefine feeFine, Feefineaction feeFineAction, String correctNoticeId) {
+  public FeeFineNoticeContextTest(Owner owner, Feefine feeFine, Feefineaction feeFineAction,
+    String correctNoticeId) {
     this.owner = owner;
     this.feeFine = feeFine;
     this.feeFineAction = feeFineAction;
@@ -75,29 +76,56 @@ public class FeeFineNoticeContextTest {
       .withPaymentMethod("Test payment method")
       .withTypeAction("Waived partially");
 
+    Feefineaction transferredFullyFeeFineAction = new Feefineaction()
+      .withPaymentMethod("Test payment method")
+      .withTypeAction("Transferred fully");
+
+    Feefineaction transferredPartiallyFeeFineAction = new Feefineaction()
+      .withPaymentMethod("Test payment method")
+      .withTypeAction("Transferred partially");
+
     List<Object[]> parameters = new ArrayList<>();
 
-    parameters.add(new Object[] {owner, feeFineWithoutNoticeIds, chargeFeeFineAction, DEFAULT_CHARGE_NOTICE_ID});
-    parameters.add(new Object[] {owner, feeFineWithNoticeIds, chargeFeeFineAction, FEEFINE_CHARGE_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithoutNoticeIds, chargeFeeFineAction, DEFAULT_CHARGE_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithNoticeIds, chargeFeeFineAction, FEEFINE_CHARGE_NOTICE_ID});
 
-    parameters.add(new Object[] {owner, feeFineWithoutNoticeIds, paidFullyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
-    parameters.add(new Object[] {owner, feeFineWithoutNoticeIds, paidPartiallyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
-    parameters.add(new Object[] {owner, feeFineWithNoticeIds, paidFullyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
-    parameters.add(new Object[] {owner, feeFineWithNoticeIds, paidPartiallyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithoutNoticeIds, paidFullyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithoutNoticeIds, paidPartiallyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithNoticeIds, paidFullyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithNoticeIds, paidPartiallyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
 
-    parameters.add(new Object[] {owner, feeFineWithoutNoticeIds, waivedFullyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithoutNoticeIds, waivedFullyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
       {owner, feeFineWithoutNoticeIds, waivedPartiallyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
-    parameters.add(new Object[] {owner, feeFineWithNoticeIds, waivedFullyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
-    parameters.add(new Object[] {owner, feeFineWithNoticeIds, waivedPartiallyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithNoticeIds, waivedFullyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithNoticeIds, waivedPartiallyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
 
-    parameters.add(new Object[] {ownerWithoutDefaultNoticeIds, feeFineWithoutNoticeIds, chargeFeeFineAction, null});
+    parameters.add(new Object[]
+      {owner, feeFineWithoutNoticeIds, transferredFullyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithoutNoticeIds, transferredPartiallyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithNoticeIds, transferredFullyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithNoticeIds, transferredPartiallyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+
+    parameters.add(new Object[]
+      {ownerWithoutDefaultNoticeIds, feeFineWithoutNoticeIds, chargeFeeFineAction, null});
 
     return parameters;
   }
 
   @Test
-  public void getTemplateIdReturnsCorrectNoticeId() {
+  public void getTemplateIdReturnsCorrectId() {
     FeeFineNoticeContext feeFineNoticeContext = new FeeFineNoticeContext()
       .withOwner(owner)
       .withFeefine(feeFine)
