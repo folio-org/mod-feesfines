@@ -56,70 +56,53 @@ public class FeeFineNoticeContextTest {
       .withChargeNoticeId(null)
       .withActionNoticeId(null);
 
-    Feefineaction chargeFeeFineAction = new Feefineaction()
+    Feefineaction charge = new Feefineaction()
       .withPaymentMethod(null)
       .withTypeAction("Test charge");
 
-    Feefineaction paidFullyFeeFineAction = new Feefineaction()
-      .withPaymentMethod("Test payment method")
-      .withTypeAction("Paid fully");
-
-    Feefineaction paidPartiallyFeeFineAction = new Feefineaction()
-      .withPaymentMethod("Test payment method")
-      .withTypeAction("Paid partially");
-
-    Feefineaction waivedFullyFeeFineAction = new Feefineaction()
-      .withPaymentMethod("Test payment method")
-      .withTypeAction("Waived fully");
-
-    Feefineaction waivedPartiallyFeeFineAction = new Feefineaction()
-      .withPaymentMethod("Test payment method")
-      .withTypeAction("Waived partially");
-
-    Feefineaction transferredFullyFeeFineAction = new Feefineaction()
-      .withPaymentMethod("Test payment method")
-      .withTypeAction("Transferred fully");
-
-    Feefineaction transferredPartiallyFeeFineAction = new Feefineaction()
-      .withPaymentMethod("Test payment method")
-      .withTypeAction("Transferred partially");
+    Feefineaction paidFully = createActionWithType("Paid fully");
+    Feefineaction paidPartially = createActionWithType("Paid partially");
+    Feefineaction waivedFully = createActionWithType("Waived fully");
+    Feefineaction waivedPartially = createActionWithType("Waived partially");
+    Feefineaction transferredFully = createActionWithType("Transferred fully");
+    Feefineaction transferredPartially = createActionWithType("Transferred partially");
 
     List<Object[]> parameters = new ArrayList<>();
 
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, chargeFeeFineAction, DEFAULT_CHARGE_NOTICE_ID});
+      {owner, feeFineWithoutNoticeIds, charge, DEFAULT_CHARGE_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, chargeFeeFineAction, FEEFINE_CHARGE_NOTICE_ID});
+      {owner, feeFineWithNoticeIds, charge, FEEFINE_CHARGE_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, paidFullyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithoutNoticeIds, paidFully, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, paidPartiallyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithoutNoticeIds, paidPartially, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, paidFullyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+      {owner, feeFineWithNoticeIds, paidFully, FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, paidPartiallyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+      {owner, feeFineWithNoticeIds, paidPartially, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, waivedFullyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithoutNoticeIds, waivedFully, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, waivedPartiallyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithoutNoticeIds, waivedPartially, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, waivedFullyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+      {owner, feeFineWithNoticeIds, waivedFully, FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, waivedPartiallyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+      {owner, feeFineWithNoticeIds, waivedPartially, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, transferredFullyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithoutNoticeIds, transferredFully, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, transferredPartiallyFeeFineAction, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithoutNoticeIds, transferredPartially, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, transferredFullyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+      {owner, feeFineWithNoticeIds, transferredFully, FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, transferredPartiallyFeeFineAction, FEEFINE_ACTION_NOTICE_ID});
+      {owner, feeFineWithNoticeIds, transferredPartially, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {ownerWithoutDefaultNoticeIds, feeFineWithoutNoticeIds, chargeFeeFineAction, null});
+      {ownerWithoutDefaultNoticeIds, feeFineWithoutNoticeIds, charge, null});
 
     return parameters;
   }
@@ -139,4 +122,11 @@ public class FeeFineNoticeContextTest {
       assertEquals(correctNoticeId, templateId);
     }
   }
+
+  private static Feefineaction createActionWithType(String type) {
+    return new Feefineaction()
+      .withPaymentMethod("Test payment method")
+      .withTypeAction(type);
+  }
+
 }
