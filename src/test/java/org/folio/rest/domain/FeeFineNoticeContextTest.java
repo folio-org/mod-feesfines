@@ -66,6 +66,7 @@ public class FeeFineNoticeContextTest {
     Feefineaction waivedPartially = createActionWithType("Waived partially");
     Feefineaction transferredFully = createActionWithType("Transferred fully");
     Feefineaction transferredPartially = createActionWithType("Transferred partially");
+    Feefineaction canceledAsError = createActionWithType("Cancelled as error");
 
     List<Object[]> parameters = new ArrayList<>();
 

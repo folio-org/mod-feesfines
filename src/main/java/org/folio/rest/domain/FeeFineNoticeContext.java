@@ -12,7 +12,7 @@ public class FeeFineNoticeContext {
 
   private static final List<String> FEE_FINE_ACTION_TYPES = Arrays.asList(
     "Paid fully", "Paid partially", "Waived fully", "Waived partially",
-    "Transferred fully", "Transferred partially");
+    "Transferred fully", "Transferred partially", "Cancelled as error");
 
   private Owner owner;
   private Feefine feefine;
@@ -33,11 +33,11 @@ public class FeeFineNoticeContext {
   }
 
   public String getTemplateId() {
-    if (isCharge()) {
-      return getChargeNoticeTemplateId();
-    }
     if (isFeeFineActon()) {
       return getActionNoticeTemplateId();
+    }
+    else if (isCharge()) {
+      return getChargeNoticeTemplateId();
     }
     return null;
   }
