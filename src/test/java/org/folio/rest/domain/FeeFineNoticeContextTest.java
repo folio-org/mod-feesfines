@@ -66,7 +66,7 @@ public class FeeFineNoticeContextTest {
     Feefineaction waivedPartially = createActionWithType("Waived partially");
     Feefineaction transferredFully = createActionWithType("Transferred fully");
     Feefineaction transferredPartially = createActionWithType("Transferred partially");
-    Feefineaction canceledAsError = createActionWithType("Cancelled as error");
+    Feefineaction cancelledAsError = createActionWithType("Cancelled as error");
 
     List<Object[]> parameters = new ArrayList<>();
 
@@ -103,9 +103,9 @@ public class FeeFineNoticeContextTest {
       {owner, feeFineWithNoticeIds, transferredPartially, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-                     {owner, feeFineWithoutNoticeIds, canceledAsError, DEFAULT_ACTION_NOTICE_ID});
+                     {owner, feeFineWithoutNoticeIds, cancelledAsError, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-                     {owner, feeFineWithNoticeIds, canceledAsError, FEEFINE_ACTION_NOTICE_ID});
+                     {owner, feeFineWithNoticeIds, cancelledAsError, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
       {ownerWithoutDefaultNoticeIds, feeFineWithoutNoticeIds, charge, null});
