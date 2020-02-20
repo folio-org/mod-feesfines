@@ -130,7 +130,8 @@ class PatronNoticeTest {
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 10.0)
-        .put("actionAdditionalInfo", "patron comment"));
+        .put("actionAdditionalInfo", "patron comment")
+        .put("reasonForCancellation", "staff comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
@@ -197,7 +198,8 @@ class PatronNoticeTest {
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 10.0)
-        .put("actionAdditionalInfo", "patron comment"));
+        .put("actionAdditionalInfo", "patron comment")
+        .put("reasonForCancellation", "staff comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
@@ -263,7 +265,8 @@ class PatronNoticeTest {
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 0.0)
-        .put("actionAdditionalInfo", "patron comment"));
+        .put("actionAdditionalInfo", "patron comment")
+        .put("reasonForCancellation", "staff comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)
@@ -332,7 +335,8 @@ class PatronNoticeTest {
         .put("actionAmount", 10.0)
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 0.0)
-        .put("actionAdditionalInfo", "patron comment"));
+        .put("actionAdditionalInfo", "patron comment")
+        .put("reasonForCancellation", "staff comment"));
 
     JsonObject notice = new JsonObject()
       .put("recipientId", userId)

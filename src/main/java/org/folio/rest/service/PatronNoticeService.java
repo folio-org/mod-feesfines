@@ -35,6 +35,7 @@ public class PatronNoticeService {
   private static final Logger logger = LoggerFactory.getLogger(PatronNoticeService.class);
 
   private static final String PATRON_COMMENTS_KEY = "PATRON";
+  private static final String STAFF_COMMENTS_KEY = "STAFF";
 
   private FeeFineRepository feeFineRepository;
   private OwnerRepository ownerRepository;
@@ -88,12 +89,13 @@ public class PatronNoticeService {
           .put("actionAmount", feefineaction.getAmountAction())
           .put("actionDateTime", actionDateTime)
           .put("balance", feefineaction.getBalance())
-          .put("actionAdditionalInfo", getAdditionalInfoForPatronFromFeeFineAction(feefineaction))));
+          .put("actionAdditionalInfo", getCommentsFromFeeFineAction(feefineaction, PATRON_COMMENTS_KEY))
+          .put("reasonForCancellation", getCommentsFromFeeFineAction(feefineaction, STAFF_COMMENTS_KEY))));
   }
 
-  private String getAdditionalInfoForPatronFromFeeFineAction(Feefineaction feefineaction) {
+  private String getCommentsFromFeeFineAction(Feefineaction feefineaction, String commentsKey){
     String comments = Optional.ofNullable(feefineaction.getComments()).orElse(StringUtils.EMPTY);
-    return parseFeeFineComments(comments).getOrDefault(PATRON_COMMENTS_KEY, StringUtils.EMPTY);
+    return parseFeeFineComments(comments).getOrDefault(commentsKey, StringUtils.EMPTY);
   }
 
   private void handleSendPatronNoticeResult(AsyncResult<Void> post) {
