@@ -247,8 +247,8 @@ public class FeeFineActionsAPITest {
         .put("actionAmount", amountAction)
         .put("actionDateTime", dateAction)
         .put("balance", balance)
-        .put("actionAdditionalInfo", "")
-        .put("reasonForCancellation","for staff"));
+        .put("actionAdditionalInfo", "patron comment")
+        .put("reasonForCancellation", "staff comment"));
   }
 
   private String createFeeFineActionJson(String dateAction, String typeAction,
@@ -258,7 +258,7 @@ public class FeeFineActionsAPITest {
     return new JsonObject()
       .put("dateAction", dateAction)
       .put("typeAction", typeAction)
-      .put("comments", "STAFF : for staff")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment")
       .put("notify", notify)
       .put("amountAction", amountAction)
       .put("balance", balance)

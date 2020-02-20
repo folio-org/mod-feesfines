@@ -103,6 +103,11 @@ public class FeeFineNoticeContextTest {
       {owner, feeFineWithNoticeIds, transferredPartially, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
+                     {owner, feeFineWithoutNoticeIds, canceledAsError, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+                     {owner, feeFineWithNoticeIds, canceledAsError, FEEFINE_ACTION_NOTICE_ID});
+
+    parameters.add(new Object[]
       {ownerWithoutDefaultNoticeIds, feeFineWithoutNoticeIds, charge, null});
 
     return parameters;
