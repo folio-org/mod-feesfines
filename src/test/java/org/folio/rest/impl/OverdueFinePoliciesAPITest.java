@@ -202,6 +202,18 @@ public class OverdueFinePoliciesAPITest {
     okapiTenant = originalTenant;
   }
 
+  @Test
+  public void postOverdueFinePolicyWithZeroFineAmount() {
+    JsonObject entityJson = createEntityJson();
+    entityJson.getJsonObject("overdueFine").put("quantity", 0);
+    entityJson.getJsonObject("overdueRecallFine").put("quantity", 0);
+
+    post(entityJson.encodePrettily())
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(ContentType.JSON);
+  }
+
   private Response post(String body) {
     return getRequestSpecification()
       .body(body)
