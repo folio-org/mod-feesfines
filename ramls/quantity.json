@@ -4,7 +4,7 @@
   "type": "object",
   "properties": {
     "quantity": {
-      "description": "Recurring fine amount",
+      "description": "Fine amount per interval",
       "type": "number"
     },
     "intervalId": {
