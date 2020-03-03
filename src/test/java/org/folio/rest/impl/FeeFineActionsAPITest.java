@@ -181,8 +181,8 @@ public class FeeFineActionsAPITest {
     final String accountId = UUID.randomUUID().toString();
     final String defaultChargeTemplateId = UUID.randomUUID().toString();
     final String userId = UUID.randomUUID().toString();
-    final String feeFineType = "damaged book";
-    final String typeAction = "damaged book";
+    final String feeFineType = "damaged book1";
+    final String typeAction = "damaged book1";
     final boolean notify = false;
     final double amountAction = 100;
     final double balance = 100;

@@ -89,8 +89,8 @@ class PatronNoticeTest {
     String accountId = UUID.randomUUID().toString();
     String defaultChargeTemplateId = UUID.randomUUID().toString();
     String userId = UUID.randomUUID().toString();
-    String feeFineType = "damaged book";
-    String typeAction = "damaged book";
+    String feeFineType = "damaged book1";
+    String typeAction = "damaged book1";
 
     createEntity("/owners", new JsonObject()
       .put("id", ownerId)
@@ -156,8 +156,8 @@ class PatronNoticeTest {
     String defaultChargeTemplateId = UUID.randomUUID().toString();
     String specificChargeTemplateId = UUID.randomUUID().toString();
     String userId = UUID.randomUUID().toString();
-    String feeFineType = "damaged book";
-    String typeAction = "damaged book";
+    String feeFineType = "damaged book2";
+    String typeAction = "damaged book2";
 
     createEntity("/owners", new JsonObject()
       .put("id", ownerId)
@@ -223,7 +223,7 @@ class PatronNoticeTest {
     String accountId = UUID.randomUUID().toString();
     String defaultActionTemplateId = UUID.randomUUID().toString();
     String userId = UUID.randomUUID().toString();
-    String feeFineType = "damaged book";
+    String feeFineType = "damaged book3";
     String typeAction = "Paid fully";
 
     createEntity("/owners", new JsonObject()
@@ -292,7 +292,7 @@ class PatronNoticeTest {
     String defaultActionTemplateId = UUID.randomUUID().toString();
     String specificActionTemplateId = UUID.randomUUID().toString();
     String userId = UUID.randomUUID().toString();
-    String feeFineType = "damaged book";
+    String feeFineType = "damaged book4";
     String typeAction = "Paid fully";
 
     createEntity("/owners", new JsonObject()

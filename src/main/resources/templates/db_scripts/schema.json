@@ -11,6 +11,16 @@
       "tableName":"feefines",
       "fromModuleVersion":"15.0",
       "withMetadata":true,
+      "uniqueIndex": [
+        {
+          "fieldName": "feeFineType",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ],
       "foreignKeys": [
         {
           "fieldName": "ownerId",

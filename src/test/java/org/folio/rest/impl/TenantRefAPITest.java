@@ -1,15 +1,14 @@
 package org.folio.rest.impl;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-
-import java.util.Collections;
-
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.Feefine;
+import org.folio.rest.jaxrs.model.FeefinedataCollection;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
@@ -33,6 +32,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+
+import static io.vertx.core.Future.succeededFuture;
+import static java.util.Arrays.asList;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(VertxUnitRunner.class)
 public class TenantRefAPITest {
@@ -127,6 +132,19 @@ public class TenantRefAPITest {
 
         return context;
       }).setHandler(context.asyncAssertSuccess());
+  }
+
+  @Test
+  public void shouldCreateAutomaticFeeFinesOnModuleInitialization() {
+    List<String> autoFeeFines = asList(
+      "Overdue fine", "Lost item fee", "Lost item processing fee", "Replacement processing fee");
+
+    List<String> createdFeeFines = succeededFuture(okapiClient.get("/feefines"))
+      .map(response -> response.as(FeefinedataCollection.class)).result()
+      .getFeefines().stream()
+      .map(Feefine::getFeeFineType).collect(Collectors.toList());
+
+    assertTrue(createdFeeFines.containsAll(autoFeeFines));
   }
 
   private static TenantClient createTenantClient() {
