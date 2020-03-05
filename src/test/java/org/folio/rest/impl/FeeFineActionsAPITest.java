@@ -26,11 +26,13 @@ import io.restassured.http.ContentType;
 import io.restassured.http.Header;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.sql.UpdateResult;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -58,6 +60,7 @@ public class FeeFineActionsAPITest {
   private static final String REST_PATH = "/feefineactions";
   private static final String OKAPI_TOKEN = "test_token";
   private static final String OKAPI_URL_TEMPLATE = "http://localhost:%s";
+  private static final String FEEFINES_TABLE = "feefines";
 
   private static Vertx vertx;
   private static int port;
@@ -99,15 +102,11 @@ public class FeeFineActionsAPITest {
   @Before
   public void setUp(TestContext context) {
     Async async = context.async();
-    PostgresClient.getInstance(vertx, okapiTenant)
-      .delete(FeeFineActionsAPI.FEEFINEACTIONS_TABLE, new Criterion(), event -> {
-        if (event.failed()) {
-          logger.error(event.cause());
-          context.fail(event.cause());
-        } else {
-          async.complete();
-        }
-      });
+    PostgresClient client = PostgresClient.getInstance(vertx, okapiTenant);
+    client.delete(FEEFINES_TABLE, new Criterion(), event -> processEvent(context, event));
+    client.delete(FeeFineActionsAPI.FEEFINEACTIONS_TABLE, new Criterion(), event ->
+      processEvent(context, event));
+    async.complete();
   }
 
   @AfterClass
@@ -181,8 +180,8 @@ public class FeeFineActionsAPITest {
     final String accountId = UUID.randomUUID().toString();
     final String defaultChargeTemplateId = UUID.randomUUID().toString();
     final String userId = UUID.randomUUID().toString();
-    final String feeFineType = "damaged book1";
-    final String typeAction = "damaged book1";
+    final String feeFineType = "damaged book";
+    final String typeAction = "damaged book";
     final boolean notify = false;
     final double amountAction = 100;
     final double balance = 100;
@@ -309,6 +308,13 @@ public class FeeFineActionsAPITest {
       .post(path)
       .then()
       .statusCode(201);
+  }
+
+  private void processEvent(TestContext context, AsyncResult<UpdateResult> event) {
+    if (event.failed()) {
+      logger.error(event.cause());
+      context.fail(event.cause());
+    }
   }
 }
 

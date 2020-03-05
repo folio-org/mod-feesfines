@@ -18,13 +18,16 @@ import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.Ignore;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 
@@ -34,6 +37,7 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
@@ -45,6 +49,8 @@ class PatronNoticeTest {
   private static final String OKAPI_URL_HEADER = "x-okapi-url";
   private static final String TENANT = "test_tenant";
   private static final String TOKEN = "dummy-TOKEN";
+  private static final String FEEFINES_TABLE = "feefines";
+  private static final Handler handler = Mockito.mock(Handler.class);
 
   private static Vertx vertx;
   private static String okapiUrl;
@@ -76,6 +82,12 @@ class PatronNoticeTest {
       .setHandler(post -> context.completeNow());
   }
 
+  @BeforeEach
+  public void setUp() {
+    PostgresClient client = PostgresClient.getInstance(vertx, TENANT);
+    client.delete(FEEFINES_TABLE, new Criterion(), handler);
+  }
+
   @AfterAll
   static void afterAll() {
     wireMockServer.stop();
@@ -89,8 +101,8 @@ class PatronNoticeTest {
     String accountId = UUID.randomUUID().toString();
     String defaultChargeTemplateId = UUID.randomUUID().toString();
     String userId = UUID.randomUUID().toString();
-    String feeFineType = "damaged book1";
-    String typeAction = "damaged book1";
+    String feeFineType = "damaged book";
+    String typeAction = "damaged book";
 
     createEntity("/owners", new JsonObject()
       .put("id", ownerId)
@@ -156,8 +168,8 @@ class PatronNoticeTest {
     String defaultChargeTemplateId = UUID.randomUUID().toString();
     String specificChargeTemplateId = UUID.randomUUID().toString();
     String userId = UUID.randomUUID().toString();
-    String feeFineType = "damaged book2";
-    String typeAction = "damaged book2";
+    String feeFineType = "damaged book";
+    String typeAction = "damaged book";
 
     createEntity("/owners", new JsonObject()
       .put("id", ownerId)
@@ -223,7 +235,7 @@ class PatronNoticeTest {
     String accountId = UUID.randomUUID().toString();
     String defaultActionTemplateId = UUID.randomUUID().toString();
     String userId = UUID.randomUUID().toString();
-    String feeFineType = "damaged book3";
+    String feeFineType = "damaged book";
     String typeAction = "Paid fully";
 
     createEntity("/owners", new JsonObject()
@@ -292,7 +304,7 @@ class PatronNoticeTest {
     String defaultActionTemplateId = UUID.randomUUID().toString();
     String specificActionTemplateId = UUID.randomUUID().toString();
     String userId = UUID.randomUUID().toString();
-    String feeFineType = "damaged book4";
+    String feeFineType = "damaged book";
     String typeAction = "Paid fully";
 
     createEntity("/owners", new JsonObject()

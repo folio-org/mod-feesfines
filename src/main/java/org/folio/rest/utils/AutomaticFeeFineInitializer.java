@@ -8,21 +8,18 @@ import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-
 import static java.util.Arrays.asList;
 
 public class AutomaticFeeFineInitializer {
 
-  private static final String FEEFINES_TABLE_NAME = "feefines";
-  private PostgresClient postgresClient;
-  private Handler<AsyncResult<String>> replyHandler;
-  private List<String> feefines;
+  private static final String FEEFINES_TABLE = "feefines";
+  private final PostgresClient postgresClient;
+  private final List<String> feefines;
 
   public AutomaticFeeFineInitializer(PostgresClient postgresClient) {
     this.postgresClient = postgresClient;
-    this.feefines = asList("Overdue fine", "Lost item fee", "Lost item processing fee", "Replacement processing fee");
+    this.feefines = asList("Overdue fine", "Lost item fee", "Lost item processing fee",
+      "Replacement processing fee");
   }
 
   public void initAutomaticFeefines() {
@@ -30,33 +27,21 @@ public class AutomaticFeeFineInitializer {
   }
 
   private void saveAutomaticFeeFine(String feeFineType) {
-    postgresClient.save(FEEFINES_TABLE_NAME, generateNewAutomaticFeeFine(feeFineType), replyHandler);
+    postgresClient.save(FEEFINES_TABLE, createNewAutomaticFeeFine(feeFineType), null);
   }
 
-  private Feefine generateNewAutomaticFeeFine(String feeFineType) {
+  private Feefine createNewAutomaticFeeFine(String feeFineType) {
     Feefine feeFine = new Feefine();
     feeFine.setFeeFineType(feeFineType);
     feeFine.setAutomatic(true);
     feeFine.setId(UUID.randomUUID().toString());
-    feeFine.setMetadata(generateMetadata());
+    feeFine.setMetadata(createMetadata());
     return feeFine;
   }
 
-  private Metadata generateMetadata() {
+  private Metadata createMetadata() {
     Metadata metadata = new Metadata();
     metadata.setCreatedDate(new Date());
     return metadata;
-  }
-
-  public void setPostgresClient(PostgresClient postgresClient) {
-    this.postgresClient = postgresClient;
-  }
-
-  public void setReplyHandler(Handler<AsyncResult<String>> replyHandler) {
-    this.replyHandler = replyHandler;
-  }
-
-  public PostgresClient getPostgresClient() {
-    return postgresClient;
   }
 }
