@@ -1,13 +1,11 @@
 package org.folio.rest.impl;
 
-import javax.ws.rs.core.Response;
 import java.util.Map;
 
+import javax.ws.rs.core.Response;
+
 import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantLoading;
-import org.folio.rest.tools.utils.TenantTool;
-import org.folio.rest.utils.AutomaticFeeFineInitializer;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -40,6 +38,7 @@ public class TenantRefAPI extends TenantAPI {
         .withIdContent()
         .add("lost-item-fees-policies")
         .add("overdue-fines-policies")
+        .add("feefines")
         .perform(tenantAttributes, headers, vertx, performResponse -> {
           if (performResponse.failed()) {
             log.error("postTenant failure", performResponse.cause());
@@ -48,10 +47,6 @@ public class TenantRefAPI extends TenantAPI {
               .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
             return;
           }
-
-          PostgresClient postgresClient = PostgresClient.getInstance(
-            Vertx.vertx(), TenantTool.calculateTenantId(headers.get("x-okapi-tenant")));
-          new AutomaticFeeFineInitializer(postgresClient).initAutomaticFeefines();
 
           log.info("postTenant executed successfully");
           handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse

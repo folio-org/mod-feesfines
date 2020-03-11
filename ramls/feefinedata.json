@@ -41,7 +41,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "feeFineType",
-    "ownerId"
+    "feeFineType"
    ]
 }
