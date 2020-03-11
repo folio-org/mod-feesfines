@@ -1,15 +1,16 @@
 package org.folio.rest.impl;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-
-import java.util.Collections;
-
 import javax.ws.rs.core.MediaType;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.Feefine;
+import org.folio.rest.jaxrs.model.FeefinedataCollection;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
@@ -33,6 +34,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+
+import static io.vertx.core.Future.succeededFuture;
+import static java.util.Arrays.asList;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(VertxUnitRunner.class)
 public class TenantRefAPITest {
@@ -125,6 +132,49 @@ public class TenantRefAPITest {
         context.assertTrue(response.getBody().asString()
           .contains("No X-Okapi-Url header"));
 
+        return context;
+      }).setHandler(context.asyncAssertSuccess());
+  }
+
+  @Test
+  public void feesFinesAreLoaded(TestContext context) {
+    final List<Feefine> expectedFeeFines = asList(
+      new Feefine()
+        .withId("9523cb96-e752-40c2-89da-60f3961a488d")
+        .withFeeFineType("Overdue fine")
+        .withAutomatic(true),
+      new Feefine()
+        .withId("cf238f9f-7018-47b7-b815-bb2db798e19f")
+        .withFeeFineType("Lost item fee")
+        .withAutomatic(true),
+      new Feefine()
+        .withId("c7dede15-aa48-45ed-860b-f996540180e0")
+        .withFeeFineType("Lost item processing fee")
+        .withAutomatic(true),
+      new Feefine()
+        .withId("d20df2fb-45fd-4184-b238-0d25747ffdd9")
+        .withFeeFineType("Replacement processing fee")
+        .withAutomatic(true)
+    );
+
+    Comparator<Feefine> byId = (f1, f2) -> StringUtils.compare(f1.getId(), f2.getId());
+    expectedFeeFines.sort(byId);
+
+    succeededFuture(okapiClient.get("/feefines"))
+      .map(response -> response.as(FeefinedataCollection.class))
+      .map(collection -> {
+        final List<Feefine> createdFeeFines = collection.getFeefines();
+        context.assertEquals(expectedFeeFines.size(), createdFeeFines.size());
+        createdFeeFines.sort(byId);
+
+        for (int i = 0; i < expectedFeeFines.size(); i++) {
+          final Feefine expected = expectedFeeFines.get(i);
+          final Feefine actual = createdFeeFines.get(i);
+
+          assertEquals(expected.getId(), actual.getId());
+          assertEquals(expected.getFeeFineType(), actual.getFeeFineType());
+          assertEquals(expected.getAutomatic(), actual.getAutomatic());
+        }
         return context;
       }).setHandler(context.asyncAssertSuccess());
   }

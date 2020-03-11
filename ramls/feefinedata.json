@@ -4,8 +4,13 @@
   "description": "Fees/fines that are used by the entire library system. They can be a set of fees / fines shared throughout the library or fees / fines that are unique to a specific customer service",
   "type": "object",
   "properties": {
+    "automatic": {
+      "description": "A flag to indicate that fee/fine was created automatically.",
+      "type": "boolean",
+      "default": false
+    },
     "feeFineType": {
-      "description": "Description of fee/fine that is up to the desecration of the user",
+      "description": "Description of fee/fine that is up to the discretion of the user",
       "type": "string"
     },
     "defaultAmount": {
@@ -37,6 +42,6 @@
   "additionalProperties": false,
   "required": [
     "feeFineType",
-    "ownerId"
+    "automatic"
    ]
 }

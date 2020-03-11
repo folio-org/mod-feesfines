@@ -38,6 +38,7 @@ public class TenantRefAPI extends TenantAPI {
         .withIdContent()
         .add("lost-item-fees-policies")
         .add("overdue-fines-policies")
+        .add("feefines")
         .perform(tenantAttributes, headers, vertx, performResponse -> {
           if (performResponse.failed()) {
             log.error("postTenant failure", performResponse.cause());
