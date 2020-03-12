@@ -1,3 +1,6 @@
+## 15.6.2 2020-03-12
+* Fix PostgreSQL connection memory leak by updating RMB to 27.1.2. Refs MODFEE-26, RMB-485.
+
 ## 15.6.1 2020-02-17
 * Fix json-schema for lost item fee policy. Refs UIU-1156.
 
