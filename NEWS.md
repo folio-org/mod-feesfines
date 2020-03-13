@@ -1,3 +1,21 @@
+## 15.7.0 2020-03-13
+* Fix missing error message when duplicate Overdue Fine Policy name entered (MODFEE-16)
+* Fix missing error message when duplicate Lost Item Fee Policy name entered (MODFEE-17)
+* Send patron notice for waiver of fee/fine charge (MODFEE-19)
+* Send patron notice for transfer of fee/fine charge (MODFEE-20)
+* Send patron notice for cancellation of fee/fine charge (MODFEE-21)
+* Fix sending "New fee/fine" and "Payment" notices when "Notify patron" is unchecked (MODFEE-22)
+* Create default "out-of-the-box" Overdue Fine and Lost Item Fee policies (MODFEE-23)
+* Fix incorrect next release version (MODFEE-24)
+* Update tenant API version to 1.2 to allow reference data loading (MODFEE-25)
+* Create automatic FeeFine records on module initialization (MODFEE-28)
+* Fix error when saving Overdue Fine Policy (MODFEE-34)
+* Add LaunchDescriptor settings (FOLIO-2234)
+* Enable kube-deploy on Jenkins pipeline (FOLIO-2256)
+* Remove old ModuleDescriptor "metadata" section (FOLIO-2321)
+* Use JVM features (UseContainerSupport, MaxRAMPercentage) to manage container memory (FOLIO-2358)
+* Fix lost item fee policy JSON-schema (UIU-1156)
+
 ## 15.6.0 2019-09-08
 * Update 26.2.4 RMB version. Refs Upgrading Version 25.
 * Add patron notice for payment of fee/fine charge. Refs MODFEE-11.
