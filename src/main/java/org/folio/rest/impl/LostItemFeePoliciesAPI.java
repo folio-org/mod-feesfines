@@ -13,7 +13,7 @@ import org.folio.rest.jaxrs.resource.LostItemFeesPolicies;
 import org.folio.rest.persist.PgUtil;
 
 import static org.folio.rest.jaxrs.resource.LostItemFeesPolicies.PostLostItemFeesPoliciesResponse.respond422WithApplicationJson;
-import static org.folio.rest.utils.ErrorHelper.createSingleError;
+import static org.folio.rest.utils.ErrorHelper.createError;
 import static org.folio.rest.utils.ErrorHelper.uniqueNameConstraintViolated;
 
 public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
@@ -51,7 +51,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
           if (r.succeeded() && uniqueNameConstraintViolated(r.result(), TABLE_NAME)) {
             asyncResultHandler.handle(
               r.map(respond422WithApplicationJson(
-                createSingleError(DUPLICATE_NAME_MSG, DUPLICATE_ERROR_CODE))));
+                createError(DUPLICATE_NAME_MSG, DUPLICATE_ERROR_CODE))));
             return;
           }
           asyncResultHandler.handle(r);
