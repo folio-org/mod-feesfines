@@ -12,6 +12,7 @@ import java.util.Map;
 import org.folio.rest.jaxrs.model.PatronNotice;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
@@ -33,15 +34,15 @@ public class PatronNoticeClient {
   }
 
   public Future<Void> postPatronNotice(PatronNotice notice) {
-    Future<HttpResponse<Buffer>> future = Future.future();
+    Promise<HttpResponse<Buffer>> promise = Promise.promise();
     webClient.postAbs(okapiUrl + "/patron-notice")
       .putHeader(ACCEPT, APPLICATION_JSON)
       .putHeader(OKAPI_HEADER_TENANT, tenant)
       .putHeader(OKAPI_URL_HEADER, okapiUrl)
       .putHeader(OKAPI_HEADER_TOKEN, token)
-        .sendJson(notice, future);
+        .sendJson(notice, promise);
 
-    return future.compose(response -> response.statusCode() == 200 ?
+    return promise.future().compose(response -> response.statusCode() == 200 ?
       succeededFuture() :
       failedFuture("Failed to post patron notice. Returned status code: " + response.statusCode()));
   }

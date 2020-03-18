@@ -8,6 +8,7 @@ import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 
 public class OwnerRepository {
 
@@ -28,8 +29,8 @@ public class OwnerRepository {
       return Future.failedFuture(new IllegalArgumentException("Owner id is not present"));
     }
 
-    Future<Owner> future = Future.future();
-    pgClient.getById(OWNERS_TABLE, optionalOwnerId.get(), Owner.class, future);
-    return future.map(context::withOwner);
+    Promise<Owner> promise = Promise.promise();
+    pgClient.getById(OWNERS_TABLE, optionalOwnerId.get(), Owner.class, promise);
+    return promise.future().map(context::withOwner);
   }
 }

@@ -8,6 +8,7 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 
 public class AccountRepository {
 
@@ -28,8 +29,8 @@ public class AccountRepository {
       return Future.failedFuture(new IllegalArgumentException("Account id is not present"));
     }
 
-    Future<Account> future = Future.future();
-    pgClient.getById(ACCOUNTS_TABLE, optionalAccountId.get(), Account.class, future);
-    return future.map(context::withAccount);
+    Promise<Account> promise = Promise.promise();
+    pgClient.getById(ACCOUNTS_TABLE, optionalAccountId.get(), Account.class, promise);
+    return promise.future().map(context::withAccount);
   }
 }
