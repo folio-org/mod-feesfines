@@ -6,7 +6,6 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.LostItemFeesPoliciesGetOrder;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
@@ -14,7 +13,6 @@ import org.folio.rest.jaxrs.resource.LostItemFeesPolicies;
 import org.folio.rest.persist.PgUtil;
 
 import static org.folio.rest.jaxrs.resource.LostItemFeesPolicies.PostLostItemFeesPoliciesResponse.respond422WithApplicationJson;
-import static org.folio.rest.utils.ErrorHelper.createErrors;
 import static org.folio.rest.utils.ErrorHelper.createSingleError;
 import static org.folio.rest.utils.ErrorHelper.uniqueNameConstraintViolated;
 
