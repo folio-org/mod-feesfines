@@ -10,20 +10,18 @@ import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-
 class ErrorHelperTest {
 
-  private static final String CONSTRAINT_NAME = "test_constraint";
+  private static final String TABLE_NAME = "test_table";
 
   @Test
   void didUniqueConstraintViolationOccurNullResponse() {
-    assertFalse(ErrorHelper.didUniqueConstraintViolationOccur(null, CONSTRAINT_NAME));
+    assertFalse(ErrorHelper.uniqueNameConstraintViolated(null, TABLE_NAME));
   }
 
   @Test
   void didUniqueConstraintViolationOccurNoEntity() {
-    assertFalse(ErrorHelper.didUniqueConstraintViolationOccur(Response.accepted().build(), CONSTRAINT_NAME));
+    assertFalse(ErrorHelper.uniqueNameConstraintViolated(Response.accepted().build(), TABLE_NAME));
   }
 
   @Test

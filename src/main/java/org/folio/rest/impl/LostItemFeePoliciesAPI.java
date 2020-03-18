@@ -12,17 +12,17 @@ import org.folio.rest.jaxrs.model.LostItemFeesPoliciesGetOrder;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.resource.LostItemFeesPolicies;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.utils.ErrorHelper;
 
+import static org.folio.rest.jaxrs.resource.LostItemFeesPolicies.PostLostItemFeesPoliciesResponse.respond422WithApplicationJson;
 import static org.folio.rest.utils.ErrorHelper.createErrors;
+import static org.folio.rest.utils.ErrorHelper.createSingleError;
+import static org.folio.rest.utils.ErrorHelper.uniqueNameConstraintViolated;
 
 public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
-    static final String LOST_ITEM_FEE_TABLE = "lost_item_fee_policy";
+    static final String TABLE_NAME = "lost_item_fee_policy";
     static final String DUPLICATE_ERROR_CODE = "feesfines.policy.lost.duplicate";
-    private static final Class<LostItemFeePolicy> LOST_ITEM_FEE_POLICY = LostItemFeePolicy.class;
-    private static final String INDEX_NAME = "lost_item_fee_policy_name_idx_unique";
-    private static final String DUPLICATE_ENTITY_MSG =
+    private static final String DUPLICATE_NAME_MSG =
             "The Lost item fee policy name entered already exists. Please enter a different name.";
 
     @Validate
@@ -36,7 +36,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.get(LOST_ITEM_FEE_TABLE, LOST_ITEM_FEE_POLICY, LostItemFeePolicies.class, query, offset, limit, okapiHeaders, vertxContext,
+        PgUtil.get(TABLE_NAME, LostItemFeePolicy.class, LostItemFeePolicies.class, query, offset, limit, okapiHeaders, vertxContext,
                 GetLostItemFeesPoliciesResponse.class, asyncResultHandler);
     }
 
@@ -48,18 +48,16 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.post(LOST_ITEM_FEE_TABLE, entity, okapiHeaders, vertxContext,
-                PostLostItemFeesPoliciesResponse.class, r -> {
-                    if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), INDEX_NAME)) {
-                        Error error = new Error()
-                                .withMessage(DUPLICATE_ENTITY_MSG)
-                                .withCode(DUPLICATE_ERROR_CODE);
-                        asyncResultHandler.handle(
-                                r.map(PostLostItemFeesPoliciesResponse.respond422WithApplicationJson(createErrors(error))));
-                        return;
-                    }
-                    asyncResultHandler.handle(r);
-                });
+      PgUtil.post(TABLE_NAME, entity, okapiHeaders, vertxContext,
+        PostLostItemFeesPoliciesResponse.class, r -> {
+          if (r.succeeded() && uniqueNameConstraintViolated(r.result(), TABLE_NAME)) {
+            asyncResultHandler.handle(
+              r.map(respond422WithApplicationJson(
+                createSingleError(DUPLICATE_NAME_MSG, DUPLICATE_ERROR_CODE))));
+            return;
+          }
+          asyncResultHandler.handle(r);
+        });
     }
 
     @Validate
@@ -70,7 +68,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.getById(LOST_ITEM_FEE_TABLE, LOST_ITEM_FEE_POLICY, lostItemFeePolicyId, okapiHeaders, vertxContext,
+        PgUtil.getById(TABLE_NAME, LostItemFeePolicy.class, lostItemFeePolicyId, okapiHeaders, vertxContext,
                 GetLostItemFeesPoliciesByLostItemFeePolicyIdResponse.class, asyncResultHandler);
     }
 
@@ -82,7 +80,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.deleteById(LOST_ITEM_FEE_TABLE, lostItemFeePolicyId, okapiHeaders, vertxContext,
+        PgUtil.deleteById(TABLE_NAME, lostItemFeePolicyId, okapiHeaders, vertxContext,
                 DeleteLostItemFeesPoliciesByLostItemFeePolicyIdResponse.class, asyncResultHandler);
     }
 
@@ -95,7 +93,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.put(LOST_ITEM_FEE_TABLE, entity, lostItemFeePolicyId, okapiHeaders, vertxContext,
+        PgUtil.put(TABLE_NAME, entity, lostItemFeePolicyId, okapiHeaders, vertxContext,
                 PutLostItemFeesPoliciesByLostItemFeePolicyIdResponse.class, asyncResultHandler);
     }
 }

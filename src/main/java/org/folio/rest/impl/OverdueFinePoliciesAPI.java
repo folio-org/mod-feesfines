@@ -1,6 +1,8 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.utils.ErrorHelper.createErrors;
+import static org.folio.rest.jaxrs.resource.OverdueFinesPolicies.PostOverdueFinesPoliciesResponse.respond422WithApplicationJson;
+import static org.folio.rest.utils.ErrorHelper.createSingleError;
+import static org.folio.rest.utils.ErrorHelper.uniqueNameConstraintViolated;
 
 import java.util.Map;
 
@@ -11,21 +13,16 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinesPoliciesGetOrder;
 import org.folio.rest.jaxrs.resource.OverdueFinesPolicies;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.utils.ErrorHelper;
 
 public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
-
-    static final String OVERDUE_FINE_POLICY_TABLE = "overdue_fine_policy";
+    static final String TABLE_NAME = "overdue_fine_policy";
     static final String DUPLICATE_ERROR_CODE = "feesfines.policy.overdue.duplicate";
-    private static final String INDEX_NAME = "overdue_fine_policy_name_idx_unique";
-    private static final Class<OverdueFinePolicy> OVERDUE_FINE_POLICY = OverdueFinePolicy.class;
-    private static final String DUPLICATE_ENTITY_MESSAGE =
+    private static final String DUPLICATE_NAME_MESSAGE =
             "The Overdue fine policy name entered already exists. Please enter a different name.";
 
     @Validate
@@ -39,7 +36,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.get(OVERDUE_FINE_POLICY_TABLE, OVERDUE_FINE_POLICY, OverdueFinePolicies.class, query, offset, limit, okapiHeaders, vertxContext,
+        PgUtil.get(TABLE_NAME, OverdueFinePolicy.class, OverdueFinePolicies.class, query, offset, limit, okapiHeaders, vertxContext,
                 GetOverdueFinesPoliciesResponse.class, asyncResultHandler);
     }
 
@@ -51,14 +48,12 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.post(OVERDUE_FINE_POLICY_TABLE, entity, okapiHeaders, vertxContext,
+        PgUtil.post(TABLE_NAME, entity, okapiHeaders, vertxContext,
           PostOverdueFinesPoliciesResponse.class, r -> {
-            if (ErrorHelper.didUniqueConstraintViolationOccur(r.result(), INDEX_NAME)) {
-              Error error = new Error()
-                .withMessage(DUPLICATE_ENTITY_MESSAGE)
-                .withCode(DUPLICATE_ERROR_CODE);
+            if (r.succeeded() && uniqueNameConstraintViolated(r.result(), TABLE_NAME)) {
               asyncResultHandler.handle(
-                r.map(PostOverdueFinesPoliciesResponse.respond422WithApplicationJson(createErrors(error))));
+                r.map(respond422WithApplicationJson(
+                  createSingleError(DUPLICATE_NAME_MESSAGE, DUPLICATE_ERROR_CODE))));
               return;
             }
             asyncResultHandler.handle(r);
@@ -73,7 +68,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.getById(OVERDUE_FINE_POLICY_TABLE, OVERDUE_FINE_POLICY, overdueFinePolicyId, okapiHeaders, vertxContext,
+        PgUtil.getById(TABLE_NAME, OverdueFinePolicy.class, overdueFinePolicyId, okapiHeaders, vertxContext,
                 GetOverdueFinesPoliciesByOverdueFinePolicyIdResponse.class, asyncResultHandler);
     }
 
@@ -85,7 +80,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.deleteById(OVERDUE_FINE_POLICY_TABLE, overdueFinePolicyId, okapiHeaders, vertxContext,
+        PgUtil.deleteById(TABLE_NAME, overdueFinePolicyId, okapiHeaders, vertxContext,
                 DeleteOverdueFinesPoliciesByOverdueFinePolicyIdResponse.class, asyncResultHandler);
     }
 
@@ -98,7 +93,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
 
-        PgUtil.put(OVERDUE_FINE_POLICY_TABLE, entity, overdueFinePolicyId, okapiHeaders, vertxContext,
+        PgUtil.put(TABLE_NAME, entity, overdueFinePolicyId, okapiHeaders, vertxContext,
                 PutOverdueFinesPoliciesByOverdueFinePolicyIdResponse.class, asyncResultHandler);
     }
 }
