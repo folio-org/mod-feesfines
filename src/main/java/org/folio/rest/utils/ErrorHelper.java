@@ -34,7 +34,7 @@ public class ErrorHelper {
       .withErrors(Arrays.asList(errors));
   }
 
-  public static Errors createSingleError(String message, String code) {
+  public static Errors createError(String message, String code) {
     Error error = new Error()
       .withMessage(message)
       .withCode(code);
