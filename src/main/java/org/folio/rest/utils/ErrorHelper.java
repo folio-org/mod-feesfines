@@ -9,23 +9,36 @@ import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 
 public class ErrorHelper {
-
-  private static final String UNIQUE_CONSTRAINT_MSG_TEMPLATE = "duplicate key value violates unique constraint \"%s\"";
+  private static final String DUPLICATE_NAME_MSG_TEMPLATE =
+    "lower(f_unaccent(jsonb ->> 'name'::text)) value already exists in table %s";
 
   private ErrorHelper() {
   }
 
-  public static boolean didUniqueConstraintViolationOccur(Response response, String constraintName) {
+  public static boolean uniqueNameConstraintViolated(Response response, String tableName) {
     return Optional.ofNullable(response)
       .filter(Response::hasEntity)
       .map(Response::getEntity)
-      .filter(r -> r instanceof String)
-      .filter(r -> ((String) r).contains(String.format(UNIQUE_CONSTRAINT_MSG_TEMPLATE, constraintName)))
+      .filter(entity -> entity instanceof Errors)
+      .map(Errors.class::cast)
+      .map(Errors::getErrors)
+      .filter(errors -> !errors.isEmpty())
+      .map(errors -> errors.get(0))
+      .map(Error::getMessage)
+      .filter(msg -> msg.contains(String.format(DUPLICATE_NAME_MSG_TEMPLATE, tableName)))
       .isPresent();
   }
 
   public static Errors createErrors(Error... errors){
     return new Errors()
       .withErrors(Arrays.asList(errors));
+  }
+
+  public static Errors createError(String message, String code) {
+    Error error = new Error()
+      .withMessage(message)
+      .withCode(code);
+
+    return createErrors(error);
   }
 }

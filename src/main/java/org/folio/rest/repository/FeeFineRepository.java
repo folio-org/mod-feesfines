@@ -9,6 +9,7 @@ import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 
 public class FeeFineRepository {
 
@@ -29,8 +30,8 @@ public class FeeFineRepository {
       return Future.failedFuture(new IllegalArgumentException("Fee fine id is not present"));
     }
 
-    Future<Feefine> future = Future.future();
-    pgClient.getById(FEEFINES_TABLE, optionalFeeFineId.get(), Feefine.class, future);
-    return future.map(context::withFeefine);
+    Promise<Feefine> promise = Promise.promise();
+    pgClient.getById(FEEFINES_TABLE, optionalFeeFineId.get(), Feefine.class, promise);
+    return promise.future().map(context::withFeefine);
   }
 }

@@ -15,8 +15,10 @@ import io.vertx.core.logging.LoggerFactory;
 import org.apache.http.HttpStatus;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.PomReader;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -74,11 +76,13 @@ public class OverdueFinePoliciesAPITest {
       new TenantClient(String.format(OKAPI_URL_TEMPLATE, port), okapiTenant, OKAPI_TOKEN);
     DeploymentOptions restDeploymentOptions = new DeploymentOptions()
       .setConfig(new JsonObject().put(HTTP_PORT, port));
+    TenantAttributes attributes = new TenantAttributes()
+      .withModuleTo(String.format("mod-feesfines-%s", PomReader.INSTANCE.getVersion()));
 
     vertx.deployVerticle(RestVerticle.class.getName(), restDeploymentOptions,
       res -> {
         try {
-          tenantClient.postTenant(null, res2 -> async.complete()
+          tenantClient.postTenant(attributes, res2 -> async.complete()
           );
         } catch (Exception e) {
           logger.error(e.getMessage());
@@ -90,7 +94,7 @@ public class OverdueFinePoliciesAPITest {
   public void setUp(TestContext context) {
     Async async = context.async();
     PostgresClient.getInstance(vertx, okapiTenant)
-      .delete(OverdueFinePoliciesAPI.OVERDUE_FINE_POLICY_TABLE, new Criterion(), event -> {
+      .delete(OverdueFinePoliciesAPI.TABLE_NAME, new Criterion(), event -> {
         if (event.failed()) {
           logger.error(event.cause());
           context.fail(event.cause());
@@ -111,12 +115,10 @@ public class OverdueFinePoliciesAPITest {
 
   @Test
   public void postOverdueFinesPoliciesSuccess() {
-    String entity = createEntity();
-    post(entity)
+    post(createEntity())
       .then()
       .statusCode(HttpStatus.SC_CREATED)
-      .contentType(ContentType.JSON)
-      .body(equalTo(entity));
+      .contentType(ContentType.JSON);
   }
 
   @Test
@@ -177,16 +179,32 @@ public class OverdueFinePoliciesAPITest {
 
   @Test
   public void postOverdueFinesPoliciesInvalidUuid() {
+    String invalidUuid = UUID.randomUUID().toString() + "a";
+
     String payloadWithInvalidUuid = createEntityJson()
-      .put("id", UUID.randomUUID().toString() + "a")
+      .put("id", invalidUuid)
+      .encodePrettily();
+
+    JsonObject parameters = new JsonObject()
+      .put("key", "overdue_fine_policy.id")
+      .put("value", invalidUuid);
+
+    JsonObject error = new JsonObject()
+      .put("message", "Invalid UUID format of id, should be xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx" +
+        " where M is 1-5 and N is 8, 9, a, b, A or B and x is 0-9, a-f or A-F.")
+      .put("type", "1")
+      .put("code", "-1")
+      .put("parameters", new JsonArray(Collections.singletonList(parameters)));
+
+    String errors = new JsonObject()
+      .put("errors", new JsonArray(Collections.singletonList(error)))
       .encodePrettily();
 
     post(payloadWithInvalidUuid)
       .then()
-      .statusCode(HttpStatus.SC_BAD_REQUEST)
-      .contentType(ContentType.TEXT)
-      .body(equalTo("Invalid UUID format of id, should be xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx" +
-        " where M is 1-5 and N is 8, 9, a, b, A or B and x is 0-9, a-f or A-F."));
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .contentType(ContentType.JSON)
+      .body(equalTo(errors));
   }
 
   @Test
@@ -234,11 +252,11 @@ public class OverdueFinePoliciesAPITest {
       .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
   }
 
-  private static String createEntity() {
+  private String createEntity() {
     return createEntityJson().encodePrettily();
   }
 
-  private static JsonObject createEntityJson() {
+  private JsonObject createEntityJson() {
     return new JsonObject()
       .put("name", "Faculty standard")
       .put("description", "This is description for Faculty standard")
