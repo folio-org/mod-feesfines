@@ -11,8 +11,11 @@ import org.folio.rest.jaxrs.model.Owner;
 public class FeeFineNoticeContext {
 
   private static final List<String> FEE_FINE_ACTION_TYPES = Arrays.asList(
-    "Paid fully", "Paid partially", "Waived fully", "Waived partially",
-    "Transferred fully", "Transferred partially", "Cancelled as error");
+    "Paid fully", "Paid partially",
+    "Waived fully", "Waived partially",
+    "Transferred fully", "Transferred partially",
+    "Refunded fully", "Refunded partially",
+    "Cancelled as error");
 
   private Owner owner;
   private Feefine feefine;
