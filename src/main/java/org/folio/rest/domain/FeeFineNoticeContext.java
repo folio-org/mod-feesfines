@@ -1,5 +1,7 @@
 package org.folio.rest.domain;
 
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -51,15 +53,11 @@ public class FeeFineNoticeContext {
   }
 
   private String getChargeNoticeTemplateId() {
-    return feefine.getChargeNoticeId() != null
-      ? feefine.getChargeNoticeId()
-      : owner.getDefaultChargeNoticeId();
+    return defaultIfBlank(feefine.getChargeNoticeId(), owner.getDefaultChargeNoticeId());
   }
 
   private String getActionNoticeTemplateId() {
-    return feefine.getActionNoticeId() != null
-      ? feefine.getActionNoticeId()
-      : owner.getDefaultActionNoticeId();
+    return defaultIfBlank(feefine.getActionNoticeId(), owner.getDefaultActionNoticeId());
   }
 
   public String getUserId() {

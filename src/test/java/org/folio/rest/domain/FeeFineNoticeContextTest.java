@@ -51,10 +51,15 @@ public class FeeFineNoticeContextTest {
       .withChargeNoticeId(FEEFINE_CHARGE_NOTICE_ID)
       .withActionNoticeId(FEEFINE_ACTION_NOTICE_ID);
 
-    Feefine feeFineWithoutNoticeIds = new Feefine()
+    Feefine feeFineWithNullNoticeIds = new Feefine()
       .withFeeFineType("Test charge")
       .withChargeNoticeId(null)
       .withActionNoticeId(null);
+
+    Feefine feeFineWithEmptyNoticeIds = new Feefine()
+      .withFeeFineType("Test charge")
+      .withChargeNoticeId("")
+      .withActionNoticeId("");
 
     Feefineaction charge = new Feefineaction()
       .withPaymentMethod(null)
@@ -71,44 +76,62 @@ public class FeeFineNoticeContextTest {
     List<Object[]> parameters = new ArrayList<>();
 
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, charge, DEFAULT_CHARGE_NOTICE_ID});
+      {owner, feeFineWithNullNoticeIds, charge, DEFAULT_CHARGE_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithEmptyNoticeIds, charge, DEFAULT_CHARGE_NOTICE_ID});
     parameters.add(new Object[]
       {owner, feeFineWithNoticeIds, charge, FEEFINE_CHARGE_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, paidFully, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithNullNoticeIds, paidFully, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, paidPartially, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithNullNoticeIds, paidPartially, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithEmptyNoticeIds, paidFully, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithEmptyNoticeIds, paidPartially, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
       {owner, feeFineWithNoticeIds, paidFully, FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
       {owner, feeFineWithNoticeIds, paidPartially, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, waivedFully, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithNullNoticeIds, waivedFully, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, waivedPartially, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithNullNoticeIds, waivedPartially, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithEmptyNoticeIds, waivedFully, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithEmptyNoticeIds, waivedPartially, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
       {owner, feeFineWithNoticeIds, waivedFully, FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
       {owner, feeFineWithNoticeIds, waivedPartially, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, transferredFully, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithNullNoticeIds, transferredFully, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithoutNoticeIds, transferredPartially, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithNullNoticeIds, transferredPartially, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithEmptyNoticeIds, transferredFully, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithEmptyNoticeIds, transferredPartially, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
       {owner, feeFineWithNoticeIds, transferredFully, FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
       {owner, feeFineWithNoticeIds, transferredPartially, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-                     {owner, feeFineWithoutNoticeIds, cancelledAsError, DEFAULT_ACTION_NOTICE_ID});
+      {owner, feeFineWithNullNoticeIds, cancelledAsError, DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-                     {owner, feeFineWithNoticeIds, cancelledAsError, FEEFINE_ACTION_NOTICE_ID});
+      {owner, feeFineWithEmptyNoticeIds, cancelledAsError, DEFAULT_ACTION_NOTICE_ID});
+    parameters.add(new Object[]
+      {owner, feeFineWithNoticeIds, cancelledAsError, FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {ownerWithoutDefaultNoticeIds, feeFineWithoutNoticeIds, charge, null});
+      {ownerWithoutDefaultNoticeIds, feeFineWithNullNoticeIds, charge, null});
+    parameters.add(new Object[]
+      {ownerWithoutDefaultNoticeIds, feeFineWithEmptyNoticeIds, charge, null});
 
     return parameters;
   }
