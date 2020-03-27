@@ -168,8 +168,8 @@ public class FeeFinesAPITest {
     String ownerId1 = randomId();
     String ownerId2 = randomId();
 
-    createOwner(ownerId1, "test_owner");
-    createOwner(ownerId2, "test_owner");
+    createOwner(ownerId1, "test_owner_1");
+    createOwner(ownerId2, "test_owner_2");
 
     String entity1 = createFeefineJson(randomId(), "book lost", ownerId1);
     String entity2 = createFeefineJson(randomId(), "book lost", ownerId2);
