@@ -14,11 +14,15 @@
       "uniqueIndex": [
         {
           "fieldName": "feeFineType",
+          "tOps": "DELETE"
+        },
+        {
+          "fieldName": "feeFineType, ownerId",
           "tOps": "ADD"
         },
         {
           "fieldName": "id",
-          "tOps": "ADD"
+          "tOps": "DELETE"
         }
       ],
       "foreignKeys": [
