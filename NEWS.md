@@ -1,3 +1,9 @@
+## 15.7.1 2020-04-03
+* Patron notices for fees/fines are not sent with default templates (MODFEE-41)
+* Unable to save Fee/Fine Types already saved by other Fee/Fine Owners (MODFEE-42)
+* Automated fee/fine types aren't created when deployed on existing database (MODFEE-46)
+* Item record not found when clicking on link from Fee/Fine Details (MODFEE-48)
+
 ## 15.7.0 2020-03-13
 * Fix missing error message when duplicate Overdue Fine Policy name entered (MODFEE-16)
 * Fix missing error message when duplicate Lost Item Fee Policy name entered (MODFEE-17)
