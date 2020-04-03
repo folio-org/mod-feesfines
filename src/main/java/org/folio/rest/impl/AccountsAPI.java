@@ -310,8 +310,8 @@ public class AccountsAPI implements Accounts {
     }
 
     private class AdditionalFieldsContext {
-      Items items;
-      HoldingsRecords holdings;
+      final Items items;
+      final HoldingsRecords holdings;
 
       public AdditionalFieldsContext(Items items, HoldingsRecords holdings) {
         this.items = items;
