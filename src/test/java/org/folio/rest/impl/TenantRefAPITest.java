@@ -138,6 +138,7 @@ public class TenantRefAPITest {
 
   @Test
   public void feesFinesAreLoaded(TestContext context) {
+    // these are default fees/fines, see resources/templates/db_scripts/populate-feefines.sql
     final List<Feefine> expectedFeeFines = asList(
       new Feefine()
         .withId("9523cb96-e752-40c2-89da-60f3961a488d")
@@ -157,7 +158,7 @@ public class TenantRefAPITest {
         .withAutomatic(true)
     );
 
-    Comparator<Feefine> byId = (f1, f2) -> StringUtils.compare(f1.getId(), f2.getId());
+    Comparator<Feefine> byId = Comparator.comparing(Feefine::getId);
     expectedFeeFines.sort(byId);
 
     succeededFuture(okapiClient.get("/feefines"))
@@ -189,8 +190,8 @@ public class TenantRefAPITest {
       .withKey("loadReference").withValue("true");
 
     return new TenantAttributes()
-      .withModuleFrom("mod-feesfines:1.0")
-      .withModuleTo("mod-feesfines:2.0")
+      .withModuleFrom("mod-feesfines-14.0.0")
+      .withModuleTo("mod-feesfines-15.7.1")
       .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 }
