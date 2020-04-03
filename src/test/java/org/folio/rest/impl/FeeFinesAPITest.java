@@ -94,11 +94,24 @@ public class FeeFinesAPITest {
 
   @Before
   public void setUp(TestContext context) {
-    Async async = context.async(2);
+    Async async = context.async();
     PostgresClient client = PostgresClient.getInstance(vertx, okapiTenant);
 
-    client.delete(FEEFINES_TABLE, new Criterion(), result -> processEvent(context, result, async));
-    client.delete(OWNERS_TABLE, new Criterion(), result -> processEvent(context, result, async));
+    client.delete(FEEFINES_TABLE, new Criterion(), deleteFeefines -> {
+      if (deleteFeefines.failed()) {
+        logger.error(deleteFeefines.cause());
+        context.fail(deleteFeefines.cause());
+      } else {
+        client.delete(OWNERS_TABLE, new Criterion(), deleteOwners -> {
+          if (deleteOwners.failed()) {
+            logger.error(deleteOwners.cause());
+            context.fail(deleteOwners.cause());
+          } else {
+            async.complete();
+          }
+        });
+      }
+    });
   }
 
   @AfterClass
