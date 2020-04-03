@@ -252,13 +252,4 @@ public class FeeFinesAPITest {
     return UUID.randomUUID().toString();
   }
 
-  private void processEvent(TestContext context, AsyncResult<UpdateResult> event, Async async) {
-    if (event.failed()) {
-      logger.error(event.cause());
-      context.fail(event.cause());
-    } else {
-      async.countDown();
-    }
-  }
 }
-
