@@ -131,6 +131,18 @@
     "id": {
       "description": "User fine/fee account id, UUID",
       "type": "string"
+    },
+    "holdingsRecordId": {
+      "description": "Item field: item.holdingsRecordId",
+      "type": "string",
+      "readonly": true,
+      "$ref": "uuid.json"
+    },
+    "instanceId": {
+      "description": "Holdings record field: holdingsRecord.instanceId",
+      "type": "string",
+      "readonly": true,
+      "$ref": "uuid.json"
     }
   },
   "additionalProperties": false,

@@ -5,12 +5,20 @@
     {
       "id": "patron-notice",
       "version": "1.0"
+    },
+    {
+      "id": "inventory",
+      "version": "10.2"
+    },
+    {
+      "id": "holdings-storage",
+      "version": "4.2"
     }
   ],
   "provides":[
     {
       "id":"feesfines",
-      "version":"15.1",
+      "version":"15.2",
       "handlers":[
         {
           "methods":[
