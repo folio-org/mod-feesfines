@@ -9,8 +9,9 @@
     },
     {
       "tableName":"feefines",
-      "fromModuleVersion":"15.0",
+      "fromModuleVersion":"15.7.1",
       "withMetadata":true,
+      "customSnippetPath": "populate-feefines.sql",
       "uniqueIndex": [
         {
           "fieldName": "feeFineType",
