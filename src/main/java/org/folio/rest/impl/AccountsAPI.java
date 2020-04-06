@@ -3,15 +3,22 @@ package org.folio.rest.impl;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.client.InventoryClient;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.HoldingsRecords;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.Accounts;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -31,8 +38,10 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.client.WebClient;
 
 public class AccountsAPI implements Accounts {
 
@@ -47,7 +56,51 @@ public class AccountsAPI implements Accounts {
         return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
 
-    @Validate
+  private Future<Void> setAdditionalFields(Vertx vertx, Map<String, String> okapiHeaders,
+    List<Account> accounts) {
+
+    if (accounts == null) {
+      return Future.succeededFuture(null);
+    }
+
+    InventoryClient inventoryClient = new InventoryClient(WebClient.create(vertx), okapiHeaders);
+
+    List<String> itemIds = accounts.stream()
+      .map(Account::getItemId)
+      .collect(Collectors.toList());
+
+    return Future.succeededFuture(new AdditionalFieldsContext(null, null))
+      .compose(ctx -> inventoryClient.getItemsById(itemIds)
+          .map(ctx::withItems))
+      .compose(ctx -> inventoryClient.getHoldingsById(ctx.items.getItems().stream()
+        .map(Item::getHoldingsRecordId)
+        .collect(Collectors.toList()))
+        .map(ctx::withHoldings))
+      .compose(ctx -> {
+        accounts.forEach(account -> {
+          Optional<Item> item = ctx.items.getItems().stream()
+            .filter(i -> account.getItemId().equals(i.getId()))
+            .findAny();
+
+          Optional<HoldingsRecord> holding = Optional.empty();
+          if (item.isPresent() && item.get().getHoldingsRecordId() != null) {
+            holding = ctx.holdings.getHoldingsRecords().stream()
+              .filter(h -> item.get().getHoldingsRecordId().equals(h.getId()))
+              .findAny();
+          }
+
+          String holdingRecordsId = item.map(Item::getHoldingsRecordId).orElse("");
+          String instanceId = holding.map(HoldingsRecord::getInstanceId).orElse("");
+
+          account.setHoldingsRecordId(holdingRecordsId);
+          account.setInstanceId(instanceId);
+        });
+
+        return Future.succeededFuture(null);
+      });
+  }
+
+  @Validate
     @Override
     public void getAccounts(String query, String orderBy, AccountsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -66,13 +119,17 @@ public class AccountsAPI implements Accounts {
                             true, false, facetList, reply -> {
                                 try {
                                     if (reply.succeeded()) {
-                                        AccountdataCollection accountCollection = new AccountdataCollection();
-                                        List<Account> accounts = reply.result().getResults();
-                                        accountCollection.setAccounts(accounts);
-                                        accountCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                                        accountCollection.setResultInfo(reply.result().getResultInfo());
-                                        asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsResponse.respond200WithApplicationJson(accountCollection)));
+                                      List<Account> accounts = reply.result().getResults();
+
+                                      setAdditionalFields(vertxContext.owner(), okapiHeaders, accounts)
+                                        .setHandler(accountsResult -> {
+                                          AccountdataCollection accountCollection = new AccountdataCollection();
+                                          accountCollection.setAccounts(accounts);
+                                          accountCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                                          accountCollection.setResultInfo(reply.result().getResultInfo());
+                                          asyncResultHandler.handle(Future.succeededFuture(
+                                            GetAccountsResponse.respond200WithApplicationJson(accountCollection)));
+                                        });
                                     } else {
                                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                                                 GetAccountsResponse.respond500WithTextPlain(
@@ -162,8 +219,11 @@ public class AccountsAPI implements Accounts {
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.respond200WithApplicationJson(accountList.get(0))));
+                                          setAdditionalFields(vertxContext.owner(), okapiHeaders, accountList)
+                                            .setHandler(accountsResult -> asyncResultHandler.handle(
+                                              Future.succeededFuture(
+                                                GetAccountsByAccountIdResponse.respond200WithApplicationJson(
+                                                  accountList.get(0)))));
                                     }
                                 }
                             });
@@ -247,5 +307,23 @@ public class AccountsAPI implements Accounts {
 
       PgUtil.put(ACCOUNTS_TABLE, entity, accountId, okapiHeaders, vertxContext,
         PutAccountsByAccountIdResponse.class, asyncResultHandler);
+    }
+
+    private class AdditionalFieldsContext {
+      final Items items;
+      final HoldingsRecords holdings;
+
+      public AdditionalFieldsContext(Items items, HoldingsRecords holdings) {
+        this.items = items;
+        this.holdings = holdings;
+      }
+
+      AdditionalFieldsContext withItems(Items items) {
+        return new AdditionalFieldsContext(items, this.holdings);
+      }
+
+      AdditionalFieldsContext withHoldings(HoldingsRecords holdings) {
+        return new AdditionalFieldsContext(this.items, holdings);
+      }
     }
 }

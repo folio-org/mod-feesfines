@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.model.OverdueFinePolicy;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.PomReader;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.utils.OkapiClient;
 import org.junit.AfterClass;
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(VertxUnitRunner.class)
 public class TenantRefAPITest {
+  private static final String MODULE_VERSION_PREFIX = "mod-feesfines-";
   private static final int PORT = NetworkUtils.nextFreePort();
   private static Vertx vertx;
 
@@ -138,6 +140,7 @@ public class TenantRefAPITest {
 
   @Test
   public void feesFinesAreLoaded(TestContext context) {
+    // these are default fees/fines, see resources/templates/db_scripts/populate-feefines.sql
     final List<Feefine> expectedFeeFines = asList(
       new Feefine()
         .withId("9523cb96-e752-40c2-89da-60f3961a488d")
@@ -157,7 +160,7 @@ public class TenantRefAPITest {
         .withAutomatic(true)
     );
 
-    Comparator<Feefine> byId = (f1, f2) -> StringUtils.compare(f1.getId(), f2.getId());
+    Comparator<Feefine> byId = Comparator.comparing(Feefine::getId);
     expectedFeeFines.sort(byId);
 
     succeededFuture(okapiClient.get("/feefines"))
@@ -189,8 +192,8 @@ public class TenantRefAPITest {
       .withKey("loadReference").withValue("true");
 
     return new TenantAttributes()
-      .withModuleFrom("mod-feesfines:1.0")
-      .withModuleTo("mod-feesfines:2.0")
+      .withModuleFrom(MODULE_VERSION_PREFIX + "14.2.4")
+      .withModuleTo(MODULE_VERSION_PREFIX + PomReader.INSTANCE.getVersion())
       .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 }

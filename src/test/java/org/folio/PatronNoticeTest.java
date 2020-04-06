@@ -18,8 +18,10 @@ import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.PomReader;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.Ignore;
 import org.junit.jupiter.api.AfterAll;
@@ -38,6 +40,7 @@ import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
@@ -366,24 +369,26 @@ class PatronNoticeTest {
   }
 
   private static Future<String> deployRestVerticle(int port) {
-    Future<String> future = Future.future();
+    Promise<String> promise = Promise.promise();
     vertx.deployVerticle(RestVerticle::new,
       new DeploymentOptions()
-        .setConfig(new JsonObject().put("http.port", port)), future);
-    return future.map(deploy -> null);
+        .setConfig(new JsonObject().put("http.port", port)), promise);
+    return promise.future().map(deploy -> null);
   }
 
   private static Future<Void> postTenant() {
-    Future<Void> future = Future.future();
+    Promise<Void> promise = Promise.promise();
     TenantClient tenantClient = new TenantClient(
       okapiUrl, TENANT, TOKEN, false);
+    TenantAttributes attributes = new TenantAttributes()
+      .withModuleTo(String.format("mod-feesfines-%s", PomReader.INSTANCE.getVersion()));
 
     try {
-      tenantClient.postTenant(null, post -> future.complete());
+      tenantClient.postTenant(attributes, post -> promise.complete());
     } catch (Exception e) {
-      future.fail(e);
+      promise.fail(e);
     }
-    return future;
+    return promise.future();
   }
 
   private static void setupStub() {

@@ -38,6 +38,8 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
+import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.tools.PomReader;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -87,11 +89,13 @@ public class FeeFineActionsAPITest {
       new TenantClient(String.format(OKAPI_URL_TEMPLATE, port), okapiTenant, OKAPI_TOKEN);
     DeploymentOptions restDeploymentOptions = new DeploymentOptions()
       .setConfig(new JsonObject().put(HTTP_PORT, port));
+    TenantAttributes attributes = new TenantAttributes()
+      .withModuleTo(String.format("mod-feesfines-%s", PomReader.INSTANCE.getVersion()));
 
     vertx.deployVerticle(RestVerticle.class.getName(), restDeploymentOptions,
       res -> {
         try {
-          tenantClient.postTenant(null, res2 -> async.complete()
+          tenantClient.postTenant(attributes, res2 -> async.complete()
           );
         } catch (Exception e) {
           logger.error(e.getMessage());
