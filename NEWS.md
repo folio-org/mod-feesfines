@@ -1,4 +1,5 @@
 ## 15.7.1 2020-04-03
+* Update RMB to v29.3.1 and Vert.x to 3.8.5 (MODFEE-36)
 * Patron notices for fees/fines are not sent with default templates (MODFEE-41)
 * Unable to save Fee/Fine Types already saved by other Fee/Fine Owners (MODFEE-42)
 * Automated fee/fine types aren't created when deployed on existing database (MODFEE-46)
