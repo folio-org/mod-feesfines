@@ -220,10 +220,10 @@ public class AccountsAPI implements Accounts {
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                           setAdditionalFields(vertxContext.owner(), okapiHeaders, accountList)
-                                            .setHandler(accountsResult -> {
-                                              asyncResultHandler.handle(Future.succeededFuture(
-                                                GetAccountsByAccountIdResponse.respond200WithApplicationJson(accountList.get(0))));
-                                            });
+                                            .setHandler(accountsResult -> asyncResultHandler.handle(
+                                              Future.succeededFuture(
+                                                GetAccountsByAccountIdResponse.respond200WithApplicationJson(
+                                                  accountList.get(0)))));
                                     }
                                 }
                             });
