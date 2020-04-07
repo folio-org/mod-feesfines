@@ -1,3 +1,6 @@
+## 15.7.2 2020-04-07
+* Remove readonly fields validation, allow passing empty strings (MODFEE-50)
+
 ## 15.7.1 2020-04-03
 * Update RMB to v29.3.1 and Vert.x to 3.8.5 (MODFEE-36)
 * Patron notices for fees/fines are not sent with default templates (MODFEE-41)
