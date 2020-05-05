@@ -26,7 +26,6 @@ import org.junit.runner.RunWith;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 import io.restassured.RestAssured;
@@ -126,7 +125,7 @@ public class AccountsAPITest {
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON);
 
-    get("/accounts")
+    get("")
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(ContentType.JSON);
@@ -141,27 +140,65 @@ public class AccountsAPITest {
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON);
 
-    get(String.format("/accounts/%s", accountId))
+    get(String.format("/%s", accountId))
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(ContentType.JSON);
   }
 
-  private String createAccountJson(String accountID) {
+  @Test
+  public void canPutAccount() {
+    String accountId = randomId();
+
+    post(createAccountJson(accountId))
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(ContentType.JSON);
+
+    put(createAccountJson(accountId), String.format("/%s", accountId))
+      .then()
+      .statusCode(HttpStatus.SC_NO_CONTENT);
+  }
+
+  @Test
+  public void canPutAccountWithEmptyAdditionalFields() {
+    String accountId = randomId();
+
+    post(createAccountJson(accountId))
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(ContentType.JSON);
+
+    put(createAccountJsonWithEmptyAdditionalFields(accountId), String.format("/%s", accountId))
+      .then()
+      .statusCode(HttpStatus.SC_NO_CONTENT);
+  }
+
+  private JsonObject createAccountJsonObject(String accountID) {
     return new JsonObject()
       .put("id", accountID)
       .put("userId", randomId())
       .put("feeFineId", randomId())
       .put("materialTypeId", randomId())
       .put("ownerId", randomId())
-      .put("itemId", ITEM_ID)
+      .put("itemId", ITEM_ID);
+  }
+
+  private String createAccountJson(String accountID) {
+    return createAccountJsonObject(accountID).encodePrettily();
+  }
+
+  private String createAccountJsonWithEmptyAdditionalFields(String accountID) {
+    return createAccountJsonObject(accountID)
+      .put("holdingsRecordId", "")
+      .put("instanceId", "")
       .encodePrettily();
   }
 
   private Response get(String path) {
     return getRequestSpecification()
       .when()
-      .get(REST_PATH);
+      .get(REST_PATH + path);
   }
 
   private Response post(String body) {
@@ -169,6 +206,13 @@ public class AccountsAPITest {
       .body(body)
       .when()
       .post(REST_PATH);
+  }
+
+  private Response put(String body, String path) {
+    return getRequestSpecification()
+      .body(body)
+      .when()
+      .put(REST_PATH + path);
   }
 
   private RequestSpecification getRequestSpecification() {
