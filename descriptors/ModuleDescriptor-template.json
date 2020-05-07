@@ -620,7 +620,12 @@
       "handlers": [
         {
           "methods": ["POST"],
-          "pathPattern": "/_/tenant"
+          "pathPattern": "/_/tenant",
+          "modulePermissions": [
+            "pubsub.event-types.post",
+            "pubsub.publishers.post",
+            "pubsub.subscribers.post"
+          ]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/_/tenant"
