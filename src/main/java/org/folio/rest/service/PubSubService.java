@@ -6,6 +6,7 @@ import static org.folio.rest.utils.JsonHelper.write;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Account;
@@ -33,12 +34,12 @@ public class PubSubService {
     this.connectionParams = new OkapiConnectionParams(okapiHeaders, vertx);
   }
 
-  public void registerModuleInPubsub(Promise<Object> promise) {
-    PubSubClientUtils.registerModule(connectionParams)
+  public CompletableFuture<Boolean> registerModuleInPubsub(Promise<Object> promise) {
+    return PubSubClientUtils.registerModule(connectionParams)
       .whenComplete((result, throwable) -> {
-        if (throwable == null) {
+        if (isTrue(result) && throwable == null) {
           logger.info("Module was successfully registered as publisher/subscriber in mod-pubsub");
-          promise.complete();
+          promise.complete(result);
         } else {
           logger.error("Error during module registration in mod-pubsub", throwable);
           promise.fail(throwable);
@@ -46,22 +47,23 @@ public class PubSubService {
       });
   }
 
-  public void publishAccountBalanceChangeEvent(Account account) {
+  public CompletableFuture<Boolean> publishAccountBalanceChangeEvent(Account account) {
     String payload = createPayload(account);
     Event event = createEvent(FF_BALANCE_CHANGE, payload);
-    publishEvent(event);
+
+    return publishEvent(event);
   }
 
-  public void publishDeletedAccountBalanceChangeEvent(String accountId) {
+  public CompletableFuture<Boolean> publishDeletedAccountBalanceChangeEvent(String accountId) {
     Account account = new Account()
       .withId(accountId)
       .withRemaining(0.0);
 
-    publishAccountBalanceChangeEvent(account);
+    return publishAccountBalanceChangeEvent(account);
   }
 
-  private void publishEvent(final Event event) {
-    PubSubClientUtils.sendEventMessage(event, connectionParams)
+  private CompletableFuture<Boolean> publishEvent(final Event event) {
+    return PubSubClientUtils.sendEventMessage(event, connectionParams)
       .whenComplete((result, throwable) -> {
         String eventType = event.getEventType();
         String eventId = event.getId();

@@ -1,27 +1,20 @@
 package org.folio.rest.impl;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-import org.folio.rest.RestVerticle;
-import org.folio.rest.client.TenantClient;
+import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.FeefinedataCollection;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
-import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
 import org.folio.rest.util.OkapiConnectionParams;
-import org.folio.rest.utils.OkapiClient;
 import org.folio.util.pubsub.PubSubClientUtils;
-import org.junit.AfterClass;
+import org.folio.util.pubsub.exceptions.ModuleRegistrationException;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,72 +25,45 @@ import org.powermock.modules.junit4.rule.PowerMockRule;
 import io.restassured.RestAssured;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import javax.ws.rs.core.MediaType;
 
 @RunWith(VertxUnitRunner.class)
 @PrepareForTest(PubSubClientUtils.class)
-public class TenantRefAPITest {
-  private static final String MODULE_NAME_TEMPLATE = "%s-%s";
-  private static final Vertx vertx = Vertx.vertx();
-  private static final OkapiClient okapiClient = new OkapiClient();
+public class TenantRefAPITest extends APITests {
 
   @Rule
   public PowerMockRule rule = new PowerMockRule();
-
-  @BeforeClass
-  public static void setUpClass(final TestContext context) throws Exception {
-    Async async = context.async();
-
-    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-    DeploymentOptions deploymentOptions = new DeploymentOptions()
-      .setConfig(new JsonObject().put("http.port", okapiClient.getPort()));
-
-    vertx.deployVerticle(RestVerticle.class.getName(), deploymentOptions, r -> async.complete());
-  }
-
-  @AfterClass
-  public static void tearDownClass(final TestContext context) {
-    Async async = context.async();
-    vertx.close(context.asyncAssertSuccess(res -> {
-      PostgresClient.stopEmbeddedPostgres();
-      async.complete();
-    }));
-  }
 
   @Before
   public void beforeEach(final TestContext context) {
     Async async = context.async();
 
-    PowerMockito.mockStatic(PubSubClientUtils.class);
+    mockStatic(PubSubClientUtils.class);
     when(PubSubClientUtils.registerModule(any(OkapiConnectionParams.class)))
-      .thenReturn(completedFuture(true));
+      .thenReturn(CompletableFuture.completedFuture(true));
 
     try {
-      new TenantClient(okapiClient.getUrl(), okapiClient.getTenant(), okapiClient.getToken())
-        .postTenant(getTenantAttributes(), result -> {
-          // start verifying behavior
-          PowerMockito.verifyStatic(PubSubClientUtils.class);
-          // call the method which is being verified
-          PubSubClientUtils.registerModule(any(OkapiConnectionParams.class));
-          async.complete();
-        });
+      tenantClient.postTenant(getTenantAttributes(), result -> {
+        context.assertEquals(HttpStatus.SC_CREATED, result.statusCode());
+        // start verifying behavior
+        PowerMockito.verifyStatic(PubSubClientUtils.class);
+        // verify that module registration method was invoked
+        PubSubClientUtils.registerModule(any(OkapiConnectionParams.class));
+        async.complete();
+      });
     } catch (Exception e) {
       context.fail(e);
     }
@@ -144,10 +110,10 @@ public class TenantRefAPITest {
   @Test
   public void shouldFailIfNoOkapiUrlHeaderSpecified(TestContext context) {
     final RequestSpecification spec = RestAssured.given()
-      .port(okapiClient.getPort())
+      .port(OKAPI_PORT)
       .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, okapiClient.getTenant()))
-      .header(new Header(OKAPI_HEADER_TOKEN, okapiClient.getToken()))
+      .header(new Header(OKAPI_HEADER_TENANT, OKAPI_TENANT))
+      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN))
       .body(getTenantAttributes());
 
     succeededFuture(spec.post("/_/tenant"))
@@ -159,6 +125,30 @@ public class TenantRefAPITest {
 
         return context;
       }).setHandler(context.asyncAssertSuccess());
+  }
+
+  @Test
+  public void shouldFailWhenRegistrationInPubsubFailed(TestContext context) {
+    Async async = context.async();
+
+    String errorMessage = "Module registration failed";
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    future.completeExceptionally(new ModuleRegistrationException(errorMessage));
+
+    when(PubSubClientUtils.registerModule(any(OkapiConnectionParams.class)))
+      .thenReturn(future);
+
+    try {
+      tenantClient.postTenant(getTenantAttributes(), response -> {
+        context.assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.statusCode());
+        response.bodyHandler(body -> {
+          context.assertEquals(errorMessage, body.toString());
+          async.complete();
+        });
+      });
+    } catch (Exception e) {
+      context.fail(e);
+    }
   }
 
   @Test
@@ -203,17 +193,5 @@ public class TenantRefAPITest {
         }
         return context;
       }).setHandler(context.asyncAssertSuccess());
-  }
-
-  private static TenantAttributes getTenantAttributes() {
-    final Parameter loadReferenceParameter = new Parameter()
-      .withKey("loadReference").withValue("true");
-
-    String moduleName = PomReader.INSTANCE.getModuleName();
-
-    return new TenantAttributes()
-      .withModuleFrom(format(MODULE_NAME_TEMPLATE, moduleName, "14.2.4"))
-      .withModuleTo(format(MODULE_NAME_TEMPLATE, moduleName, PomReader.INSTANCE.getVersion()))
-      .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 }
