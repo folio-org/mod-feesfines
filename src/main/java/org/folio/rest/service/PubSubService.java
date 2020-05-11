@@ -1,7 +1,7 @@
 package org.folio.rest.service;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
-import static org.folio.rest.domain.EventType.FF_BALANCE_CHANGE;
+import static org.folio.rest.domain.EventType.FF_BALANCE_CHANGED;
 import static org.folio.rest.utils.JsonHelper.write;
 
 import java.util.Map;
@@ -49,7 +49,7 @@ public class PubSubService {
 
   public CompletableFuture<Boolean> publishAccountBalanceChangeEvent(Account account) {
     String payload = createPayload(account);
-    Event event = createEvent(FF_BALANCE_CHANGE, payload);
+    Event event = createEvent(FF_BALANCE_CHANGED, payload);
 
     return publishEvent(event);
   }

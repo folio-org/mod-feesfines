@@ -1,7 +1,7 @@
 {
   "publications": [
     {
-      "eventType": "FF_BALANCE_CHANGE",
+      "eventType": "FF_BALANCE_CHANGED",
       "description": "Patron fee/fine balance was changed",
       "eventTTL": 1,
       "signed": false

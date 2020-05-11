@@ -31,7 +31,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
-public abstract class APITests {
+public class APITests {
   protected static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private static final String MODULE_NAME_TEMPLATE = "%s-%s";
@@ -68,8 +68,7 @@ public abstract class APITests {
 
     vertx.deployVerticle(RestVerticle.class.getName(), deploymentOptions, deployment -> {
       try {
-        tenantClient.postTenant(getTenantAttributes(), result -> async.complete()
-        );
+        tenantClient.postTenant(getTenantAttributes(), result -> async.complete());
       } catch (Exception e) {
         log.error(e.getMessage());
         context.fail(e);

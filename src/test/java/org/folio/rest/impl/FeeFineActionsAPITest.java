@@ -16,7 +16,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
@@ -50,7 +49,7 @@ import org.powermock.modules.junit4.rule.PowerMockRule;
 
 @RunWith(VertxUnitRunner.class)
 @PrepareForTest(PubSubClientUtils.class)
-public class FeeFineActionsAPITest extends APITests{
+public class FeeFineActionsAPITest extends APITests {
   private static final String REST_PATH = "/feefineactions";
   private static final String FEEFINES_TABLE = "feefines";
 
@@ -76,11 +75,11 @@ public class FeeFineActionsAPITest extends APITests{
   public void postFeefineActionsWithPatronNotification() {
     setupPatronNoticeStub();
 
-    final String ownerId = UUID.randomUUID().toString();
-    final String feeFineId = UUID.randomUUID().toString();
-    final String accountId = UUID.randomUUID().toString();
-    final String defaultChargeTemplateId = UUID.randomUUID().toString();
-    final String userId = UUID.randomUUID().toString();
+    final String ownerId = randomId();
+    final String feeFineId = randomId();
+    final String accountId = randomId();
+    final String defaultChargeTemplateId = randomId();
+    final String userId = randomId();
     final String feeFineType = "damaged book";
     final String typeAction = "damaged book";
     final boolean notify = true;
@@ -102,8 +101,8 @@ public class FeeFineActionsAPITest extends APITests{
     createEntity("/accounts", new JsonObject()
       .put("id", accountId)
       .put("userId", userId)
-      .put("itemId", UUID.randomUUID().toString())
-      .put("materialTypeId", UUID.randomUUID().toString())
+      .put("itemId", randomId())
+      .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
       .put("amount", amount));
@@ -128,11 +127,11 @@ public class FeeFineActionsAPITest extends APITests{
 
   @Test
   public void postFeefineActionsWithoutPatronNotification() {
-    final String ownerId = UUID.randomUUID().toString();
-    final String feeFineId = UUID.randomUUID().toString();
-    final String accountId = UUID.randomUUID().toString();
-    final String defaultChargeTemplateId = UUID.randomUUID().toString();
-    final String userId = UUID.randomUUID().toString();
+    final String ownerId = randomId();
+    final String feeFineId = randomId();
+    final String accountId = randomId();
+    final String defaultChargeTemplateId = randomId();
+    final String userId = randomId();
     final String feeFineType = "damaged book";
     final String typeAction = "damaged book";
     final boolean notify = false;
@@ -150,8 +149,8 @@ public class FeeFineActionsAPITest extends APITests{
     createEntity("/accounts", new JsonObject()
       .put("id", accountId)
       .put("userId", userId)
-      .put("itemId", UUID.randomUUID().toString())
-      .put("materialTypeId", UUID.randomUUID().toString())
+      .put("itemId", randomId())
+      .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
       .put("amount", 10.0));
@@ -219,7 +218,7 @@ public class FeeFineActionsAPITest extends APITests{
       .put("source", "ADMINISTRATOR, DIKU")
       .put("accountId", accountId)
       .put("userId", userId)
-      .put("id", UUID.randomUUID().toString())
+      .put("id", randomId())
       .encodePrettily();
 
   }

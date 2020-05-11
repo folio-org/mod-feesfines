@@ -153,7 +153,7 @@ public class AccountsAPITest extends APITests{
     write(expectedPayload, "feeFineId", account.getFeeFineId());
     write(expectedPayload, "balance", account.getRemaining());
 
-    context.assertEquals(EventType.FF_BALANCE_CHANGE.name(), event.getEventType());
+    context.assertEquals(EventType.FF_BALANCE_CHANGED.name(), event.getEventType());
     context.assertEquals(PubSubClientUtils.constructModuleName(), eventMetadata.getPublishedBy());
     context.assertEquals(OKAPI_TENANT, eventMetadata.getTenantId());
     context.assertEquals(1, eventMetadata.getEventTTL());
