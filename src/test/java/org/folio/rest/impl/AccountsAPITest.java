@@ -148,9 +148,9 @@ public class AccountsAPITest extends APITests{
     JsonObject eventPayload = new JsonObject(event.getEventPayload());
 
     JsonObject expectedPayload = new JsonObject();
-    write(expectedPayload, "accountId", account.getId());
     write(expectedPayload, "userId", account.getUserId());
-    write(expectedPayload, "feeFineId", account.getFeeFineId());
+    write(expectedPayload, "feeFineId", account.getId());
+    write(expectedPayload, "feeFineTypeId", account.getFeeFineId());
     write(expectedPayload, "balance", account.getRemaining());
 
     context.assertEquals(EventType.FF_BALANCE_CHANGED.name(), event.getEventType());

@@ -77,9 +77,9 @@ public class PubSubService {
 
   private String createPayload(Account account) {
     JsonObject payload = new JsonObject();
-    write(payload, "accountId", account.getId());
     write(payload, "userId", account.getUserId());
-    write(payload, "feeFineId", account.getFeeFineId());
+    write(payload, "feeFineId", account.getId());
+    write(payload, "feeFineTypeId", account.getFeeFineId());
     write(payload, "balance", account.getRemaining());
 
     return payload.encodePrettily();
