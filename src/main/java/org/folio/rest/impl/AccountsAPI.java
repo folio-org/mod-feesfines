@@ -30,6 +30,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
+import org.folio.rest.service.AccountService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -44,17 +45,18 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.client.WebClient;
 
 public class AccountsAPI implements Accounts {
+  private final static Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+  private static final String ACCOUNTS_TABLE = "accounts";
+  private static final String ACCOUNT_ID_FIELD = "'id'";
+  private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
 
-    private static final String ACCOUNTS_TABLE = "accounts";
-    private static final String ACCOUNT_ID_FIELD = "'id'";
-    private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
-    private final Messages messages = Messages.getInstance();
-    private final Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+  private final Messages messages = Messages.getInstance();
+  private final AccountService accountService = new AccountService();
 
-    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON(ACCOUNTS_TABLE + ".jsonb");
-        return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-    }
+  private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(ACCOUNTS_TABLE + ".jsonb");
+    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+  }
 
   private Future<Void> setAdditionalFields(Vertx vertx, Map<String, String> okapiHeaders,
     List<Account> accounts) {
@@ -298,18 +300,15 @@ public class AccountsAPI implements Accounts {
 
     @Validate
     @Override
-    public void putAccountsByAccountId(String accountId,
-                                       String lang,
-                                       Account entity,
-                                       Map<String, String> okapiHeaders,
-                                       Handler<AsyncResult<Response>> asyncResultHandler,
-                                       Context vertxContext) {
+    public void putAccountsByAccountId(String accountId, String lang,
+      Account entity, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      PgUtil.put(ACCOUNTS_TABLE, entity, accountId, okapiHeaders, vertxContext,
-        PutAccountsByAccountIdResponse.class, asyncResultHandler);
+      accountService.updateAccount(accountId, entity, okapiHeaders, vertxContext)
+        .thenAccept(asyncResultHandler::handle);
     }
 
-    private class AdditionalFieldsContext {
+    private static class AdditionalFieldsContext {
       final Items items;
       final HoldingsRecords holdings;
 

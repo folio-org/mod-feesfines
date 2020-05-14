@@ -1,88 +1,41 @@
 package org.folio.rest.impl;
 
-import javax.ws.rs.core.MediaType;
-
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.client.TenantClient;
-import org.folio.rest.jaxrs.model.Feefine;
-import org.folio.rest.jaxrs.model.FeefinedataCollection;
-import org.folio.rest.jaxrs.model.LostItemFeePolicies;
-import org.folio.rest.jaxrs.model.LostItemFeePolicy;
-import org.folio.rest.jaxrs.model.OverdueFinePolicies;
-import org.folio.rest.jaxrs.model.OverdueFinePolicy;
-import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.utils.NetworkUtils;
-import org.folio.rest.utils.OkapiClient;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import io.restassured.RestAssured;
-import io.restassured.http.Header;
-import io.restassured.specification.RequestSpecification;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Arrays.asList;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.junit.Assert.assertEquals;
 
+import java.util.Comparator;
+import java.util.List;
+
+import javax.ws.rs.core.MediaType;
+
+import org.folio.rest.jaxrs.model.Feefine;
+import org.folio.rest.jaxrs.model.FeefinedataCollection;
+import org.folio.rest.jaxrs.model.LostItemFeePolicies;
+import org.folio.rest.jaxrs.model.LostItemFeePolicy;
+import org.folio.rest.jaxrs.model.OverdueFinePolicies;
+import org.folio.rest.jaxrs.model.OverdueFinePolicy;
+import org.folio.test.support.BaseApiTest;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import io.restassured.RestAssured;
+import io.restassured.http.Header;
+import io.restassured.specification.RequestSpecification;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+
 @RunWith(VertxUnitRunner.class)
-public class TenantRefAPITest {
-  private static final String MODULE_VERSION_PREFIX = "mod-feesfines-";
-  private static final int PORT = NetworkUtils.nextFreePort();
-  private static Vertx vertx;
-
-  private final OkapiClient okapiClient = new OkapiClient(PORT);
-
-  @BeforeClass
-  public static void setUpClass(final TestContext context) throws Exception {
-    Async async = context.async();
-    vertx = Vertx.vertx();
-
-    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-    final TenantClient tenantClient = createTenantClient();
-
-    DeploymentOptions restDeploymentOptions = new DeploymentOptions()
-      .setConfig(new JsonObject().put("http.port", PORT));
-
-    vertx.deployVerticle(RestVerticle.class.getName(), restDeploymentOptions,
-      res -> {
-        try {
-          tenantClient.postTenant(getTenantAttributes(), result -> async.complete());
-        } catch (Exception e) {
-          context.fail(e);
-        }
-      });
-  }
-
-  @AfterClass
-  public static void tearDownClass(final TestContext context) {
-    Async async = context.async();
-    vertx.close(context.asyncAssertSuccess(res -> {
-      PostgresClient.stopEmbeddedPostgres();
-      async.complete();
-    }));
-  }
+public class TenantRefAPITest extends BaseApiTest {
 
   @Test
   public void overdueFinePolicyLoaded(TestContext context) {
-    succeededFuture(okapiClient.get("/overdue-fines-policies"))
+    succeededFuture(client.get("/overdue-fines-policies"))
       .map(response -> response.as(OverdueFinePolicies.class))
       .map(policy -> {
         context.assertEquals(policy.getTotalRecords(), 1);
@@ -101,7 +54,7 @@ public class TenantRefAPITest {
 
   @Test
   public void lostItemFeePolicyLoaded(TestContext context) {
-    succeededFuture(okapiClient.get("/lost-item-fees-policies"))
+    succeededFuture(client.get("/lost-item-fees-policies"))
       .map(response -> response.as(LostItemFeePolicies.class))
       .map(policy -> {
         context.assertEquals(policy.getTotalRecords(), 1);
@@ -121,10 +74,10 @@ public class TenantRefAPITest {
   @Test
   public void shouldFailIfNoOkapiUrlHeaderSpecified(TestContext context) {
     final RequestSpecification spec = RestAssured.given()
-      .port(PORT)
+      .baseUri(getOkapiUrl())
       .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, "test_tenant"))
-      .header(new Header(OKAPI_HEADER_TOKEN, "test_token"))
+      .header(new Header(OKAPI_HEADER_TENANT, TENANT_NAME))
+      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN))
       .body(getTenantAttributes());
 
     succeededFuture(spec.post("/_/tenant"))
@@ -163,7 +116,7 @@ public class TenantRefAPITest {
     Comparator<Feefine> byId = Comparator.comparing(Feefine::getId);
     expectedFeeFines.sort(byId);
 
-    succeededFuture(okapiClient.get("/feefines"))
+    succeededFuture(client.get("/feefines"))
       .map(response -> response.as(FeefinedataCollection.class))
       .map(collection -> {
         final List<Feefine> createdFeeFines = collection.getFeefines();
@@ -182,18 +135,21 @@ public class TenantRefAPITest {
       }).setHandler(context.asyncAssertSuccess());
   }
 
-  private static TenantClient createTenantClient() {
-    return new TenantClient("http://localhost:" + PORT,
-      "test_tenant", "test_token");
-  }
+  @Test
+  public void shouldFailIfCannotRegisterInPubSub(TestContext context) {
+    wireMock.stubFor(post(urlPathMatching("/pubsub/.+"))
+      .willReturn(aResponse().withStatus(500).withBody("Pubsub unavailable")));
 
-  private static TenantAttributes getTenantAttributes() {
-    final Parameter loadReferenceParameter = new Parameter()
-      .withKey("loadReference").withValue("true");
+    succeededFuture(client.post("/_/tenant", getTenantAttributes()))
+      .map(response -> {
+        context.assertEquals(response.getStatusCode(), 500);
+        context.assertNotNull(response.getBody().asString());
+        context.assertTrue(response.getBody().asString()
+          .contains("EventDescriptor was not registered"));
+        context.assertTrue(response.getBody().asString()
+          .contains("FEESFINES_ACCOUNT_WITH_LOAN_CLOSED"));
 
-    return new TenantAttributes()
-      .withModuleFrom(MODULE_VERSION_PREFIX + "14.2.4")
-      .withModuleTo(MODULE_VERSION_PREFIX + PomReader.INSTANCE.getVersion())
-      .withParameters(Collections.singletonList(loadReferenceParameter));
+        return context;
+      }).setHandler(context.asyncAssertSuccess());
   }
 }

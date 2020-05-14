@@ -1,133 +1,58 @@
 package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static org.folio.test.support.matcher.AccountMatchers.isAccountPaidFully;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.UUID;
 
-import javax.ws.rs.core.MediaType;
-
 import org.apache.http.HttpStatus;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.client.TenantClient;
-import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.AfterClass;
+import org.folio.test.support.BaseApiTest;
+import org.folio.test.support.matcher.MappableMatcher;
+import org.hamcrest.Matcher;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
 
-import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.restassured.http.Header;
-import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.UpdateResult;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-@RunWith(VertxUnitRunner.class)
-public class AccountsAPITest {
-  private static final Logger logger = LoggerFactory.getLogger(FeeFinesAPITest.class);
-
-  private static final String OKAPI_URL = "x-okapi-url";
-  private static final String HTTP_PORT = "http.port";
-  private static final String REST_PATH = "/accounts";
-  private static final String OKAPI_TOKEN = "test_token";
-  private static final String OKAPI_URL_TEMPLATE = "http://localhost:%s";
+public class AccountsAPITest extends BaseApiTest {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ITEM_ID = "43ec57e3-3974-4d05-a2c2-95126e087b72";
-
-  private static Vertx vertx;
-  private static int port;
-  private static String okapiTenant = "test_tenant";
-
-  private String okapiUrl;
-
-  @Rule
-  public WireMockRule userMockServer = new WireMockRule(
-    WireMockConfiguration.wireMockConfig()
-      .dynamicPort()
-      .notifier(new ConsoleNotifier(true)));
-
-  @BeforeClass
-  public static void setUpClass(final TestContext context) throws Exception {
-    Async async = context.async();
-    vertx = Vertx.vertx();
-    port = NetworkUtils.nextFreePort();
-
-    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-
-    TenantClient tenantClient =
-      new TenantClient(String.format(OKAPI_URL_TEMPLATE, port), okapiTenant, OKAPI_TOKEN);
-    DeploymentOptions restDeploymentOptions = new DeploymentOptions()
-      .setConfig(new JsonObject().put(HTTP_PORT, port));
-    TenantAttributes attributes = new TenantAttributes()
-      .withModuleTo(String.format("mod-feesfines-%s", PomReader.INSTANCE.getVersion()));
-
-    vertx.deployVerticle(RestVerticle.class.getName(), restDeploymentOptions,
-      res -> {
-        try {
-          tenantClient.postTenant(attributes, res2 -> async.complete()
-          );
-        } catch (Exception e) {
-          logger.error(e.getMessage());
-        }
-      });
-  }
+  public static final String ACCOUNT_CLOSED_EVENT = "FEESFINES_ACCOUNT_WITH_LOAN_CLOSED";
 
   @Before
-  public void setUp(TestContext context) {
-    Async async = context.async();
-    PostgresClient client = PostgresClient.getInstance(vertx, okapiTenant);
-
-    userMockServer.stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
+  public void setUp() throws Exception {
+    wireMock.stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
       .willReturn(aResponse().withBodyFile("items.json")));
 
-    userMockServer.stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
+    wireMock.stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
       .willReturn(aResponse().withBodyFile("holdings.json")));
 
-    client.delete(ACCOUNTS_TABLE, new Criterion(), result -> processEvent(context, result, async));
-    async.complete();
-  }
-
-  @AfterClass
-  public static void tearDownClass(final TestContext context) {
-    Async async = context.async();
-    vertx.close(context.asyncAssertSuccess(res -> {
-      PostgresClient.stopEmbeddedPostgres();
-      async.complete();
-    }));
+    removeAllFromTable(ACCOUNTS_TABLE);
   }
 
   @Test
   public void canGetAccounts() {
-    post(createAccountJson(randomId()))
+    accountsClient.create(createAccountJson(randomId()))
       .then()
-      .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON);
 
-    get("")
+    accountsClient.getAll()
       .then()
-      .statusCode(HttpStatus.SC_OK)
       .contentType(ContentType.JSON);
   }
 
@@ -135,14 +60,12 @@ public class AccountsAPITest {
   public void canGetAccount() {
     String accountId = randomId();
 
-    post(createAccountJson(accountId))
+    accountsClient.create(createAccountJson(accountId))
       .then()
-      .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON);
 
-    get(String.format("/%s", accountId))
+    accountsClient.getById(accountId)
       .then()
-      .statusCode(HttpStatus.SC_OK)
       .contentType(ContentType.JSON);
   }
 
@@ -150,12 +73,11 @@ public class AccountsAPITest {
   public void canPutAccount() {
     String accountId = randomId();
 
-    post(createAccountJson(accountId))
+    accountsClient.create(createAccountJson(accountId))
       .then()
-      .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON);
 
-    put(createAccountJson(accountId), String.format("/%s", accountId))
+    accountsClient.update(accountId, createAccountJson(accountId))
       .then()
       .statusCode(HttpStatus.SC_NO_CONTENT);
   }
@@ -164,14 +86,185 @@ public class AccountsAPITest {
   public void canPutAccountWithEmptyAdditionalFields() {
     String accountId = randomId();
 
-    post(createAccountJson(accountId))
+    accountsClient.create(createAccountJson(accountId))
       .then()
-      .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON);
 
-    put(createAccountJsonWithEmptyAdditionalFields(accountId), String.format("/%s", accountId))
+    accountsClient.update(accountId,
+      createAccountJsonWithEmptyAdditionalFields(accountId))
       .then()
       .statusCode(HttpStatus.SC_NO_CONTENT);
+  }
+
+  @Test
+  public void eventIsPublishedWhenAccountIsClosedWithLoanAndNoRemainingAmount() {
+    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+      .willReturn(noContent()));
+
+    final String accountId = randomId();
+    final String loanId = UUID.randomUUID().toString();
+
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", loanId)
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
+
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId), isAccountPaidFully());
+
+    final JsonObject publishRequest = getEventPublishRequest();
+    assertThat(publishRequest, notNullValue());
+
+    assertThat(publishRequest, isEventPublished());
+    assertThat(publishRequest.getString("eventPayload"), allOf(
+      hasJsonPath("loanId", is(loanId)),
+      hasJsonPath("accountId", is(accountId))
+    ));
+  }
+
+  @Test
+  public void canCloseAccountWithLoanIfNoEventSubscribers() {
+    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+      .willReturn(aResponse().withStatus(400)
+        .withBody("There is no SUBSCRIBERS registered for event type "
+          + ACCOUNT_CLOSED_EVENT
+          + ". Event 1bf88206-ccf4-4b28-b5f1-d90c72cba37b will not be published")));
+
+    final String accountId = randomId();
+    final String loanId = UUID.randomUUID().toString();
+
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", loanId)
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
+
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId), isAccountPaidFully());
+
+    final JsonObject publishRequest = getEventPublishRequest();
+    assertThat(publishRequest, notNullValue());
+  }
+
+  @Test
+  public void eventNotPublishedWhenAccountIsClosedWithRemainingAmount() {
+    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+      .willReturn(noContent()));
+
+    final String accountId = randomId();
+    final String loanId = UUID.randomUUID().toString();
+
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", loanId)
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid partially"))
+      .put("remaining", 0.1);
+
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId).body().asString(), allOf(
+      hasJsonPath("status.name", is("Closed")),
+      hasJsonPath("paymentStatus.name", is("Paid partially")),
+      hasJsonPath("remaining", is(0.1))
+    ));
+    assertThat(getEventPublishRequest(), nullValue());
+  }
+
+  @Test
+  public void eventNotPublishedWhenAccountIsClosedWithoutLoan() {
+    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+      .willReturn(noContent()));
+
+    final String accountId = randomId();
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
+
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId), isAccountPaidFully());
+    assertThat(getEventPublishRequest(), nullValue());
+  }
+
+  @Test
+  public void eventNotPublishedWhenAccountIsOpenButNoRemainingAmount() {
+    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+      .willReturn(noContent()));
+
+    final String accountId = randomId();
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", UUID.randomUUID().toString())
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Open"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
+
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId).getBody().asString(), allOf(
+      hasJsonPath("status.name", is("Open")),
+      hasJsonPath("paymentStatus.name", is("Paid fully")),
+      hasJsonPath("remaining", is(0.0))
+    ));
+    assertThat(getEventPublishRequest(), nullValue());
+  }
+
+  @Test
+  public void canForwardPubSubFailureOnAccountClose() {
+    final String expectedError = "Pub-sub unavailable";
+    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+      .willReturn(aResponse().withStatus(500).withBody(expectedError)));
+
+    final String accountId = randomId();
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", UUID.randomUUID().toString())
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
+
+    accountsClient.attemptUpdate(accountId, updatedAccount)
+      .then()
+      .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+      .body(containsString(expectedError));
   }
 
   private JsonObject createAccountJsonObject(String accountID) {
@@ -184,60 +277,41 @@ public class AccountsAPITest {
       .put("itemId", ITEM_ID);
   }
 
-  private String createAccountJson(String accountID) {
-    return createAccountJsonObject(accountID).encodePrettily();
+  private JsonObject createAccountJson(String accountID) {
+    return createAccountJsonObject(accountID);
   }
 
-  private String createAccountJsonWithEmptyAdditionalFields(String accountID) {
+  private JsonObject createAccountJsonWithEmptyAdditionalFields(String accountID) {
     return createAccountJsonObject(accountID)
       .put("holdingsRecordId", "")
-      .put("instanceId", "")
-      .encodePrettily();
-  }
-
-  private Response get(String path) {
-    return getRequestSpecification()
-      .when()
-      .get(REST_PATH + path);
-  }
-
-  private Response post(String body) {
-    return getRequestSpecification()
-      .body(body)
-      .when()
-      .post(REST_PATH);
-  }
-
-  private Response put(String body, String path) {
-    return getRequestSpecification()
-      .body(body)
-      .when()
-      .put(REST_PATH + path);
-  }
-
-  private RequestSpecification getRequestSpecification() {
-    if (okapiUrl == null) {
-      okapiUrl = String.format(OKAPI_URL_TEMPLATE, userMockServer.port());
-    }
-
-    return RestAssured.given()
-      .port(port)
-      .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, okapiTenant))
-      .header(new Header(OKAPI_URL, okapiUrl))
-      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
+      .put("instanceId", "");
   }
 
   private String randomId() {
     return UUID.randomUUID().toString();
   }
 
-  private void processEvent(TestContext context, AsyncResult<UpdateResult> event, Async async) {
-    if (event.failed()) {
-      logger.error(event.cause());
-      context.fail(event.cause());
-    } else {
-      async.countDown();
-    }
+  private JsonObject createNamedObject(String value) {
+    return new JsonObject().put("name", value);
+  }
+
+  private JsonObject getEventPublishRequest() {
+    final FindRequestsResult requests = wireMock.findRequestsMatching(
+      postRequestedFor(urlPathMatching("/pubsub/publish")).build());
+
+    return requests.getRequests().size() == 1
+      ? new JsonObject(requests.getRequests().get(0).getBodyAsString())
+      : null;
+  }
+
+  private Matcher<JsonObject> isEventPublished() {
+    return new MappableMatcher<>(JsonObject::toString,
+      allOf(
+        hasJsonPath("eventType", is(ACCOUNT_CLOSED_EVENT)),
+        hasJsonPath("eventMetadata.tenantId", is(TENANT_NAME)),
+        hasJsonPath("eventMetadata.publishedBy",
+          containsString("mod-feesfines")),
+        hasJsonPath("eventPayload", notNullValue())
+      ));
   }
 }

@@ -1,0 +1,10 @@
+{
+  "publications": [
+    {
+      "eventType": "FEESFINES_ACCOUNT_WITH_LOAN_CLOSED",
+      "description": "An account with a loan associated is closed",
+      "eventTTL": 30,
+      "signed": false
+    }
+  ]
+}

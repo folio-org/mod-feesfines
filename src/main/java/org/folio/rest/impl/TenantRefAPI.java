@@ -1,11 +1,17 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.jaxrs.resource.Tenant.PostTenantResponse.respond201WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.Tenant.PostTenantResponse.respond500WithTextPlain;
+import static org.folio.util.pubsub.PubSubClientUtils.registerModule;
+
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.rest.util.OkapiConnectionParams;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -20,8 +26,8 @@ public class TenantRefAPI extends TenantAPI {
 
   @Override
   public void postTenant(TenantAttributes tenantAttributes,
-                         Map<String, String> headers,
-                         Handler<AsyncResult<Response>> handler, Context context) {
+    Map<String, String> headers, Handler<AsyncResult<Response>> handler,
+    Context context) {
 
     log.info("postTenant");
     log.info("Tenant attributes: {}", JsonObject.mapFrom(tenantAttributes));
@@ -42,14 +48,22 @@ public class TenantRefAPI extends TenantAPI {
           if (performResponse.failed()) {
             log.error("postTenant failure", performResponse.cause());
 
-            handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-              .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
+            handler.handle(succeededFuture(respond500WithTextPlain(
+              performResponse.cause().getLocalizedMessage())));
             return;
           }
 
-          log.info("postTenant executed successfully");
-          handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-            .respond201WithApplicationJson("")));
+          log.info("Reference data have been load successfully");
+
+          log.info("Registering module in pub/sub...");
+          registerModule(new OkapiConnectionParams(headers, vertx))
+            .thenApply(notUsed -> {
+              log.info("Successfully registered in pub/sub");
+              return respond201WithApplicationJson("");
+            }).exceptionally(error -> {
+              log.fatal("Can not register module in pub/sub", error);
+              return respond500WithTextPlain(error.getMessage());
+            }).thenAccept(response -> handler.handle(succeededFuture(response)));
         });
     }, context);
   }
