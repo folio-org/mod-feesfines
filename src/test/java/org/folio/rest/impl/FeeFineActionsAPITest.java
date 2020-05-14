@@ -21,6 +21,10 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.MediaType;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.http.Header;
@@ -55,6 +59,12 @@ public class FeeFineActionsAPITest extends APITests {
 
   @Rule
   public PowerMockRule rule = new PowerMockRule();
+
+  @Rule
+  public WireMockRule wireMock = new WireMockRule(
+    WireMockConfiguration.wireMockConfig()
+      .dynamicPort()
+      .notifier(new ConsoleNotifier(true)));
 
   @Before
   public void setUp(TestContext context) {

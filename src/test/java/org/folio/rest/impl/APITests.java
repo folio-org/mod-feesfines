@@ -17,11 +17,6 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.utils.OkapiClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Rule;
-
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -46,12 +41,6 @@ public class APITests {
   protected static Vertx vertx;
   protected static OkapiClient okapiClient;
   protected static TenantClient tenantClient;
-
-  @Rule
-  public WireMockRule wireMock = new WireMockRule(
-    WireMockConfiguration.wireMockConfig()
-      .dynamicPort()
-      .notifier(new ConsoleNotifier(true)));
 
   @BeforeClass
   public static void beforeAll(final TestContext context) throws Exception {

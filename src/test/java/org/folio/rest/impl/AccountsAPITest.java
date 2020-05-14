@@ -31,6 +31,9 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -45,6 +48,12 @@ public class AccountsAPITest extends APITests{
 
   @Rule
   public PowerMockRule rule = new PowerMockRule();
+
+  @Rule
+  public WireMockRule wireMock = new WireMockRule(
+    WireMockConfiguration.wireMockConfig()
+      .dynamicPort()
+      .notifier(new ConsoleNotifier(true)));
 
   @Before
   public void setUp(TestContext context) {

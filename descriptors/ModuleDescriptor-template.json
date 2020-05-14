@@ -13,6 +13,22 @@
     {
       "id": "holdings-storage",
       "version": "4.2"
+    },
+    {
+      "id": "pubsub-event-types",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-publishers",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-subscribers",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-publish",
+      "version": "0.1"
     }
   ],
   "provides":[
@@ -137,7 +153,8 @@
             "accounts.item.post"
           ],
           "modulePermissions": [
-            "patron-notice.post"
+            "patron-notice.post",
+            "pubsub.publish.post"
           ]
         },
         {
@@ -149,7 +166,8 @@
             "accounts.item.put"
           ],
           "modulePermissions": [
-            "patron-notice.post"
+            "patron-notice.post",
+            "pubsub.publish.post"
           ]
         },
         {
@@ -158,7 +176,8 @@
           ],
           "pathPattern":"/accounts/{id}",
           "permissionsRequired":[
-            "accounts.item.delete"
+            "accounts.item.delete",
+            "pubsub.publish.post"
           ]
         },
         {
