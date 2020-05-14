@@ -5,14 +5,17 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
@@ -21,116 +24,72 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.http.Header;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.UpdateResult;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
-import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.tools.PomReader;
-import org.junit.AfterClass;
+import org.folio.rest.jaxrs.model.Event;
+import org.folio.rest.util.OkapiConnectionParams;
+import org.folio.util.pubsub.PubSubClientUtils;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.folio.rest.RestVerticle;
-import org.folio.rest.client.TenantClient;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.tools.utils.NetworkUtils;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.rule.PowerMockRule;
 
 @RunWith(VertxUnitRunner.class)
-public class FeeFineActionsAPITest {
-  private static final Logger logger = LoggerFactory.getLogger(FeeFineActionsAPITest.class);
-
-  private static final String OKAPI_URL = "x-okapi-url";
-  private static final String HTTP_PORT = "http.port";
+@PrepareForTest(PubSubClientUtils.class)
+public class FeeFineActionsAPITest extends APITests {
   private static final String REST_PATH = "/feefineactions";
-  private static final String OKAPI_TOKEN = "test_token";
-  private static final String OKAPI_URL_TEMPLATE = "http://localhost:%s";
   private static final String FEEFINES_TABLE = "feefines";
 
-  private static Vertx vertx;
-  private static int port;
-  private static String okapiTenant = "test_tenant";
-  private static RequestSpecification spec;
-
-  private String okapiUrl;
+  @Rule
+  public PowerMockRule rule = new PowerMockRule();
 
   @Rule
-  public WireMockRule userMockServer = new WireMockRule(
+  public WireMockRule wireMock = new WireMockRule(
     WireMockConfiguration.wireMockConfig()
       .dynamicPort()
       .notifier(new ConsoleNotifier(true)));
 
-  @BeforeClass
-  public static void setUpClass(final TestContext context) throws Exception {
-    Async async = context.async();
-    vertx = Vertx.vertx();
-    port = NetworkUtils.nextFreePort();
-
-    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-
-    TenantClient tenantClient =
-      new TenantClient(String.format(OKAPI_URL_TEMPLATE, port), okapiTenant, OKAPI_TOKEN);
-    DeploymentOptions restDeploymentOptions = new DeploymentOptions()
-      .setConfig(new JsonObject().put(HTTP_PORT, port));
-    TenantAttributes attributes = new TenantAttributes()
-      .withModuleTo(String.format("mod-feesfines-%s", PomReader.INSTANCE.getVersion()));
-
-    vertx.deployVerticle(RestVerticle.class.getName(), restDeploymentOptions,
-      res -> {
-        try {
-          tenantClient.postTenant(attributes, res2 -> async.complete()
-          );
-        } catch (Exception e) {
-          logger.error(e.getMessage());
-        }
-      });
-  }
-
   @Before
   public void setUp(TestContext context) {
     Async async = context.async();
-    PostgresClient client = PostgresClient.getInstance(vertx, okapiTenant);
+
+    mockStatic(PubSubClientUtils.class);
+    when(PubSubClientUtils.sendEventMessage(any(Event.class), any(OkapiConnectionParams.class)))
+      .thenReturn(completedFuture(true));
+
+    PostgresClient client = PostgresClient.getInstance(vertx, OKAPI_TENANT);
     client.delete(FEEFINES_TABLE, new Criterion(), event -> processEvent(context, event));
     client.delete(FeeFineActionsAPI.FEEFINEACTIONS_TABLE, new Criterion(), event ->
       processEvent(context, event));
     async.complete();
   }
 
-  @AfterClass
-  public static void tearDownClass(final TestContext context) {
-    Async async = context.async();
-    vertx.close(context.asyncAssertSuccess(res -> {
-      PostgresClient.stopEmbeddedPostgres();
-      async.complete();
-    }));
-  }
-
   @Test
-  public void postFeefineactionsWithPatronNotification() {
+  public void postFeefineActionsWithPatronNotification() {
     setupPatronNoticeStub();
 
-    final String ownerId = UUID.randomUUID().toString();
-    final String feeFineId = UUID.randomUUID().toString();
-    final String accountId = UUID.randomUUID().toString();
-    final String defaultChargeTemplateId = UUID.randomUUID().toString();
-    final String userId = UUID.randomUUID().toString();
+    final String ownerId = randomId();
+    final String feeFineId = randomId();
+    final String accountId = randomId();
+    final String defaultChargeTemplateId = randomId();
+    final String userId = randomId();
     final String feeFineType = "damaged book";
     final String typeAction = "damaged book";
     final boolean notify = true;
@@ -152,8 +111,8 @@ public class FeeFineActionsAPITest {
     createEntity("/accounts", new JsonObject()
       .put("id", accountId)
       .put("userId", userId)
-      .put("itemId", UUID.randomUUID().toString())
-      .put("materialTypeId", UUID.randomUUID().toString())
+      .put("itemId", randomId())
+      .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
       .put("amount", amount));
@@ -171,19 +130,18 @@ public class FeeFineActionsAPITest {
 
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> userMockServer.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
+      .untilAsserted(() -> wireMock.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
         .withRequestBody(equalToJson(expectedNoticeJson))
       ));
-
   }
 
   @Test
-  public void postFeefineactionsWithoutPatronNotification() {
-    final String ownerId = UUID.randomUUID().toString();
-    final String feeFineId = UUID.randomUUID().toString();
-    final String accountId = UUID.randomUUID().toString();
-    final String defaultChargeTemplateId = UUID.randomUUID().toString();
-    final String userId = UUID.randomUUID().toString();
+  public void postFeefineActionsWithoutPatronNotification() {
+    final String ownerId = randomId();
+    final String feeFineId = randomId();
+    final String accountId = randomId();
+    final String defaultChargeTemplateId = randomId();
+    final String userId = randomId();
     final String feeFineType = "damaged book";
     final String typeAction = "damaged book";
     final boolean notify = false;
@@ -201,8 +159,8 @@ public class FeeFineActionsAPITest {
     createEntity("/accounts", new JsonObject()
       .put("id", accountId)
       .put("userId", userId)
-      .put("itemId", UUID.randomUUID().toString())
-      .put("materialTypeId", UUID.randomUUID().toString())
+      .put("itemId", randomId())
+      .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
       .put("amount", 10.0));
@@ -214,7 +172,7 @@ public class FeeFineActionsAPITest {
 
     post(feeFineActionJson)
       .then()
-      .statusCode(201)
+      .statusCode(HttpStatus.SC_CREATED)
       .body(equalTo(feeFineActionJson));
   }
 
@@ -270,7 +228,7 @@ public class FeeFineActionsAPITest {
       .put("source", "ADMINISTRATOR, DIKU")
       .put("accountId", accountId)
       .put("userId", userId)
-      .put("id", UUID.randomUUID().toString())
+      .put("id", randomId())
       .encodePrettily();
 
   }
@@ -283,24 +241,20 @@ public class FeeFineActionsAPITest {
   }
 
   private RequestSpecification getRequestSpecification() {
-    if (okapiUrl == null) {
-      okapiUrl = String.format(OKAPI_URL_TEMPLATE, userMockServer.port());
-    }
-
     return RestAssured.given()
-      .port(port)
+      .port(OKAPI_PORT)
       .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, okapiTenant))
-      .header(new Header(OKAPI_URL, okapiUrl))
+      .header(new Header(OKAPI_HEADER_TENANT, OKAPI_TENANT))
+      .header(new Header(OKAPI_HEADER_URL, wireMock.baseUrl()))
       .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
   }
 
   private void setupPatronNoticeStub() {
-    userMockServer.stubFor(WireMock.post(urlPathEqualTo("/patron-notice"))
+    wireMock.stubFor(WireMock.post(urlPathEqualTo("/patron-notice"))
       .withHeader(ACCEPT, matching(APPLICATION_JSON))
-      .withHeader(OKAPI_HEADER_TENANT, matching(okapiTenant))
+      .withHeader(OKAPI_HEADER_TENANT, matching(OKAPI_TENANT))
       .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
-      .withHeader(OKAPI_URL, matching(userMockServer.baseUrl()))
+      .withHeader(OKAPI_HEADER_URL, matching(wireMock.baseUrl()))
       .willReturn(ok()));
   }
 
@@ -311,12 +265,13 @@ public class FeeFineActionsAPITest {
       .when()
       .post(path)
       .then()
-      .statusCode(201);
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(ContentType.JSON);
   }
 
   private void processEvent(TestContext context, AsyncResult<UpdateResult> event) {
     if (event.failed()) {
-      logger.error(event.cause());
+      log.error(event.cause());
       context.fail(event.cause());
     }
   }

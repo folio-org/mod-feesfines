@@ -31,7 +31,7 @@ public class InventoryClient extends OkapiClient {
   }
 
   public Future<Items> getItemsById(List<String> itemIds) {
-    if (itemIds.size() == 0) {
+    if (itemIds.isEmpty()) {
       return Future.succeededFuture(new Items()
         .withItems(new ArrayList<>())
         .withTotalRecords(0));
@@ -68,7 +68,7 @@ public class InventoryClient extends OkapiClient {
   }
 
   public Future<HoldingsRecords> getHoldingsById(List<String> holdingIds) {
-    if (holdingIds.size() == 0) {
+    if (holdingIds.isEmpty()) {
       return Future.succeededFuture(new HoldingsRecords()
         .withHoldingsRecords(new ArrayList<>())
         .withTotalRecords(0));

@@ -1,37 +1,30 @@
 package org.folio.rest.impl;
 
-import javax.ws.rs.core.MediaType;
-
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-import org.apache.commons.lang3.StringUtils;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.client.TenantClient;
+import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.FeefinedataCollection;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
-import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.utils.NetworkUtils;
-import org.folio.rest.utils.OkapiClient;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.folio.rest.util.OkapiConnectionParams;
+import org.folio.util.pubsub.PubSubClientUtils;
+import org.folio.util.pubsub.exceptions.ModuleRegistrationException;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.rule.PowerMockRule;
 
 import io.restassured.RestAssured;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -41,43 +34,39 @@ import static java.util.Arrays.asList;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+
+import javax.ws.rs.core.MediaType;
 
 @RunWith(VertxUnitRunner.class)
-public class TenantRefAPITest {
-  private static final String MODULE_VERSION_PREFIX = "mod-feesfines-";
-  private static final int PORT = NetworkUtils.nextFreePort();
-  private static Vertx vertx;
+@PrepareForTest(PubSubClientUtils.class)
+public class TenantRefAPITest extends APITests {
 
-  private final OkapiClient okapiClient = new OkapiClient(PORT);
+  @Rule
+  public PowerMockRule rule = new PowerMockRule();
 
-  @BeforeClass
-  public static void setUpClass(final TestContext context) throws Exception {
+  @Before
+  public void beforeEach(final TestContext context) {
     Async async = context.async();
-    vertx = Vertx.vertx();
 
-    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-    final TenantClient tenantClient = createTenantClient();
+    mockStatic(PubSubClientUtils.class);
+    when(PubSubClientUtils.registerModule(any(OkapiConnectionParams.class)))
+      .thenReturn(CompletableFuture.completedFuture(true));
 
-    DeploymentOptions restDeploymentOptions = new DeploymentOptions()
-      .setConfig(new JsonObject().put("http.port", PORT));
-
-    vertx.deployVerticle(RestVerticle.class.getName(), restDeploymentOptions,
-      res -> {
-        try {
-          tenantClient.postTenant(getTenantAttributes(), result -> async.complete());
-        } catch (Exception e) {
-          context.fail(e);
-        }
+    try {
+      tenantClient.postTenant(getTenantAttributes(), result -> {
+        context.assertEquals(HttpStatus.SC_CREATED, result.statusCode());
+        // start verifying behavior
+        PowerMockito.verifyStatic(PubSubClientUtils.class);
+        // verify that module registration method was invoked
+        PubSubClientUtils.registerModule(any(OkapiConnectionParams.class));
+        async.complete();
       });
-  }
-
-  @AfterClass
-  public static void tearDownClass(final TestContext context) {
-    Async async = context.async();
-    vertx.close(context.asyncAssertSuccess(res -> {
-      PostgresClient.stopEmbeddedPostgres();
-      async.complete();
-    }));
+    } catch (Exception e) {
+      context.fail(e);
+    }
   }
 
   @Test
@@ -121,10 +110,10 @@ public class TenantRefAPITest {
   @Test
   public void shouldFailIfNoOkapiUrlHeaderSpecified(TestContext context) {
     final RequestSpecification spec = RestAssured.given()
-      .port(PORT)
+      .port(OKAPI_PORT)
       .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, "test_tenant"))
-      .header(new Header(OKAPI_HEADER_TOKEN, "test_token"))
+      .header(new Header(OKAPI_HEADER_TENANT, OKAPI_TENANT))
+      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN))
       .body(getTenantAttributes());
 
     succeededFuture(spec.post("/_/tenant"))
@@ -136,6 +125,30 @@ public class TenantRefAPITest {
 
         return context;
       }).setHandler(context.asyncAssertSuccess());
+  }
+
+  @Test
+  public void shouldFailWhenRegistrationInPubsubFailed(TestContext context) {
+    Async async = context.async();
+
+    String errorMessage = "Module registration failed";
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    future.completeExceptionally(new ModuleRegistrationException(errorMessage));
+
+    when(PubSubClientUtils.registerModule(any(OkapiConnectionParams.class)))
+      .thenReturn(future);
+
+    try {
+      tenantClient.postTenant(getTenantAttributes(), response -> {
+        context.assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.statusCode());
+        response.bodyHandler(body -> {
+          context.assertEquals(errorMessage, body.toString());
+          async.complete();
+        });
+      });
+    } catch (Exception e) {
+      context.fail(e);
+    }
   }
 
   @Test
@@ -180,20 +193,5 @@ public class TenantRefAPITest {
         }
         return context;
       }).setHandler(context.asyncAssertSuccess());
-  }
-
-  private static TenantClient createTenantClient() {
-    return new TenantClient("http://localhost:" + PORT,
-      "test_tenant", "test_token");
-  }
-
-  private static TenantAttributes getTenantAttributes() {
-    final Parameter loadReferenceParameter = new Parameter()
-      .withKey("loadReference").withValue("true");
-
-    return new TenantAttributes()
-      .withModuleFrom(MODULE_VERSION_PREFIX + "14.2.4")
-      .withModuleTo(MODULE_VERSION_PREFIX + PomReader.INSTANCE.getVersion())
-      .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 }

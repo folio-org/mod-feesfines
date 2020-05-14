@@ -1,10 +1,14 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.service.PubSubService;
 import org.folio.rest.tools.utils.TenantLoading;
 
 import io.vertx.core.AsyncResult;
@@ -42,14 +46,25 @@ public class TenantRefAPI extends TenantAPI {
           if (performResponse.failed()) {
             log.error("postTenant failure", performResponse.cause());
 
-            handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+            handler.handle(succeededFuture(PostTenantResponse
               .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
             return;
           }
 
-          log.info("postTenant executed successfully");
-          handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-            .respond201WithApplicationJson("")));
+          vertx.executeBlocking(
+            promise -> new PubSubService(headers, vertx).registerModuleInPubsub(promise),
+            registration -> {
+              if (registration.failed()) {
+                log.error("postTenant failure", registration.cause());
+                handler.handle(succeededFuture(PostTenantResponse
+                  .respond500WithTextPlain(registration.cause().getLocalizedMessage())));
+              } else {
+                log.info("postTenant executed successfully");
+                handler.handle(succeededFuture(PostTenantResponse
+                  .respond201WithApplicationJson(EMPTY)));
+              }
+            }
+          );
         });
     }, context);
   }

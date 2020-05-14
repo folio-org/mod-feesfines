@@ -1,243 +1,197 @@
 package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-
-import java.util.UUID;
-
-import javax.ws.rs.core.MediaType;
+import static io.restassured.http.ContentType.JSON;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.rest.utils.JsonHelper.write;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
 import org.apache.http.HttpStatus;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.client.TenantClient;
-import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.domain.EventType;
+import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.Event;
+import org.folio.rest.jaxrs.model.EventMetadata;
+import org.folio.rest.jaxrs.model.PaymentStatus;
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.AfterClass;
+import org.folio.rest.util.OkapiConnectionParams;
+import org.folio.util.pubsub.PubSubClientUtils;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.rule.PowerMockRule;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import io.restassured.http.Header;
-import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.UpdateResult;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class AccountsAPITest {
-  private static final Logger logger = LoggerFactory.getLogger(FeeFinesAPITest.class);
-
-  private static final String OKAPI_URL = "x-okapi-url";
-  private static final String HTTP_PORT = "http.port";
+@PrepareForTest(PubSubClientUtils.class)
+public class AccountsAPITest extends APITests{
   private static final String REST_PATH = "/accounts";
-  private static final String OKAPI_TOKEN = "test_token";
-  private static final String OKAPI_URL_TEMPLATE = "http://localhost:%s";
   private static final String ACCOUNTS_TABLE = "accounts";
-  private static final String ITEM_ID = "43ec57e3-3974-4d05-a2c2-95126e087b72";
-
-  private static Vertx vertx;
-  private static int port;
-  private static String okapiTenant = "test_tenant";
-
-  private String okapiUrl;
 
   @Rule
-  public WireMockRule userMockServer = new WireMockRule(
+  public PowerMockRule rule = new PowerMockRule();
+
+  @Rule
+  public WireMockRule wireMock = new WireMockRule(
     WireMockConfiguration.wireMockConfig()
       .dynamicPort()
       .notifier(new ConsoleNotifier(true)));
 
-  @BeforeClass
-  public static void setUpClass(final TestContext context) throws Exception {
+  @Before
+  public void setUp(TestContext context) {
     Async async = context.async();
-    vertx = Vertx.vertx();
-    port = NetworkUtils.nextFreePort();
 
-    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
+    wireMock.stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
+      .willReturn(aResponse().withBodyFile("items.json")));
+    wireMock.stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
+      .willReturn(aResponse().withBodyFile("holdings.json")));
 
-    TenantClient tenantClient =
-      new TenantClient(String.format(OKAPI_URL_TEMPLATE, port), okapiTenant, OKAPI_TOKEN);
-    DeploymentOptions restDeploymentOptions = new DeploymentOptions()
-      .setConfig(new JsonObject().put(HTTP_PORT, port));
-    TenantAttributes attributes = new TenantAttributes()
-      .withModuleTo(String.format("mod-feesfines-%s", PomReader.INSTANCE.getVersion()));
+    mockStatic(PubSubClientUtils.class);
+    when(PubSubClientUtils.sendEventMessage(any(Event.class), any(OkapiConnectionParams.class)))
+      .thenReturn(completedFuture(true));
 
-    vertx.deployVerticle(RestVerticle.class.getName(), restDeploymentOptions,
-      res -> {
-        try {
-          tenantClient.postTenant(attributes, res2 -> async.complete()
-          );
-        } catch (Exception e) {
-          logger.error(e.getMessage());
+    PostgresClient.getInstance(vertx, OKAPI_TENANT)
+      .delete(ACCOUNTS_TABLE, new Criterion(), result -> {
+        if (result.failed()) {
+          log.error(result.cause());
+          context.fail(result.cause());
+        } else {
+          async.complete();
         }
       });
   }
 
-  @Before
-  public void setUp(TestContext context) {
-    Async async = context.async();
-    PostgresClient client = PostgresClient.getInstance(vertx, okapiTenant);
-
-    userMockServer.stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
-      .willReturn(aResponse().withBodyFile("items.json")));
-
-    userMockServer.stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
-      .willReturn(aResponse().withBodyFile("holdings.json")));
-
-    client.delete(ACCOUNTS_TABLE, new Criterion(), result -> processEvent(context, result, async));
-    async.complete();
-  }
-
-  @AfterClass
-  public static void tearDownClass(final TestContext context) {
-    Async async = context.async();
-    vertx.close(context.asyncAssertSuccess(res -> {
-      PostgresClient.stopEmbeddedPostgres();
-      async.complete();
-    }));
-  }
-
   @Test
-  public void canGetAccounts() {
-    post(createAccountJson(randomId()))
+  public void testAllMethodsAndEventPublishing(TestContext context) {
+    Account accountToPost = createAccount();
+    String accountId = accountToPost.getId();
+
+    // create an account
+    okapiClient.post(REST_PATH, toJson(accountToPost))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
-      .contentType(ContentType.JSON);
+      .contentType(JSON);
 
-    get("")
+    ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+    assertThatEventWasPublished(eventCaptor, accountToPost, context);
+
+    // get all accounts
+    okapiClient.get(REST_PATH)
       .then()
       .statusCode(HttpStatus.SC_OK)
-      .contentType(ContentType.JSON);
-  }
+      .contentType(JSON);
 
-  @Test
-  public void canGetAccount() {
-    String accountId = randomId();
+    String individualAccountUrl = buildAccountUrl(accountId);
 
-    post(createAccountJson(accountId))
-      .then()
-      .statusCode(HttpStatus.SC_CREATED)
-      .contentType(ContentType.JSON);
-
-    get(String.format("/%s", accountId))
+    // get individual account by id
+    okapiClient.get(individualAccountUrl)
       .then()
       .statusCode(HttpStatus.SC_OK)
-      .contentType(ContentType.JSON);
-  }
+      .contentType(JSON);
 
-  @Test
-  public void canPutAccount() {
-    String accountId = randomId();
+    Account accountToPut = accountToPost.withRemaining(4.55);
 
-    post(createAccountJson(accountId))
-      .then()
-      .statusCode(HttpStatus.SC_CREATED)
-      .contentType(ContentType.JSON);
-
-    put(createAccountJson(accountId), String.format("/%s", accountId))
+    // put account
+    okapiClient.put(individualAccountUrl, toJson(accountToPut))
       .then()
       .statusCode(HttpStatus.SC_NO_CONTENT);
+
+    assertThatEventWasPublished(eventCaptor, accountToPut, context);
+
+    // delete account
+    okapiClient.delete(individualAccountUrl)
+    .then()
+    .statusCode(HttpStatus.SC_NO_CONTENT);
+
+    Account accountToDelete = new Account()
+      .withId(accountId)
+      .withRemaining(0.00);
+
+    assertThatEventWasPublished(eventCaptor, accountToDelete, context);
   }
 
   @Test
   public void canPutAccountWithEmptyAdditionalFields() {
-    String accountId = randomId();
+    Account account = createAccount();
 
-    post(createAccountJson(accountId))
+    okapiClient.post(REST_PATH, toJson(account))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
-      .contentType(ContentType.JSON);
+      .contentType(JSON);
 
-    put(createAccountJsonWithEmptyAdditionalFields(accountId), String.format("/%s", accountId))
+    Account accountWithEmptyFields = account
+      .withHoldingsRecordId(EMPTY)
+      .withInstanceId(EMPTY);
+
+    okapiClient.put(buildAccountUrl(account.getId()), toJson(accountWithEmptyFields))
       .then()
       .statusCode(HttpStatus.SC_NO_CONTENT);
   }
 
-  private JsonObject createAccountJsonObject(String accountID) {
-    return new JsonObject()
-      .put("id", accountID)
-      .put("userId", randomId())
-      .put("feeFineId", randomId())
-      .put("materialTypeId", randomId())
-      .put("ownerId", randomId())
-      .put("itemId", ITEM_ID);
+  private void assertThatEventWasPublished(ArgumentCaptor<Event> eventCaptor, Account account,
+    TestContext context) {
+
+    verifyStatic(PubSubClientUtils.class, atLeast(1));
+    PubSubClientUtils.sendEventMessage(eventCaptor.capture(), any(OkapiConnectionParams.class));
+
+    Event event = eventCaptor.getValue();
+    EventMetadata eventMetadata = event.getEventMetadata();
+    JsonObject eventPayload = new JsonObject(event.getEventPayload());
+
+    JsonObject expectedPayload = new JsonObject();
+    write(expectedPayload, "userId", account.getUserId());
+    write(expectedPayload, "feeFineId", account.getId());
+    write(expectedPayload, "feeFineTypeId", account.getFeeFineId());
+    write(expectedPayload, "balance", account.getRemaining());
+
+    context.assertEquals(EventType.FF_BALANCE_CHANGED.name(), event.getEventType());
+    context.assertEquals(PubSubClientUtils.constructModuleName(), eventMetadata.getPublishedBy());
+    context.assertEquals(OKAPI_TENANT, eventMetadata.getTenantId());
+    context.assertEquals(1, eventMetadata.getEventTTL());
+    context.assertEquals(expectedPayload, eventPayload);
   }
 
-  private String createAccountJson(String accountID) {
-    return createAccountJsonObject(accountID).encodePrettily();
+  private Account createAccount() {
+    return new Account()
+      .withId(randomId())
+      .withOwnerId(randomId())
+      .withUserId(randomId())
+      .withItemId(randomId())
+      .withLoanId(randomId())
+      .withMaterialTypeId(randomId())
+      .withFeeFineId(randomId())
+      .withFeeFineType("book lost")
+      .withFeeFineOwner("owner")
+      .withAmount(9.00)
+      .withRemaining(4.55)
+      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withStatus(new Status().withName("Open"));
   }
 
-  private String createAccountJsonWithEmptyAdditionalFields(String accountID) {
-    return createAccountJsonObject(accountID)
-      .put("holdingsRecordId", "")
-      .put("instanceId", "")
-      .encodePrettily();
+  private static String toJson(Object object) {
+    return JsonObject.mapFrom(object).encodePrettily();
   }
 
-  private Response get(String path) {
-    return getRequestSpecification()
-      .when()
-      .get(REST_PATH + path);
+  private static String buildAccountUrl(String id) {
+    return String.format("%s/%s", REST_PATH, id);
   }
 
-  private Response post(String body) {
-    return getRequestSpecification()
-      .body(body)
-      .when()
-      .post(REST_PATH);
-  }
-
-  private Response put(String body, String path) {
-    return getRequestSpecification()
-      .body(body)
-      .when()
-      .put(REST_PATH + path);
-  }
-
-  private RequestSpecification getRequestSpecification() {
-    if (okapiUrl == null) {
-      okapiUrl = String.format(OKAPI_URL_TEMPLATE, userMockServer.port());
-    }
-
-    return RestAssured.given()
-      .port(port)
-      .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, okapiTenant))
-      .header(new Header(OKAPI_URL, okapiUrl))
-      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
-  }
-
-  private String randomId() {
-    return UUID.randomUUID().toString();
-  }
-
-  private void processEvent(TestContext context, AsyncResult<UpdateResult> event, Async async) {
-    if (event.failed()) {
-      logger.error(event.cause());
-      context.fail(event.cause());
-    } else {
-      async.countDown();
-    }
-  }
 }
