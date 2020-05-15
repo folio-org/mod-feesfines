@@ -20,7 +20,6 @@ import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
-import org.folio.test.support.BaseApiTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -31,7 +30,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class TenantRefAPITest extends BaseApiTest {
+public class TenantRefAPITest extends APITests {
 
   @Test
   public void overdueFinePolicyLoaded(TestContext context) {
@@ -146,8 +145,6 @@ public class TenantRefAPITest extends BaseApiTest {
         context.assertNotNull(response.getBody().asString());
         context.assertTrue(response.getBody().asString()
           .contains("EventDescriptor was not registered"));
-        context.assertTrue(response.getBody().asString()
-          .contains("FEESFINES_ACCOUNT_WITH_LOAN_CLOSED"));
 
         return context;
       }).setHandler(context.asyncAssertSuccess());

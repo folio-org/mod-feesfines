@@ -1,11 +1,12 @@
 package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static io.restassured.http.ContentType.JSON;
+import static io.vertx.core.json.Json.decodeValue;
 import static org.folio.test.support.matcher.AccountMatchers.isAccountPaidFully;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -13,29 +14,41 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
+import java.util.Comparator;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
-import org.folio.test.support.BaseApiTest;
+import org.awaitility.Awaitility;
+import org.folio.rest.domain.EventType;
+import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.Event;
+import org.folio.rest.jaxrs.model.EventMetadata;
+import org.folio.rest.jaxrs.model.PaymentStatus;
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.test.support.matcher.MappableMatcher;
+import org.folio.util.pubsub.PubSubClientUtils;
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
-import io.restassured.http.ContentType;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
-public class AccountsAPITest extends BaseApiTest {
+public class AccountsAPITest extends APITests {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ITEM_ID = "43ec57e3-3974-4d05-a2c2-95126e087b72";
-  public static final String ACCOUNT_CLOSED_EVENT = "FEESFINES_ACCOUNT_WITH_LOAN_CLOSED";
+  public static final String ACCOUNT_CLOSED_EVENT_NAME = "FF_ACCOUNT_WITH_LOAN_CLOSED";
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     wireMock.stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
       .willReturn(aResponse().withBodyFile("items.json")));
 
@@ -46,40 +59,49 @@ public class AccountsAPITest extends BaseApiTest {
   }
 
   @Test
-  public void canGetAccounts() {
-    accountsClient.create(createAccountJson(randomId()))
-      .then()
-      .contentType(ContentType.JSON);
+  public void testAllMethodsAndEventPublishing() {
+    Account accountToPost = createAccount();
+    String accountId = accountToPost.getId();
 
+    // create an account
+    accountsClient.create(accountToPost)
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(JSON);
+
+    assertBalanceChangedEventPublished(accountToPost);
+
+    // get all accounts
     accountsClient.getAll()
       .then()
-      .contentType(ContentType.JSON);
-  }
+      .statusCode(HttpStatus.SC_OK)
+      .contentType(JSON);
 
-  @Test
-  public void canGetAccount() {
-    String accountId = randomId();
-
-    accountsClient.create(createAccountJson(accountId))
-      .then()
-      .contentType(ContentType.JSON);
-
+    // get individual account by id
     accountsClient.getById(accountId)
       .then()
-      .contentType(ContentType.JSON);
-  }
+      .statusCode(HttpStatus.SC_OK)
+      .contentType(JSON);
 
-  @Test
-  public void canPutAccount() {
-    String accountId = randomId();
+    Account accountToPut = accountToPost.withRemaining(4.55);
 
-    accountsClient.create(createAccountJson(accountId))
-      .then()
-      .contentType(ContentType.JSON);
-
-    accountsClient.update(accountId, createAccountJson(accountId))
+    // put account
+    accountsClient.update(accountId, accountToPut)
       .then()
       .statusCode(HttpStatus.SC_NO_CONTENT);
+
+    assertBalanceChangedEventPublished(accountToPut);
+
+    // delete account
+    accountsClient.delete(accountId)
+      .then()
+      .statusCode(HttpStatus.SC_NO_CONTENT);
+
+    Account accountToDelete = new Account()
+      .withId(accountId)
+      .withRemaining(0.00);
+
+    assertBalanceChangedEventPublished(accountToDelete);
   }
 
   @Test
@@ -88,7 +110,7 @@ public class AccountsAPITest extends BaseApiTest {
 
     accountsClient.create(createAccountJson(accountId))
       .then()
-      .contentType(ContentType.JSON);
+      .contentType(JSON);
 
     accountsClient.update(accountId,
       createAccountJsonWithEmptyAdditionalFields(accountId))
@@ -98,9 +120,6 @@ public class AccountsAPITest extends BaseApiTest {
 
   @Test
   public void eventIsPublishedWhenAccountIsClosedWithLoanAndNoRemainingAmount() {
-    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
-      .willReturn(noContent()));
-
     final String accountId = randomId();
     final String loanId = UUID.randomUUID().toString();
 
@@ -120,11 +139,11 @@ public class AccountsAPITest extends BaseApiTest {
 
     assertThat(accountsClient.getById(accountId), isAccountPaidFully());
 
-    final JsonObject publishRequest = getEventPublishRequest();
-    assertThat(publishRequest, notNullValue());
+    final Event event = getLastAccountClosedEvent();
+    assertThat(event, notNullValue());
 
-    assertThat(publishRequest, isEventPublished());
-    assertThat(publishRequest.getString("eventPayload"), allOf(
+    assertThat(event, isAccountClosedEventPublished());
+    assertThat(event.getEventPayload(), allOf(
       hasJsonPath("loanId", is(loanId)),
       hasJsonPath("accountId", is(accountId))
     ));
@@ -135,7 +154,7 @@ public class AccountsAPITest extends BaseApiTest {
     wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
       .willReturn(aResponse().withStatus(400)
         .withBody("There is no SUBSCRIBERS registered for event type "
-          + ACCOUNT_CLOSED_EVENT
+          + ACCOUNT_CLOSED_EVENT_NAME
           + ". Event 1bf88206-ccf4-4b28-b5f1-d90c72cba37b will not be published")));
 
     final String accountId = randomId();
@@ -157,15 +176,11 @@ public class AccountsAPITest extends BaseApiTest {
 
     assertThat(accountsClient.getById(accountId), isAccountPaidFully());
 
-    final JsonObject publishRequest = getEventPublishRequest();
-    assertThat(publishRequest, notNullValue());
+    assertThat(getLastAccountClosedEvent(), notNullValue());
   }
 
   @Test
   public void eventNotPublishedWhenAccountIsClosedWithRemainingAmount() {
-    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
-      .willReturn(noContent()));
-
     final String accountId = randomId();
     final String loanId = UUID.randomUUID().toString();
 
@@ -188,14 +203,11 @@ public class AccountsAPITest extends BaseApiTest {
       hasJsonPath("paymentStatus.name", is("Paid partially")),
       hasJsonPath("remaining", is(0.1))
     ));
-    assertThat(getEventPublishRequest(), nullValue());
+    assertThat(getLastAccountClosedEvent(), nullValue());
   }
 
   @Test
   public void eventNotPublishedWhenAccountIsClosedWithoutLoan() {
-    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
-      .willReturn(noContent()));
-
     final String accountId = randomId();
     final JsonObject account = createAccountJsonObject(accountId)
       .put("remaining", 90.00)
@@ -211,14 +223,11 @@ public class AccountsAPITest extends BaseApiTest {
     accountsClient.update(accountId, updatedAccount);
 
     assertThat(accountsClient.getById(accountId), isAccountPaidFully());
-    assertThat(getEventPublishRequest(), nullValue());
+    assertThat(getLastAccountClosedEvent(), nullValue());
   }
 
   @Test
   public void eventNotPublishedWhenAccountIsOpenButNoRemainingAmount() {
-    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
-      .willReturn(noContent()));
-
     final String accountId = randomId();
     final JsonObject account = createAccountJsonObject(accountId)
       .put("loanId", UUID.randomUUID().toString())
@@ -239,7 +248,7 @@ public class AccountsAPITest extends BaseApiTest {
       hasJsonPath("paymentStatus.name", is("Paid fully")),
       hasJsonPath("remaining", is(0.0))
     ));
-    assertThat(getEventPublishRequest(), nullValue());
+    assertThat(getLastAccountClosedEvent(), nullValue());
   }
 
   @Test
@@ -267,6 +276,23 @@ public class AccountsAPITest extends BaseApiTest {
       .body(containsString(expectedError));
   }
 
+  private Account createAccount() {
+    return new Account()
+      .withId(randomId())
+      .withOwnerId(randomId())
+      .withUserId(randomId())
+      .withItemId(randomId())
+      .withLoanId(randomId())
+      .withMaterialTypeId(randomId())
+      .withFeeFineId(randomId())
+      .withFeeFineType("book lost")
+      .withFeeFineOwner("owner")
+      .withAmount(9.00)
+      .withRemaining(4.55)
+      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withStatus(new Status().withName("Open"));
+  }
+
   private JsonObject createAccountJsonObject(String accountID) {
     return new JsonObject()
       .put("id", accountID)
@@ -287,31 +313,64 @@ public class AccountsAPITest extends BaseApiTest {
       .put("instanceId", "");
   }
 
-  private String randomId() {
-    return UUID.randomUUID().toString();
-  }
-
   private JsonObject createNamedObject(String value) {
     return new JsonObject().put("name", value);
   }
 
-  private JsonObject getEventPublishRequest() {
+  private Event getLastAccountClosedEvent() {
+    return getLastPublishedEventOfType(ACCOUNT_CLOSED_EVENT_NAME);
+  }
+
+  private Event getLastBalanceChangedEvent() {
+    return getLastPublishedEventOfType(EventType.FF_BALANCE_CHANGED.toString());
+  }
+
+  private Event getLastPublishedEventOfType(String eventType) {
     final FindRequestsResult requests = wireMock.findRequestsMatching(
       postRequestedFor(urlPathMatching("/pubsub/publish")).build());
 
-    return requests.getRequests().size() == 1
-      ? new JsonObject(requests.getRequests().get(0).getBodyAsString())
-      : null;
+    return requests.getRequests().stream()
+      .filter(request -> StringUtils.isNotBlank(request.getBodyAsString()))
+      .filter(request -> decodeValue(request.getBodyAsString(), Event.class)
+        .getEventType().equals(eventType))
+      .max(Comparator.comparing(LoggedRequest::getLoggedDate))
+      .map(LoggedRequest::getBodyAsString)
+      .map(JsonObject::new)
+      .map(json -> json.mapTo(Event.class))
+      .orElse(null);
   }
 
-  private Matcher<JsonObject> isEventPublished() {
-    return new MappableMatcher<>(JsonObject::toString,
+  private Matcher<Event> isAccountClosedEventPublished() {
+    return new MappableMatcher<>(Json::encode,
       allOf(
-        hasJsonPath("eventType", is(ACCOUNT_CLOSED_EVENT)),
+        hasJsonPath("eventType", is(ACCOUNT_CLOSED_EVENT_NAME)),
         hasJsonPath("eventMetadata.tenantId", is(TENANT_NAME)),
         hasJsonPath("eventMetadata.publishedBy",
           containsString("mod-feesfines")),
         hasJsonPath("eventPayload", notNullValue())
       ));
+  }
+
+  private void assertBalanceChangedEventPublished(Account account) {
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS)
+      .until(() -> getLastBalanceChangedEvent() != null);
+
+    final Event event = getLastBalanceChangedEvent();
+    assertThat(event, notNullValue());
+
+    EventMetadata eventMetadata = event.getEventMetadata();
+
+    assertEquals(EventType.FF_BALANCE_CHANGED.name(), event.getEventType());
+    assertEquals(PubSubClientUtils.constructModuleName(), eventMetadata.getPublishedBy());
+    assertEquals(TENANT_NAME, eventMetadata.getTenantId());
+    assertEquals(1, eventMetadata.getEventTTL().intValue());
+
+    final JsonObject eventPayload = new JsonObject(event.getEventPayload());
+
+    assertThat(eventPayload.getString("userId"), is(account.getUserId()));
+    assertThat(eventPayload.getString("feeFineId"), is(account.getId()));
+    assertThat(eventPayload.getString("feeFineTypeId"), is(account.getFeeFineId()));
+    assertThat(eventPayload.getDouble("balance"), is(account.getRemaining()));
   }
 }

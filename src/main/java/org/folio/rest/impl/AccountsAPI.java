@@ -313,14 +313,8 @@ public class AccountsAPI implements Accounts {
       Account entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      PgUtil.put(ACCOUNTS_TABLE, entity, accountId, okapiHeaders, vertxContext,
-        PutAccountsByAccountIdResponse.class, put -> {
-          if (put.succeeded()) {
-            new PubSubService(okapiHeaders, vertxContext)
-              .publishAccountBalanceChangeEvent(entity);
-          }
-          asyncResultHandler.handle(put);
-        });
+      accountService.updateAccount(accountId, entity, okapiHeaders, vertxContext)
+        .thenAccept(asyncResultHandler::handle);
     }
 
     private static class AdditionalFieldsContext {

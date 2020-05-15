@@ -1,6 +1,7 @@
 package org.folio.rest.service;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
+import static org.folio.rest.domain.EventType.FF_ACCOUNT_WITH_LOAN_CLOSED;
 import static org.folio.rest.domain.EventType.FF_BALANCE_CHANGED;
 import static org.folio.rest.utils.JsonHelper.write;
 
@@ -8,6 +9,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import org.folio.rest.client.FeeFinePubSubClient;
+import org.folio.rest.domain.AccountWithLoanClosedEvent;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
@@ -25,6 +28,7 @@ import io.vertx.core.logging.LoggerFactory;
 public class PubSubService {
   private final Logger logger = LoggerFactory.getLogger(PubSubService.class);
   private final OkapiConnectionParams connectionParams;
+  private final FeeFinePubSubClient pubSubClient;
 
   public PubSubService(Map<String, String> okapiHeaders, Context context) {
     this(okapiHeaders, context.owner());
@@ -32,6 +36,7 @@ public class PubSubService {
 
   public PubSubService(Map<String, String> okapiHeaders, Vertx vertx) {
     this.connectionParams = new OkapiConnectionParams(okapiHeaders, vertx);
+    this.pubSubClient = new FeeFinePubSubClient(vertx, okapiHeaders);
   }
 
   public CompletableFuture<Boolean> registerModuleInPubsub(Promise<Object> promise) {
@@ -60,6 +65,11 @@ public class PubSubService {
       .withRemaining(0.0);
 
     return publishAccountBalanceChangeEvent(account);
+  }
+
+  public CompletableFuture<Void> publishAccountWithLoanClosedEvent(Account account) {
+    return pubSubClient.publishEvent(createEvent(FF_ACCOUNT_WITH_LOAN_CLOSED,
+      AccountWithLoanClosedEvent.forAccount(account).toJsonString()));
   }
 
   private CompletableFuture<Boolean> publishEvent(final Event event) {
@@ -95,5 +105,4 @@ public class PubSubService {
         .withTenantId(connectionParams.getTenantId())
         .withEventTTL(1));
   }
-
 }

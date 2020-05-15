@@ -11,7 +11,7 @@ import org.folio.rest.jaxrs.model.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.vertx.core.Context;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 
@@ -19,8 +19,8 @@ public class FeeFinePubSubClient {
   private static final Logger log = LoggerFactory.getLogger(FeeFinePubSubClient.class);
   private final OkapiClient okapiClient;
 
-  public FeeFinePubSubClient(Context context, Map<String, String> okapiHeaders) {
-    this.okapiClient = new OkapiClient(create(context.owner()), okapiHeaders);
+  public FeeFinePubSubClient(Vertx vertx, Map<String, String> okapiHeaders) {
+    this.okapiClient = new OkapiClient(create(vertx), okapiHeaders);
   }
 
   /**

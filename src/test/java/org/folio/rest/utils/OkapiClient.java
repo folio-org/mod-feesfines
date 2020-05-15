@@ -2,9 +2,9 @@ package org.folio.rest.utils;
 
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-import static org.folio.test.support.BaseApiTest.OKAPI_TOKEN;
-import static org.folio.test.support.BaseApiTest.OKAPI_URL_HEADER;
-import static org.folio.test.support.BaseApiTest.TENANT_NAME;
+import static org.folio.rest.impl.APITests.OKAPI_TOKEN;
+import static org.folio.rest.impl.APITests.OKAPI_URL_HEADER;
+import static org.folio.rest.impl.APITests.TENANT_NAME;
 
 import javax.ws.rs.core.MediaType;
 
@@ -39,6 +39,12 @@ public class OkapiClient {
       .when()
       .body(encodeBody(body))
       .put(uri);
+  }
+
+  public Response delete(String uri) {
+    return getRequestSpecification()
+      .when()
+      .delete(uri);
   }
 
   private String encodeBody(Object body) {

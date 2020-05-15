@@ -1,45 +1,22 @@
 package org.folio.rest.impl;
 
 import org.apache.http.HttpStatus;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PostgresClient;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-@RunWith(VertxUnitRunner.class)
 public class FeeFinesAPITest extends APITests {
   private static final String REST_PATH = "/feefines";
   private static final String FEEFINES_TABLE = "feefines";
   private static final String OWNERS_TABLE = "owners";
 
   @Before
-  public void setUp(TestContext context) {
-    Async async = context.async();
-    PostgresClient client = PostgresClient.getInstance(vertx, OKAPI_TENANT);
-
-    client.delete(FEEFINES_TABLE, new Criterion(), deleteFeefines -> {
-      if (deleteFeefines.failed()) {
-        log.error(deleteFeefines.cause());
-        context.fail(deleteFeefines.cause());
-      } else {
-        client.delete(OWNERS_TABLE, new Criterion(), deleteOwners -> {
-          if (deleteOwners.failed()) {
-            log.error(deleteOwners.cause());
-            context.fail(deleteOwners.cause());
-          } else {
-            async.complete();
-          }
-        });
-      }
-    });
+  public void setUp() {
+    removeAllFromTable(FEEFINES_TABLE);
+    removeAllFromTable(OWNERS_TABLE);
   }
 
   @Test
@@ -130,7 +107,7 @@ public class FeeFinesAPITest extends APITests {
   }
 
   private Response post(String entity) {
-    return okapiClient.post(REST_PATH, entity);
+    return client.post(REST_PATH, entity);
   }
 
   private void createOwner(String id, String name) {
@@ -141,7 +118,7 @@ public class FeeFinesAPITest extends APITests {
       .put("defaultActionNoticeId", randomId())
       .encodePrettily();
 
-    okapiClient.post("/owners", ownerJson)
+    client.post("/owners", ownerJson)
       .then()
       .statusCode(HttpStatus.SC_CREATED);
   }

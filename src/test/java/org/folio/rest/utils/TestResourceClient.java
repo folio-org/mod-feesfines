@@ -1,7 +1,8 @@
 package org.folio.rest.utils;
 
+import static org.folio.rest.impl.APITests.getOkapiUrl;
+
 import org.folio.HttpStatus;
-import org.folio.test.support.BaseApiTest;
 
 import io.restassured.response.Response;
 
@@ -10,7 +11,7 @@ public class TestResourceClient {
   private final OkapiClient okapiClient;
 
   public TestResourceClient(String baseUri) {
-    this.okapiClient = new OkapiClient(BaseApiTest.getOkapiUrl());
+    this.okapiClient = new OkapiClient(getOkapiUrl());
     this.baseUri = baseUri;
   }
 
@@ -50,6 +51,14 @@ public class TestResourceClient {
     return okapiClient.get(baseUri)
       .then()
       .statusCode(HttpStatus.HTTP_OK.toInt())
+      .extract()
+      .response();
+  }
+
+  public Response delete(String accountId) {
+    return okapiClient.delete(baseUri + "/" + accountId)
+      .then()
+      .statusCode(HttpStatus.HTTP_NO_CONTENT.toInt())
       .extract()
       .response();
   }
