@@ -12,6 +12,7 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
+import org.folio.rest.service.PubSubService;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
@@ -102,7 +103,7 @@ public class AccountsAPI implements Accounts {
       });
   }
 
-  @Validate
+    @Validate
     @Override
     public void getAccounts(String query, String orderBy, AccountsGetOrder order, int offset, int limit, List<String> facets, String lang,
             Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -182,7 +183,13 @@ public class AccountsAPI implements Accounts {
                              Context vertxContext) {
 
       PgUtil.post(ACCOUNTS_TABLE, entity, okapiHeaders, vertxContext,
-        PostAccountsResponse.class, asyncResultHandler);
+        PostAccountsResponse.class, post -> {
+          if (post.succeeded()) {
+            new PubSubService(okapiHeaders, vertxContext)
+              .publishAccountBalanceChangeEvent(entity);
+          }
+          asyncResultHandler.handle(post);
+        });
     }
 
     @Validate
@@ -261,6 +268,8 @@ public class AccountsAPI implements Accounts {
                             ACCOUNTS_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
+                                        new PubSubService(okapiHeaders, vertxContext)
+                                          .publishDeletedAccountBalanceChangeEvent(accountId);
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 DeleteAccountsByAccountIdResponse.respond204()));
                                     } else {
@@ -304,8 +313,14 @@ public class AccountsAPI implements Accounts {
       Account entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      accountService.updateAccount(accountId, entity, okapiHeaders, vertxContext)
-        .thenAccept(asyncResultHandler::handle);
+      PgUtil.put(ACCOUNTS_TABLE, entity, accountId, okapiHeaders, vertxContext,
+        PutAccountsByAccountIdResponse.class, put -> {
+          if (put.succeeded()) {
+            new PubSubService(okapiHeaders, vertxContext)
+              .publishAccountBalanceChangeEvent(entity);
+          }
+          asyncResultHandler.handle(put);
+        });
     }
 
     private static class AdditionalFieldsContext {

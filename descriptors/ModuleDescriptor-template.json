@@ -23,11 +23,11 @@
       "version": "0.1"
     },
     {
-      "id": "pubsub-publish",
+      "id": "pubsub-subscribers",
       "version": "0.1"
     },
     {
-      "id": "pubsub-subscribers",
+      "id": "pubsub-publish",
       "version": "0.1"
     }
   ],
@@ -153,7 +153,8 @@
             "accounts.item.post"
           ],
           "modulePermissions": [
-            "patron-notice.post"
+            "patron-notice.post",
+            "pubsub.publish.post"
           ]
         },
         {
@@ -165,8 +166,8 @@
             "accounts.item.put"
           ],
           "modulePermissions": [
-            "pubsub.publish.post",
-            "patron-notice.post"
+            "patron-notice.post",
+            "pubsub.publish.post"
           ]
         },
         {
@@ -175,7 +176,8 @@
           ],
           "pathPattern":"/accounts/{id}",
           "permissionsRequired":[
-            "accounts.item.delete"
+            "accounts.item.delete",
+            "pubsub.publish.post"
           ]
         },
         {
@@ -631,25 +633,20 @@
       ]
     },
     {
-      "id": "_tenant",
-      "version": "1.2",
+      "id" : "_tenant",
+      "version" : "1.2",
       "interfaceType": "system",
       "handlers": [
         {
-          "methods": [
-            "POST"
-          ],
+          "methods": ["POST"],
           "pathPattern": "/_/tenant",
           "modulePermissions": [
             "pubsub.event-types.post",
             "pubsub.publishers.post",
             "pubsub.subscribers.post"
           ]
-        },
-        {
-          "methods": [
-            "DELETE"
-          ],
+        }, {
+          "methods": ["DELETE"],
           "pathPattern": "/_/tenant"
         }
       ]
