@@ -45,7 +45,7 @@ import io.vertx.core.json.JsonObject;
 public class AccountsAPITest extends APITests {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ITEM_ID = "43ec57e3-3974-4d05-a2c2-95126e087b72";
-  public static final String ACCOUNT_CLOSED_EVENT_NAME = "FF_ACCOUNT_WITH_LOAN_CLOSED";
+  public static final String FEEFINE_CLOSED_EVENT_NAME = "FEEFINE_WITH_LOAN_CLOSED";
 
   @Before
   public void setUp() {
@@ -119,7 +119,7 @@ public class AccountsAPITest extends APITests {
   }
 
   @Test
-  public void eventIsPublishedWhenAccountIsClosedWithLoanAndNoRemainingAmount() {
+  public void eventIsPublishedWhenFeeFineIsClosedWithLoanAndNoRemainingAmount() {
     final String accountId = randomId();
     final String loanId = UUID.randomUUID().toString();
 
@@ -139,10 +139,10 @@ public class AccountsAPITest extends APITests {
 
     assertThat(accountsClient.getById(accountId), isAccountPaidFully());
 
-    final Event event = getLastAccountClosedEvent();
+    final Event event = getLastFeeFineClosedEvent();
     assertThat(event, notNullValue());
 
-    assertThat(event, isAccountClosedEventPublished());
+    assertThat(event, isFeeFineClosedEventPublished());
     assertThat(event.getEventPayload(), allOf(
       hasJsonPath("loanId", is(loanId)),
       hasJsonPath("accountId", is(accountId))
@@ -150,11 +150,11 @@ public class AccountsAPITest extends APITests {
   }
 
   @Test
-  public void canCloseAccountWithLoanIfNoEventSubscribers() {
+  public void canCloseFeeFineWithLoanIfNoEventSubscribers() {
     wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
       .willReturn(aResponse().withStatus(400)
         .withBody("There is no SUBSCRIBERS registered for event type "
-          + ACCOUNT_CLOSED_EVENT_NAME
+          + FEEFINE_CLOSED_EVENT_NAME
           + ". Event 1bf88206-ccf4-4b28-b5f1-d90c72cba37b will not be published")));
 
     final String accountId = randomId();
@@ -176,11 +176,11 @@ public class AccountsAPITest extends APITests {
 
     assertThat(accountsClient.getById(accountId), isAccountPaidFully());
 
-    assertThat(getLastAccountClosedEvent(), notNullValue());
+    assertThat(getLastFeeFineClosedEvent(), notNullValue());
   }
 
   @Test
-  public void eventNotPublishedWhenAccountIsClosedWithRemainingAmount() {
+  public void eventNotPublishedWhenFeeFineIsClosedWithRemainingAmount() {
     final String accountId = randomId();
     final String loanId = UUID.randomUUID().toString();
 
@@ -203,11 +203,11 @@ public class AccountsAPITest extends APITests {
       hasJsonPath("paymentStatus.name", is("Paid partially")),
       hasJsonPath("remaining", is(0.1))
     ));
-    assertThat(getLastAccountClosedEvent(), nullValue());
+    assertThat(getLastFeeFineClosedEvent(), nullValue());
   }
 
   @Test
-  public void eventNotPublishedWhenAccountIsClosedWithoutLoan() {
+  public void eventNotPublishedWhenFeeFineIsClosedWithoutLoan() {
     final String accountId = randomId();
     final JsonObject account = createAccountJsonObject(accountId)
       .put("remaining", 90.00)
@@ -223,11 +223,11 @@ public class AccountsAPITest extends APITests {
     accountsClient.update(accountId, updatedAccount);
 
     assertThat(accountsClient.getById(accountId), isAccountPaidFully());
-    assertThat(getLastAccountClosedEvent(), nullValue());
+    assertThat(getLastFeeFineClosedEvent(), nullValue());
   }
 
   @Test
-  public void eventNotPublishedWhenAccountIsOpenButNoRemainingAmount() {
+  public void eventNotPublishedWhenFeeFineIsOpenButNoRemainingAmount() {
     final String accountId = randomId();
     final JsonObject account = createAccountJsonObject(accountId)
       .put("loanId", UUID.randomUUID().toString())
@@ -248,11 +248,11 @@ public class AccountsAPITest extends APITests {
       hasJsonPath("paymentStatus.name", is("Paid fully")),
       hasJsonPath("remaining", is(0.0))
     ));
-    assertThat(getLastAccountClosedEvent(), nullValue());
+    assertThat(getLastFeeFineClosedEvent(), nullValue());
   }
 
   @Test
-  public void canForwardPubSubFailureOnAccountClose() {
+  public void canForwardPubSubFailureOnFeeFineClose() {
     final String expectedError = "Pub-sub unavailable";
     wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
       .willReturn(aResponse().withStatus(500).withBody(expectedError)));
@@ -317,8 +317,8 @@ public class AccountsAPITest extends APITests {
     return new JsonObject().put("name", value);
   }
 
-  private Event getLastAccountClosedEvent() {
-    return getLastPublishedEventOfType(ACCOUNT_CLOSED_EVENT_NAME);
+  private Event getLastFeeFineClosedEvent() {
+    return getLastPublishedEventOfType(FEEFINE_CLOSED_EVENT_NAME);
   }
 
   private Event getLastBalanceChangedEvent() {
@@ -340,10 +340,10 @@ public class AccountsAPITest extends APITests {
       .orElse(null);
   }
 
-  private Matcher<Event> isAccountClosedEventPublished() {
+  private Matcher<Event> isFeeFineClosedEventPublished() {
     return new MappableMatcher<>(Json::encode,
       allOf(
-        hasJsonPath("eventType", is(ACCOUNT_CLOSED_EVENT_NAME)),
+        hasJsonPath("eventType", is(FEEFINE_CLOSED_EVENT_NAME)),
         hasJsonPath("eventMetadata.tenantId", is(TENANT_NAME)),
         hasJsonPath("eventMetadata.publishedBy",
           containsString("mod-feesfines")),

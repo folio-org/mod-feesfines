@@ -2,15 +2,16 @@ package org.folio.rest.domain;
 
 import java.util.Arrays;
 
-public enum AccountStatus {
+public enum FeeFineStatus {
+  OPEN("Open"),
   CLOSED("Closed");
 
   private final String value;
-  AccountStatus(String statusValue) {
+  FeeFineStatus(String statusValue) {
     this.value = statusValue;
   }
 
-  public static AccountStatus forValue(String value) {
+  public static FeeFineStatus forValue(String value) {
     return Arrays.stream(values())
       .filter(currentEnum -> currentEnum.value.equalsIgnoreCase(value))
       .findFirst()

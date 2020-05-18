@@ -1,7 +1,7 @@
 package org.folio.rest.service;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
-import static org.folio.rest.domain.EventType.FF_ACCOUNT_WITH_LOAN_CLOSED;
+import static org.folio.rest.domain.EventType.FEEFINE_WITH_LOAN_CLOSED;
 import static org.folio.rest.domain.EventType.FF_BALANCE_CHANGED;
 import static org.folio.rest.utils.JsonHelper.write;
 
@@ -10,7 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import org.folio.rest.client.FeeFinePubSubClient;
-import org.folio.rest.domain.AccountWithLoanClosedEvent;
+import org.folio.rest.domain.FeeFineWithLoanClosed;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
@@ -67,9 +67,9 @@ public class PubSubService {
     return publishAccountBalanceChangeEvent(account);
   }
 
-  public CompletableFuture<Void> publishAccountWithLoanClosedEvent(Account account) {
-    return pubSubClient.publishEvent(createEvent(FF_ACCOUNT_WITH_LOAN_CLOSED,
-      AccountWithLoanClosedEvent.forAccount(account).toJsonString()));
+  public CompletableFuture<Void> publishFeeFineWithLoanClosedEvent(Account feeFine) {
+    return pubSubClient.publishEvent(createEvent(FEEFINE_WITH_LOAN_CLOSED,
+      FeeFineWithLoanClosed.forFeeFine(feeFine).toJsonString()));
   }
 
   private CompletableFuture<Boolean> publishEvent(final Event event) {
