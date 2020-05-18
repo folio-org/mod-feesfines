@@ -9,7 +9,7 @@
     {
       "eventType": "FF_ACCOUNT_WITH_LOAN_CLOSED",
       "description": "An account with a loan associated is closed",
-      "eventTTL": 30,
+      "eventTTL": 1,
       "signed": false
     }
   ],
