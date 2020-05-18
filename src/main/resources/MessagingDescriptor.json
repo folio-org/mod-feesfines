@@ -7,7 +7,7 @@
       "signed": false
     },
     {
-      "eventType": "FEEFINE_WITH_LOAN_CLOSED",
+      "eventType": "LOAN_RELATED_FEE_FINE_CLOSED",
       "description": "An account with a loan associated is closed",
       "eventTTL": 1,
       "signed": false

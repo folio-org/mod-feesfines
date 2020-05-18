@@ -4,11 +4,11 @@ import org.folio.rest.jaxrs.model.Account;
 
 import io.vertx.core.json.JsonObject;
 
-public final class FeeFineWithLoanClosed {
+public final class LoanRelatedFeeFineClosedEvent {
   private final String loanId;
   private final String feeFineId;
 
-  public FeeFineWithLoanClosed(String loanId, String feeFineId) {
+  public LoanRelatedFeeFineClosedEvent(String loanId, String feeFineId) {
     this.loanId = loanId;
     this.feeFineId = feeFineId;
   }
@@ -25,7 +25,7 @@ public final class FeeFineWithLoanClosed {
     return JsonObject.mapFrom(this).toString();
   }
 
-  public static FeeFineWithLoanClosed forFeeFine(Account feeFine) {
-    return new FeeFineWithLoanClosed(feeFine.getLoanId(), feeFine.getId());
+  public static LoanRelatedFeeFineClosedEvent forFeeFine(Account feeFine) {
+    return new LoanRelatedFeeFineClosedEvent(feeFine.getLoanId(), feeFine.getId());
   }
 }

@@ -45,7 +45,7 @@ public class AccountService {
       pubSubService.publishAccountBalanceChangeEvent(account);
 
       if (isFeeFineWithLoanClosed(account)) {
-        return pubSubService.publishFeeFineWithLoanClosedEvent(account)
+        return pubSubService.publishLoanRelatedFeeFineClosedEvent(account)
           .thenApply(notUsed -> responseResult);
       }
 
