@@ -145,7 +145,7 @@ public class AccountsAPITest extends APITests {
     assertThat(event, isFeeFineClosedEventPublished());
     assertThat(event.getEventPayload(), allOf(
       hasJsonPath("loanId", is(loanId)),
-      hasJsonPath("accountId", is(accountId))
+      hasJsonPath("feeFineId", is(accountId))
     ));
   }
 
