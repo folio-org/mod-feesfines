@@ -5,25 +5,23 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.hamcrest.core.IsEqual.equalTo;
-
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.hamcrest.core.IsEqual.equalTo;
 
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.http.HttpStatus;
+import org.awaitility.Awaitility;
+import org.folio.test.support.ApiTests;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -33,52 +31,16 @@ import io.restassured.specification.RequestSpecification;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.UpdateResult;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.apache.http.HttpStatus;
-import org.awaitility.Awaitility;
-import org.folio.rest.jaxrs.model.Event;
-import org.folio.rest.util.OkapiConnectionParams;
-import org.folio.util.pubsub.PubSubClientUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
-
-@RunWith(VertxUnitRunner.class)
-@PrepareForTest(PubSubClientUtils.class)
-public class FeeFineActionsAPITest extends APITests {
+public class FeeFineActionsAPITest extends ApiTests {
   private static final String REST_PATH = "/feefineactions";
   private static final String FEEFINES_TABLE = "feefines";
 
-  @Rule
-  public PowerMockRule rule = new PowerMockRule();
-
-  @Rule
-  public WireMockRule wireMock = new WireMockRule(
-    WireMockConfiguration.wireMockConfig()
-      .dynamicPort()
-      .notifier(new ConsoleNotifier(true)));
-
   @Before
-  public void setUp(TestContext context) {
-    Async async = context.async();
-
-    mockStatic(PubSubClientUtils.class);
-    when(PubSubClientUtils.sendEventMessage(any(Event.class), any(OkapiConnectionParams.class)))
-      .thenReturn(completedFuture(true));
-
-    PostgresClient client = PostgresClient.getInstance(vertx, OKAPI_TENANT);
-    client.delete(FEEFINES_TABLE, new Criterion(), event -> processEvent(context, event));
-    client.delete(FeeFineActionsAPI.FEEFINEACTIONS_TABLE, new Criterion(), event ->
-      processEvent(context, event));
-    async.complete();
+  public void setUp() {
+    removeAllFromTable(FEEFINES_TABLE);
+    removeAllFromTable(FeeFineActionsAPI.FEEFINEACTIONS_TABLE);
   }
 
   @Test
@@ -130,7 +92,7 @@ public class FeeFineActionsAPITest extends APITests {
 
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> wireMock.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
+      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
         .withRequestBody(equalToJson(expectedNoticeJson))
       ));
   }
@@ -242,19 +204,19 @@ public class FeeFineActionsAPITest extends APITests {
 
   private RequestSpecification getRequestSpecification() {
     return RestAssured.given()
-      .port(OKAPI_PORT)
+      .baseUri(getOkapiUrl())
       .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, OKAPI_TENANT))
-      .header(new Header(OKAPI_HEADER_URL, wireMock.baseUrl()))
+      .header(new Header(OKAPI_HEADER_TENANT, TENANT_NAME))
+      .header(new Header(OKAPI_URL_HEADER, getOkapiUrl()))
       .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
   }
 
   private void setupPatronNoticeStub() {
-    wireMock.stubFor(WireMock.post(urlPathEqualTo("/patron-notice"))
+    getOkapi().stubFor(WireMock.post(urlPathEqualTo("/patron-notice"))
       .withHeader(ACCEPT, matching(APPLICATION_JSON))
-      .withHeader(OKAPI_HEADER_TENANT, matching(OKAPI_TENANT))
+      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
       .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
-      .withHeader(OKAPI_HEADER_URL, matching(wireMock.baseUrl()))
+      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
       .willReturn(ok()));
   }
 

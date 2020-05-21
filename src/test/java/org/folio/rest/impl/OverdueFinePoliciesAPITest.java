@@ -1,42 +1,28 @@
 package org.folio.rest.impl;
 
-import static org.hamcrest.core.StringStartsWith.startsWith;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.StringContains.containsString;
-
-import io.restassured.http.ContentType;
-import io.vertx.core.json.JsonArray;
-import org.apache.http.HttpStatus;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.utils.OkapiClient;
-import org.junit.*;
-import org.junit.runner.RunWith;
-
-import io.restassured.response.Response;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import static org.hamcrest.core.StringStartsWith.startsWith;
 
 import java.util.Collections;
 
-@RunWith(VertxUnitRunner.class)
-public class OverdueFinePoliciesAPITest extends APITests{
+import org.apache.http.HttpStatus;
+import org.folio.test.support.ApiTests;
+import org.junit.Before;
+import org.junit.Test;
+
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
+public class OverdueFinePoliciesAPITest extends ApiTests {
   private static final String REST_PATH = "/overdue-fines-policies";
 
   @Before
-  public void setUp(TestContext context) {
-    Async async = context.async();
-    PostgresClient.getInstance(vertx, OKAPI_TENANT)
-      .delete(OverdueFinePoliciesAPI.TABLE_NAME, new Criterion(), event -> {
-        if (event.failed()) {
-          log.error(event.cause());
-          context.fail(event.cause());
-        } else {
-          async.complete();
-        }
-      });
+  public void setUp() {
+    removeAllFromTable(OverdueFinePoliciesAPI.TABLE_NAME);
   }
 
   @Test
@@ -135,8 +121,10 @@ public class OverdueFinePoliciesAPITest extends APITests{
 
   @Test
   public void postOverdueFinesPoliciesServerError() {
-    new OkapiClient(OKAPI_URL, "test_breaker", OKAPI_TOKEN)
-      .post(REST_PATH, createEntity())
+    client.getRequestSpecification()
+      .header(OKAPI_HEADER_TENANT, "test_breaker")
+      .body(createEntity())
+      .post(REST_PATH)
       .then()
       .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
       .body(
@@ -156,7 +144,7 @@ public class OverdueFinePoliciesAPITest extends APITests{
   }
 
   private Response post(String body) {
-    return okapiClient.post(REST_PATH, body);
+    return client.post(REST_PATH, body);
   }
 
   private String createEntity() {

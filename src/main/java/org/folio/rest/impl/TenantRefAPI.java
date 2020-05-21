@@ -8,7 +8,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.service.PubSubService;
+import org.folio.rest.service.PubSubRegistrationService;
 import org.folio.rest.tools.utils.TenantLoading;
 
 import io.vertx.core.AsyncResult;
@@ -52,7 +52,7 @@ public class TenantRefAPI extends TenantAPI {
           }
 
           vertx.executeBlocking(
-            promise -> new PubSubService(headers, vertx).registerModuleInPubsub(promise),
+            promise -> new PubSubRegistrationService(vertx, headers).registerModule(promise),
             registration -> {
               if (registration.failed()) {
                 log.error("postTenant failure", registration.cause());

@@ -12,7 +12,7 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
-import org.folio.rest.service.PubSubService;
+import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
@@ -31,6 +31,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
+import org.folio.rest.service.AccountUpdateService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -45,17 +46,18 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.client.WebClient;
 
 public class AccountsAPI implements Accounts {
+  private final static Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+  private static final String ACCOUNTS_TABLE = "accounts";
+  private static final String ACCOUNT_ID_FIELD = "'id'";
+  private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
 
-    private static final String ACCOUNTS_TABLE = "accounts";
-    private static final String ACCOUNT_ID_FIELD = "'id'";
-    private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
-    private final Messages messages = Messages.getInstance();
-    private final Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+  private final Messages messages = Messages.getInstance();
+  private final AccountUpdateService accountUpdateService = new AccountUpdateService();
 
-    private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON(ACCOUNTS_TABLE + ".jsonb");
-        return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-    }
+  private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(ACCOUNTS_TABLE + ".jsonb");
+    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+  }
 
   private Future<Void> setAdditionalFields(Vertx vertx, Map<String, String> okapiHeaders,
     List<Account> accounts) {
@@ -183,7 +185,7 @@ public class AccountsAPI implements Accounts {
       PgUtil.post(ACCOUNTS_TABLE, entity, okapiHeaders, vertxContext,
         PostAccountsResponse.class, post -> {
           if (post.succeeded()) {
-            new PubSubService(okapiHeaders, vertxContext)
+            new AccountEventPublisher(vertxContext, okapiHeaders)
               .publishAccountBalanceChangeEvent(entity);
           }
           asyncResultHandler.handle(post);
@@ -266,7 +268,7 @@ public class AccountsAPI implements Accounts {
                             ACCOUNTS_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
-                                        new PubSubService(okapiHeaders, vertxContext)
+                                        new AccountEventPublisher(vertxContext, okapiHeaders)
                                           .publishDeletedAccountBalanceChangeEvent(accountId);
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 DeleteAccountsByAccountIdResponse.respond204()));
@@ -307,24 +309,15 @@ public class AccountsAPI implements Accounts {
 
     @Validate
     @Override
-    public void putAccountsByAccountId(String accountId,
-                                       String lang,
-                                       Account entity,
-                                       Map<String, String> okapiHeaders,
-                                       Handler<AsyncResult<Response>> asyncResultHandler,
-                                       Context vertxContext) {
+    public void putAccountsByAccountId(String accountId, String lang,
+      Account entity, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      PgUtil.put(ACCOUNTS_TABLE, entity, accountId, okapiHeaders, vertxContext,
-        PutAccountsByAccountIdResponse.class, put -> {
-          if (put.succeeded()) {
-            new PubSubService(okapiHeaders, vertxContext)
-              .publishAccountBalanceChangeEvent(entity);
-          }
-          asyncResultHandler.handle(put);
-        });
+      accountUpdateService.updateAccount(accountId, entity, okapiHeaders, vertxContext)
+        .thenAccept(asyncResultHandler::handle);
     }
 
-    private class AdditionalFieldsContext {
+    private static class AdditionalFieldsContext {
       final Items items;
       final HoldingsRecords holdings;
 

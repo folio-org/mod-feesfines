@@ -5,6 +5,12 @@
       "description": "Patron fee/fine balance was changed",
       "eventTTL": 1,
       "signed": false
+    },
+    {
+      "eventType": "LOAN_RELATED_FEE_FINE_CLOSED",
+      "description": "A fee or fine with a loan associated has been closed",
+      "eventTTL": 1,
+      "signed": false
     }
   ],
   "subscriptions": [

@@ -41,3 +41,11 @@ The built artifacts for this module are available.
 See [configuration](https://dev.folio.org/download/artifacts) for repository access,
 and the [Docker image](https://hub.docker.com/r/folioorg/mod-feesfines/).
 
+### Implementation details 
+
+#### Fee/fine amount rounding
+
+It was decided and agreed with the fee/fine's PO that default fee/fine amount rounding mode is half up 
+(java `BigDecimal.ROUND_HALF_UP`). It means that value X < `0.005` is rounded to `0.00` and value X  >= `0.005` 
+is rounded to `0.01`.
+

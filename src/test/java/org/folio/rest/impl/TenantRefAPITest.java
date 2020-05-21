@@ -1,77 +1,41 @@
 package org.folio.rest.impl;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static io.vertx.core.Future.succeededFuture;
+import static java.util.Arrays.asList;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.junit.Assert.assertEquals;
+
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-import org.apache.http.HttpStatus;
+import javax.ws.rs.core.MediaType;
+
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.FeefinedataCollection;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
-import org.folio.rest.util.OkapiConnectionParams;
-import org.folio.util.pubsub.PubSubClientUtils;
-import org.folio.util.pubsub.exceptions.ModuleRegistrationException;
-import org.junit.Before;
-import org.junit.Rule;
+import org.folio.test.support.ApiTests;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
 import io.restassured.RestAssured;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-import static io.vertx.core.Future.succeededFuture;
-import static java.util.Arrays.asList;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-
-import javax.ws.rs.core.MediaType;
-
 @RunWith(VertxUnitRunner.class)
-@PrepareForTest(PubSubClientUtils.class)
-public class TenantRefAPITest extends APITests {
-
-  @Rule
-  public PowerMockRule rule = new PowerMockRule();
-
-  @Before
-  public void beforeEach(final TestContext context) {
-    Async async = context.async();
-
-    mockStatic(PubSubClientUtils.class);
-    when(PubSubClientUtils.registerModule(any(OkapiConnectionParams.class)))
-      .thenReturn(CompletableFuture.completedFuture(true));
-
-    try {
-      tenantClient.postTenant(getTenantAttributes(), result -> {
-        context.assertEquals(HttpStatus.SC_CREATED, result.statusCode());
-        // start verifying behavior
-        PowerMockito.verifyStatic(PubSubClientUtils.class);
-        // verify that module registration method was invoked
-        PubSubClientUtils.registerModule(any(OkapiConnectionParams.class));
-        async.complete();
-      });
-    } catch (Exception e) {
-      context.fail(e);
-    }
-  }
+public class TenantRefAPITest extends ApiTests {
 
   @Test
   public void overdueFinePolicyLoaded(TestContext context) {
-    succeededFuture(okapiClient.get("/overdue-fines-policies"))
+    succeededFuture(client.get("/overdue-fines-policies"))
       .map(response -> response.as(OverdueFinePolicies.class))
       .map(policy -> {
         context.assertEquals(policy.getTotalRecords(), 1);
@@ -90,7 +54,7 @@ public class TenantRefAPITest extends APITests {
 
   @Test
   public void lostItemFeePolicyLoaded(TestContext context) {
-    succeededFuture(okapiClient.get("/lost-item-fees-policies"))
+    succeededFuture(client.get("/lost-item-fees-policies"))
       .map(response -> response.as(LostItemFeePolicies.class))
       .map(policy -> {
         context.assertEquals(policy.getTotalRecords(), 1);
@@ -110,9 +74,9 @@ public class TenantRefAPITest extends APITests {
   @Test
   public void shouldFailIfNoOkapiUrlHeaderSpecified(TestContext context) {
     final RequestSpecification spec = RestAssured.given()
-      .port(OKAPI_PORT)
+      .baseUri(getOkapiUrl())
       .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, OKAPI_TENANT))
+      .header(new Header(OKAPI_HEADER_TENANT, TENANT_NAME))
       .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN))
       .body(getTenantAttributes());
 
@@ -125,30 +89,6 @@ public class TenantRefAPITest extends APITests {
 
         return context;
       }).setHandler(context.asyncAssertSuccess());
-  }
-
-  @Test
-  public void shouldFailWhenRegistrationInPubsubFailed(TestContext context) {
-    Async async = context.async();
-
-    String errorMessage = "Module registration failed";
-    CompletableFuture<Boolean> future = new CompletableFuture<>();
-    future.completeExceptionally(new ModuleRegistrationException(errorMessage));
-
-    when(PubSubClientUtils.registerModule(any(OkapiConnectionParams.class)))
-      .thenReturn(future);
-
-    try {
-      tenantClient.postTenant(getTenantAttributes(), response -> {
-        context.assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.statusCode());
-        response.bodyHandler(body -> {
-          context.assertEquals(errorMessage, body.toString());
-          async.complete();
-        });
-      });
-    } catch (Exception e) {
-      context.fail(e);
-    }
   }
 
   @Test
@@ -176,7 +116,7 @@ public class TenantRefAPITest extends APITests {
     Comparator<Feefine> byId = Comparator.comparing(Feefine::getId);
     expectedFeeFines.sort(byId);
 
-    succeededFuture(okapiClient.get("/feefines"))
+    succeededFuture(client.get("/feefines"))
       .map(response -> response.as(FeefinedataCollection.class))
       .map(collection -> {
         final List<Feefine> createdFeeFines = collection.getFeefines();
@@ -191,6 +131,22 @@ public class TenantRefAPITest extends APITests {
           assertEquals(expected.getFeeFineType(), actual.getFeeFineType());
           assertEquals(expected.getAutomatic(), actual.getAutomatic());
         }
+        return context;
+      }).setHandler(context.asyncAssertSuccess());
+  }
+
+  @Test
+  public void shouldFailIfCannotRegisterInPubSub(TestContext context) {
+    getOkapi().stubFor(post(urlPathMatching("/pubsub/.+"))
+      .willReturn(aResponse().withStatus(500).withBody("Pubsub unavailable")));
+
+    succeededFuture(client.post("/_/tenant", getTenantAttributes()))
+      .map(response -> {
+        context.assertEquals(response.getStatusCode(), 500);
+        context.assertNotNull(response.getBody().asString());
+        context.assertTrue(response.getBody().asString()
+          .contains("EventDescriptor was not registered"));
+
         return context;
       }).setHandler(context.asyncAssertSuccess());
   }

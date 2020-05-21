@@ -1,108 +1,85 @@
 package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.rest.utils.JsonHelper.write;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
+import static io.vertx.core.json.Json.decodeValue;
+import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
+import java.util.Comparator;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
+import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.util.OkapiConnectionParams;
+import org.folio.test.support.ApiTests;
+import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.folio.util.pubsub.PubSubClientUtils;
+import org.hamcrest.Matcher;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-@RunWith(VertxUnitRunner.class)
-@PrepareForTest(PubSubClientUtils.class)
-public class AccountsAPITest extends APITests{
-  private static final String REST_PATH = "/accounts";
+public class AccountsAPITest extends ApiTests {
   private static final String ACCOUNTS_TABLE = "accounts";
-
-  @Rule
-  public PowerMockRule rule = new PowerMockRule();
-
-  @Rule
-  public WireMockRule wireMock = new WireMockRule(
-    WireMockConfiguration.wireMockConfig()
-      .dynamicPort()
-      .notifier(new ConsoleNotifier(true)));
+  private static final String ITEM_ID = "43ec57e3-3974-4d05-a2c2-95126e087b72";
+  public static final String FEEFINE_CLOSED_EVENT_NAME = "LOAN_RELATED_FEE_FINE_CLOSED";
 
   @Before
-  public void setUp(TestContext context) {
-    Async async = context.async();
-
-    wireMock.stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
+  public void setUp() {
+    getOkapi().stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
       .willReturn(aResponse().withBodyFile("items.json")));
-    wireMock.stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
+
+    getOkapi().stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
       .willReturn(aResponse().withBodyFile("holdings.json")));
 
-    mockStatic(PubSubClientUtils.class);
-    when(PubSubClientUtils.sendEventMessage(any(Event.class), any(OkapiConnectionParams.class)))
-      .thenReturn(completedFuture(true));
-
-    PostgresClient.getInstance(vertx, OKAPI_TENANT)
-      .delete(ACCOUNTS_TABLE, new Criterion(), result -> {
-        if (result.failed()) {
-          log.error(result.cause());
-          context.fail(result.cause());
-        } else {
-          async.complete();
-        }
-      });
+    removeAllFromTable(ACCOUNTS_TABLE);
   }
 
   @Test
-  public void testAllMethodsAndEventPublishing(TestContext context) {
+  public void testAllMethodsAndEventPublishing() {
     Account accountToPost = createAccount();
     String accountId = accountToPost.getId();
 
     // create an account
-    okapiClient.post(REST_PATH, toJson(accountToPost))
+    accountsClient.create(accountToPost)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON);
 
-    ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-    assertThatEventWasPublished(eventCaptor, accountToPost, context);
+    assertBalanceChangedEventPublished(accountToPost);
 
     // get all accounts
-    okapiClient.get(REST_PATH)
+    accountsClient.getAll()
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON);
 
-    String individualAccountUrl = buildAccountUrl(accountId);
-
     // get individual account by id
-    okapiClient.get(individualAccountUrl)
+    accountsClient.getById(accountId)
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON);
@@ -110,63 +87,194 @@ public class AccountsAPITest extends APITests{
     Account accountToPut = accountToPost.withRemaining(4.55);
 
     // put account
-    okapiClient.put(individualAccountUrl, toJson(accountToPut))
+    accountsClient.update(accountId, accountToPut)
       .then()
       .statusCode(HttpStatus.SC_NO_CONTENT);
 
-    assertThatEventWasPublished(eventCaptor, accountToPut, context);
+    assertBalanceChangedEventPublished(accountToPut);
 
     // delete account
-    okapiClient.delete(individualAccountUrl)
-    .then()
-    .statusCode(HttpStatus.SC_NO_CONTENT);
+    accountsClient.delete(accountId)
+      .then()
+      .statusCode(HttpStatus.SC_NO_CONTENT);
 
     Account accountToDelete = new Account()
       .withId(accountId)
       .withRemaining(0.00);
 
-    assertThatEventWasPublished(eventCaptor, accountToDelete, context);
+    assertBalanceChangedEventPublished(accountToDelete);
   }
 
   @Test
   public void canPutAccountWithEmptyAdditionalFields() {
-    Account account = createAccount();
+    String accountId = randomId();
 
-    okapiClient.post(REST_PATH, toJson(account))
+    accountsClient.create(createAccountJson(accountId))
       .then()
-      .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON);
 
-    Account accountWithEmptyFields = account
-      .withHoldingsRecordId(EMPTY)
-      .withInstanceId(EMPTY);
-
-    okapiClient.put(buildAccountUrl(account.getId()), toJson(accountWithEmptyFields))
+    accountsClient.update(accountId,
+      createAccountJsonWithEmptyAdditionalFields(accountId))
       .then()
       .statusCode(HttpStatus.SC_NO_CONTENT);
   }
 
-  private void assertThatEventWasPublished(ArgumentCaptor<Event> eventCaptor, Account account,
-    TestContext context) {
+  @Test
+  public void eventIsPublishedWhenFeeFineIsClosedWithLoanAndNoRemainingAmount() {
+    final String accountId = randomId();
+    final String loanId = UUID.randomUUID().toString();
 
-    verifyStatic(PubSubClientUtils.class, atLeast(1));
-    PubSubClientUtils.sendEventMessage(eventCaptor.capture(), any(OkapiConnectionParams.class));
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", loanId)
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
 
-    Event event = eventCaptor.getValue();
-    EventMetadata eventMetadata = event.getEventMetadata();
-    JsonObject eventPayload = new JsonObject(event.getEventPayload());
+    accountsClient.create(account);
 
-    JsonObject expectedPayload = new JsonObject();
-    write(expectedPayload, "userId", account.getUserId());
-    write(expectedPayload, "feeFineId", account.getId());
-    write(expectedPayload, "feeFineTypeId", account.getFeeFineId());
-    write(expectedPayload, "balance", account.getRemaining());
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
 
-    context.assertEquals(EventType.FF_BALANCE_CHANGED.name(), event.getEventType());
-    context.assertEquals(PubSubClientUtils.constructModuleName(), eventMetadata.getPublishedBy());
-    context.assertEquals(OKAPI_TENANT, eventMetadata.getTenantId());
-    context.assertEquals(1, eventMetadata.getEventTTL());
-    context.assertEquals(expectedPayload, eventPayload);
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId), isPaidFully());
+
+    final Event event = getLastFeeFineClosedEvent();
+    assertThat(event, notNullValue());
+
+    assertThat(event, isFeeFineClosedEventPublished());
+    assertThat(event.getEventPayload(), allOf(
+      hasJsonPath("loanId", is(loanId)),
+      hasJsonPath("feeFineId", is(accountId))
+    ));
+  }
+
+  @Test
+  public void canCloseFeeFineWithLoanIfNoEventSubscribers() {
+    getOkapi().stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+      .willReturn(aResponse().withStatus(400)
+        .withBody("There is no SUBSCRIBERS registered for event type "
+          + FEEFINE_CLOSED_EVENT_NAME
+          + ". Event 1bf88206-ccf4-4b28-b5f1-d90c72cba37b will not be published")));
+
+    final String accountId = randomId();
+    final String loanId = UUID.randomUUID().toString();
+
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", loanId)
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
+
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId), isPaidFully());
+
+    assertThat(getLastFeeFineClosedEvent(), notNullValue());
+  }
+
+  @Test
+  public void eventNotPublishedWhenFeeFineIsClosedWithRemainingAmount() {
+    final String accountId = randomId();
+    final String loanId = UUID.randomUUID().toString();
+
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", loanId)
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid partially"))
+      .put("remaining", 0.1);
+
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId).body().asString(), allOf(
+      hasJsonPath("status.name", is("Closed")),
+      hasJsonPath("paymentStatus.name", is("Paid partially")),
+      hasJsonPath("remaining", is(0.1))
+    ));
+    assertThat(getLastFeeFineClosedEvent(), nullValue());
+  }
+
+  @Test
+  public void eventNotPublishedWhenFeeFineIsClosedWithoutLoan() {
+    final String accountId = randomId();
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
+
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId), isPaidFully());
+    assertThat(getLastFeeFineClosedEvent(), nullValue());
+  }
+
+  @Test
+  public void eventNotPublishedWhenFeeFineIsOpenButNoRemainingAmount() {
+    final String accountId = randomId();
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", UUID.randomUUID().toString())
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Open"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
+
+    accountsClient.update(accountId, updatedAccount);
+
+    assertThat(accountsClient.getById(accountId).getBody().asString(), allOf(
+      hasJsonPath("status.name", is("Open")),
+      hasJsonPath("paymentStatus.name", is("Paid fully")),
+      hasJsonPath("remaining", is(0.0))
+    ));
+    assertThat(getLastFeeFineClosedEvent(), nullValue());
+  }
+
+  @Test
+  public void canForwardPubSubFailureOnFeeFineClose() {
+    final String expectedError = "Pub-sub unavailable";
+    getOkapi().stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+      .willReturn(aResponse().withStatus(500).withBody(expectedError)));
+
+    final String accountId = randomId();
+    final JsonObject account = createAccountJsonObject(accountId)
+      .put("loanId", UUID.randomUUID().toString())
+      .put("remaining", 90.00)
+      .put("status", createNamedObject("Open"));
+
+    accountsClient.create(account);
+
+    final JsonObject updatedAccount = account.copy()
+      .put("status", createNamedObject("Closed"))
+      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("remaining", 0.0);
+
+    accountsClient.attemptUpdate(accountId, updatedAccount)
+      .then()
+      .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+      .body(containsString(expectedError));
   }
 
   private Account createAccount() {
@@ -186,12 +294,84 @@ public class AccountsAPITest extends APITests{
       .withStatus(new Status().withName("Open"));
   }
 
-  private static String toJson(Object object) {
-    return JsonObject.mapFrom(object).encodePrettily();
+  private JsonObject createAccountJsonObject(String accountID) {
+    return new JsonObject()
+      .put("id", accountID)
+      .put("userId", randomId())
+      .put("feeFineId", randomId())
+      .put("materialTypeId", randomId())
+      .put("ownerId", randomId())
+      .put("itemId", ITEM_ID);
   }
 
-  private static String buildAccountUrl(String id) {
-    return String.format("%s/%s", REST_PATH, id);
+  private JsonObject createAccountJson(String accountID) {
+    return createAccountJsonObject(accountID);
   }
 
+  private JsonObject createAccountJsonWithEmptyAdditionalFields(String accountID) {
+    return createAccountJsonObject(accountID)
+      .put("holdingsRecordId", "")
+      .put("instanceId", "");
+  }
+
+  private JsonObject createNamedObject(String value) {
+    return new JsonObject().put("name", value);
+  }
+
+  private Event getLastFeeFineClosedEvent() {
+    return getLastPublishedEventOfType(FEEFINE_CLOSED_EVENT_NAME);
+  }
+
+  private Event getLastBalanceChangedEvent() {
+    return getLastPublishedEventOfType(EventType.FF_BALANCE_CHANGED.toString());
+  }
+
+  private Event getLastPublishedEventOfType(String eventType) {
+    final FindRequestsResult requests = getOkapi().findRequestsMatching(
+      postRequestedFor(urlPathMatching("/pubsub/publish")).build());
+
+    return requests.getRequests().stream()
+      .filter(request -> StringUtils.isNotBlank(request.getBodyAsString()))
+      .filter(request -> decodeValue(request.getBodyAsString(), Event.class)
+        .getEventType().equals(eventType))
+      .max(Comparator.comparing(LoggedRequest::getLoggedDate))
+      .map(LoggedRequest::getBodyAsString)
+      .map(JsonObject::new)
+      .map(json -> json.mapTo(Event.class))
+      .orElse(null);
+  }
+
+  private Matcher<Event> isFeeFineClosedEventPublished() {
+    return new TypeMappingMatcher<>(Json::encode,
+      allOf(
+        hasJsonPath("eventType", is(FEEFINE_CLOSED_EVENT_NAME)),
+        hasJsonPath("eventMetadata.tenantId", is(TENANT_NAME)),
+        hasJsonPath("eventMetadata.publishedBy",
+          containsString("mod-feesfines")),
+        hasJsonPath("eventPayload", notNullValue())
+      ));
+  }
+
+  private void assertBalanceChangedEventPublished(Account account) {
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS)
+      .until(() -> getLastBalanceChangedEvent() != null);
+
+    final Event event = getLastBalanceChangedEvent();
+    assertThat(event, notNullValue());
+
+    EventMetadata eventMetadata = event.getEventMetadata();
+
+    assertEquals(EventType.FF_BALANCE_CHANGED.name(), event.getEventType());
+    assertEquals(PubSubClientUtils.constructModuleName(), eventMetadata.getPublishedBy());
+    assertEquals(TENANT_NAME, eventMetadata.getTenantId());
+    assertEquals(1, eventMetadata.getEventTTL().intValue());
+
+    final JsonObject eventPayload = new JsonObject(event.getEventPayload());
+
+    assertThat(eventPayload.getString("userId"), is(account.getUserId()));
+    assertThat(eventPayload.getString("feeFineId"), is(account.getId()));
+    assertThat(eventPayload.getString("feeFineTypeId"), is(account.getFeeFineId()));
+    assertThat(eventPayload.getDouble("balance"), is(account.getRemaining()));
+  }
 }
