@@ -13,7 +13,7 @@ public final class AccountMatchers {
   private AccountMatchers() {}
 
   public static Matcher<Response> isPaidFully() {
-    return new MappableMatcher<>(
+    return new TypeMappingMatcher<>(
       response -> response.getBody().asString(),
       allOf(
         hasJsonPath("status.name", is("Closed")),

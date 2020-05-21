@@ -1,11 +1,11 @@
 package org.folio.rest.service;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
-import static org.folio.util.pubsub.PubSubClientUtils.registerModule;
 
 import java.util.Map;
 
 import org.folio.rest.util.OkapiConnectionParams;
+import org.folio.util.pubsub.PubSubClientUtils;
 
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -20,8 +20,8 @@ public class PubSubRegistrationService {
     this.connectionParams = new OkapiConnectionParams(headers, vertx);
   }
 
-  public void registerModuleInPubsub(Promise<Object> promise) {
-    registerModule(connectionParams)
+  public void registerModule(Promise<Object> promise) {
+    PubSubClientUtils.registerModule(connectionParams)
       .whenComplete((result, throwable) -> {
         if (isTrue(result) && throwable == null) {
           logger.info("Module was successfully registered as publisher/subscriber in mod-pubsub");

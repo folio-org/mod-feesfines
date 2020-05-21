@@ -30,7 +30,7 @@ import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.test.support.ApiTests;
-import org.folio.test.support.matcher.MappableMatcher;
+import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.folio.util.pubsub.PubSubClientUtils;
 import org.hamcrest.Matcher;
 import org.junit.Before;
@@ -342,7 +342,7 @@ public class AccountsAPITest extends ApiTests {
   }
 
   private Matcher<Event> isFeeFineClosedEventPublished() {
-    return new MappableMatcher<>(Json::encode,
+    return new TypeMappingMatcher<>(Json::encode,
       allOf(
         hasJsonPath("eventType", is(FEEFINE_CLOSED_EVENT_NAME)),
         hasJsonPath("eventMetadata.tenantId", is(TENANT_NAME)),

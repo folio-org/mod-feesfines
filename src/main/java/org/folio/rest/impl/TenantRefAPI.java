@@ -52,7 +52,7 @@ public class TenantRefAPI extends TenantAPI {
           }
 
           vertx.executeBlocking(
-            promise -> new PubSubRegistrationService(vertx, headers).registerModuleInPubsub(promise),
+            promise -> new PubSubRegistrationService(vertx, headers).registerModule(promise),
             registration -> {
               if (registration.failed()) {
                 log.error("postTenant failure", registration.cause());
