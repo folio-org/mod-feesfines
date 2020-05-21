@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import org.apache.http.HttpStatus;
+import org.folio.test.support.ApiTests;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -8,7 +9,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
 
-public class FeeFinesAPITest extends APITests {
+public class FeeFinesAPITest extends ApiTests {
   private static final String REST_PATH = "/feefines";
   private static final String FEEFINES_TABLE = "feefines";
   private static final String OWNERS_TABLE = "owners";

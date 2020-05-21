@@ -2,9 +2,9 @@ package org.folio.rest.utils;
 
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-import static org.folio.rest.impl.APITests.OKAPI_TOKEN;
-import static org.folio.rest.impl.APITests.OKAPI_URL_HEADER;
-import static org.folio.rest.impl.APITests.TENANT_NAME;
+import static org.folio.test.support.ApiTests.OKAPI_TOKEN;
+import static org.folio.test.support.ApiTests.OKAPI_URL_HEADER;
+import static org.folio.test.support.ApiTests.TENANT_NAME;
 
 import javax.ws.rs.core.MediaType;
 

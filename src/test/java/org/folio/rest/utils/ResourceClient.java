@@ -1,6 +1,6 @@
 package org.folio.rest.utils;
 
-import static org.folio.rest.impl.APITests.getOkapiUrl;
+import static org.folio.test.support.ApiTests.getOkapiUrl;
 
 import org.folio.HttpStatus;
 

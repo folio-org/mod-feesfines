@@ -76,6 +76,6 @@ public class AccountUpdateService {
 
   private boolean isFeeFineUpdateSucceeded(AsyncResult<Response> responseAsyncResult) {
     return responseAsyncResult.succeeded()
-      || responseAsyncResult.result().getStatus() == HTTP_NO_CONTENT.toInt();
+      && responseAsyncResult.result().getStatus() == HTTP_NO_CONTENT.toInt();
   }
 }

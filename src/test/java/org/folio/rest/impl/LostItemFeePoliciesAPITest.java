@@ -8,6 +8,7 @@ import static org.hamcrest.core.StringStartsWith.startsWith;
 import java.util.Collections;
 
 import org.apache.http.HttpStatus;
+import org.folio.test.support.ApiTests;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,7 +17,7 @@ import io.restassured.response.Response;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class LostItemFeePoliciesAPITest extends APITests {
+public class LostItemFeePoliciesAPITest extends ApiTests {
   private static final String REST_PATH = "/lost-item-fees-policies";
 
   @Before

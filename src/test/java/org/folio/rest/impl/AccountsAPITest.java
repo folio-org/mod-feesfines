@@ -29,6 +29,7 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
+import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.MappableMatcher;
 import org.folio.util.pubsub.PubSubClientUtils;
 import org.hamcrest.Matcher;
@@ -42,17 +43,17 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
-public class AccountsAPITest extends APITests {
+public class AccountsAPITest extends ApiTests {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ITEM_ID = "43ec57e3-3974-4d05-a2c2-95126e087b72";
   public static final String FEEFINE_CLOSED_EVENT_NAME = "LOAN_RELATED_FEE_FINE_CLOSED";
 
   @Before
   public void setUp() {
-    wireMock.stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
+    getOkapi().stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
       .willReturn(aResponse().withBodyFile("items.json")));
 
-    wireMock.stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
+    getOkapi().stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
       .willReturn(aResponse().withBodyFile("holdings.json")));
 
     removeAllFromTable(ACCOUNTS_TABLE);
@@ -151,7 +152,7 @@ public class AccountsAPITest extends APITests {
 
   @Test
   public void canCloseFeeFineWithLoanIfNoEventSubscribers() {
-    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+    getOkapi().stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
       .willReturn(aResponse().withStatus(400)
         .withBody("There is no SUBSCRIBERS registered for event type "
           + FEEFINE_CLOSED_EVENT_NAME
@@ -254,7 +255,7 @@ public class AccountsAPITest extends APITests {
   @Test
   public void canForwardPubSubFailureOnFeeFineClose() {
     final String expectedError = "Pub-sub unavailable";
-    wireMock.stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
+    getOkapi().stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
       .willReturn(aResponse().withStatus(500).withBody(expectedError)));
 
     final String accountId = randomId();
@@ -326,7 +327,7 @@ public class AccountsAPITest extends APITests {
   }
 
   private Event getLastPublishedEventOfType(String eventType) {
-    final FindRequestsResult requests = wireMock.findRequestsMatching(
+    final FindRequestsResult requests = getOkapi().findRequestsMatching(
       postRequestedFor(urlPathMatching("/pubsub/publish")).build());
 
     return requests.getRequests().stream()

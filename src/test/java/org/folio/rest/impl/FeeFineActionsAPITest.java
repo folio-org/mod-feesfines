@@ -17,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
+import org.folio.test.support.ApiTests;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,7 +33,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.UpdateResult;
 import io.vertx.ext.unit.TestContext;
 
-public class FeeFineActionsAPITest extends APITests {
+public class FeeFineActionsAPITest extends ApiTests {
   private static final String REST_PATH = "/feefineactions";
   private static final String FEEFINES_TABLE = "feefines";
 
@@ -91,7 +92,7 @@ public class FeeFineActionsAPITest extends APITests {
 
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> wireMock.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
+      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
         .withRequestBody(equalToJson(expectedNoticeJson))
       ));
   }
@@ -206,16 +207,16 @@ public class FeeFineActionsAPITest extends APITests {
       .baseUri(getOkapiUrl())
       .contentType(MediaType.APPLICATION_JSON)
       .header(new Header(OKAPI_HEADER_TENANT, TENANT_NAME))
-      .header(new Header(OKAPI_URL_HEADER, wireMock.baseUrl()))
+      .header(new Header(OKAPI_URL_HEADER, getOkapiUrl()))
       .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
   }
 
   private void setupPatronNoticeStub() {
-    wireMock.stubFor(WireMock.post(urlPathEqualTo("/patron-notice"))
+    getOkapi().stubFor(WireMock.post(urlPathEqualTo("/patron-notice"))
       .withHeader(ACCEPT, matching(APPLICATION_JSON))
       .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
       .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
-      .withHeader(OKAPI_URL_HEADER, matching(wireMock.baseUrl()))
+      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
       .willReturn(ok()));
   }
 

@@ -20,6 +20,7 @@ import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
+import org.folio.test.support.ApiTests;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -30,7 +31,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class TenantRefAPITest extends APITests {
+public class TenantRefAPITest extends ApiTests {
 
   @Test
   public void overdueFinePolicyLoaded(TestContext context) {
@@ -136,7 +137,7 @@ public class TenantRefAPITest extends APITests {
 
   @Test
   public void shouldFailIfCannotRegisterInPubSub(TestContext context) {
-    wireMock.stubFor(post(urlPathMatching("/pubsub/.+"))
+    getOkapi().stubFor(post(urlPathMatching("/pubsub/.+"))
       .willReturn(aResponse().withStatus(500).withBody("Pubsub unavailable")));
 
     succeededFuture(client.post("/_/tenant", getTenantAttributes()))
