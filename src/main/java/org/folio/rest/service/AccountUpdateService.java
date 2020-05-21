@@ -24,14 +24,14 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 
-public class AccountService {
-  private static final Logger log = LoggerFactory.getLogger(AccountService.class);
+public class AccountUpdateService {
+  private static final Logger log = LoggerFactory.getLogger(AccountUpdateService.class);
   private static final String ACCOUNTS_TABLE = "accounts";
 
   public CompletableFuture<AsyncResult<Response>> updateAccount(String accountId,
     Account account, Map<String, String> headers, Context context) {
 
-    final PubSubService pubSubService = new PubSubService(headers, context);
+    final AccountEventPublisher eventPublisher = new AccountEventPublisher(context, headers);
     final CompletableFuture<AsyncResult<Response>> putCompleted = new CompletableFuture<>();
 
     put(ACCOUNTS_TABLE, account, accountId, headers, context,
@@ -42,16 +42,16 @@ public class AccountService {
         return completedFuture(responseResult);
       }
 
-      pubSubService.publishAccountBalanceChangeEvent(account);
+      eventPublisher.publishAccountBalanceChangeEvent(account);
 
       if (isFeeFineWithLoanClosed(account)) {
-        return pubSubService.publishLoanRelatedFeeFineClosedEvent(account)
+        return eventPublisher.publishLoanRelatedFeeFineClosedEvent(account)
           .thenApply(notUsed -> responseResult);
       }
 
       return completedFuture(responseResult);
     }).exceptionally(error -> {
-      log.error("Cannot publish fee/fine closed event [loanId - {}, feeFineId - {}]," +
+      log.error("Cannot publish fee/fine closed event [feeFineId - {}, loanId - {}]" +
         " error occurred {}", account.getLoanId(), account.getId(), error);
 
       return succeededFuture(respond500WithTextPlain(error.getMessage()));
@@ -59,12 +59,19 @@ public class AccountService {
   }
 
   private boolean isFeeFineWithLoanClosed(Account feeFine) {
+    return isFeeFineAssociatedToLoan(feeFine) && isFeeFineClosed(feeFine);
+  }
+
+  private boolean isFeeFineClosed(Account feeFine) {
     final FeeFineAmount feeFineAmount = new FeeFineAmount(feeFine.getRemaining());
     final FeeFineStatus feeFineStatus = feeFine.getStatus() != null
       ? forValue(feeFine.getStatus().getName()) : null;
 
-    return feeFineStatus == CLOSED && StringUtils.isNotBlank(feeFine.getLoanId())
-      && feeFineAmount.hasZeroAmount();
+    return feeFineStatus == CLOSED && feeFineAmount.hasZeroAmount();
+  }
+
+  private boolean isFeeFineAssociatedToLoan(Account feeFine) {
+    return StringUtils.isNotBlank(feeFine.getLoanId());
   }
 
   private boolean isFeeFineUpdateSucceeded(AsyncResult<Response> responseAsyncResult) {

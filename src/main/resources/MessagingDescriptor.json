@@ -8,7 +8,7 @@
     },
     {
       "eventType": "LOAN_RELATED_FEE_FINE_CLOSED",
-      "description": "An account with a loan associated is closed",
+      "description": "A fee or fine with a loan associated has been closed",
       "eventTTL": 1,
       "signed": false
     }

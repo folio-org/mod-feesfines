@@ -10,7 +10,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-import static org.folio.rest.utils.TestResourceClients.accountsClient;
+import static org.folio.rest.utils.ResourceClients.accountsClient;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Base64;
@@ -29,7 +29,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.PomReader;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.utils.OkapiClient;
-import org.folio.rest.utils.TestResourceClient;
+import org.folio.rest.utils.ResourceClient;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -57,7 +57,7 @@ public class APITests {
 
   private static Vertx vertx;
 
-  protected final TestResourceClient accountsClient = accountsClient();
+  protected final ResourceClient accountsClient = accountsClient();
 
   @ClassRule
   public static WireMockRule wireMock = new WireMockRule(

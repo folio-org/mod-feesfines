@@ -12,7 +12,7 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
-import org.folio.rest.service.PubSubService;
+import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
@@ -31,7 +31,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
-import org.folio.rest.service.AccountService;
+import org.folio.rest.service.AccountUpdateService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -52,7 +52,7 @@ public class AccountsAPI implements Accounts {
   private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
 
   private final Messages messages = Messages.getInstance();
-  private final AccountService accountService = new AccountService();
+  private final AccountUpdateService accountUpdateService = new AccountUpdateService();
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(ACCOUNTS_TABLE + ".jsonb");
@@ -185,7 +185,7 @@ public class AccountsAPI implements Accounts {
       PgUtil.post(ACCOUNTS_TABLE, entity, okapiHeaders, vertxContext,
         PostAccountsResponse.class, post -> {
           if (post.succeeded()) {
-            new PubSubService(okapiHeaders, vertxContext)
+            new AccountEventPublisher(vertxContext, okapiHeaders)
               .publishAccountBalanceChangeEvent(entity);
           }
           asyncResultHandler.handle(post);
@@ -268,7 +268,7 @@ public class AccountsAPI implements Accounts {
                             ACCOUNTS_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
                                     if (deleteReply.result().getUpdated() == 1) {
-                                        new PubSubService(okapiHeaders, vertxContext)
+                                        new AccountEventPublisher(vertxContext, okapiHeaders)
                                           .publishDeletedAccountBalanceChangeEvent(accountId);
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 DeleteAccountsByAccountIdResponse.respond204()));
@@ -313,7 +313,7 @@ public class AccountsAPI implements Accounts {
       Account entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-      accountService.updateAccount(accountId, entity, okapiHeaders, vertxContext)
+      accountUpdateService.updateAccount(accountId, entity, okapiHeaders, vertxContext)
         .thenAccept(asyncResultHandler::handle);
     }
 

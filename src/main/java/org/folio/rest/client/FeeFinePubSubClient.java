@@ -1,12 +1,14 @@
 package org.folio.rest.client;
 
 import static io.vertx.ext.web.client.WebClient.create;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
+import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import org.folio.HttpStatus;
-import org.folio.rest.exception.InternalServerError;
+import org.folio.rest.exception.InternalServerErrorException;
 import org.folio.rest.jaxrs.model.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,25 +47,25 @@ public class FeeFinePubSubClient {
       });
 
     return sendResult.thenCompose(response -> {
-      if (response.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
-        return CompletableFuture.completedFuture(null);
+      if (response.statusCode() == HTTP_NO_CONTENT.toInt()) {
+        return completedFuture(null);
       }
 
       if (isEventHasNoSubscribersResponse(response)) {
         log.warn("No subscribers available for event type [{}]", event.getEventType());
-        return CompletableFuture.completedFuture(null);
+        return completedFuture(null);
       }
 
       log.error("Error publishing event [{}]", response.bodyAsString());
 
       final CompletableFuture<Void> failureFuture = new CompletableFuture<>();
-      failureFuture.completeExceptionally(new InternalServerError(response.bodyAsString()));
+      failureFuture.completeExceptionally(new InternalServerErrorException(response.bodyAsString()));
       return failureFuture;
     });
   }
 
   private boolean isEventHasNoSubscribersResponse(HttpResponse<Buffer> response) {
-    return response.statusCode() == HttpStatus.HTTP_BAD_REQUEST.toInt()
+    return response.statusCode() == HTTP_BAD_REQUEST.toInt()
       && response.bodyAsString() != null
       && response.bodyAsString().toLowerCase()
       .contains("there is no subscribers registered for event type");

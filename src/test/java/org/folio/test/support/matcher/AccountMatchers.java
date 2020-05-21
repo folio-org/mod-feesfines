@@ -12,7 +12,7 @@ public final class AccountMatchers {
 
   private AccountMatchers() {}
 
-  public static Matcher<Response> isAccountPaidFully() {
+  public static Matcher<Response> isPaidFully() {
     return new MappableMatcher<>(
       response -> response.getBody().asString(),
       allOf(

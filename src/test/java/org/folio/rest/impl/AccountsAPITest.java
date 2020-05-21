@@ -7,7 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static io.vertx.core.json.Json.decodeValue;
-import static org.folio.test.support.matcher.AccountMatchers.isAccountPaidFully;
+import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -137,7 +137,7 @@ public class AccountsAPITest extends APITests {
 
     accountsClient.update(accountId, updatedAccount);
 
-    assertThat(accountsClient.getById(accountId), isAccountPaidFully());
+    assertThat(accountsClient.getById(accountId), isPaidFully());
 
     final Event event = getLastFeeFineClosedEvent();
     assertThat(event, notNullValue());
@@ -174,7 +174,7 @@ public class AccountsAPITest extends APITests {
 
     accountsClient.update(accountId, updatedAccount);
 
-    assertThat(accountsClient.getById(accountId), isAccountPaidFully());
+    assertThat(accountsClient.getById(accountId), isPaidFully());
 
     assertThat(getLastFeeFineClosedEvent(), notNullValue());
   }
@@ -222,7 +222,7 @@ public class AccountsAPITest extends APITests {
 
     accountsClient.update(accountId, updatedAccount);
 
-    assertThat(accountsClient.getById(accountId), isAccountPaidFully());
+    assertThat(accountsClient.getById(accountId), isPaidFully());
     assertThat(getLastFeeFineClosedEvent(), nullValue());
   }
 

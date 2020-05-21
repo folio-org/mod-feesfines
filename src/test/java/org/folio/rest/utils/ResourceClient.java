@@ -6,11 +6,11 @@ import org.folio.HttpStatus;
 
 import io.restassured.response.Response;
 
-public class TestResourceClient {
+public class ResourceClient {
   private final String baseUri;
   private final OkapiClient okapiClient;
 
-  public TestResourceClient(String baseUri) {
+  public ResourceClient(String baseUri) {
     this.okapiClient = new OkapiClient(getOkapiUrl());
     this.baseUri = baseUri;
   }
