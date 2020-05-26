@@ -236,7 +236,7 @@ public class OwnersAPI implements Owners {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
                             OWNERS_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
-                                    if (deleteReply.result().getUpdated() == 1) {
+                                    if (deleteReply.result().rowCount() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 DeleteOwnersByOwnerIdResponse.respond204()));
                                     } else {
@@ -310,7 +310,7 @@ public class OwnersAPI implements Owners {
                                                     if (putReply.failed()) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutOwnersByOwnerIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                    } else if (putReply.result().rowCount() == 1) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutOwnersByOwnerIdResponse.respond204()));
                                                     }

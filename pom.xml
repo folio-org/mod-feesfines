@@ -26,7 +26,7 @@
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-stack-depchain</artifactId>
-        <version>3.8.5</version>
+        <version>${vertx.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -472,10 +472,12 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <raml-module-builder.version>29.3.1</raml-module-builder.version>
+    <raml-module-builder.version>30.0.0</raml-module-builder.version>
+    <vertx.version>3.9.0</vertx.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
     <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->
     <postgres.port>5433</postgres.port>
+    <sonar.exclusions>**/impl/**</sonar.exclusions>
   </properties>
 </project>

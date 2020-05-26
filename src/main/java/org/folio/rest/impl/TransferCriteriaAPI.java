@@ -238,7 +238,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
                             TRANSFER_CRITERIA_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
-                                    if (deleteReply.result().getUpdated() == 1) {
+                                    if (deleteReply.result().rowCount() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 DeleteTransferCriteriasByTransferCriteriaIdResponse.respond204()));
                                     } else {
@@ -312,7 +312,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
                                                     if (putReply.failed()) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                    } else if (putReply.result().rowCount() == 1) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutTransferCriteriasByTransferCriteriaIdResponse.respond204()));
                                                     }

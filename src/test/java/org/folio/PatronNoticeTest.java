@@ -82,7 +82,7 @@ class PatronNoticeTest {
 
     deployRestVerticle(okapiPort)
       .compose(deploy -> postTenant())
-      .setHandler(post -> context.completeNow());
+      .onComplete(post -> context.completeNow());
   }
 
   @BeforeEach

@@ -28,10 +28,7 @@ import io.restassured.http.ContentType;
 import io.restassured.http.Header;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.UpdateResult;
-import io.vertx.ext.unit.TestContext;
 
 public class FeeFineActionsAPITest extends ApiTests {
   private static final String REST_PATH = "/feefineactions";
@@ -229,13 +226,6 @@ public class FeeFineActionsAPITest extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON);
-  }
-
-  private void processEvent(TestContext context, AsyncResult<UpdateResult> event) {
-    if (event.failed()) {
-      log.error(event.cause());
-      context.fail(event.cause());
-    }
   }
 }
 

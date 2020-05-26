@@ -49,7 +49,7 @@ public class TenantRefAPITest extends ApiTests {
         context.assertEquals(overduePolicy.getId(),
           "cd3f6cac-fa17-4079-9fae-2fb28e521412");
         return context;
-      }).setHandler(context.asyncAssertSuccess());
+      }).onComplete(context.asyncAssertSuccess());
   }
 
   @Test
@@ -68,7 +68,7 @@ public class TenantRefAPITest extends ApiTests {
         context.assertEquals(lostItemFeePolicy.getId(),
           "ed892c0e-52e0-4cd9-8133-c0ef07b4a709");
         return context;
-      }).setHandler(context.asyncAssertSuccess());
+      }).onComplete(context.asyncAssertSuccess());
   }
 
   @Test
@@ -88,7 +88,7 @@ public class TenantRefAPITest extends ApiTests {
           .contains("No X-Okapi-Url header"));
 
         return context;
-      }).setHandler(context.asyncAssertSuccess());
+      }).onComplete(context.asyncAssertSuccess());
   }
 
   @Test
@@ -132,7 +132,7 @@ public class TenantRefAPITest extends ApiTests {
           assertEquals(expected.getAutomatic(), actual.getAutomatic());
         }
         return context;
-      }).setHandler(context.asyncAssertSuccess());
+      }).onComplete(context.asyncAssertSuccess());
   }
 
   @Test
@@ -148,6 +148,6 @@ public class TenantRefAPITest extends ApiTests {
           .contains("EventDescriptor was not registered"));
 
         return context;
-      }).setHandler(context.asyncAssertSuccess());
+      }).onComplete(context.asyncAssertSuccess());
   }
 }

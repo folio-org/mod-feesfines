@@ -233,7 +233,7 @@ public class WaivesAPI implements Waives {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
                             WAIVES_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
-                                    if (deleteReply.result().getUpdated() == 1) {
+                                    if (deleteReply.result().rowCount() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 DeleteWaivesByWaiveIdResponse.respond204()));
                                     } else {
@@ -306,7 +306,7 @@ public class WaivesAPI implements Waives {
                                                     if (putReply.failed()) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutWaivesByWaiveIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                    } else if (putReply.result().rowCount() == 1) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutWaivesByWaiveIdResponse.respond204()));
                                                     }
