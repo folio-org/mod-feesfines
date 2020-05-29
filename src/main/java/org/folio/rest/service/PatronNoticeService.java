@@ -58,7 +58,7 @@ public class PatronNoticeService {
       .compose(this::refuseWhenEmptyTemplateId)
       .map(this::createNotice)
       .compose(patronNoticeClient::postPatronNotice)
-      .setHandler(this::handleSendPatronNoticeResult);
+      .onComplete(this::handleSendPatronNoticeResult);
   }
 
   private Future<FeeFineNoticeContext> refuseWhenEmptyTemplateId(FeeFineNoticeContext ctx) {

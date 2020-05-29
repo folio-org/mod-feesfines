@@ -1,16 +1,12 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import javax.ws.rs.core.Response;
+
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
@@ -18,18 +14,25 @@ import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.FeefinedataCollection;
 import org.folio.rest.jaxrs.model.FeefinesGetOrder;
 import org.folio.rest.jaxrs.resource.Feefines;
-import org.folio.rest.persist.PgExceptionUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class FeeFinesAPI implements Feefines {
 
@@ -238,7 +241,7 @@ public class FeeFinesAPI implements Feefines {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
                             FEEFINES_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
-                                    if (deleteReply.result().getUpdated() == 1) {
+                                    if (deleteReply.result().rowCount() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 DeleteFeefinesByFeefineIdResponse.respond204()));
                                     } else {
@@ -316,7 +319,7 @@ public class FeeFinesAPI implements Feefines {
                                                     if (putReply.failed()) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutFeefinesByFeefineIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                    } else if (putReply.result().rowCount() == 1) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutFeefinesByFeefineIdResponse.respond204()));
                                                     }

@@ -125,7 +125,7 @@ public class AccountsAPI implements Accounts {
                                       List<Account> accounts = reply.result().getResults();
 
                                       setAdditionalFields(vertxContext.owner(), okapiHeaders, accounts)
-                                        .setHandler(accountsResult -> {
+                                        .onComplete(accountsResult -> {
                                           AccountdataCollection accountCollection = new AccountdataCollection();
                                           accountCollection.setAccounts(accounts);
                                           accountCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
@@ -229,7 +229,7 @@ public class AccountsAPI implements Accounts {
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                           setAdditionalFields(vertxContext.owner(), okapiHeaders, accountList)
-                                            .setHandler(accountsResult -> asyncResultHandler.handle(
+                                            .onComplete(accountsResult -> asyncResultHandler.handle(
                                               Future.succeededFuture(
                                                 GetAccountsByAccountIdResponse.respond200WithApplicationJson(
                                                   accountList.get(0)))));
@@ -267,7 +267,7 @@ public class AccountsAPI implements Accounts {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
                             ACCOUNTS_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
-                                    if (deleteReply.result().getUpdated() == 1) {
+                                    if (deleteReply.result().rowCount() == 1) {
                                         new AccountEventPublisher(vertxContext, okapiHeaders)
                                           .publishDeletedAccountBalanceChangeEvent(accountId);
                                         asyncResultHandler.handle(Future.succeededFuture(

@@ -233,7 +233,7 @@ public class CommentsAPI implements Comments {
                     PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
                             COMMENTS_TABLE, criterion, deleteReply -> {
                                 if (deleteReply.succeeded()) {
-                                    if (deleteReply.result().getUpdated() == 1) {
+                                    if (deleteReply.result().rowCount() == 1) {
                                         asyncResultHandler.handle(Future.succeededFuture(
                                                 DeleteCommentsByCommentIdResponse.respond204()));
                                     } else {
@@ -306,7 +306,7 @@ public class CommentsAPI implements Comments {
                                                     if (putReply.failed()) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutCommentsByCommentIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
-                                                    } else if (putReply.result().getUpdated() == 1) {
+                                                    } else if (putReply.result().rowCount() == 1) {
                                                         asyncResultHandler.handle(Future.succeededFuture(
                                                                 PutCommentsByCommentIdResponse.respond204()));
                                                     }
