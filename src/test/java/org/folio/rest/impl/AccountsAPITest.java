@@ -323,7 +323,7 @@ public class AccountsAPITest extends ApiTests {
   }
 
   private Event getLastBalanceChangedEvent() {
-    return getLastPublishedEventOfType(EventType.FF_BALANCE_CHANGED.toString());
+    return getLastPublishedEventOfType(EventType.FEE_FINE_BALANCE_CHANGED.toString());
   }
 
   private Event getLastPublishedEventOfType(String eventType) {
@@ -362,7 +362,7 @@ public class AccountsAPITest extends ApiTests {
 
     EventMetadata eventMetadata = event.getEventMetadata();
 
-    assertEquals(EventType.FF_BALANCE_CHANGED.name(), event.getEventType());
+    assertEquals(EventType.FEE_FINE_BALANCE_CHANGED.name(), event.getEventType());
     assertEquals(PubSubClientUtils.constructModuleName(), eventMetadata.getPublishedBy());
     assertEquals(TENANT_NAME, eventMetadata.getTenantId());
     assertEquals(1, eventMetadata.getEventTTL().intValue());

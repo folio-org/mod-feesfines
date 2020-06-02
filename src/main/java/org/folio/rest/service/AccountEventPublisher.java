@@ -1,6 +1,6 @@
 package org.folio.rest.service;
 
-import static org.folio.rest.domain.EventType.FF_BALANCE_CHANGED;
+import static org.folio.rest.domain.EventType.FEE_FINE_BALANCE_CHANGED;
 import static org.folio.rest.domain.EventType.LOAN_RELATED_FEE_FINE_CLOSED;
 import static org.folio.rest.domain.LoanRelatedFeeFineClosedEvent.forFeeFine;
 import static org.folio.rest.utils.JsonHelper.write;
@@ -28,7 +28,7 @@ public class AccountEventPublisher {
   public void publishAccountBalanceChangeEvent(Account account) {
     final String payload = createBalanceChangedPayload(account);
 
-    eventPublisher.publishEventAsynchronously(FF_BALANCE_CHANGED, payload);
+    eventPublisher.publishEventAsynchronously(FEE_FINE_BALANCE_CHANGED, payload);
   }
 
   public void publishDeletedAccountBalanceChangeEvent(String accountId) {
