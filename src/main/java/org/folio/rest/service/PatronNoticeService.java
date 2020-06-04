@@ -12,10 +12,13 @@ import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.client.PatronNoticeClient;
+import org.folio.rest.client.UsersClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Context;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.PatronNotice;
+import org.folio.rest.jaxrs.model.Personal;
+import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
@@ -41,6 +44,7 @@ public class PatronNoticeService {
   private OwnerRepository ownerRepository;
   private AccountRepository accountRepository;
   private PatronNoticeClient patronNoticeClient;
+  private UsersClient usersClient;
 
   public PatronNoticeService(Vertx vertx, Map<String, String> okapiHeaders) {
     PostgresClient pgClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
@@ -48,6 +52,7 @@ public class PatronNoticeService {
     ownerRepository = new OwnerRepository(pgClient);
     accountRepository = new AccountRepository(pgClient);
     patronNoticeClient = new PatronNoticeClient(WebClient.create(vertx), okapiHeaders);
+    usersClient = new UsersClient(vertx, okapiHeaders);
   }
 
   public void sendPatronNotice(Feefineaction feefineaction) {
@@ -56,9 +61,15 @@ public class PatronNoticeService {
       .compose(feeFineRepository::loadFeefine)
       .compose(ownerRepository::loadOwner)
       .compose(this::refuseWhenEmptyTemplateId)
+      .compose(this::fetchUser)
       .map(this::createNotice)
       .compose(patronNoticeClient::postPatronNotice)
       .setHandler(this::handleSendPatronNoticeResult);
+  }
+
+  private Future<FeeFineNoticeContext> fetchUser(FeeFineNoticeContext context) {
+    return usersClient.fetchUserById(context.getUserId())
+      .map(context::withUser);
   }
 
   private Future<FeeFineNoticeContext> refuseWhenEmptyTemplateId(FeeFineNoticeContext ctx) {
@@ -90,7 +101,23 @@ public class PatronNoticeService {
           .put("actionDateTime", actionDateTime)
           .put("balance", feefineaction.getBalance())
           .put("actionAdditionalInfo", getCommentsFromFeeFineAction(feefineaction, PATRON_COMMENTS_KEY))
-          .put("reasonForCancellation", getCommentsFromFeeFineAction(feefineaction, STAFF_COMMENTS_KEY))));
+          .put("reasonForCancellation", getCommentsFromFeeFineAction(feefineaction, STAFF_COMMENTS_KEY)))
+        .withAdditionalProperty("user", buildUserContext(ctx.getUser()))
+      );
+  }
+
+  private JsonObject buildUserContext(User user) {
+    JsonObject userContext = new JsonObject()
+      .put("barcode", user.getBarcode());
+
+    Personal personal = user.getPersonal();
+    if (user.getPersonal() != null) {
+      userContext
+        .put("firstName", personal.getFirstName())
+        .put("lastName", personal.getLastName())
+        .put("middleName", personal.getMiddleName());
+    }
+    return userContext;
   }
 
   private String getCommentsFromFeeFineAction(Feefineaction feefineaction, String commentsKey){

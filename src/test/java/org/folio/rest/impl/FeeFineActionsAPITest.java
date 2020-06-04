@@ -18,6 +18,13 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.http.HttpStatus;
+import org.awaitility.Awaitility;
+import org.folio.rest.jaxrs.model.Personal;
+import org.folio.rest.jaxrs.model.User;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -136,10 +143,25 @@ public class FeeFineActionsAPITest {
     final double amount = 10;
     final String dateAction = "2019-12-23T14:25:59.550+0000";
 
+    User user = new User()
+      .withId(userId)
+      .withUsername("tester")
+      .withActive(true)
+      .withBarcode("123456")
+      .withPatronGroup(UUID.randomUUID().toString())
+      .withType("patron")
+      .withPersonal(new Personal()
+        .withFirstName("First")
+        .withMiddleName("Middle")
+        .withLastName("Last")
+        .withEmail("test@test.com"));
+
+    setupUsersStub(user);
+
     final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
       amountAction, balance, accountId, userId);
     final String expectedNoticeJson = createNoticeJson(defaultChargeTemplateId,
-      userId, feeFineType, typeAction, amountAction, balance, amount, dateAction);
+      userId, feeFineType, typeAction, amountAction, balance, amount, dateAction, user);
 
     createEntity("/owners", new JsonObject()
       .put("id", ownerId)
@@ -171,7 +193,6 @@ public class FeeFineActionsAPITest {
       .untilAsserted(() -> userMockServer.verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
         .withRequestBody(equalToJson(expectedNoticeJson))
       ));
-
   }
 
   @Test
@@ -215,12 +236,12 @@ public class FeeFineActionsAPITest {
       .body(equalTo(feeFineActionJson));
   }
 
-  private String createNoticeJson(String defaultChargeTemplateId,
-                                  String userId, String feeFineType,
-                                  String typeAction, double amountAction,
-                                  double balance, double amount, String dateAction) {
+  private String createNoticeJson(String defaultChargeTemplateId, String userId, String feeFineType,
+    String typeAction, double amountAction, double balance, double amount, String dateAction,
+    User user) {
+
     JsonObject noticeContext = createNoticeContext(feeFineType, typeAction,
-      amountAction, balance, amount, dateAction);
+      amountAction, balance, amount, dateAction, user);
 
     return new JsonObject()
       .put("recipientId", userId)
@@ -232,12 +253,9 @@ public class FeeFineActionsAPITest {
       .encodePrettily();
   }
 
-  private JsonObject createNoticeContext(String feeFineType,
-                                         String typeAction,
-                                         double amountAction,
-                                         double balance,
-                                         double amount,
-                                         String dateAction) {
+  private JsonObject createNoticeContext(String feeFineType, String typeAction, double amountAction,
+    double balance, double amount, String dateAction, User user) {
+
     return new JsonObject()
       .put("fee", new JsonObject()
         .put("owner", "library")
@@ -248,13 +266,17 @@ public class FeeFineActionsAPITest {
         .put("actionDateTime", dateAction)
         .put("balance", balance)
         .put("actionAdditionalInfo", "patron comment")
-        .put("reasonForCancellation", "staff comment"));
+        .put("reasonForCancellation", "staff comment"))
+      .put("user", new JsonObject()
+        .put("firstName", user.getPersonal().getFirstName())
+        .put("lastName", user.getPersonal().getLastName())
+        .put("middleName", user.getPersonal().getMiddleName())
+        .put("barcode", user.getBarcode()));
   }
 
-  private String createFeeFineActionJson(String dateAction, String typeAction,
-                                         boolean notify, double amountAction,
-                                         double balance, String accountId,
-                                         String userId) {
+  private String createFeeFineActionJson(String dateAction, String typeAction, boolean notify,
+    double amountAction, double balance, String accountId, String userId) {
+
     return new JsonObject()
       .put("dateAction", dateAction)
       .put("typeAction", typeAction)
@@ -299,6 +321,18 @@ public class FeeFineActionsAPITest {
       .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
       .withHeader(OKAPI_URL, matching(userMockServer.baseUrl()))
       .willReturn(ok()));
+  }
+
+  private void setupUsersStub(User user) {
+    String response = JsonObject.mapFrom(user)
+      .encodePrettily();
+
+    userMockServer.stubFor(WireMock.get(urlPathEqualTo("/users/" + user.getId()))
+      .withHeader(ACCEPT, matching(APPLICATION_JSON))
+      .withHeader(OKAPI_HEADER_TENANT, matching(okapiTenant))
+      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
+      .withHeader(OKAPI_URL, matching(userMockServer.baseUrl()))
+      .willReturn(aResponse().withBody(response)));
   }
 
   private void createEntity(String path, JsonObject entity) {
