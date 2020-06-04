@@ -1,5 +1,6 @@
 package org.folio;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
@@ -18,7 +19,9 @@ import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.PomReader;
@@ -32,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -53,6 +57,7 @@ class PatronNoticeTest {
   private static final String TENANT = "test_tenant";
   private static final String TOKEN = "dummy-TOKEN";
   private static final String FEEFINES_TABLE = "feefines";
+  private static final String USER_ID = UUID.randomUUID().toString();
   private static final Handler handler = Mockito.mock(Handler.class);
 
   private static Vertx vertx;
@@ -65,7 +70,8 @@ class PatronNoticeTest {
     PatronNoticeTest.vertx = vertx;
     wireMockServer = new WireMockServer(NetworkUtils.nextFreePort());
     wireMockServer.start();
-    setupStub();
+    setupPatronNoticeStub();
+    setupUsersStub();
 
     int okapiPort = NetworkUtils.nextFreePort();
     okapiUrl = "http://localhost:" + okapiPort;
@@ -102,8 +108,7 @@ class PatronNoticeTest {
     String ownerId = UUID.randomUUID().toString();
     String feeFineId = UUID.randomUUID().toString();
     String accountId = UUID.randomUUID().toString();
-    String defaultChargeTemplateId = UUID.randomUUID().toString();
-    String userId = UUID.randomUUID().toString();
+    String defaultChargeTemplateId = UUID.randomUUID().toString();;
     String feeFineType = "damaged book";
     String typeAction = "damaged book";
 
@@ -114,7 +119,7 @@ class PatronNoticeTest {
 
     createEntity("/accounts", new JsonObject()
       .put("id", accountId)
-      .put("userId", userId)
+      .put("userId", USER_ID)
       .put("itemId", UUID.randomUUID().toString())
       .put("materialTypeId", UUID.randomUUID().toString())
       .put("feeFineId", feeFineId)
@@ -127,7 +132,7 @@ class PatronNoticeTest {
       .put("ownerId", ownerId));
 
     createEntity("/feefineactions", new JsonObject()
-      .put("userId", userId)
+      .put("userId", USER_ID)
       .put("accountId", accountId)
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
@@ -146,10 +151,15 @@ class PatronNoticeTest {
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 10.0)
         .put("actionAdditionalInfo", "patron comment")
-        .put("reasonForCancellation", "staff comment"));
+        .put("reasonForCancellation", "staff comment"))
+      .put("user", new JsonObject()
+        .put("firstName", "First")
+        .put("lastName", "Last")
+        .put("middleName", "Middle")
+        .put("barcode", "123456"));
 
     JsonObject notice = new JsonObject()
-      .put("recipientId", userId)
+      .put("recipientId", USER_ID)
       .put("deliveryChannel", "email")
       .put("templateId", defaultChargeTemplateId)
       .put("outputFormat", "text/html")
@@ -170,7 +180,6 @@ class PatronNoticeTest {
     String accountId = UUID.randomUUID().toString();
     String defaultChargeTemplateId = UUID.randomUUID().toString();
     String specificChargeTemplateId = UUID.randomUUID().toString();
-    String userId = UUID.randomUUID().toString();
     String feeFineType = "damaged book";
     String typeAction = "damaged book";
 
@@ -181,7 +190,7 @@ class PatronNoticeTest {
 
     createEntity("/accounts", new JsonObject()
       .put("id", accountId)
-      .put("userId", userId)
+      .put("userId", USER_ID)
       .put("itemId", UUID.randomUUID().toString())
       .put("materialTypeId", UUID.randomUUID().toString())
       .put("feeFineId", feeFineId)
@@ -195,7 +204,7 @@ class PatronNoticeTest {
       .put("chargeNoticeId", specificChargeTemplateId));
 
     createEntity("/feefineactions", new JsonObject()
-      .put("userId", userId)
+      .put("userId", USER_ID)
       .put("accountId", accountId)
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
@@ -214,10 +223,15 @@ class PatronNoticeTest {
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 10.0)
         .put("actionAdditionalInfo", "patron comment")
-        .put("reasonForCancellation", "staff comment"));
+        .put("reasonForCancellation", "staff comment"))
+      .put("user", new JsonObject()
+        .put("firstName", "First")
+        .put("lastName", "Last")
+        .put("middleName", "Middle")
+        .put("barcode", "123456"));
 
     JsonObject notice = new JsonObject()
-      .put("recipientId", userId)
+      .put("recipientId", USER_ID)
       .put("deliveryChannel", "email")
       .put("templateId", specificChargeTemplateId)
       .put("outputFormat", "text/html")
@@ -237,7 +251,6 @@ class PatronNoticeTest {
     String feeFineId = UUID.randomUUID().toString();
     String accountId = UUID.randomUUID().toString();
     String defaultActionTemplateId = UUID.randomUUID().toString();
-    String userId = UUID.randomUUID().toString();
     String feeFineType = "damaged book";
     String typeAction = "Paid fully";
 
@@ -248,7 +261,7 @@ class PatronNoticeTest {
 
     createEntity("/accounts", new JsonObject()
       .put("id", accountId)
-      .put("userId", userId)
+      .put("userId", USER_ID)
       .put("itemId", UUID.randomUUID().toString())
       .put("materialTypeId", UUID.randomUUID().toString())
       .put("feeFineId", feeFineId)
@@ -261,7 +274,7 @@ class PatronNoticeTest {
       .put("ownerId", ownerId));
 
     createEntity("/feefineactions", new JsonObject()
-      .put("userId", userId)
+      .put("userId", USER_ID)
       .put("accountId", accountId)
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
@@ -281,10 +294,15 @@ class PatronNoticeTest {
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 0.0)
         .put("actionAdditionalInfo", "patron comment")
-        .put("reasonForCancellation", "staff comment"));
+        .put("reasonForCancellation", "staff comment"))
+      .put("user", new JsonObject()
+        .put("firstName", "First")
+        .put("lastName", "Last")
+        .put("middleName", "Middle")
+        .put("barcode", "123456"));
 
     JsonObject notice = new JsonObject()
-      .put("recipientId", userId)
+      .put("recipientId", USER_ID)
       .put("deliveryChannel", "email")
       .put("templateId", defaultActionTemplateId)
       .put("outputFormat", "text/html")
@@ -306,7 +324,6 @@ class PatronNoticeTest {
     String accountId = UUID.randomUUID().toString();
     String defaultActionTemplateId = UUID.randomUUID().toString();
     String specificActionTemplateId = UUID.randomUUID().toString();
-    String userId = UUID.randomUUID().toString();
     String feeFineType = "damaged book";
     String typeAction = "Paid fully";
 
@@ -317,7 +334,7 @@ class PatronNoticeTest {
 
     createEntity("/accounts", new JsonObject()
       .put("id", accountId)
-      .put("userId", userId)
+      .put("userId", USER_ID)
       .put("itemId", UUID.randomUUID().toString())
       .put("materialTypeId", UUID.randomUUID().toString())
       .put("feeFineId", feeFineId)
@@ -331,7 +348,7 @@ class PatronNoticeTest {
       .put("actionNoticeId", specificActionTemplateId));
 
     createEntity("/feefineactions", new JsonObject()
-      .put("userId", userId)
+      .put("userId", USER_ID)
       .put("accountId", accountId)
       .put("typeAction", typeAction)
       .put("amountAction", 10.0)
@@ -351,10 +368,15 @@ class PatronNoticeTest {
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
         .put("balance", 0.0)
         .put("actionAdditionalInfo", "patron comment")
-        .put("reasonForCancellation", "staff comment"));
+        .put("reasonForCancellation", "staff comment"))
+      .put("user", new JsonObject()
+        .put("firstName", "First")
+        .put("lastName", "Last")
+        .put("middleName", "Middle")
+        .put("barcode", "123456"));
 
     JsonObject notice = new JsonObject()
-      .put("recipientId", userId)
+      .put("recipientId", USER_ID)
       .put("deliveryChannel", "email")
       .put("templateId", specificActionTemplateId)
       .put("outputFormat", "text/html")
@@ -391,13 +413,38 @@ class PatronNoticeTest {
     return promise.future();
   }
 
-  private static void setupStub() {
+  private static void setupPatronNoticeStub() {
     wireMockServer.stubFor(post(urlPathEqualTo("/patron-notice"))
       .withHeader(ACCEPT, matching(APPLICATION_JSON))
       .withHeader(OKAPI_HEADER_TENANT, matching(TENANT))
       .withHeader(OKAPI_HEADER_TOKEN, matching(TOKEN))
       .withHeader(OKAPI_URL_HEADER, matching(wireMockServer.baseUrl()))
       .willReturn(ok()));
+  }
+
+  private static void setupUsersStub() {
+    User user = new User()
+      .withId(USER_ID)
+      .withUsername("tester")
+      .withActive(true)
+      .withBarcode("123456")
+      .withPatronGroup(UUID.randomUUID().toString())
+      .withType("patron")
+      .withPersonal(new Personal()
+        .withFirstName("First")
+        .withMiddleName("Middle")
+        .withLastName("Last")
+        .withEmail("test@test.com"));
+
+    String response = JsonObject.mapFrom(user)
+      .encodePrettily();
+
+    wireMockServer.stubFor(WireMock.get(urlPathEqualTo("/users/" + USER_ID))
+      .withHeader(ACCEPT, matching(APPLICATION_JSON))
+      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT))
+      .withHeader(OKAPI_HEADER_TOKEN, matching(TOKEN))
+      .withHeader(OKAPI_URL_HEADER, matching(wireMockServer.baseUrl()))
+      .willReturn(aResponse().withBody(response)));
   }
 
   private void createEntity(String path, JsonObject entity) {
