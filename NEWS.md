@@ -1,3 +1,9 @@
+## 15.8.0 2020-06-12
+* Enable user-related tokens for manual fee/fine patron notices (MODFEE-66)
+* Update RMB version to 30.0.1 and Vertx to 3.9 (MODFEE-59, MODFEE-62)
+* Publish events when account is created, changed or deleted (MODFEE-53, MODFEE-54, MODFEE-63)
+* Remove readonly fields validation (MODFEE-50)
+
 ## 15.7.0 2020-03-13
 * Fix missing error message when duplicate Overdue Fine Policy name entered (MODFEE-16)
 * Fix missing error message when duplicate Lost Item Fee Policy name entered (MODFEE-17)
