@@ -134,8 +134,8 @@ public class FeeFineActionsAPI implements Feefineactions {
   private Response sendPatronNoticeIfNeedBe(Feefineaction entity, Map<String, String> okapiHeaders,
                                     Context vertxContext, Response response) {
     if (needToNotifyPatron(entity.getNotify())) {
-      PatronNoticeService patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
-      patronNoticeService.sendPatronNotice(entity);
+      new PatronNoticeService(vertxContext.owner(), okapiHeaders)
+        .sendPatronNotice(entity);
     }
     return response;
   }

@@ -39,7 +39,7 @@ public class ApiTests {
   @ClassRule
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
 
-  private static Vertx vertx;
+  protected static Vertx vertx;
 
   protected final ResourceClient accountsClient = accountsClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());

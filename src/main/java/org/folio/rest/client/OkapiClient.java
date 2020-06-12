@@ -33,7 +33,8 @@ public class OkapiClient {
     return webClient.getAbs(okapiUrl + path)
       .putHeader(OKAPI_HEADER_TENANT, tenant)
       .putHeader(OKAPI_URL_HEADER, okapiUrl)
-      .putHeader(OKAPI_HEADER_TOKEN, token);
+      .putHeader(OKAPI_HEADER_TOKEN, token)
+      .putHeader(ACCEPT, APPLICATION_JSON);
   }
 
   HttpRequest<Buffer> okapiPostAbs(String path) {

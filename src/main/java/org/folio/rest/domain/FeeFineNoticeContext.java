@@ -9,6 +9,7 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.Owner;
+import org.folio.rest.jaxrs.model.User;
 
 public class FeeFineNoticeContext {
 
@@ -23,18 +24,19 @@ public class FeeFineNoticeContext {
   private Feefine feefine;
   private Account account;
   private Feefineaction feefineaction;
+  private User user;
 
   public FeeFineNoticeContext() {
   }
 
-  private FeeFineNoticeContext(Owner owner,
-                               Feefine feefine,
-                               Account account,
-                               Feefineaction feefineaction) {
+  private FeeFineNoticeContext(Owner owner, Feefine feefine, Account account,
+    Feefineaction feefineaction, User user) {
+
     this.owner = owner;
     this.feefine = feefine;
     this.account = account;
     this.feefineaction = feefineaction;
+    this.user = user;
   }
 
   public String getTemplateId() {
@@ -72,7 +74,7 @@ public class FeeFineNoticeContext {
   }
 
   public FeeFineNoticeContext withOwner(Owner owner) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user);
   }
 
   public Feefine getFeefine() {
@@ -80,7 +82,7 @@ public class FeeFineNoticeContext {
   }
 
   public FeeFineNoticeContext withFeefine(Feefine feefine) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user);
   }
 
   public Account getAccount() {
@@ -88,7 +90,7 @@ public class FeeFineNoticeContext {
   }
 
   public FeeFineNoticeContext withAccount(Account account) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user);
   }
 
   public Feefineaction getFeefineaction() {
@@ -96,6 +98,15 @@ public class FeeFineNoticeContext {
   }
 
   public FeeFineNoticeContext withFeefineaction(Feefineaction feefineaction) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user);
   }
+
+  public User getUser() {
+    return user;
+  }
+
+  public FeeFineNoticeContext withUser(User user) {
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user);
+  }
+
 }
