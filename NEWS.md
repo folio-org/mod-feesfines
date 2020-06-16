@@ -1,3 +1,6 @@
+## 15.7.3 2020-06-16
+* Enable user-related tokens for manual fee/fine patron notices (MODFEE-66)
+
 ## 15.7.2 2020-04-07
 * Remove readonly fields validation, allow passing empty strings (MODFEE-50)
 
