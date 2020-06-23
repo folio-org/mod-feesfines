@@ -15,8 +15,8 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.util.Comparator;
 import java.util.UUID;
@@ -297,7 +297,7 @@ public class AccountsAPITest extends ApiTests {
     assertNotNull(event);
 
     final JsonObject eventPayload = new JsonObject(event.getEventPayload());
-    assertNull(eventPayload.getString("loanId"), null);
+    assertFalse(eventPayload.containsKey("loanId"));
   }
 
   private Account createAccount() {
