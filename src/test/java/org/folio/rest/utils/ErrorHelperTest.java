@@ -8,24 +8,24 @@ import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
-class ErrorHelperTest {
+public class ErrorHelperTest {
 
   private static final String TABLE_NAME = "test_table";
 
   @Test
-  void didUniqueConstraintViolationOccurNullResponse() {
+  public void didUniqueConstraintViolationOccurNullResponse() {
     assertFalse(ErrorHelper.uniqueNameConstraintViolated(null, TABLE_NAME));
   }
 
   @Test
-  void didUniqueConstraintViolationOccurNoEntity() {
+  public void didUniqueConstraintViolationOccurNoEntity() {
     assertFalse(ErrorHelper.uniqueNameConstraintViolated(Response.accepted().build(), TABLE_NAME));
   }
 
   @Test
-  void createErrorsTest(){
+  public void createErrorsTest(){
     Error e1 = new Error();
     Error e2 = new Error();
     Errors errors = ErrorHelper.createErrors(e1, e2);

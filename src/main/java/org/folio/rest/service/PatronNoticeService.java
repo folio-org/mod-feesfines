@@ -2,57 +2,60 @@ package org.folio.rest.service;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.utils.FeeFineActionCommentsParser.parseFeeFineComments;
+import static org.folio.util.UuidUtil.isUuid;
 
-import java.text.SimpleDateFormat;
-import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TimeZone;
 
-import org.apache.commons.lang3.StringUtils;
+import org.folio.rest.client.CirculationStorageClient;
+import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.client.UsersClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
-import org.folio.rest.jaxrs.model.Context;
+import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
-import org.folio.rest.jaxrs.model.PatronNotice;
-import org.folio.rest.jaxrs.model.Personal;
-import org.folio.rest.jaxrs.model.User;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Loan;
+import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineRepository;
 import org.folio.rest.repository.OwnerRepository;
+import org.folio.rest.utils.PatronNoticeBuilder;
+import org.folio.util.UuidUtil;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.client.WebClient;
 
 public class PatronNoticeService {
-
   private static final Logger logger = LoggerFactory.getLogger(PatronNoticeService.class);
 
-  private static final String PATRON_COMMENTS_KEY = "PATRON";
-  private static final String STAFF_COMMENTS_KEY = "STAFF";
-
-  private FeeFineRepository feeFineRepository;
-  private OwnerRepository ownerRepository;
-  private AccountRepository accountRepository;
-  private PatronNoticeClient patronNoticeClient;
-  private UsersClient usersClient;
+  private final FeeFineRepository feeFineRepository;
+  private final OwnerRepository ownerRepository;
+  private final AccountRepository accountRepository;
+  private final PatronNoticeClient patronNoticeClient;
+  private final UsersClient usersClient;
+  private final InventoryClient inventoryClient;
+  private final CirculationStorageClient circulationStorageClient;
 
   public PatronNoticeService(Vertx vertx, Map<String, String> okapiHeaders) {
     PostgresClient pgClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
+    WebClient webClient = WebClient.create(vertx);
+
     feeFineRepository = new FeeFineRepository(pgClient);
     ownerRepository = new OwnerRepository(pgClient);
     accountRepository = new AccountRepository(pgClient);
-    patronNoticeClient = new PatronNoticeClient(WebClient.create(vertx), okapiHeaders);
+
+    patronNoticeClient = new PatronNoticeClient(webClient, okapiHeaders);
     usersClient = new UsersClient(vertx, okapiHeaders);
+    inventoryClient = new InventoryClient(webClient, okapiHeaders);
+    circulationStorageClient = new CirculationStorageClient(webClient, okapiHeaders);
   }
 
   public void sendPatronNotice(Feefineaction feefineaction) {
@@ -62,7 +65,13 @@ public class PatronNoticeService {
       .compose(ownerRepository::loadOwner)
       .compose(this::refuseWhenEmptyTemplateId)
       .compose(this::fetchUser)
-      .map(this::createNotice)
+      .compose(this::fetchItem)
+      .compose(this::fetchHolding)
+      .compose(this::fetchInstance)
+      .compose(this::fetchLocation)
+      .compose(this::fetchLoan)
+      .compose(this::fetchLoanPolicy)
+      .map(PatronNoticeBuilder::buildNotice)
       .compose(patronNoticeClient::postPatronNotice)
       .onComplete(this::handleSendPatronNoticeResult);
   }
@@ -72,57 +81,121 @@ public class PatronNoticeService {
       .map(context::withUser);
   }
 
+  private Future<FeeFineNoticeContext> fetchItem(FeeFineNoticeContext context) {
+    final String itemId = context.getAccount().getItemId();
+
+    if (!isUuid(itemId)) {
+      return succeededFuture(context);
+    }
+
+    return inventoryClient.getItemById(itemId)
+      .map(context::withItem);
+  }
+
+  private Future<FeeFineNoticeContext> fetchHolding(FeeFineNoticeContext context) {
+    final String holdingsRecordId = Optional.ofNullable(context.getAccount())
+      .map(Account::getHoldingsRecordId)
+      .filter(UuidUtil::isUuid)
+      .orElseGet(() -> Optional.ofNullable(context.getItem())
+        .map(Item::getHoldingsRecordId)
+        .orElse(null));
+
+    if (!isUuid(holdingsRecordId)) {
+      return succeededFuture(context);
+    }
+
+    return inventoryClient.getHoldingById(holdingsRecordId)
+      .map(context::withHoldingsRecord);
+  }
+
+  private Future<FeeFineNoticeContext> fetchInstance(FeeFineNoticeContext context) {
+    final String instanceId = Optional.ofNullable(context.getAccount())
+      .map(Account::getInstanceId)
+      .filter(UuidUtil::isUuid)
+      .orElseGet(() -> Optional.ofNullable(context.getHoldingsRecord())
+        .map(HoldingsRecord::getInstanceId)
+        .orElse(null));
+
+    if (!isUuid(instanceId)) {
+      return succeededFuture(context);
+    }
+
+    return inventoryClient.getInstanceById(instanceId)
+      .map(context::withInstance);
+  }
+
+  private Future<FeeFineNoticeContext> fetchLocation(FeeFineNoticeContext context) {
+    final Item item = context.getItem();
+
+    if (item == null || !isUuid(item.getEffectiveLocationId())) {
+      return succeededFuture(context);
+    }
+
+    return inventoryClient.getLocationById(item.getEffectiveLocationId())
+      .compose(this::fetchInstitution)
+      .compose(this::fetchLibrary)
+      .compose(this::fetchCampus)
+      .map(context::withEffectiveLocation);
+  }
+
+  private Future<Location> fetchInstitution(Location location) {
+    final String institutionId = location.getInstitutionId();
+
+    if (!isUuid(institutionId)) {
+      return succeededFuture(location);
+    }
+
+    return inventoryClient.getInstitutionById(institutionId)
+      .map(location::withInstitution);
+  }
+
+  private Future<Location> fetchLibrary(Location location) {
+    final String libraryId = location.getLibraryId();
+
+    if (!isUuid(libraryId)) {
+      return succeededFuture(location);
+    }
+
+    return inventoryClient.getLibraryById(libraryId)
+      .map(location::withLibrary);
+  }
+
+  private Future<Location> fetchCampus(Location location) {
+    final String campusId = location.getCampusId();
+
+    if (!isUuid(campusId)) {
+      return succeededFuture(location);
+    }
+
+    return inventoryClient.getCampusById(campusId)
+      .map(location::withCampus);
+  }
+
+  private Future<FeeFineNoticeContext> fetchLoan(FeeFineNoticeContext context) {
+    final String loanId = context.getAccount().getLoanId();
+
+    if (!isUuid(loanId)) {
+      return succeededFuture(context);
+    }
+
+    return circulationStorageClient.getLoanById(loanId)
+      .map(context::withLoan);
+  }
+
+  private Future<FeeFineNoticeContext> fetchLoanPolicy(FeeFineNoticeContext context) {
+    final Loan loan = context.getLoan();
+
+    if (loan == null) {
+      return succeededFuture(context);
+    }
+
+    return circulationStorageClient.getLoanPolicyById(loan.getLoanPolicyId())
+      .map(context::withLoanPolicy);
+  }
+
   private Future<FeeFineNoticeContext> refuseWhenEmptyTemplateId(FeeFineNoticeContext ctx) {
     return ctx.getTemplateId() == null ?
       failedFuture("Template not set") : succeededFuture(ctx);
-  }
-
-  private PatronNotice createNotice(FeeFineNoticeContext ctx) {
-    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-    df.setTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC));
-
-    Feefineaction feefineaction = ctx.getFeefineaction();
-    String actionDateTime = Optional.ofNullable(feefineaction.getDateAction())
-      .map(df::format)
-      .orElse(null);
-
-    return new PatronNotice()
-      .withDeliveryChannel("email")
-      .withOutputFormat("text/html")
-      .withRecipientId(ctx.getUserId())
-      .withTemplateId(ctx.getTemplateId())
-      .withContext(new Context()
-        .withAdditionalProperty("fee", new JsonObject()
-          .put("owner", ctx.getOwner().getOwner())
-          .put("type", ctx.getFeefine().getFeeFineType())
-          .put("amount", ctx.getAccount().getAmount())
-          .put("actionType", feefineaction.getTypeAction())
-          .put("actionAmount", feefineaction.getAmountAction())
-          .put("actionDateTime", actionDateTime)
-          .put("balance", feefineaction.getBalance())
-          .put("actionAdditionalInfo", getCommentsFromFeeFineAction(feefineaction, PATRON_COMMENTS_KEY))
-          .put("reasonForCancellation", getCommentsFromFeeFineAction(feefineaction, STAFF_COMMENTS_KEY)))
-        .withAdditionalProperty("user", buildUserContext(ctx.getUser()))
-      );
-  }
-
-  private JsonObject buildUserContext(User user) {
-    JsonObject userContext = new JsonObject()
-      .put("barcode", user.getBarcode());
-
-    Personal personal = user.getPersonal();
-    if (user.getPersonal() != null) {
-      userContext
-        .put("firstName", personal.getFirstName())
-        .put("lastName", personal.getLastName())
-        .put("middleName", personal.getMiddleName());
-    }
-    return userContext;
-  }
-
-  private String getCommentsFromFeeFineAction(Feefineaction feefineaction, String commentsKey){
-    String comments = Optional.ofNullable(feefineaction.getComments()).orElse(StringUtils.EMPTY);
-    return parseFeeFineComments(comments).getOrDefault(commentsKey, StringUtils.EMPTY);
   }
 
   private void handleSendPatronNoticeResult(AsyncResult<Void> post) {

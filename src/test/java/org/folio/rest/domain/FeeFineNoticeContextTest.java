@@ -21,10 +21,10 @@ public class FeeFineNoticeContextTest {
   private static final String FEEFINE_CHARGE_NOTICE_ID = "f361fc2d-dfbb-48a9-9f3f-a40c297411cf";
   private static final String FEEFINE_ACTION_NOTICE_ID = "500ebb63-0871-4fe7-a1da-fb3f1dbec5f2";
 
-  private Owner owner;
-  private Feefine feeFine;
-  private Feefineaction feeFineAction;
-  private String correctNoticeId;
+  private final Owner owner;
+  private final Feefine feeFine;
+  private final Feefineaction feeFineAction;
+  private final String correctNoticeId;
 
   public FeeFineNoticeContextTest(Owner owner, Feefine feeFine, Feefineaction feeFineAction,
     String correctNoticeId) {
