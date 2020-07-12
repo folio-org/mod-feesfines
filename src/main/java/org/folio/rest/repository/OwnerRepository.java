@@ -12,7 +12,7 @@ import io.vertx.core.Promise;
 
 public class OwnerRepository {
 
-  private static final String OWNERS_TABLE = "owners";
+  public static final String OWNERS_TABLE = "owners";
 
   private PostgresClient pgClient;
 

@@ -1,26 +1,40 @@
 package org.folio.rest.client;
 
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
+import static java.lang.String.format;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.folio.util.UuidUtil.isUuid;
 
+import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class OkapiClient {
+  protected static final Logger log = LoggerFactory.getLogger(OkapiClient.class);
   private static final String OKAPI_URL_HEADER = "x-okapi-url";
   static final ObjectMapper objectMapper = new ObjectMapper();
 
-  private WebClient webClient;
-  private String okapiUrl;
-  protected String tenant;
-  private String token;
+  private final WebClient webClient;
+  private final String okapiUrl;
+  private final String tenant;
+  private final String token;
 
   OkapiClient(WebClient webClient, Map<String, String> okapiHeaders) {
     this.webClient = webClient;
@@ -43,5 +57,47 @@ public class OkapiClient {
       .putHeader(OKAPI_HEADER_TENANT, tenant)
       .putHeader(OKAPI_URL_HEADER, okapiUrl)
       .putHeader(OKAPI_HEADER_TOKEN, token);
+  }
+
+  public <T> Future<T> getById(String resourcePath, String id, Class<T> objectType) {
+    Optional<String> validationError = validateGetByIdArguments(resourcePath, id, objectType);
+    if (validationError.isPresent()) {
+      String errorMessage = validationError.get();
+      log.error(errorMessage);
+      return failedFuture(new IllegalArgumentException(errorMessage));
+    }
+
+    Promise<HttpResponse<Buffer>> promise = Promise.promise();
+    okapiGetAbs(resourcePath + "/" + id).send(promise);
+
+    return promise.future().compose(response -> {
+      if (response.statusCode() != 200) {
+        return failedFuture(format("Failed to get %s by ID. Response status code: %s",
+          objectType.getSimpleName(), response.statusCode()));
+      }
+      try {
+        T object = objectMapper.readValue(response.bodyAsString(), objectType);
+        return succeededFuture(object);
+      } catch (IOException exception) {
+        return failedFuture(format("Failed to parse response for %s. Response body: %s",
+          objectType.getSimpleName(), response.bodyAsString()));
+      }
+    });
+  }
+
+  private static <T> Optional<String> validateGetByIdArguments(String path, String id, Class<T> objectType) {
+    String errorMessage = null;
+
+    if (objectType == null) {
+      errorMessage = "Requested object type is null";
+    }
+    else if (isBlank(path)) {
+      errorMessage = "Invalid resource path for " + objectType.getSimpleName();
+    }
+    else if (!isUuid(id)) {
+      errorMessage = "Invalid UUID: " + id;
+    }
+
+    return Optional.ofNullable(errorMessage);
   }
 }

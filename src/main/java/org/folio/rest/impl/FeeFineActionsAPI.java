@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.apache.commons.lang3.BooleanUtils.isTrue;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -133,15 +135,11 @@ public class FeeFineActionsAPI implements Feefineactions {
 
   private Response sendPatronNoticeIfNeedBe(Feefineaction entity, Map<String, String> okapiHeaders,
                                     Context vertxContext, Response response) {
-    if (needToNotifyPatron(entity.getNotify())) {
+    if (isTrue(entity.getNotify())) {
       new PatronNoticeService(vertxContext.owner(), okapiHeaders)
         .sendPatronNotice(entity);
     }
     return response;
-  }
-
-  private boolean needToNotifyPatron(Boolean notify) {
-    return notify != null && notify;
   }
 
   @Validate

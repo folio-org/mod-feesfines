@@ -8,8 +8,19 @@ documentation:
     content: This documents the API calls that can be made to query and manage feefine of the system
 
 types:
+  account: !include accountdata.json
   feefineaction: !include feefineactiondata.json
   feefineactiondataCollection: !include feefineactiondataCollection.json
+
+  materialType: !include inventory/materialtype.json
+  item: !include inventory/item.json
+  items: !include inventory/items.json
+  holdings-record: !include inventory/holdingsrecord.json
+  holdings-records: !include inventory/holdingsrecords.json
+  instance: !include inventory/instance.json
+  location: !include inventory/location.json
+  loan: !include loan.json
+  loan-policy: !include loan-policy.json
   user: !include user.json
   errors: !include raml-util/schemas/errors.schema
 

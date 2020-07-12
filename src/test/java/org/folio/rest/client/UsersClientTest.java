@@ -74,8 +74,7 @@ public class UsersClientTest extends ApiTests {
     String responseBody = "User not found";
     mockUsersResponse(HttpStatus.SC_NOT_FOUND, responseBody);
 
-    String expectedFailureMessage = String.format("Failed to fetch user with ID %s. Response: %d %s",
-      USER_ID, HttpStatus.SC_NOT_FOUND, responseBody);
+    String expectedFailureMessage = "Failed to get User by ID. Response status code: 404";
 
     usersClient.fetchUserById(USER_ID)
       .onSuccess(user -> context.fail("Should have failed"))
@@ -92,10 +91,13 @@ public class UsersClientTest extends ApiTests {
     String responseBody = "not a json";
     mockUsersResponse(HttpStatus.SC_OK, responseBody);
 
+    String expectedErrorMessage = "Failed to parse response for User. Response body: " + responseBody;
+
+
     usersClient.fetchUserById(USER_ID)
       .onSuccess(user -> context.fail("Should have failed"))
       .onFailure(throwable -> {
-        context.assertTrue(throwable instanceof JsonParseException);
+        context.assertEquals(expectedErrorMessage, throwable.getMessage());
         async.complete();
       });
   }

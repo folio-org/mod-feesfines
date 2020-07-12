@@ -12,7 +12,7 @@ import io.vertx.core.Promise;
 
 public class AccountRepository {
 
-  private static final String ACCOUNTS_TABLE = "accounts";
+  public static final String ACCOUNTS_TABLE = "accounts";
 
   private PostgresClient pgClient;
 

@@ -120,7 +120,7 @@
                 "type": "boolean"
               }
             },
-            "additionalProperties": false
+            "additionalProperties": true
           }
         },
         "preferredContactTypeId": {
@@ -128,7 +128,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": [
         "lastName"
       ]
@@ -167,5 +167,5 @@
       "additionalProperties": true
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

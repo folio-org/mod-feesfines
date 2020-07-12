@@ -15,6 +15,34 @@
       "version": "4.2"
     },
     {
+      "id": "item-storage",
+      "version": "8.4"
+    },
+    {
+      "id": "instance-storage",
+      "version": "7.4"
+    },
+    {
+      "id": "locations",
+      "version": "3.0"
+    },
+    {
+      "id": "location-units",
+      "version": "2.0"
+    },
+    {
+      "id": "users",
+      "version": "15.1"
+    },
+    {
+      "id": "loan-storage",
+      "version": "7.0"
+    },
+    {
+      "id": "loan-policy-storage",
+      "version": "2.1"
+    },
+    {
       "id": "pubsub-event-types",
       "version": "0.1"
     },
@@ -205,6 +233,29 @@
           "pathPattern":"/feefineactions",
           "permissionsRequired":[
             "feefineactions.item.post"
+          ],
+          "modulePermissions": [
+            "patron-notice.post",
+            "circulation-storage.loans.item.get",
+            "circulation-storage.loans.collection.get",
+            "circulation-storage.loan-policies.item.get",
+            "circulation-storage.loan-policies.collection.get",
+            "inventory-storage.items.item.get",
+            "inventory-storage.items.collection.get",
+            "inventory-storage.holdings.item.get",
+            "inventory-storage.holdings.collection.get",
+            "inventory-storage.instances.item.get",
+            "inventory-storage.instances.collection.get",
+            "inventory-storage.locations.item.get",
+            "inventory-storage.locations.collection.get",
+            "inventory-storage.location-units.libraries.item.get",
+            "inventory-storage.location-units.libraries.collection.get",
+            "inventory-storage.location-units.campuses.item.get",
+            "inventory-storage.location-units.campuses.collection.get",
+            "inventory-storage.location-units.institutions.item.get",
+            "inventory-storage.location-units.institutions.collection.get",
+            "users.item.get",
+            "users.collection.get"
           ]
         },
         {
