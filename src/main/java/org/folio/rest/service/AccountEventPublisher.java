@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.util.UuidUtil;
 
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -50,6 +51,9 @@ public class AccountEventPublisher {
     write(payload, "feeFineId", account.getId());
     write(payload, "feeFineTypeId", account.getFeeFineId());
     write(payload, "balance", account.getRemaining());
+    if (UuidUtil.isUuid(account.getLoanId())) {
+      write(payload, "loanId", account.getLoanId());
+    }
 
     return payload.toString();
   }

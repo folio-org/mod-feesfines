@@ -15,6 +15,8 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.Comparator;
 import java.util.UUID;
@@ -277,6 +279,27 @@ public class AccountsAPITest extends ApiTests {
       .body(containsString(expectedError));
   }
 
+  @Test
+  public void shouldNotAddLoanIdIfItIsNotValidInAccount() {
+    Account accountToPost = createAccount();
+    accountToPost.withLoanId("invalid id");
+
+    accountsClient.create(accountToPost)
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(JSON);
+
+    Awaitility.await()
+      .atMost(1, TimeUnit.SECONDS)
+      .until(() -> getLastBalanceChangedEvent() != null);
+
+    final Event event = getLastBalanceChangedEvent();
+    assertNotNull(event);
+
+    final JsonObject eventPayload = new JsonObject(event.getEventPayload());
+    assertFalse(eventPayload.containsKey("loanId"));
+  }
+
   private Account createAccount() {
     return new Account()
       .withId(randomId())
@@ -373,5 +396,6 @@ public class AccountsAPITest extends ApiTests {
     assertThat(eventPayload.getString("feeFineId"), is(account.getId()));
     assertThat(eventPayload.getString("feeFineTypeId"), is(account.getFeeFineId()));
     assertThat(eventPayload.getDouble("balance"), is(account.getRemaining()));
+    assertThat(eventPayload.getString("loanId"), is(account.getLoanId()));
   }
 }
