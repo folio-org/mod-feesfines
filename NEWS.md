@@ -1,3 +1,6 @@
+## 15.8.1 2020-07-13
+* Add loanId to the FEE_FINE_BALANCE_CHANGED event payload (MODFEE-71)
+
 ## 15.8.0 2020-06-12
 * Enable user-related tokens for manual fee/fine patron notices (MODFEE-66)
 * Update RMB version to 30.0.1 and Vertx to 3.9 (MODFEE-59, MODFEE-62)
