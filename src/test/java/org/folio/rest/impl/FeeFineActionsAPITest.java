@@ -12,6 +12,8 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.hamcrest.core.IsEqual.equalTo;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
@@ -172,16 +174,17 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private JsonObject createNoticeContext(String feeFineType, String typeAction, double amountAction,
     double balance, double amount, String dateAction, User user) {
+    NumberFormat formatter = new DecimalFormat("#0.00");
 
     return new JsonObject()
       .put("fee", new JsonObject()
         .put("owner", "library")
         .put("type", feeFineType)
-        .put("amount", amount)
+        .put("amount", formatter.format(amount))
         .put("actionType", typeAction)
-        .put("actionAmount", amountAction)
+        .put("actionAmount", formatter.format(amountAction))
         .put("actionDateTime", dateAction)
-        .put("balance", balance)
+        .put("balance", formatter.format(balance))
         .put("actionAdditionalInfo", "patron comment")
         .put("reasonForCancellation", "staff comment"))
       .put("user", new JsonObject()

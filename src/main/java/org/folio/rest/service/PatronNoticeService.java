@@ -4,6 +4,8 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.utils.FeeFineActionCommentsParser.parseFeeFineComments;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
 import java.util.Map;
@@ -85,6 +87,7 @@ public class PatronNoticeService {
     String actionDateTime = Optional.ofNullable(feefineaction.getDateAction())
       .map(df::format)
       .orElse(null);
+    NumberFormat formatter = new DecimalFormat("#0.00");
 
     return new PatronNotice()
       .withDeliveryChannel("email")
@@ -95,11 +98,11 @@ public class PatronNoticeService {
         .withAdditionalProperty("fee", new JsonObject()
           .put("owner", ctx.getOwner().getOwner())
           .put("type", ctx.getFeefine().getFeeFineType())
-          .put("amount", ctx.getAccount().getAmount())
+          .put("amount", formatter.format(ctx.getAccount().getAmount()))
           .put("actionType", feefineaction.getTypeAction())
-          .put("actionAmount", feefineaction.getAmountAction())
+          .put("actionAmount", formatter.format(feefineaction.getAmountAction()))
           .put("actionDateTime", actionDateTime)
-          .put("balance", feefineaction.getBalance())
+          .put("balance", formatter.format(feefineaction.getBalance()))
           .put("actionAdditionalInfo", getCommentsFromFeeFineAction(feefineaction, PATRON_COMMENTS_KEY))
           .put("reasonForCancellation", getCommentsFromFeeFineAction(feefineaction, STAFF_COMMENTS_KEY)))
         .withAdditionalProperty("user", buildUserContext(ctx.getUser()))
