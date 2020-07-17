@@ -13,6 +13,8 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -64,6 +66,7 @@ class PatronNoticeTest {
   private static String okapiUrl;
   private static WireMockServer wireMockServer;
   private static RequestSpecification spec;
+  private NumberFormat formatter = new DecimalFormat("#0.00");
 
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext context) throws IOException {
@@ -145,11 +148,11 @@ class PatronNoticeTest {
       .put("fee", new JsonObject()
         .put("owner", "library")
         .put("type", feeFineType)
-        .put("amount", "10,00")
+        .put("amount", formatter.format(10.0))
         .put("actionType", typeAction)
-        .put("actionAmount", "10,00")
+        .put("actionAmount", formatter.format(10.0))
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
-        .put("balance", "10,00")
+        .put("balance", formatter.format(10.0))
         .put("actionAdditionalInfo", "patron comment")
         .put("reasonForCancellation", "staff comment"))
       .put("user", new JsonObject()
@@ -217,11 +220,11 @@ class PatronNoticeTest {
       .put("fee", new JsonObject()
         .put("owner", "library")
         .put("type", feeFineType)
-        .put("amount", "10,00")
+        .put("amount", formatter.format(10.0))
         .put("actionType", typeAction)
-        .put("actionAmount", "10,00")
+        .put("actionAmount", formatter.format(10.0))
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
-        .put("balance", "10,00")
+        .put("balance", formatter.format(10.0))
         .put("actionAdditionalInfo", "patron comment")
         .put("reasonForCancellation", "staff comment"))
       .put("user", new JsonObject()
@@ -288,11 +291,11 @@ class PatronNoticeTest {
       .put("fee", new JsonObject()
         .put("owner", "library")
         .put("type", feeFineType)
-        .put("amount", "10,00")
+        .put("amount", formatter.format(10.0))
         .put("actionType", typeAction)
-        .put("actionAmount", "10,00")
+        .put("actionAmount", formatter.format(10.0))
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
-        .put("balance", "0,00")
+        .put("balance", formatter.format(0.0))
         .put("actionAdditionalInfo", "patron comment")
         .put("reasonForCancellation", "staff comment"))
       .put("user", new JsonObject()
@@ -362,11 +365,11 @@ class PatronNoticeTest {
       .put("fee", new JsonObject()
         .put("owner", "library")
         .put("type", feeFineType)
-        .put("amount", "10,00")
+        .put("amount", formatter.format(10.0))
         .put("actionType", typeAction)
-        .put("actionAmount", "10,00")
+        .put("actionAmount", formatter.format(10.0))
         .put("actionDateTime", "2019-09-17T08:43:15.000+0000")
-        .put("balance", "0,00")
+        .put("balance", formatter.format(0.0))
         .put("actionAdditionalInfo", "patron comment")
         .put("reasonForCancellation", "staff comment"))
       .put("user", new JsonObject()
