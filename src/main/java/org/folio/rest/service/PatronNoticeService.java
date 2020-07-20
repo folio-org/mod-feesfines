@@ -87,7 +87,6 @@ public class PatronNoticeService {
     String actionDateTime = Optional.ofNullable(feefineaction.getDateAction())
       .map(df::format)
       .orElse(null);
-    NumberFormat formatter = new DecimalFormat("#0.00");
 
     return new PatronNotice()
       .withDeliveryChannel("email")
@@ -98,15 +97,25 @@ public class PatronNoticeService {
         .withAdditionalProperty("fee", new JsonObject()
           .put("owner", ctx.getOwner().getOwner())
           .put("type", ctx.getFeefine().getFeeFineType())
-          .put("amount", formatter.format(ctx.getAccount().getAmount()))
+          .put("amount", ctx.getAccount() != null
+            ? getFormattedValue(ctx.getAccount().getAmount())
+            : null)
           .put("actionType", feefineaction.getTypeAction())
-          .put("actionAmount", formatter.format(feefineaction.getAmountAction()))
+          .put("actionAmount", getFormattedValue(feefineaction.getAmountAction()))
           .put("actionDateTime", actionDateTime)
-          .put("balance", formatter.format(feefineaction.getBalance()))
+          .put("balance", getFormattedValue(feefineaction.getBalance()))
           .put("actionAdditionalInfo", getCommentsFromFeeFineAction(feefineaction, PATRON_COMMENTS_KEY))
           .put("reasonForCancellation", getCommentsFromFeeFineAction(feefineaction, STAFF_COMMENTS_KEY)))
         .withAdditionalProperty("user", buildUserContext(ctx.getUser()))
       );
+  }
+
+  private String getFormattedValue(Double value) {
+    if (value == null) {
+      return null;
+    }
+    NumberFormat formatter = new DecimalFormat("#0.00");
+    return formatter.format(value);
   }
 
   private JsonObject buildUserContext(User user) {
