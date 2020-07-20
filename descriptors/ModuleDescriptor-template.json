@@ -205,6 +205,9 @@
           "pathPattern":"/feefineactions",
           "permissionsRequired":[
             "feefineactions.item.post"
+          ],
+          "modulePermissions": [
+            "patron-notice.post"
           ]
         },
         {

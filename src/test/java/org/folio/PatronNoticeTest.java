@@ -434,7 +434,8 @@ class PatronNoticeTest {
         .withFirstName("First")
         .withMiddleName("Middle")
         .withLastName("Last")
-        .withEmail("test@test.com"));
+        .withEmail("test@test.com"))
+      .withAdditionalProperty("additionalProperty", "value");
 
     String response = JsonObject.mapFrom(user)
       .encodePrettily();
