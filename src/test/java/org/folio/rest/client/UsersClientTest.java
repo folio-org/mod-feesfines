@@ -91,7 +91,8 @@ public class UsersClientTest extends ApiTests {
     String responseBody = "not a json";
     mockUsersResponse(HttpStatus.SC_OK, responseBody);
 
-    String expectedErrorMessage = "Failed to parse response for User. Response body: " + responseBody;
+    String expectedErrorMessage = String.format(
+      "Failed to parse response from %s. Response body: %s", "/users/" + USER_ID, responseBody);
 
 
     usersClient.fetchUserById(USER_ID)

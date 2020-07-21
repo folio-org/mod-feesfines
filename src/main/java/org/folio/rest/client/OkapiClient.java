@@ -27,9 +27,9 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class OkapiClient {
-  protected static final Logger log = LoggerFactory.getLogger(OkapiClient.class);
+  private static final Logger log = LoggerFactory.getLogger(OkapiClient.class);
   private static final String OKAPI_URL_HEADER = "x-okapi-url";
-  static final ObjectMapper objectMapper = new ObjectMapper();
+  protected static final ObjectMapper objectMapper = new ObjectMapper();
 
   private final WebClient webClient;
   private final String okapiUrl;
@@ -67,25 +67,32 @@ public class OkapiClient {
       return failedFuture(new IllegalArgumentException(errorMessage));
     }
 
+    final String url = resourcePath + "/" + id;
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
-    okapiGetAbs(resourcePath + "/" + id).send(promise);
+    okapiGetAbs(url).send(promise);
 
     return promise.future().compose(response -> {
       if (response.statusCode() != 200) {
-        return failedFuture(format("Failed to get %s by ID. Response status code: %s",
-          objectType.getSimpleName(), response.statusCode()));
+        final String errorMessage = format("Failed to get %s by ID. Response status code: %s",
+          objectType.getSimpleName(), response.statusCode());
+        log.error(errorMessage);
+        return failedFuture(errorMessage);
       }
       try {
         T object = objectMapper.readValue(response.bodyAsString(), objectType);
         return succeededFuture(object);
       } catch (IOException exception) {
-        return failedFuture(format("Failed to parse response for %s. Response body: %s",
-          objectType.getSimpleName(), response.bodyAsString()));
+        final String errorMessage = format("Failed to parse response from %s. Response body: %s",
+          url, response.bodyAsString());
+        log.error(errorMessage);
+        return failedFuture(errorMessage);
       }
     });
   }
 
-  private static <T> Optional<String> validateGetByIdArguments(String path, String id, Class<T> objectType) {
+  private static <T> Optional<String> validateGetByIdArguments(String path, String id,
+    Class<T> objectType) {
+
     String errorMessage = null;
 
     if (objectType == null) {
