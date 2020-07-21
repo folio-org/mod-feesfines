@@ -11,9 +11,11 @@ import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 
+import java.util.Collections;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
+import org.folio.rest.jaxrs.model.Address;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.test.support.ApiTests;
@@ -50,11 +52,18 @@ public class UsersClientTest extends ApiTests {
       .withBarcode("123456")
       .withPatronGroup(randomId())
       .withType("patron")
+      .withAdditionalProperty("additionalProperty", "value")
       .withPersonal(new Personal()
         .withFirstName("First")
         .withMiddleName("Middle")
         .withLastName("Last")
-        .withEmail("test@test.com"));
+        .withEmail("test@test.com")
+        .withAdditionalProperty("additionalProperty", "value")
+        .withAddresses(Collections.singletonList(
+          new Address()
+            .withId(randomId())
+            .withAdditionalProperty("additionalProperty", "value")))
+      );
 
     JsonObject userJson = JsonObject.mapFrom(user);
     mockUsersResponse(HttpStatus.SC_OK, userJson.encodePrettily());
