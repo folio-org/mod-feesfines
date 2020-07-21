@@ -80,7 +80,6 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static final String OWNERS_TABLE = "owners";
   private static final String FEE_FINE_ACTIONS_TABLE = "feefineactions";
 
-
   private static final String KEY_NAME = "name";
   private static final String KEY_ID = "id";
 
