@@ -38,7 +38,7 @@ import io.vertx.core.logging.LoggerFactory;
 
 public class FeeFineActionsAPI implements Feefineactions {
 
-    public static final String FEEFINEACTIONS_TABLE = "feefineactions";
+    private static final String FEEFINEACTIONS_TABLE = "feefineactions";
 
     private final Messages messages = Messages.getInstance();
     private static final String FEEFINEACTION_ID_FIELD = "'id'";

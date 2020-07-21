@@ -13,9 +13,9 @@ import io.vertx.core.Promise;
 
 public class FeeFineRepository {
 
-  public static final String FEEFINES_TABLE = "feefines";
+  private static final String FEEFINES_TABLE = "feefines";
 
-  private PostgresClient pgClient;
+  private final PostgresClient pgClient;
 
   public FeeFineRepository(PostgresClient pgClient) {
     this.pgClient = pgClient;

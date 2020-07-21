@@ -38,15 +38,11 @@ import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LoanPolicy;
 import org.folio.rest.jaxrs.model.Location;
-import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.RenewalsPolicy;
 import org.folio.rest.jaxrs.model.User;
-import org.folio.rest.repository.AccountRepository;
-import org.folio.rest.repository.FeeFineRepository;
-import org.folio.rest.repository.OwnerRepository;
 import org.folio.test.support.ApiTests;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -79,6 +75,12 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static final String LOAN_POLICIES_PATH = "/loan-policy-storage/loan-policies";
   private static final String USERS_PATH = "/users";
 
+  private static final String ACCOUNTS_TABLE = "accounts";
+  private static final String FEEFINES_TABLE = "feefines";
+  private static final String OWNERS_TABLE = "owners";
+  private static final String FEE_FINE_ACTIONS_TABLE = "feefineactions";
+
+
   private static final String KEY_NAME = "name";
   private static final String KEY_ID = "id";
 
@@ -88,10 +90,10 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   @Before
   public void setUp() {
-    removeAllFromTable(FeeFineRepository.FEEFINES_TABLE);
-    removeAllFromTable(AccountRepository.ACCOUNTS_TABLE);
-    removeAllFromTable(FeeFineActionsAPI.FEEFINEACTIONS_TABLE);
-    removeAllFromTable(OwnerRepository.OWNERS_TABLE);
+    removeAllFromTable(FEEFINES_TABLE);
+    removeAllFromTable(ACCOUNTS_TABLE);
+    removeAllFromTable(FEE_FINE_ACTIONS_TABLE);
+    removeAllFromTable(OWNERS_TABLE);
 
     super.setUpMapping();
   }
@@ -477,7 +479,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     return (String) properties.get("id");
   }
 
-  static String dateToString(Date date) {
+  private static String dateToString(Date date) {
     return new DateTime(date, DateTimeZone.UTC).toString();
   }
 

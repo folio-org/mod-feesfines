@@ -12,9 +12,9 @@ import io.vertx.core.Promise;
 
 public class OwnerRepository {
 
-  public static final String OWNERS_TABLE = "owners";
+  private static final String OWNERS_TABLE = "owners";
 
-  private PostgresClient pgClient;
+  private final PostgresClient pgClient;
 
   public OwnerRepository(PostgresClient pgClient) {
     this.pgClient = pgClient;
