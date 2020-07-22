@@ -11,9 +11,11 @@ import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 
+import java.util.Collections;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
+import org.folio.rest.jaxrs.model.Address;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.test.support.ApiTests;
@@ -50,11 +52,18 @@ public class UsersClientTest extends ApiTests {
       .withBarcode("123456")
       .withPatronGroup(randomId())
       .withType("patron")
+      .withAdditionalProperty("additionalProperty", "value")
       .withPersonal(new Personal()
         .withFirstName("First")
         .withMiddleName("Middle")
         .withLastName("Last")
-        .withEmail("test@test.com"));
+        .withEmail("test@test.com")
+        .withAdditionalProperty("additionalProperty", "value")
+        .withAddresses(Collections.singletonList(
+          new Address()
+            .withId(randomId())
+            .withAdditionalProperty("additionalProperty", "value")))
+      );
 
     JsonObject userJson = JsonObject.mapFrom(user);
     mockUsersResponse(HttpStatus.SC_OK, userJson.encodePrettily());
@@ -74,8 +83,7 @@ public class UsersClientTest extends ApiTests {
     String responseBody = "User not found";
     mockUsersResponse(HttpStatus.SC_NOT_FOUND, responseBody);
 
-    String expectedFailureMessage = String.format("Failed to fetch user with ID %s. Response: %d %s",
-      USER_ID, HttpStatus.SC_NOT_FOUND, responseBody);
+    String expectedFailureMessage = "Failed to get User by ID. Response status code: 404";
 
     usersClient.fetchUserById(USER_ID)
       .onSuccess(user -> context.fail("Should have failed"))
@@ -92,10 +100,14 @@ public class UsersClientTest extends ApiTests {
     String responseBody = "not a json";
     mockUsersResponse(HttpStatus.SC_OK, responseBody);
 
+    String expectedErrorMessage = String.format(
+      "Failed to parse response from %s. Response body: %s", "/users/" + USER_ID, responseBody);
+
+
     usersClient.fetchUserById(USER_ID)
       .onSuccess(user -> context.fail("Should have failed"))
       .onFailure(throwable -> {
-        context.assertTrue(throwable instanceof JsonParseException);
+        context.assertEquals(expectedErrorMessage, throwable.getMessage());
         async.complete();
       });
   }
