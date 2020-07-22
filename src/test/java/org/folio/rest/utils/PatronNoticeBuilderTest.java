@@ -28,15 +28,12 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Library;
-import org.folio.rest.jaxrs.model.Loan;
-import org.folio.rest.jaxrs.model.LoanPolicy;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.PatronNotice;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
-import org.folio.rest.jaxrs.model.RenewalsPolicy;
 import org.folio.rest.jaxrs.model.User;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -53,8 +50,6 @@ public class PatronNoticeBuilderTest {
     final Item item = createItem();
     final Location location = createLocation();
     final HoldingsRecord holdingsRecord = createHoldingsRecord();
-    final Loan loan = createLoan();
-    final LoanPolicy loanPolicy = createLoanPolicy();
     final Owner owner = createOwner();
     final Feefine feefine = createFeeFine();
     final Account account = createAccount();
@@ -69,8 +64,6 @@ public class PatronNoticeBuilderTest {
       .withItem(createItem())
       .withInstance(instance)
       .withHoldingsRecord(holdingsRecord)
-      .withLoan(loan)
-      .withLoanPolicy(loanPolicy)
       .withEffectiveLocation(location)
       .withOwner(owner)
       .withFeefine(feefine)
@@ -125,18 +118,6 @@ public class PatronNoticeBuilderTest {
       itemContext.getString("effectiveLocationCampus"));
 
     assertEquals(account.getMaterialType(), itemContext.getString("materialType"));
-
-    final JsonObject loanContext = (JsonObject) context.getAdditionalProperties().get("loan");
-    final RenewalsPolicy renewalsPolicy = loanPolicy.getRenewalsPolicy();
-
-    assertEquals(dateToString(loan.getDueDate()),
-      loanContext.getString("dueDate"));
-    assertEquals(loan.getLoanDate(), loanContext.getString("initialBorrowDate"));
-    assertEquals(loan.getReturnDate(), loanContext.getString("checkedInDate"));
-    assertEquals(String.valueOf(loan.getRenewalCount()), loanContext.getString("numberOfRenewalsTaken"));
-    assertEquals(String.valueOf(renewalsPolicy.getNumberAllowed().intValue()),
-      loanContext.getString("numberOfRenewalsAllowed"));
-    assertEquals("3", loanContext.getString("numberOfRenewalsRemaining"));
 
     final JsonObject chargeContext = (JsonObject) context.getAdditionalProperties().get("feeCharge");
 
@@ -269,22 +250,6 @@ public class PatronNoticeBuilderTest {
       .withAmount(13.0)
       .withRemaining(8.55)
       .withMetadata(new Metadata().withCreatedDate(new Date()));
-  }
-
-  private static LoanPolicy createLoanPolicy() {
-    return new LoanPolicy()
-      .withRenewalsPolicy(
-        new RenewalsPolicy()
-          .withUnlimited(false)
-          .withNumberAllowed(5.0));
-  }
-
-  private static Loan createLoan() {
-    return new Loan()
-      .withDueDate(new Date())
-      .withLoanDate(new DateTime().toString())
-      .withReturnDate(new DateTime().toString())
-      .withRenewalCount(2);
   }
 
   private static HoldingsRecord createHoldingsRecord() {

@@ -11,8 +11,6 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Loan;
-import org.folio.rest.jaxrs.model.LoanPolicy;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.User;
@@ -30,31 +28,27 @@ public class FeeFineNoticeContext {
   private Account account;
   private Feefineaction feefineaction;
   private User user;
-  private Loan loan;
   private Item item;
   private Instance instance;
   private HoldingsRecord holdingsRecord;
   private Location effectiveLocation;
-  private LoanPolicy loanPolicy;
 
   public FeeFineNoticeContext() {
   }
 
   public FeeFineNoticeContext(Owner owner, Feefine feefine, Account account,
-    Feefineaction feefineaction, User user, Loan loan, Item item, Instance instance,
-    HoldingsRecord holdingsRecord, Location effectiveLocation, LoanPolicy loanPolicy) {
+    Feefineaction feefineaction, User user, Item item, Instance instance,
+    HoldingsRecord holdingsRecord, Location effectiveLocation) {
 
     this.owner = owner;
     this.feefine = feefine;
     this.account = account;
     this.feefineaction = feefineaction;
     this.user = user;
-    this.loan = loan;
     this.item = item;
     this.instance = instance;
     this.holdingsRecord = holdingsRecord;
     this.effectiveLocation = effectiveLocation;
-    this.loanPolicy = loanPolicy;
   }
 
   public String getTemplateId() {
@@ -88,58 +82,48 @@ public class FeeFineNoticeContext {
   }
 
   public FeeFineNoticeContext withOwner(Owner owner) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+      instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withFeefine(Feefine feefine) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+      instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withAccount(Account account) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+      instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withFeefineaction(Feefineaction feefineaction) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+      instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withUser(User user) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
-  }
-
-  public FeeFineNoticeContext withLoan(Loan loan) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+      instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withItem(Item item) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+      instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withInstance(Instance instance) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+      instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withHoldingsRecord(HoldingsRecord holdingsRecord) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+      instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withEffectiveLocation(Location effectiveLocation) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
-  }
-
-  public FeeFineNoticeContext withLoanPolicy(LoanPolicy loanPolicy) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, loan, item,
-      instance, holdingsRecord, effectiveLocation, loanPolicy);
+    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+      instance, holdingsRecord, effectiveLocation);
   }
 
   public Owner getOwner() {
@@ -162,10 +146,6 @@ public class FeeFineNoticeContext {
     return user;
   }
 
-  public Loan getLoan() {
-    return loan;
-  }
-
   public Item getItem() {
     return item;
   }
@@ -180,9 +160,5 @@ public class FeeFineNoticeContext {
 
   public Location getEffectiveLocation() {
     return effectiveLocation;
-  }
-
-  public LoanPolicy getLoanPolicy() {
-    return loanPolicy;
   }
 }

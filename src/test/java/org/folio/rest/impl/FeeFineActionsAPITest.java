@@ -35,13 +35,10 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Library;
-import org.folio.rest.jaxrs.model.Loan;
-import org.folio.rest.jaxrs.model.LoanPolicy;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
-import org.folio.rest.jaxrs.model.RenewalsPolicy;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.test.support.ApiTests;
 import org.joda.time.DateTime;
@@ -71,8 +68,6 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static final String INSTITUTIONS_PATH = "/location-units/institutions";
   private static final String CAMPUSES_PATH = "/location-units/campuses";
   private static final String LIBRARIES_PATH = "/location-units/libraries";
-  private static final String LOANS_PATH = "/loan-storage/loans";
-  private static final String LOAN_POLICIES_PATH = "/loan-policy-storage/loan-policies";
   private static final String USERS_PATH = "/users";
 
   private static final String ACCOUNTS_TABLE = "accounts";
@@ -85,7 +80,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private static final String PRIMARY_CONTRIBUTOR_NAME = "Primary contributor";
   private static final String NON_PRIMARY_CONTRIBUTOR_NAME = "Non-primary contributor";
-  private static final int NUMBER_OF_RENEWALS_ALLOWED = 5;
 
   @Before
   public void setUp() {
@@ -105,13 +99,11 @@ public class FeeFineActionsAPITest extends ApiTests {
     final Location location = createLocation(library, campus, institution);
     final Instance instance = createInstance();
     final HoldingsRecord holdingsRecord = createHoldingsRecord(instance);
-    final LoanPolicy loanPolicy = createLoanPolicy();
-    final Loan loan = createLoan(loanPolicy);
     final Item item = createItem(holdingsRecord, location);
     final User user = createUser();
     final Owner owner = createOwner();
     final Feefine feefine = createFeeFine(owner);
-    final Account account = createAccount(user, item, feefine, loan, owner, instance, holdingsRecord);
+    final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
     final Feefineaction action = createAction(user, account, true);
 
     createEntity(OWNERS_PATH, owner);
@@ -123,8 +115,6 @@ public class FeeFineActionsAPITest extends ApiTests {
     createStub(LOCATIONS_PATH, location, location.getId());
     createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
     createStub(INSTANCES_PATH, instance, instance.getId());
-    createStub(LOANS_PATH, loan, loan.getId());
-    createStub(LOAN_POLICIES_PATH, loanPolicy, loanPolicy.getId());
     createStub(LIBRARIES_PATH, library, getIdFromProperties(library.getAdditionalProperties()));
     createStub(CAMPUSES_PATH, campus, getIdFromProperties(campus.getAdditionalProperties()));
     createStub(INSTITUTIONS_PATH, institution, getIdFromProperties(institution.getAdditionalProperties()));
@@ -165,13 +155,6 @@ public class FeeFineActionsAPITest extends ApiTests {
           .put("effectiveLocationInstitution", getNameFromProperties(institution.getAdditionalProperties()))
           .put("effectiveLocationCampus", getNameFromProperties(campus.getAdditionalProperties()))
           .put("materialType", account.getMaterialType()))
-        .put("loan", new JsonObject()
-          .put("dueDate", dateToString(loan.getDueDate()))
-          .put("initialBorrowDate", loan.getLoanDate())
-          .put("checkedInDate", loan.getReturnDate())
-          .put("numberOfRenewalsTaken", String.valueOf(loan.getRenewalCount()))
-          .put("numberOfRenewalsAllowed", String.valueOf(NUMBER_OF_RENEWALS_ALLOWED))
-          .put("numberOfRenewalsRemaining", "3"))
         .put("feeCharge", new JsonObject()
           .put("owner", account.getFeeFineOwner())
           .put("type", account.getFeeFineType())
@@ -353,15 +336,14 @@ public class FeeFineActionsAPITest extends ApiTests {
         new Contributor().withName(NON_PRIMARY_CONTRIBUTOR_NAME).withPrimary(false)));
   }
 
-  private static Account createAccount(User user, Item item, Feefine feefine, Loan loan,
-    Owner owner, Instance instance, HoldingsRecord holdingsRecord) {
+  private static Account createAccount(User user, Item item, Feefine feefine, Owner owner,
+    Instance instance, HoldingsRecord holdingsRecord) {
 
     return new Account()
       .withId(randomId())
       .withUserId(user.getId())
       .withItemId(item.getId())
       .withFeeFineId(feefine.getId())
-      .withLoanId(loan.getId())
       .withOwnerId(owner.getId())
       .withFeeFineOwner(owner.getOwner())
       .withInstanceId(instance.getId())
@@ -376,25 +358,6 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withMaterialTypeId(randomId())
       .withAmount(13.0)
       .withRemaining(8.55);
-  }
-
-  private static LoanPolicy createLoanPolicy() {
-    return new LoanPolicy()
-      .withId(randomId())
-      .withRenewalsPolicy(
-        new RenewalsPolicy()
-          .withUnlimited(false)
-          .withNumberAllowed((double) NUMBER_OF_RENEWALS_ALLOWED));
-  }
-
-  private static Loan createLoan(LoanPolicy loanPolicy) {
-    return new Loan()
-      .withId(randomId())
-      .withLoanPolicyId(loanPolicy.getId())
-      .withDueDate(new Date())
-      .withLoanDate(new DateTime().toString())
-      .withReturnDate(new DateTime().toString())
-      .withRenewalCount(2);
   }
 
   private static HoldingsRecord createHoldingsRecord(Instance instance) {
