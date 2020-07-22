@@ -7,7 +7,6 @@ import static org.folio.util.UuidUtil.isUuid;
 import java.util.Map;
 import java.util.Optional;
 
-import org.folio.rest.client.CirculationStorageClient;
 import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.client.UsersClient;
@@ -16,7 +15,6 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -42,7 +40,6 @@ public class PatronNoticeService {
   private final PatronNoticeClient patronNoticeClient;
   private final UsersClient usersClient;
   private final InventoryClient inventoryClient;
-  private final CirculationStorageClient circulationStorageClient;
 
   public PatronNoticeService(Vertx vertx, Map<String, String> okapiHeaders) {
     PostgresClient pgClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
@@ -55,7 +52,6 @@ public class PatronNoticeService {
     patronNoticeClient = new PatronNoticeClient(webClient, okapiHeaders);
     usersClient = new UsersClient(vertx, okapiHeaders);
     inventoryClient = new InventoryClient(webClient, okapiHeaders);
-    circulationStorageClient = new CirculationStorageClient(webClient, okapiHeaders);
   }
 
   public void sendPatronNotice(Feefineaction feefineaction) {
@@ -69,8 +65,6 @@ public class PatronNoticeService {
       .compose(this::fetchHolding)
       .compose(this::fetchInstance)
       .compose(this::fetchLocation)
-      .compose(this::fetchLoan)
-      .compose(this::fetchLoanPolicy)
       .map(PatronNoticeBuilder::buildNotice)
       .compose(patronNoticeClient::postPatronNotice)
       .onComplete(this::handleSendPatronNoticeResult);
@@ -169,28 +163,6 @@ public class PatronNoticeService {
 
     return inventoryClient.getCampusById(campusId)
       .map(location::withCampus);
-  }
-
-  private Future<FeeFineNoticeContext> fetchLoan(FeeFineNoticeContext context) {
-    final String loanId = context.getAccount().getLoanId();
-
-    if (!isUuid(loanId)) {
-      return succeededFuture(context);
-    }
-
-    return circulationStorageClient.getLoanById(loanId)
-      .map(context::withLoan);
-  }
-
-  private Future<FeeFineNoticeContext> fetchLoanPolicy(FeeFineNoticeContext context) {
-    final Loan loan = context.getLoan();
-
-    if (loan == null) {
-      return succeededFuture(context);
-    }
-
-    return circulationStorageClient.getLoanPolicyById(loan.getLoanPolicyId())
-      .map(context::withLoanPolicy);
   }
 
   private Future<FeeFineNoticeContext> refuseWhenEmptyTemplateId(FeeFineNoticeContext ctx) {

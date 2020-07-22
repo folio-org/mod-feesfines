@@ -35,14 +35,6 @@
       "version": "15.1"
     },
     {
-      "id": "loan-storage",
-      "version": "7.0"
-    },
-    {
-      "id": "loan-policy-storage",
-      "version": "2.1"
-    },
-    {
       "id": "pubsub-event-types",
       "version": "0.1"
     },
@@ -236,10 +228,6 @@
           ],
           "modulePermissions": [
             "patron-notice.post",
-            "circulation-storage.loans.item.get",
-            "circulation-storage.loans.collection.get",
-            "circulation-storage.loan-policies.item.get",
-            "circulation-storage.loan-policies.collection.get",
             "inventory-storage.items.item.get",
             "inventory-storage.items.collection.get",
             "inventory-storage.holdings.item.get",

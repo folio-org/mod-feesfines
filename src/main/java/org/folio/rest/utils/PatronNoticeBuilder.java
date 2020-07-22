@@ -1,6 +1,5 @@
 package org.folio.rest.utils;
 
-import static java.lang.Math.max;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -23,13 +22,10 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Loan;
-import org.folio.rest.jaxrs.model.LoanPolicy;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.PatronNotice;
 import org.folio.rest.jaxrs.model.Personal;
-import org.folio.rest.jaxrs.model.RenewalsPolicy;
 import org.folio.rest.jaxrs.model.User;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -38,9 +34,6 @@ import io.vertx.core.json.JsonObject;
 
 public class PatronNoticeBuilder {
   private static final String PATRON_COMMENTS_KEY = "PATRON";
-  private static final String UNLIMITED = "unlimited";
-  private static final String NUMBER_OF_RENEWALS_ALLOWED = "numberOfRenewalsAllowed";
-  private static final String NUMBER_OF_RENEWALS_REMAINING = "numberOfRenewalsRemaining";
   private static final String LIST_VALUES_SEPARATOR = "; ";
   private static final String BARCODE = "barcode";
   public static final String TITLE = "title";
@@ -63,7 +56,6 @@ public class PatronNoticeBuilder {
   private static Context buildContext(FeeFineNoticeContext ctx) {
     return new Context()
       .withAdditionalProperty("item", buildItemContext(ctx))
-      .withAdditionalProperty("loan", buildLoanContext(ctx))
       .withAdditionalProperty("user", buildUserContext(ctx))
       .withAdditionalProperty("feeCharge", buildFeeChargeContext(ctx))
       .withAdditionalProperty("feeAction", buildFeeActionContext(ctx));
@@ -155,46 +147,6 @@ public class PatronNoticeBuilder {
     }
 
     return itemContext;
-  }
-
-  private static JsonObject buildLoanContext(FeeFineNoticeContext ctx) {
-    final Loan loan = ctx.getLoan();
-    final JsonObject loanContext = new JsonObject();
-
-    if (loan == null) {
-      return loanContext;
-    }
-
-    loanContext
-      .put("dueDate", dateToString(loan.getDueDate()))
-      .put("initialBorrowDate", loan.getLoanDate())
-      .put("checkedInDate", loan.getReturnDate());
-
-    if (loan.getRenewalCount() != null) {
-      loanContext.put("numberOfRenewalsTaken", Integer.toString(loan.getRenewalCount()));
-    }
-
-    final LoanPolicy loanPolicy = ctx.getLoanPolicy();
-
-    if (loanPolicy != null && loanPolicy.getRenewalsPolicy() != null) {
-      final RenewalsPolicy renewalsPolicy = loanPolicy.getRenewalsPolicy();
-
-      if (isTrue(renewalsPolicy.getUnlimited())) {
-        loanContext.put(NUMBER_OF_RENEWALS_ALLOWED, UNLIMITED);
-        loanContext.put(NUMBER_OF_RENEWALS_REMAINING, UNLIMITED);
-      } else {
-        Double numberAllowed = renewalsPolicy.getNumberAllowed();
-        int renewalLimit = numberAllowed == null ? 0 : numberAllowed.intValue();
-        loanContext.put(NUMBER_OF_RENEWALS_ALLOWED, Integer.toString(renewalLimit));
-
-        if (loan.getRenewalCount() != null) {
-          int renewalsRemaining = max(renewalLimit - loan.getRenewalCount(), 0);
-          loanContext.put(NUMBER_OF_RENEWALS_REMAINING, Integer.toString(renewalsRemaining));
-        }
-      }
-    }
-
-    return loanContext;
   }
 
   private static JsonObject buildFeeChargeContext(FeeFineNoticeContext ctx) {
