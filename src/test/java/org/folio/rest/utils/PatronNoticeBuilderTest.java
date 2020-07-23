@@ -1,13 +1,17 @@
 package org.folio.rest.utils;
 
 import static org.folio.rest.utils.PatronNoticeBuilder.buildNotice;
+import static org.folio.rest.utils.PatronNoticeBuilder.formatCurrency;
 import static org.folio.rest.utils.PatronNoticeBuilder.parseFeeFineComments;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -43,6 +47,7 @@ import io.vertx.core.json.JsonObject;
 
 public class PatronNoticeBuilderTest {
   private static final String NAME = "name";
+  private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
 
   @Test
   public void createContextWithAllAvailableFields() {
@@ -124,8 +129,8 @@ public class PatronNoticeBuilderTest {
     assertEquals(account.getFeeFineOwner(), chargeContext.getString("owner"));
     assertEquals(account.getFeeFineType(), chargeContext.getString("type"));
     assertEquals(account.getPaymentStatus().getName(), chargeContext.getString("paymentStatus"));
-    assertEquals(account.getAmount(), chargeContext.getDouble("amount"));
-    assertEquals(account.getRemaining(), chargeContext.getDouble("remainingAmount"));
+    assertEquals(CURRENCY_FORMATTER.format(account.getAmount()), chargeContext.getString("amount"));
+    assertEquals(CURRENCY_FORMATTER.format(account.getRemaining()), chargeContext.getString("remainingAmount"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDate"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDateTime"));
 
@@ -134,8 +139,8 @@ public class PatronNoticeBuilderTest {
     assertEquals(action.getTypeAction(), actionContext.getString("type"));
     assertEquals(dateToString(action.getDateAction()), actionContext.getString("actionDate"));
     assertEquals(dateToString(action.getDateAction()), actionContext.getString("actionDateTime"));
-    assertEquals(action.getAmountAction(), actionContext.getDouble("amount"));
-    assertEquals(action.getBalance(), actionContext.getDouble("remainingAmount"));
+    assertEquals(CURRENCY_FORMATTER.format(action.getAmountAction()), actionContext.getString("amount"));
+    assertEquals(CURRENCY_FORMATTER.format(action.getBalance()), actionContext.getString("remainingAmount"));
     assertEquals("patron comment", actionContext.getString("additionalInfo"));
   }
 
@@ -212,6 +217,18 @@ public class PatronNoticeBuilderTest {
     assertThat(parsedComments.size(), is(1));
 
     assertThat(parsedComments, hasEntry("STAFF", "staff comment"));
+  }
+
+  @Test
+  public void currencyIsFormattedCorrectly() {
+    assertNull(formatCurrency(null));
+    assertEquals("0.00", formatCurrency(0d));
+    assertEquals("1.00", formatCurrency(1d));
+    assertEquals("1.20", formatCurrency(1.2));
+    assertEquals("1.23", formatCurrency(1.23));
+    assertEquals("1.22", formatCurrency(1.224));
+    assertEquals("1.23", formatCurrency(1.225));
+    assertEquals("1.23", formatCurrency(1.226));
   }
 
   private static Feefineaction createAction() {

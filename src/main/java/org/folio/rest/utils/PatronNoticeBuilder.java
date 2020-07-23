@@ -5,6 +5,8 @@ import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -164,8 +166,8 @@ public class PatronNoticeBuilder {
       .put("owner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
       .put("paymentStatus", paymentStatus)
-      .put("amount", account.getAmount())
-      .put("remainingAmount", account.getRemaining());
+      .put("amount", formatCurrency(account.getAmount()))
+      .put("remainingAmount", formatCurrency(account.getRemaining()));
 
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
@@ -193,8 +195,8 @@ public class PatronNoticeBuilder {
       .put("type", action.getTypeAction())
       .put("actionDate", actionDate)
       .put("actionDateTime", actionDate)
-      .put("amount", action.getAmountAction())
-      .put("remainingAmount", action.getBalance())
+      .put("amount", formatCurrency(action.getAmountAction()))
+      .put("remainingAmount", formatCurrency(action.getBalance()))
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
 
     return feeActionContext;
@@ -244,10 +246,19 @@ public class PatronNoticeBuilder {
       .orElse(null);
   }
 
-  static String dateToString(Date date) {
+  private static String dateToString(Date date) {
     return date != null
       ? new DateTime(date, DateTimeZone.UTC).toString()
       : null;
+  }
+
+  static String formatCurrency(Double value) {
+    if (value == null) {
+      return null;
+    }
+
+    NumberFormat formatter = new DecimalFormat("#0.00");
+    return formatter.format(value);
   }
 
 }

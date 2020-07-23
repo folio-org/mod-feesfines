@@ -12,6 +12,8 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.hamcrest.core.IsEqual.equalTo;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -80,6 +82,9 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private static final String PRIMARY_CONTRIBUTOR_NAME = "Primary contributor";
   private static final String NON_PRIMARY_CONTRIBUTOR_NAME = "Non-primary contributor";
+
+  private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
+
 
   @Before
   public void setUp() {
@@ -159,16 +164,16 @@ public class FeeFineActionsAPITest extends ApiTests {
           .put("owner", account.getFeeFineOwner())
           .put("type", account.getFeeFineType())
           .put("paymentStatus", account.getPaymentStatus().getName())
-          .put("amount", account.getAmount())
-          .put("remainingAmount", account.getRemaining())
+          .put("amount", CURRENCY_FORMATTER.format(account.getAmount()))
+          .put("remainingAmount", CURRENCY_FORMATTER.format(account.getRemaining()))
           .put("chargeDate", accountCreationDate)
           .put("chargeDateTime", accountCreationDate))
         .put("feeAction", new JsonObject()
           .put("type", action.getTypeAction())
           .put("actionDate", dateToString(action.getDateAction()))
           .put("actionDateTime", dateToString(action.getDateAction()))
-          .put("amount", action.getAmountAction())
-          .put("remainingAmount", action.getBalance())
+          .put("amount", CURRENCY_FORMATTER.format(action.getAmountAction()))
+          .put("remainingAmount", CURRENCY_FORMATTER.format(action.getBalance()))
           .put("additionalInfo", "patron comment")
         )
       );
