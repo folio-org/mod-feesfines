@@ -47,6 +47,7 @@ import io.vertx.core.json.JsonObject;
 
 public class PatronNoticeBuilderTest {
   private static final String NAME = "name";
+  private static final String COMMENT_FOR_PATRON = "patron comment";
   private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
 
   @Test
@@ -133,6 +134,8 @@ public class PatronNoticeBuilderTest {
     assertEquals(CURRENCY_FORMATTER.format(account.getRemaining()), chargeContext.getString("remainingAmount"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDate"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDateTime"));
+    assertEquals(COMMENT_FOR_PATRON, chargeContext.getString("additionalInfo"));
+
 
     final JsonObject actionContext = (JsonObject) context.getAdditionalProperties().get("feeAction");
 
@@ -141,7 +144,7 @@ public class PatronNoticeBuilderTest {
     assertEquals(dateToString(action.getDateAction()), actionContext.getString("actionDateTime"));
     assertEquals(CURRENCY_FORMATTER.format(action.getAmountAction()), actionContext.getString("amount"));
     assertEquals(CURRENCY_FORMATTER.format(action.getBalance()), actionContext.getString("remainingAmount"));
-    assertEquals("patron comment", actionContext.getString("additionalInfo"));
+    assertEquals(COMMENT_FOR_PATRON, actionContext.getString("additionalInfo"));
   }
 
   @Test
@@ -237,7 +240,7 @@ public class PatronNoticeBuilderTest {
       .withDateAction(new Date())
       .withAmountAction(4.45)
       .withBalance(8.55)
-      .withComments("STAFF : staff comment \n PATRON : patron comment");
+      .withComments("STAFF : staff comment \n PATRON : " + COMMENT_FOR_PATRON);
   }
 
   private static Feefine createFeeFine() {

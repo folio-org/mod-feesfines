@@ -82,6 +82,7 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private static final String PRIMARY_CONTRIBUTOR_NAME = "Primary contributor";
   private static final String NON_PRIMARY_CONTRIBUTOR_NAME = "Non-primary contributor";
+  private static final String COMMENT_FOR_PATRON = "patron comment";
 
   private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
 
@@ -166,14 +167,15 @@ public class FeeFineActionsAPITest extends ApiTests {
           .put("amount", CURRENCY_FORMATTER.format(account.getAmount()))
           .put("remainingAmount", CURRENCY_FORMATTER.format(account.getRemaining()))
           .put("chargeDate", accountCreationDate)
-          .put("chargeDateTime", accountCreationDate))
+          .put("chargeDateTime", accountCreationDate)
+          .put("additionalInfo", COMMENT_FOR_PATRON))
         .put("feeAction", new JsonObject()
           .put("type", action.getTypeAction())
           .put("actionDate", dateToString(action.getDateAction()))
           .put("actionDateTime", dateToString(action.getDateAction()))
           .put("amount", CURRENCY_FORMATTER.format(action.getAmountAction()))
           .put("remainingAmount", CURRENCY_FORMATTER.format(action.getBalance()))
-          .put("additionalInfo", "patron comment")
+          .put("additionalInfo", COMMENT_FOR_PATRON)
         )
       );
 
@@ -318,7 +320,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withDateAction(new Date())
       .withAmountAction(4.45)
       .withBalance(8.55)
-      .withComments("STAFF : staff comment \n PATRON : patron comment");
+      .withComments("STAFF : staff comment \n PATRON : " + COMMENT_FOR_PATRON);
   }
 
   private static Feefine createFeeFine(Owner owner) {
