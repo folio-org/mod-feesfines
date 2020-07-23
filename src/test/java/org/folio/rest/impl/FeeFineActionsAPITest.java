@@ -85,7 +85,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
 
-
   @Before
   public void setUp() {
     removeAllFromTable(FEEFINES_TABLE);
