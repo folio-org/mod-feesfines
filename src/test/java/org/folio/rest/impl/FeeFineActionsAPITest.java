@@ -93,8 +93,6 @@ public class FeeFineActionsAPITest extends ApiTests {
     removeAllFromTable(ACCOUNTS_TABLE);
     removeAllFromTable(FEE_FINE_ACTIONS_TABLE);
     removeAllFromTable(OWNERS_TABLE);
-
-    super.setUpMapping();
   }
 
   @Test
