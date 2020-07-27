@@ -2,6 +2,8 @@ package org.folio.rest.service;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.utils.FeeFineActionHelper.isAction;
+import static org.folio.rest.utils.FeeFineActionHelper.isCharge;
 import static org.folio.util.UuidUtil.isUuid;
 
 import java.util.Map;
@@ -19,6 +21,7 @@ import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
+import org.folio.rest.repository.ActionRepository;
 import org.folio.rest.repository.FeeFineRepository;
 import org.folio.rest.repository.OwnerRepository;
 import org.folio.rest.utils.PatronNoticeBuilder;
@@ -37,6 +40,7 @@ public class PatronNoticeService {
   private final FeeFineRepository feeFineRepository;
   private final OwnerRepository ownerRepository;
   private final AccountRepository accountRepository;
+  private final ActionRepository actionRepository;
   private final PatronNoticeClient patronNoticeClient;
   private final UsersClient usersClient;
   private final InventoryClient inventoryClient;
@@ -48,14 +52,16 @@ public class PatronNoticeService {
     feeFineRepository = new FeeFineRepository(pgClient);
     ownerRepository = new OwnerRepository(pgClient);
     accountRepository = new AccountRepository(pgClient);
+    actionRepository = new ActionRepository(pgClient);
 
     patronNoticeClient = new PatronNoticeClient(webClient, okapiHeaders);
     usersClient = new UsersClient(vertx, okapiHeaders);
     inventoryClient = new InventoryClient(webClient, okapiHeaders);
   }
 
-  public void sendPatronNotice(Feefineaction feefineaction) {
-    succeededFuture(new FeeFineNoticeContext().withFeefineaction(feefineaction))
+  public void sendPatronNotice(Feefineaction action) {
+    createContext(action)
+      .compose(this::loadChargeIfMissing)
       .compose(accountRepository::loadAccount)
       .compose(feeFineRepository::loadFeefine)
       .compose(ownerRepository::loadOwner)
@@ -68,6 +74,31 @@ public class PatronNoticeService {
       .map(PatronNoticeBuilder::buildNotice)
       .compose(patronNoticeClient::postPatronNotice)
       .onComplete(this::handleSendPatronNoticeResult);
+  }
+
+  private Future<FeeFineNoticeContext> createContext(Feefineaction action) {
+    FeeFineNoticeContext context = new FeeFineNoticeContext();
+
+    if (isAction(action)) {
+      context = context.withAction(action);
+    }
+
+    else if (isCharge(action)) {
+      context = context.withCharge(action);
+    }
+
+    return succeededFuture(context);
+  }
+
+  private Future<FeeFineNoticeContext> loadChargeIfMissing(FeeFineNoticeContext context) {
+    final Feefineaction action = context.getAction();
+
+    if (context.getCharge() != null || action == null) {
+      return succeededFuture(context);
+    }
+
+    return actionRepository.findChargeForAccount(action.getAccountId())
+      .map(context::withCharge);
   }
 
   private Future<FeeFineNoticeContext> fetchUser(FeeFineNoticeContext context) {

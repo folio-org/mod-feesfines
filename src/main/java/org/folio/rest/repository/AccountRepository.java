@@ -22,7 +22,7 @@ public class AccountRepository {
 
   public Future<FeeFineNoticeContext> loadAccount(FeeFineNoticeContext context) {
     Optional<String> optionalAccountId = Optional.ofNullable(context)
-      .map(FeeFineNoticeContext::getFeefineaction)
+      .map(FeeFineNoticeContext::getPrimaryAction)
       .map(Feefineaction::getAccountId);
 
     if (!optionalAccountId.isPresent()) {

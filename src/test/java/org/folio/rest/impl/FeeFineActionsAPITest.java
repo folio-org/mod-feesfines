@@ -82,7 +82,9 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private static final String PRIMARY_CONTRIBUTOR_NAME = "Primary contributor";
   private static final String NON_PRIMARY_CONTRIBUTOR_NAME = "Non-primary contributor";
-  private static final String COMMENT_FOR_PATRON = "patron comment";
+
+  private static final String CHARGE_COMMENT_FOR_PATRON = "Charge comment";
+  private static final String ACTION_COMMENT_FOR_PATRON = "Action comment";
 
   private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
 
@@ -107,6 +109,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     final Owner owner = createOwner();
     final Feefine feefine = createFeeFine(owner);
     final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
+    final Feefineaction charge = createCharge(user, account, true);
     final Feefineaction action = createAction(user, account, true);
 
     createEntity(OWNERS_PATH, owner);
@@ -122,16 +125,16 @@ public class FeeFineActionsAPITest extends ApiTests {
     createStub(CAMPUSES_PATH, campus, getIdFromProperties(campus.getAdditionalProperties()));
     createStub(INSTITUTIONS_PATH, institution, getIdFromProperties(institution.getAdditionalProperties()));
 
-    postAction(action);
+    postAction(charge);
 
     final String accountCreationDate = getAccountCreationDate(account);
 
-    final JsonObject expectedContext = new JsonObject()
+    final JsonObject expectedChargeContext = new JsonObject()
       .put("recipientId", action.getUserId())
       .put("deliveryChannel", "email")
       .put("outputFormat", "text/html")
       .put("lang", "en")
-      .put("templateId", feefine.getActionNoticeId())
+      .put("templateId", feefine.getChargeNoticeId())
       .put("context", new JsonObject()
         .put("user", new JsonObject()
           .put("barcode", user.getBarcode())
@@ -166,22 +169,28 @@ public class FeeFineActionsAPITest extends ApiTests {
           .put("remainingAmount", CURRENCY_FORMATTER.format(account.getRemaining()))
           .put("chargeDate", accountCreationDate)
           .put("chargeDateTime", accountCreationDate)
-          .put("additionalInfo", COMMENT_FOR_PATRON))
+          .put("additionalInfo", CHARGE_COMMENT_FOR_PATRON))
         .put("feeAction", new JsonObject()
-          .put("type", action.getTypeAction())
-          .put("actionDate", dateToString(action.getDateAction()))
-          .put("actionDateTime", dateToString(action.getDateAction()))
-          .put("amount", CURRENCY_FORMATTER.format(action.getAmountAction()))
-          .put("remainingAmount", CURRENCY_FORMATTER.format(action.getBalance()))
-          .put("additionalInfo", COMMENT_FOR_PATRON)
         )
       );
 
-    Awaitility.await()
-      .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
-        .withRequestBody(equalToJson(expectedContext.encodePrettily()))
-      ));
+    checkResult(expectedChargeContext);
+
+    final JsonObject expectedActionContext = expectedChargeContext
+      .put("templateId", feefine.getActionNoticeId());
+
+    expectedActionContext
+      .getJsonObject("context")
+      .getJsonObject("feeAction")
+      .put("type", action.getTypeAction())
+      .put("actionDate", dateToString(action.getDateAction()))
+      .put("actionDateTime", dateToString(action.getDateAction()))
+      .put("amount", CURRENCY_FORMATTER.format(action.getAmountAction()))
+      .put("remainingAmount", CURRENCY_FORMATTER.format(action.getBalance()))
+      .put("additionalInfo", ACTION_COMMENT_FOR_PATRON);
+
+    postAction(action);
+    checkResult(expectedActionContext);
   }
 
   @Test
@@ -311,14 +320,28 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private static Feefineaction createAction(User user, Account account, boolean notify) {
     return new Feefineaction()
+      .withId(randomId())
       .withUserId(user.getId())
       .withAccountId(account.getId())
       .withNotify(notify)
-      .withTypeAction("Paid fully")
+      .withTypeAction("Paid partially")
       .withDateAction(new Date())
-      .withAmountAction(4.45)
+      .withAmountAction(4.44)
+      .withBalance(7.11)
+      .withPaymentMethod("Cash")
+      .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
+  }
+
+  private static Feefineaction createCharge(User user, Account account, boolean notify) {
+    return new Feefineaction()
+      .withUserId(user.getId())
+      .withAccountId(account.getId())
+      .withNotify(notify)
+      .withTypeAction("Overdue fine")
+      .withDateAction(new Date())
+      .withAmountAction(8.55)
       .withBalance(8.55)
-      .withComments("STAFF : staff comment \n PATRON : " + COMMENT_FOR_PATRON);
+      .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }
 
   private static Feefine createFeeFine(Owner owner) {
@@ -458,6 +481,14 @@ public class FeeFineActionsAPITest extends ApiTests {
       .getString("createdDate");
 
     return new DateTime(creationDateFromMetadata, DateTimeZone.UTC).toString();
+  }
+
+  private void checkResult(JsonObject expectedRequest) {
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS)
+      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
+        .withRequestBody(equalToJson(expectedRequest.encodePrettily()))
+      ));
   }
 }
 
