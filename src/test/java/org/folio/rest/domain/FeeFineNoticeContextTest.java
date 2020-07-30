@@ -22,12 +22,11 @@ public class FeeFineNoticeContextTest {
   private static final String FEEFINE_ACTION_NOTICE_ID = "500ebb63-0871-4fe7-a1da-fb3f1dbec5f2";
 
   private final FeeFineNoticeContext context;
-  private final String expectedNoticeId;
+  private final String expectedTemplateId;
 
-  public FeeFineNoticeContextTest(FeeFineNoticeContext context, String expectedNoticeId) {
-
+  public FeeFineNoticeContextTest(FeeFineNoticeContext context, String expectedTemplateId) {
     this.context = context;
-    this.expectedNoticeId = expectedNoticeId;
+    this.expectedTemplateId = expectedTemplateId;
   }
 
   @Parameterized.Parameters
@@ -151,11 +150,11 @@ public class FeeFineNoticeContextTest {
   public void getTemplateIdReturnsCorrectId() {
     final String templateId = context.getTemplateId();
 
-    if (expectedNoticeId == null) {
+    if (expectedTemplateId == null) {
       assertNull(templateId);
     }
     else {
-      assertEquals(expectedNoticeId, templateId);
+      assertEquals(expectedTemplateId, templateId);
     }
   }
 

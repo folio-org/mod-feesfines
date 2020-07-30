@@ -82,7 +82,6 @@ public class PatronNoticeService {
     if (isAction(action)) {
       context = context.withAction(action);
     }
-
     else if (isCharge(action)) {
       context = context.withCharge(action);
     }
