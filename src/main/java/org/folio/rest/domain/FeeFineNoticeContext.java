@@ -2,9 +2,6 @@ package org.folio.rest.domain;
 
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -16,17 +13,12 @@ import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.User;
 
 public class FeeFineNoticeContext {
-  private static final List<String> FEE_FINE_ACTION_TYPES = Arrays.asList(
-    "Paid fully", "Paid partially",
-    "Waived fully", "Waived partially",
-    "Transferred fully", "Transferred partially",
-    "Refunded fully", "Refunded partially",
-    "Cancelled as error");
 
   private Owner owner;
   private Feefine feefine;
   private Account account;
-  private Feefineaction feefineaction;
+  private Feefineaction charge;
+  private Feefineaction action;
   private User user;
   private Item item;
   private Instance instance;
@@ -37,13 +29,14 @@ public class FeeFineNoticeContext {
   }
 
   public FeeFineNoticeContext(Owner owner, Feefine feefine, Account account,
-    Feefineaction feefineaction, User user, Item item, Instance instance,
+    Feefineaction charge, Feefineaction action, User user, Item item, Instance instance,
     HoldingsRecord holdingsRecord, Location effectiveLocation) {
 
     this.owner = owner;
     this.feefine = feefine;
     this.account = account;
-    this.feefineaction = feefineaction;
+    this.charge = charge;
+    this.action = action;
     this.user = user;
     this.item = item;
     this.instance = instance;
@@ -52,21 +45,19 @@ public class FeeFineNoticeContext {
   }
 
   public String getTemplateId() {
-    if (isFeeFineActon()) {
+    if (action != null) {
       return getActionNoticeTemplateId();
     }
-    else if (isCharge()) {
+
+    if (charge != null) {
       return getChargeNoticeTemplateId();
     }
+
     return null;
   }
 
-  private boolean isCharge() {
-    return feefineaction.getPaymentMethod() == null;
-  }
-
-  private boolean isFeeFineActon() {
-    return FEE_FINE_ACTION_TYPES.contains(feefineaction.getTypeAction());
+  public Feefineaction getPrimaryAction() {
+    return action != null ? action : charge;
   }
 
   private String getChargeNoticeTemplateId() {
@@ -78,51 +69,60 @@ public class FeeFineNoticeContext {
   }
 
   public String getUserId() {
-    return feefineaction.getUserId();
+    return getPrimaryAction().getUserId();
+  }
+
+  public String getAccountId() {
+    return getPrimaryAction().getAccountId();
   }
 
   public FeeFineNoticeContext withOwner(Owner owner) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
       instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withFeefine(Feefine feefine) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
       instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withAccount(Account account) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
       instance, holdingsRecord, effectiveLocation);
   }
 
-  public FeeFineNoticeContext withFeefineaction(Feefineaction feefineaction) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+  public FeeFineNoticeContext withCharge(Feefineaction charge) {
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
+      instance, holdingsRecord, effectiveLocation);
+  }
+
+  public FeeFineNoticeContext withAction(Feefineaction action) {
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
       instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withUser(User user) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
       instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withItem(Item item) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
       instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withInstance(Instance instance) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
       instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withHoldingsRecord(HoldingsRecord holdingsRecord) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
       instance, holdingsRecord, effectiveLocation);
   }
 
   public FeeFineNoticeContext withEffectiveLocation(Location effectiveLocation) {
-    return new FeeFineNoticeContext(owner, feefine, account, feefineaction, user, item,
+    return new FeeFineNoticeContext(owner, feefine, account, charge, action, user, item,
       instance, holdingsRecord, effectiveLocation);
   }
 
@@ -138,8 +138,12 @@ public class FeeFineNoticeContext {
     return account;
   }
 
-  public Feefineaction getFeefineaction() {
-    return feefineaction;
+  public Feefineaction getCharge() {
+    return charge;
+  }
+
+  public Feefineaction getAction() {
+    return action;
   }
 
   public User getUser() {

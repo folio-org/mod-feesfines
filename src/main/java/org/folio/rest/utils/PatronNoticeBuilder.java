@@ -153,7 +153,7 @@ public class PatronNoticeBuilder {
 
   private static JsonObject buildFeeChargeContext(FeeFineNoticeContext ctx) {
     final Account account = ctx.getAccount();
-    final Feefineaction action = ctx.getFeefineaction();
+    final Feefineaction charge = ctx.getCharge();
     final JsonObject feeChargeContext = new JsonObject();
 
     if (account == null) {
@@ -179,15 +179,15 @@ public class PatronNoticeBuilder {
         .put("chargeDateTime", chargeDate);
     }
 
-    if (action != null) {
-      feeChargeContext.put("additionalInfo", getCommentsFromFeeFineAction(action));
+    if (charge != null) {
+      feeChargeContext.put("additionalInfo", getCommentsFromFeeFineAction(charge));
     }
 
     return feeChargeContext;
   }
 
   private static JsonObject buildFeeActionContext(FeeFineNoticeContext ctx) {
-    final Feefineaction action = ctx.getFeefineaction();
+    final Feefineaction action = ctx.getAction();
     final JsonObject feeActionContext = new JsonObject();
 
     if (action == null) {

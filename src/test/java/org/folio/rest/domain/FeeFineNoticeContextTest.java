@@ -21,17 +21,12 @@ public class FeeFineNoticeContextTest {
   private static final String FEEFINE_CHARGE_NOTICE_ID = "f361fc2d-dfbb-48a9-9f3f-a40c297411cf";
   private static final String FEEFINE_ACTION_NOTICE_ID = "500ebb63-0871-4fe7-a1da-fb3f1dbec5f2";
 
-  private final Owner owner;
-  private final Feefine feeFine;
-  private final Feefineaction feeFineAction;
-  private final String correctNoticeId;
+  private final FeeFineNoticeContext context;
+  private final String expectedTemplateId;
 
-  public FeeFineNoticeContextTest(Owner owner, Feefine feeFine, Feefineaction feeFineAction,
-    String correctNoticeId) {
-    this.owner = owner;
-    this.feeFine = feeFine;
-    this.feeFineAction = feeFineAction;
-    this.correctNoticeId = correctNoticeId;
+  public FeeFineNoticeContextTest(FeeFineNoticeContext context, String expectedTemplateId) {
+    this.context = context;
+    this.expectedTemplateId = expectedTemplateId;
   }
 
   @Parameterized.Parameters
@@ -78,92 +73,88 @@ public class FeeFineNoticeContextTest {
     List<Object[]> parameters = new ArrayList<>();
 
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, charge, DEFAULT_CHARGE_NOTICE_ID});
+      {createChargeContext(owner, feeFineWithNullNoticeIds, charge), DEFAULT_CHARGE_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, charge, DEFAULT_CHARGE_NOTICE_ID});
+      {createChargeContext(owner, feeFineWithEmptyNoticeIds, charge), DEFAULT_CHARGE_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, charge, FEEFINE_CHARGE_NOTICE_ID});
+      {createChargeContext(owner, feeFineWithNoticeIds, charge), FEEFINE_CHARGE_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, paidFully, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNullNoticeIds, paidFully), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, paidPartially, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNullNoticeIds, paidPartially), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, paidFully, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithEmptyNoticeIds, paidFully), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, paidPartially, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithEmptyNoticeIds, paidPartially), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, paidFully, FEEFINE_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNoticeIds, paidFully), FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, paidPartially, FEEFINE_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNoticeIds, paidPartially), FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, waivedFully, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNullNoticeIds, waivedFully), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, waivedPartially, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNullNoticeIds, waivedPartially), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, waivedFully, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithEmptyNoticeIds, waivedFully), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, waivedPartially, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithEmptyNoticeIds, waivedPartially), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, waivedFully, FEEFINE_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNoticeIds, waivedFully), FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, waivedPartially, FEEFINE_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNoticeIds, waivedPartially), FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, transferredFully, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNullNoticeIds, transferredFully), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, transferredPartially, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNullNoticeIds, transferredPartially), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, transferredFully, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithEmptyNoticeIds, transferredFully), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, transferredPartially, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithEmptyNoticeIds, transferredPartially), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, transferredFully, FEEFINE_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNoticeIds, transferredFully), FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, transferredPartially, FEEFINE_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNoticeIds, transferredPartially), FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, refundedFully, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNullNoticeIds, refundedFully), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, refundedPartially, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNullNoticeIds, refundedPartially), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, refundedFully, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithEmptyNoticeIds, refundedFully), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, refundedPartially, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithEmptyNoticeIds, refundedPartially), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, refundedFully, FEEFINE_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNoticeIds, refundedFully), FEEFINE_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, refundedPartially, FEEFINE_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNoticeIds, refundedPartially), FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {owner, feeFineWithNullNoticeIds, cancelledAsError, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNullNoticeIds, cancelledAsError), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithEmptyNoticeIds, cancelledAsError, DEFAULT_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithEmptyNoticeIds, cancelledAsError), DEFAULT_ACTION_NOTICE_ID});
     parameters.add(new Object[]
-      {owner, feeFineWithNoticeIds, cancelledAsError, FEEFINE_ACTION_NOTICE_ID});
+      {createActionContext(owner, feeFineWithNoticeIds, cancelledAsError), FEEFINE_ACTION_NOTICE_ID});
 
     parameters.add(new Object[]
-      {ownerWithoutDefaultNoticeIds, feeFineWithNullNoticeIds, charge, null});
+      {createChargeContext(ownerWithoutDefaultNoticeIds, feeFineWithNullNoticeIds, charge), null});
     parameters.add(new Object[]
-      {ownerWithoutDefaultNoticeIds, feeFineWithEmptyNoticeIds, charge, null});
+      {createChargeContext(ownerWithoutDefaultNoticeIds, feeFineWithEmptyNoticeIds, charge), null});
 
     return parameters;
   }
 
   @Test
   public void getTemplateIdReturnsCorrectId() {
-    FeeFineNoticeContext feeFineNoticeContext = new FeeFineNoticeContext()
-      .withOwner(owner)
-      .withFeefine(feeFine)
-      .withFeefineaction(feeFineAction);
+    final String templateId = context.getTemplateId();
 
-    String templateId = feeFineNoticeContext.getTemplateId();
-    if (correctNoticeId == null) {
+    if (expectedTemplateId == null) {
       assertNull(templateId);
     }
     else {
-      assertEquals(correctNoticeId, templateId);
+      assertEquals(expectedTemplateId, templateId);
     }
   }
 
@@ -171,6 +162,24 @@ public class FeeFineNoticeContextTest {
     return new Feefineaction()
       .withPaymentMethod("Test payment method")
       .withTypeAction(type);
+  }
+
+  private static FeeFineNoticeContext createChargeContext(Owner owner, Feefine feeFine,
+    Feefineaction charge) {
+
+    return new FeeFineNoticeContext()
+      .withOwner(owner)
+      .withFeefine(feeFine)
+      .withCharge(charge);
+  }
+
+  private static FeeFineNoticeContext createActionContext(Owner owner, Feefine feeFine,
+    Feefineaction action) {
+
+    return new FeeFineNoticeContext()
+      .withOwner(owner)
+      .withFeefine(feeFine)
+      .withAction(action);
   }
 
 }

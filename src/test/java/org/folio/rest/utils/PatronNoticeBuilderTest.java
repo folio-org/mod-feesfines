@@ -47,7 +47,13 @@ import io.vertx.core.json.JsonObject;
 
 public class PatronNoticeBuilderTest {
   private static final String NAME = "name";
-  private static final String COMMENT_FOR_PATRON = "patron comment";
+
+  private static final String CHARGE_COMMENT_FOR_PATRON = "Charge comment";
+  private static final String ACTION_COMMENT_FOR_PATRON = "Action comment";
+
+  private static final String PRIMARY_CONTRIBUTOR = "Primary contributor";
+  private static final String NON_PRIMARY_CONTRIBUTOR = "Non-primary contributor";
+
   private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
 
   @Test
@@ -60,10 +66,8 @@ public class PatronNoticeBuilderTest {
     final Feefine feefine = createFeeFine();
     final Account account = createAccount();
     final Feefineaction action = createAction();
-
-    final String primaryContributor = "Primary contributor";
-    final String nonPrimaryContributor = "Non-primary contributor";
-    final Instance instance = createInstance(primaryContributor, nonPrimaryContributor);
+    final Feefineaction chargeAction = createChargeAction();
+    final Instance instance = createInstance();
 
     final FeeFineNoticeContext sourceContext = new FeeFineNoticeContext()
       .withUser(createUser())
@@ -74,7 +78,8 @@ public class PatronNoticeBuilderTest {
       .withOwner(owner)
       .withFeefine(feefine)
       .withAccount(account)
-      .withFeefineaction(action);
+      .withAction(action)
+      .withCharge(chargeAction);
 
     final PatronNotice patronNotice = buildNotice(sourceContext);
 
@@ -111,8 +116,8 @@ public class PatronNoticeBuilderTest {
     assertEquals(callNumberComponents.getSuffix(), itemContext.getString("callNumberSuffix"));
 
     assertEquals(instance.getTitle(), itemContext.getString("title"));
-    assertEquals(primaryContributor, itemContext.getString("primaryContributor"));
-    assertEquals(primaryContributor + "; " + nonPrimaryContributor,
+    assertEquals(PRIMARY_CONTRIBUTOR, itemContext.getString("primaryContributor"));
+    assertEquals(PRIMARY_CONTRIBUTOR + "; " + NON_PRIMARY_CONTRIBUTOR,
       itemContext.getString("allContributors"));
 
     assertEquals(location.getName(), itemContext.getString("effectiveLocationSpecific"));
@@ -134,7 +139,7 @@ public class PatronNoticeBuilderTest {
     assertEquals(CURRENCY_FORMATTER.format(account.getRemaining()), chargeContext.getString("remainingAmount"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDate"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDateTime"));
-    assertEquals(COMMENT_FOR_PATRON, chargeContext.getString("additionalInfo"));
+    assertEquals(CHARGE_COMMENT_FOR_PATRON, chargeContext.getString("additionalInfo"));
 
 
     final JsonObject actionContext = (JsonObject) context.getAdditionalProperties().get("feeAction");
@@ -144,7 +149,7 @@ public class PatronNoticeBuilderTest {
     assertEquals(dateToString(action.getDateAction()), actionContext.getString("actionDateTime"));
     assertEquals(CURRENCY_FORMATTER.format(action.getAmountAction()), actionContext.getString("amount"));
     assertEquals(CURRENCY_FORMATTER.format(action.getBalance()), actionContext.getString("remainingAmount"));
-    assertEquals(COMMENT_FOR_PATRON, actionContext.getString("additionalInfo"));
+    assertEquals(ACTION_COMMENT_FOR_PATRON, actionContext.getString("additionalInfo"));
   }
 
   @Test
@@ -157,7 +162,7 @@ public class PatronNoticeBuilderTest {
 
     final FeeFineNoticeContext sourceContext = new FeeFineNoticeContext()
       .withAccount(account)
-      .withFeefineaction(createAction())
+      .withAction(createAction())
       .withFeefine(createFeeFine())
       .withOwner(createOwner());
 
@@ -236,11 +241,21 @@ public class PatronNoticeBuilderTest {
 
   private static Feefineaction createAction() {
     return new Feefineaction()
-      .withTypeAction("Action type")
+      .withTypeAction("Paid partially")
       .withDateAction(new Date())
       .withAmountAction(4.45)
       .withBalance(8.55)
-      .withComments("STAFF : staff comment \n PATRON : " + COMMENT_FOR_PATRON);
+      .withPaymentMethod("Cash")
+      .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
+  }
+
+  private static Feefineaction createChargeAction() {
+    return new Feefineaction()
+      .withTypeAction("Book lost")
+      .withDateAction(new Date())
+      .withAmountAction(8.55)
+      .withBalance(8.55)
+      .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }
 
   private static Feefine createFeeFine() {
@@ -249,12 +264,12 @@ public class PatronNoticeBuilderTest {
       .withChargeNoticeId(UUID.randomUUID().toString());
   }
 
-  private static Instance createInstance(String primaryContributor, String nonPrimaryContributor) {
+  private static Instance createInstance() {
     return new Instance()
       .withTitle("Instance title")
       .withContributors(Arrays.asList(
-        new Contributor().withName(primaryContributor).withPrimary(true),
-        new Contributor().withName(nonPrimaryContributor).withPrimary(false)));
+        new Contributor().withName(PRIMARY_CONTRIBUTOR).withPrimary(true),
+        new Contributor().withName(NON_PRIMARY_CONTRIBUTOR).withPrimary(false)));
   }
 
   private static Account createAccount() {
