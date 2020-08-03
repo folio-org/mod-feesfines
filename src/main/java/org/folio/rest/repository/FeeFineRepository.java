@@ -15,7 +15,7 @@ public class FeeFineRepository {
 
   private static final String FEEFINES_TABLE = "feefines";
 
-  private PostgresClient pgClient;
+  private final PostgresClient pgClient;
 
   public FeeFineRepository(PostgresClient pgClient) {
     this.pgClient = pgClient;

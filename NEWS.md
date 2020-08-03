@@ -1,3 +1,8 @@
+## 15.8.2 2020-08-03
+* Extend/rename tokens available to manual fee/fine notices (MODFEE-72)
+* Fix incorrect formatting of monetary values in patron notices (MODFEE-87)
+* Fix missing permissions for fee/fine actions endpoint (MODFEE-89)
+
 ## 15.8.1 2020-07-13
 * Add loanId to the FEE_FINE_BALANCE_CHANGED event payload (MODFEE-71)
 

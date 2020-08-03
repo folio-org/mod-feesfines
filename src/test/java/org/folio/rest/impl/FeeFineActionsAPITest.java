@@ -3,27 +3,52 @@ package org.folio.rest.impl;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static io.vertx.core.json.JsonObject.mapFrom;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.hamcrest.core.IsEqual.equalTo;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
+import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.Campus;
+import org.folio.rest.jaxrs.model.Contributor;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
+import org.folio.rest.jaxrs.model.Feefine;
+import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Institution;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Library;
+import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.Owner;
+import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.test.support.ApiTests;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.restassured.RestAssured;
@@ -34,82 +59,139 @@ import io.restassured.specification.RequestSpecification;
 import io.vertx.core.json.JsonObject;
 
 public class FeeFineActionsAPITest extends ApiTests {
-  private static final String REST_PATH = "/feefineactions";
+  private static final String ACTIONS_PATH = "/feefineactions";
+  private static final String OWNERS_PATH = "/owners";
+  private static final String ACCOUNTS_PATH = "/accounts";
+  private static final String FEEFINES_PATH = "/feefines";
+  private static final String ITEMS_PATH = "/item-storage/items";
+  private static final String HOLDINGS_PATH = "/holdings-storage/holdings";
+  private static final String INSTANCES_PATH = "/instance-storage/instances";
+  private static final String LOCATIONS_PATH = "/locations";
+  private static final String INSTITUTIONS_PATH = "/location-units/institutions";
+  private static final String CAMPUSES_PATH = "/location-units/campuses";
+  private static final String LIBRARIES_PATH = "/location-units/libraries";
+  private static final String USERS_PATH = "/users";
+
+  private static final String ACCOUNTS_TABLE = "accounts";
   private static final String FEEFINES_TABLE = "feefines";
+  private static final String OWNERS_TABLE = "owners";
+  private static final String FEE_FINE_ACTIONS_TABLE = "feefineactions";
+
+  private static final String KEY_NAME = "name";
+  private static final String KEY_ID = "id";
+
+  private static final String PRIMARY_CONTRIBUTOR_NAME = "Primary contributor";
+  private static final String NON_PRIMARY_CONTRIBUTOR_NAME = "Non-primary contributor";
+
+  private static final String CHARGE_COMMENT_FOR_PATRON = "Charge comment";
+  private static final String ACTION_COMMENT_FOR_PATRON = "Action comment";
+
+  private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
+
 
   @Before
   public void setUp() {
     removeAllFromTable(FEEFINES_TABLE);
-    removeAllFromTable(FeeFineActionsAPI.FEEFINEACTIONS_TABLE);
+    removeAllFromTable(ACCOUNTS_TABLE);
+    removeAllFromTable(FEE_FINE_ACTIONS_TABLE);
+    removeAllFromTable(OWNERS_TABLE);
   }
 
   @Test
-  public void postFeefineActionsWithPatronNotification() {
-    setupPatronNoticeStub();
+  public void postActionWithPatronNotice() {
+    final Library library = createLibrary();
+    final Campus campus = createCampus();
+    final Institution institution = createInstitution();
+    final Location location = createLocation(library, campus, institution);
+    final Instance instance = createInstance();
+    final HoldingsRecord holdingsRecord = createHoldingsRecord(instance);
+    final Item item = createItem(holdingsRecord, location);
+    final User user = createUser();
+    final Owner owner = createOwner();
+    final Feefine feefine = createFeeFine(owner);
+    final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
+    final Feefineaction charge = createCharge(user, account, true);
+    final Feefineaction action = createAction(user, account, true);
 
-    final String ownerId = randomId();
-    final String feeFineId = randomId();
-    final String accountId = randomId();
-    final String defaultChargeTemplateId = randomId();
-    final String userId = randomId();
-    final String feeFineType = "damaged book";
-    final String typeAction = "damaged book";
-    final boolean notify = true;
-    final double amountAction = 100;
-    final double balance = 100;
-    final double amount = 10;
-    final String dateAction = "2019-12-23T14:25:59.550+0000";
+    createEntity(OWNERS_PATH, owner);
+    createEntity(FEEFINES_PATH, feefine);
+    createEntity(ACCOUNTS_PATH, account);
 
-    User user = new User()
-      .withId(userId)
-      .withUsername("tester")
-      .withActive(true)
-      .withBarcode("123456")
-      .withPatronGroup(randomId())
-      .withType("patron")
-      .withPersonal(new Personal()
-        .withFirstName("First")
-        .withMiddleName("Middle")
-        .withLastName("Last")
-        .withEmail("test@test.com"));
+    createStub(USERS_PATH, user, user.getId());
+    createStub(ITEMS_PATH, item, item.getId());
+    createStub(LOCATIONS_PATH, location, location.getId());
+    createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
+    createStub(INSTANCES_PATH, instance, instance.getId());
+    createStub(LIBRARIES_PATH, library, getIdFromProperties(library.getAdditionalProperties()));
+    createStub(CAMPUSES_PATH, campus, getIdFromProperties(campus.getAdditionalProperties()));
+    createStub(INSTITUTIONS_PATH, institution, getIdFromProperties(institution.getAdditionalProperties()));
 
-    setupUsersStub(user);
+    postAction(charge);
 
-    final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
-      amountAction, balance, accountId, userId);
-    final String expectedNoticeJson = createNoticeJson(defaultChargeTemplateId,
-      userId, feeFineType, typeAction, amountAction, balance, amount, dateAction, user);
+    final String accountCreationDate = getAccountCreationDate(account);
 
-    createEntity("/owners", new JsonObject()
-      .put("id", ownerId)
-      .put("owner", "library")
-      .put("defaultChargeNoticeId", defaultChargeTemplateId));
+    final JsonObject expectedChargeContext = new JsonObject()
+      .put("recipientId", action.getUserId())
+      .put("deliveryChannel", "email")
+      .put("outputFormat", "text/html")
+      .put("lang", "en")
+      .put("templateId", feefine.getChargeNoticeId())
+      .put("context", new JsonObject()
+        .put("user", new JsonObject()
+          .put("barcode", user.getBarcode())
+          .put("firstName", user.getPersonal().getFirstName())
+          .put("lastName", user.getPersonal().getLastName())
+          .put("middleName", user.getPersonal().getMiddleName()))
+        .put("item", new JsonObject()
+          .put("barcode", item.getBarcode())
+          .put("enumeration", item.getEnumeration())
+          .put("volume", item.getVolume())
+          .put("chronology", item.getChronology())
+          .put("yearCaption", "2000")
+          .put("copy", item.getCopyNumber())
+          .put("numberOfPieces", item.getNumberOfPieces())
+          .put("descriptionOfPieces", item.getDescriptionOfPieces())
+          .put("callNumber", item.getEffectiveCallNumberComponents().getCallNumber())
+          .put("callNumberPrefix", item.getEffectiveCallNumberComponents().getPrefix())
+          .put("callNumberSuffix", item.getEffectiveCallNumberComponents().getSuffix())
+          .put("title", instance.getTitle())
+          .put("primaryContributor", PRIMARY_CONTRIBUTOR_NAME)
+          .put("allContributors", PRIMARY_CONTRIBUTOR_NAME + "; " + NON_PRIMARY_CONTRIBUTOR_NAME)
+          .put("effectiveLocationSpecific", location.getName())
+          .put("effectiveLocationLibrary", getNameFromProperties(library.getAdditionalProperties()))
+          .put("effectiveLocationInstitution", getNameFromProperties(institution.getAdditionalProperties()))
+          .put("effectiveLocationCampus", getNameFromProperties(campus.getAdditionalProperties()))
+          .put("materialType", account.getMaterialType()))
+        .put("feeCharge", new JsonObject()
+          .put("owner", account.getFeeFineOwner())
+          .put("type", account.getFeeFineType())
+          .put("paymentStatus", account.getPaymentStatus().getName())
+          .put("amount", CURRENCY_FORMATTER.format(account.getAmount()))
+          .put("remainingAmount", CURRENCY_FORMATTER.format(account.getRemaining()))
+          .put("chargeDate", accountCreationDate)
+          .put("chargeDateTime", accountCreationDate)
+          .put("additionalInfo", CHARGE_COMMENT_FOR_PATRON))
+        .put("feeAction", new JsonObject()
+        )
+      );
 
-    createEntity("/accounts", new JsonObject()
-      .put("id", accountId)
-      .put("userId", userId)
-      .put("itemId", randomId())
-      .put("materialTypeId", randomId())
-      .put("feeFineId", feeFineId)
-      .put("ownerId", ownerId)
-      .put("amount", amount));
+    checkResult(expectedChargeContext);
 
-    createEntity("/feefines", new JsonObject()
-      .put("id", feeFineId)
-      .put("feeFineType", feeFineType)
-      .put("ownerId", ownerId));
+    final JsonObject expectedActionContext = expectedChargeContext
+      .put("templateId", feefine.getActionNoticeId());
 
-    post(feeFineActionJson)
-      .then()
-      .statusCode(HttpStatus.SC_CREATED)
-      .contentType(ContentType.JSON)
-      .body(equalTo(feeFineActionJson));
+    expectedActionContext
+      .getJsonObject("context")
+      .getJsonObject("feeAction")
+      .put("type", action.getTypeAction())
+      .put("actionDate", dateToString(action.getDateAction()))
+      .put("actionDateTime", dateToString(action.getDateAction()))
+      .put("amount", CURRENCY_FORMATTER.format(action.getAmountAction()))
+      .put("remainingAmount", CURRENCY_FORMATTER.format(action.getBalance()))
+      .put("additionalInfo", ACTION_COMMENT_FOR_PATRON);
 
-    Awaitility.await()
-      .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
-        .withRequestBody(equalToJson(expectedNoticeJson))
-      ));
+    postAction(action);
+    checkResult(expectedActionContext);
   }
 
   @Test
@@ -153,44 +235,6 @@ public class FeeFineActionsAPITest extends ApiTests {
       .body(equalTo(feeFineActionJson));
   }
 
-  private String createNoticeJson(String defaultChargeTemplateId, String userId, String feeFineType,
-    String typeAction, double amountAction, double balance, double amount, String dateAction,
-    User user) {
-
-    JsonObject noticeContext = createNoticeContext(feeFineType, typeAction,
-      amountAction, balance, amount, dateAction, user);
-
-    return new JsonObject()
-      .put("recipientId", userId)
-      .put("deliveryChannel", "email")
-      .put("templateId", defaultChargeTemplateId)
-      .put("outputFormat", "text/html")
-      .put("lang", "en")
-      .put("context", noticeContext)
-      .encodePrettily();
-  }
-
-  private JsonObject createNoticeContext(String feeFineType, String typeAction, double amountAction,
-    double balance, double amount, String dateAction, User user) {
-
-    return new JsonObject()
-      .put("fee", new JsonObject()
-        .put("owner", "library")
-        .put("type", feeFineType)
-        .put("amount", amount)
-        .put("actionType", typeAction)
-        .put("actionAmount", amountAction)
-        .put("actionDateTime", dateAction)
-        .put("balance", balance)
-        .put("actionAdditionalInfo", "patron comment")
-        .put("reasonForCancellation", "staff comment"))
-      .put("user", new JsonObject()
-        .put("firstName", user.getPersonal().getFirstName())
-        .put("lastName", user.getPersonal().getLastName())
-        .put("middleName", user.getPersonal().getMiddleName())
-        .put("barcode", user.getBarcode()));
-  }
-
   private String createFeeFineActionJson(String dateAction, String typeAction, boolean notify,
     double amountAction, double balance, String accountId, String userId) {
 
@@ -208,44 +252,6 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("userId", userId)
       .put("id", randomId())
       .encodePrettily();
-
-  }
-
-  private Response post(String body) {
-    return getRequestSpecification()
-      .body(body)
-      .when()
-      .post(REST_PATH);
-  }
-
-  private RequestSpecification getRequestSpecification() {
-    return RestAssured.given()
-      .baseUri(getOkapiUrl())
-      .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, TENANT_NAME))
-      .header(new Header(OKAPI_URL_HEADER, getOkapiUrl()))
-      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
-  }
-
-  private void setupPatronNoticeStub() {
-    getOkapi().stubFor(WireMock.post(urlPathEqualTo("/patron-notice"))
-      .withHeader(ACCEPT, matching(APPLICATION_JSON))
-      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
-      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
-      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
-      .willReturn(ok()));
-  }
-
-  private void setupUsersStub(User user) {
-    String response = JsonObject.mapFrom(user)
-      .encodePrettily();
-
-    getOkapi().stubFor(WireMock.get(urlPathEqualTo("/users/" + user.getId()))
-      .withHeader(ACCEPT, matching(APPLICATION_JSON))
-      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
-      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
-      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
-      .willReturn(aResponse().withBody(response)));
   }
 
   private void createEntity(String path, JsonObject entity) {
@@ -257,6 +263,233 @@ public class FeeFineActionsAPITest extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON);
+  }
+
+  private <T> void createEntity(String path, T entity) {
+    RestAssured.given()
+      .spec(getRequestSpecification())
+      .body(mapFrom(entity).encodePrettily())
+      .when()
+      .post(path)
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(ContentType.JSON);
+  }
+
+  private Response post(String body) {
+    return getRequestSpecification()
+      .body(body)
+      .when()
+      .post(ACTIONS_PATH);
+  }
+
+  private Response get(String path, String id) {
+    return getRequestSpecification()
+      .when()
+      .get(path + "/" + id);
+  }
+
+  private Response postAction(Feefineaction action) {
+    return post(mapFrom(action).encodePrettily());
+  }
+
+  private RequestSpecification getRequestSpecification() {
+    return RestAssured.given()
+      .baseUri(getOkapiUrl())
+      .contentType(MediaType.APPLICATION_JSON)
+      .header(new Header(OKAPI_HEADER_TENANT, TENANT_NAME))
+      .header(new Header(OKAPI_URL_HEADER, getOkapiUrl()))
+      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
+  }
+
+  private <T> void createStub(String url, T returnObject) {
+    createStub(url, aResponse().withBody(mapFrom(returnObject).encodePrettily()));
+  }
+
+  private <T> void createStub(String url, T returnObject, String id) {
+    createStub(url + "/" + id, returnObject);
+  }
+
+  private void createStub(String url, ResponseDefinitionBuilder responseBuilder) {
+    getOkapi().stubFor(WireMock.get(urlPathEqualTo(url))
+      .withHeader(ACCEPT, matching(APPLICATION_JSON))
+      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
+      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
+      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
+      .willReturn(responseBuilder));
+  }
+
+  private static Feefineaction createAction(User user, Account account, boolean notify) {
+    return new Feefineaction()
+      .withId(randomId())
+      .withUserId(user.getId())
+      .withAccountId(account.getId())
+      .withNotify(notify)
+      .withTypeAction("Paid partially")
+      .withDateAction(new Date())
+      .withAmountAction(4.44)
+      .withBalance(7.11)
+      .withPaymentMethod("Cash")
+      .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
+  }
+
+  private static Feefineaction createCharge(User user, Account account, boolean notify) {
+    return new Feefineaction()
+      .withUserId(user.getId())
+      .withAccountId(account.getId())
+      .withNotify(notify)
+      .withTypeAction("Overdue fine")
+      .withDateAction(new Date())
+      .withAmountAction(8.55)
+      .withBalance(8.55)
+      .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
+  }
+
+  private static Feefine createFeeFine(Owner owner) {
+    return new Feefine()
+      .withId(randomId())
+      .withOwnerId(owner.getId())
+      .withFeeFineType("Overdue fine")
+      .withAutomatic(true)
+      .withActionNoticeId(UUID.randomUUID().toString())
+      .withChargeNoticeId(UUID.randomUUID().toString());
+  }
+
+  private static Instance createInstance() {
+    return new Instance()
+      .withId(randomId())
+      .withTitle("Instance title")
+      .withContributors(Arrays.asList(
+        new Contributor().withName(PRIMARY_CONTRIBUTOR_NAME).withPrimary(true),
+        new Contributor().withName(NON_PRIMARY_CONTRIBUTOR_NAME).withPrimary(false)));
+  }
+
+  private static Account createAccount(User user, Item item, Feefine feefine, Owner owner,
+    Instance instance, HoldingsRecord holdingsRecord) {
+
+    return new Account()
+      .withId(randomId())
+      .withUserId(user.getId())
+      .withItemId(item.getId())
+      .withFeeFineId(feefine.getId())
+      .withOwnerId(owner.getId())
+      .withFeeFineOwner(owner.getOwner())
+      .withInstanceId(instance.getId())
+      .withHoldingsRecordId(holdingsRecord.getId())
+      .withBarcode("Account-level barcode")
+      .withTitle("Account-level title")
+      .withCallNumber("Account-level call number")
+      .withLocation("Account-level location")
+      .withPaymentStatus(new PaymentStatus().withName("Paid fully"))
+      .withFeeFineType(feefine.getFeeFineType())
+      .withMaterialType("book")
+      .withMaterialTypeId(randomId())
+      .withAmount(13.0)
+      .withRemaining(8.55);
+  }
+
+  private static HoldingsRecord createHoldingsRecord(Instance instance) {
+    return new HoldingsRecord()
+      .withId(randomId())
+      .withInstanceId(instance.getId())
+      .withCopyNumber("cp.2");
+  }
+
+  private static Location createLocation(Library library, Campus campus, Institution institution) {
+    return new Location()
+      .withId(randomId())
+      .withName("Specific")
+      .withCampusId(String.valueOf(campus.getAdditionalProperties().get(KEY_ID)))
+      .withLibraryId(String.valueOf(library.getAdditionalProperties().get(KEY_ID)))
+      .withInstitutionId(String.valueOf(institution.getAdditionalProperties().get(KEY_ID)));
+  }
+
+  private static Library createLibrary() {
+    return new Library()
+      .withAdditionalProperty(KEY_ID, randomId())
+      .withAdditionalProperty(KEY_NAME, "Library");
+  }
+
+  private static Campus createCampus() {
+    return new Campus()
+      .withAdditionalProperty(KEY_ID, randomId())
+      .withAdditionalProperty(KEY_NAME, "Campus");
+  }
+
+  private static Institution createInstitution() {
+    return new Institution()
+      .withAdditionalProperty(KEY_ID, randomId())
+      .withAdditionalProperty(KEY_NAME, "Institution");
+  }
+
+  private static Item createItem(HoldingsRecord holdingsRecord,
+    Location location) {
+    return new Item()
+      .withId(randomId())
+      .withHoldingsRecordId(holdingsRecord.getId())
+      .withBarcode("12345")
+      .withEnumeration("enum")
+      .withVolume("vol.1")
+      .withChronology("chronology")
+      .withYearCaption(new HashSet<>(Collections.singletonList("2000")))
+      .withCopyNumber("cp.1")
+      .withNumberOfPieces("1")
+      .withDescriptionOfPieces("little pieces")
+      .withEffectiveLocationId(location.getId())
+      .withEffectiveCallNumberComponents(
+        new EffectiveCallNumberComponents()
+          .withCallNumber("ABC.123.DEF")
+          .withPrefix("PREFIX")
+          .withSuffix("SUFFIX"));
+  }
+
+  private static User createUser() {
+    return new User()
+      .withId(randomId())
+      .withBarcode("54321")
+      .withPersonal(new Personal()
+        .withFirstName("First")
+        .withMiddleName("Middle")
+        .withLastName("Last"));
+  }
+
+  private static Owner createOwner() {
+    return new Owner()
+      .withId(randomId())
+      .withOwner("Test owner")
+      .withDefaultActionNoticeId(UUID.randomUUID().toString())
+      .withDefaultChargeNoticeId(UUID.randomUUID().toString());
+  }
+
+  private static String getNameFromProperties(Map<String, Object> properties) {
+    return (String) properties.get("name");
+  }
+
+  private static String getIdFromProperties(Map<String, Object> properties) {
+    return (String) properties.get("id");
+  }
+
+  private static String dateToString(Date date) {
+    return new DateTime(date, DateTimeZone.UTC).toString();
+  }
+
+  private String getAccountCreationDate(Account account) {
+    String getAccountResponse = get(ACCOUNTS_PATH, account.getId())
+      .getBody().prettyPrint();
+
+    final String creationDateFromMetadata = new JsonObject(getAccountResponse)
+      .getJsonObject("metadata")
+      .getString("createdDate");
+
+    return new DateTime(creationDateFromMetadata, DateTimeZone.UTC).toString();
+  }
+
+  private void checkResult(JsonObject expectedRequest) {
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS)
+      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
+        .withRequestBody(equalToJson(expectedRequest.encodePrettily()))
+      ));
   }
 }
 

@@ -11,8 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.folio.rest.jaxrs.model.Campus;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Institution;
+import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
+import org.folio.rest.jaxrs.model.Library;
+import org.folio.rest.jaxrs.model.Location;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -32,14 +39,14 @@ public class InventoryClient extends OkapiClient {
 
   public Future<Items> getItemsById(List<String> itemIds) {
     if (itemIds.isEmpty()) {
-      return Future.succeededFuture(new Items()
+      return succeededFuture(new Items()
         .withItems(new ArrayList<>())
         .withTotalRecords(0));
     }
 
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
 
-    HttpRequest<Buffer> request = okapiGetAbs("/inventory/items");
+    HttpRequest<Buffer> request = okapiGetAbs("/item-storage/items");
     if (!itemIds.isEmpty()) {
       request.addQueryParam("query", String.format("(id==(%s))",
         itemIds.stream()
@@ -60,7 +67,7 @@ public class InventoryClient extends OkapiClient {
           return succeededFuture(items);
         }
         catch (IOException ioException) {
-          return failedFuture("Failed to parse request. Response body: "
+          return failedFuture("Failed to parse response. Response body: "
             + response.bodyAsString());
         }
       }
@@ -69,7 +76,7 @@ public class InventoryClient extends OkapiClient {
 
   public Future<HoldingsRecords> getHoldingsById(List<String> holdingIds) {
     if (holdingIds.isEmpty()) {
-      return Future.succeededFuture(new HoldingsRecords()
+      return succeededFuture(new HoldingsRecords()
         .withHoldingsRecords(new ArrayList<>())
         .withTotalRecords(0));
     }
@@ -104,6 +111,34 @@ public class InventoryClient extends OkapiClient {
         }
       }
     });
+  }
+
+  public Future<Item> getItemById(String id) {
+    return getById("/item-storage/items", id, Item.class);
+  }
+
+  public Future<HoldingsRecord> getHoldingById(String id) {
+    return getById("/holdings-storage/holdings", id, HoldingsRecord.class);
+  }
+
+  public Future<Instance> getInstanceById(String id) {
+    return getById("/instance-storage/instances", id, Instance.class);
+  }
+
+  public Future<Location> getLocationById(String id) {
+    return getById("/locations", id, Location.class);
+  }
+
+  public Future<Institution> getInstitutionById(String id) {
+    return getById("/location-units/institutions", id, Institution.class);
+  }
+
+  public Future<Campus> getCampusById(String id) {
+    return getById("/location-units/campuses", id, Campus.class);
+  }
+
+  public Future<Library> getLibraryById(String id) {
+    return getById("/location-units/libraries", id, Library.class);
   }
 
 }

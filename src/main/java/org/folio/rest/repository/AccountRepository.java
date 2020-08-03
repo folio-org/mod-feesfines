@@ -14,7 +14,7 @@ public class AccountRepository {
 
   private static final String ACCOUNTS_TABLE = "accounts";
 
-  private PostgresClient pgClient;
+  private final PostgresClient pgClient;
 
   public AccountRepository(PostgresClient pgClient) {
     this.pgClient = pgClient;
@@ -22,7 +22,7 @@ public class AccountRepository {
 
   public Future<FeeFineNoticeContext> loadAccount(FeeFineNoticeContext context) {
     Optional<String> optionalAccountId = Optional.ofNullable(context)
-      .map(FeeFineNoticeContext::getFeefineaction)
+      .map(FeeFineNoticeContext::getPrimaryAction)
       .map(Feefineaction::getAccountId);
 
     if (!optionalAccountId.isPresent()) {

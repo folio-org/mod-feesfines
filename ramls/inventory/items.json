@@ -1,27 +1,27 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "A collection of holdings records",
+  "description": "A collection of item records",
   "type": "object",
   "properties": {
-    "holdingsRecords": {
-      "description": "List of holdings records",
-      "id": "holdingsRecord",
+    "items": {
+      "description": "List of item records",
+      "id": "items",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "holdings-record.json"
+        "$ref": "item.json"
       }
     },
     "totalRecords": {
       "type": "integer"
     },
     "resultInfo": {
-      "$ref": "raml-util/schemas/resultInfo.schema",
+      "$ref": "../raml-util/schemas/resultInfo.schema",
       "readonly": true
     }
   },
   "required": [
-    "holdingsRecords",
+    "items",
     "totalRecords"
   ]
 }
