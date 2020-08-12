@@ -12,6 +12,8 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
+import org.folio.rest.jaxrs.model.AccountsCheckRequest;
+import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
@@ -32,6 +34,7 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.service.AccountUpdateService;
+import org.folio.rest.service.AccountValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -317,7 +320,20 @@ public class AccountsAPI implements Accounts {
         .thenAccept(asyncResultHandler::handle);
     }
 
-    private static class AdditionalFieldsContext {
+    @Override
+    public void postAccountsCheckPayByAccountId(String accountId, AccountsCheckRequest entity,
+      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
+
+      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
+      PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+
+      AccountValidationService validationService = new AccountValidationService(
+        new AccountRepository(pgClient));
+      validationService.validatePayment(accountId, entity, asyncResultHandler);
+    }
+
+  private static class AdditionalFieldsContext {
       final Items items;
       final HoldingsRecords holdings;
 

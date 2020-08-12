@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static io.vertx.core.json.Json.decodeValue;
+import static org.folio.rest.utils.ResourceClients.accountsPayCheckClient;
 import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -27,10 +28,12 @@ import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.AccountsCheckRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
+import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -298,6 +301,62 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject eventPayload = new JsonObject(event.getEventPayload());
     assertFalse(eventPayload.containsKey("loanId"));
+  }
+
+  @Test
+  public void payCheckAmountShouldBeAllowed() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
+    accountCheckRequest.setAmount(3.0);
+
+    accountsPayCheckClient.attemptCreate(accountCheckRequest)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("allowed", is(true))
+      .body("amount", is(3.0f))
+      .body("remainingAmount", is(4.55f));
+  }
+
+  @Test
+  public void payCheckAmountShouldNotBeAllowedWithExceededAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
+    accountCheckRequest.setAmount(10.0);
+    String expectedErrorMessage = "Payment amount exceeds the selected amount";
+
+    accountsPayCheckClient.attemptCreate(accountCheckRequest)
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body(containsString(expectedErrorMessage))
+      .body("allowed", is(false))
+      .body("amount", is(10.0f));
+  }
+
+  @Test
+  public void payCheckAmountShouldNotBeAllowedWithNegativeAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
+    accountCheckRequest.setAmount(-5.0);
+    String expectedErrorMessage = "Invalid amount entered";
+
+    accountsPayCheckClient.attemptCreate(accountCheckRequest)
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body(containsString(expectedErrorMessage))
+      .body("allowed", is(false))
+      .body("amount", is(-5.0f));
+  }
+
+  private Account postAccount() {
+    Account accountToPost = createAccount();
+    accountsClient.create(accountToPost)
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(JSON);
+    return accountToPost;
   }
 
   private Account createAccount() {

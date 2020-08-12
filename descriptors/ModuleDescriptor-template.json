@@ -202,6 +202,18 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/check-pay",
+          "permissionsRequired":[
+            "accounts.item.post"
+          ],
+          "modulePermissions": [
+            "patron-notice.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",

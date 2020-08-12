@@ -12,6 +12,8 @@ types:
   accountdataCollection: !include accountdataCollection.json
   errors: !include raml-util/schemas/errors.schema
   patronNotice: !include patronNotice.json
+  accountsCheckRequest: !include accountsCheckRequest.json
+  accountsCheckResponse: !include accountsCheckResponse.json
 
 traits:
   orderable: !include raml-util/traits/orderable.raml
@@ -52,4 +54,21 @@ resourceTypes:
         schema: account
     get:
       description: Get a single account
-
+    /check-pay:
+      post:
+        is: [validate]
+        description: Checks if payment is valid
+        body:
+          application/json:
+            type: accountsCheckRequest
+        responses:
+          200:
+            description: "Returns accounts check response if validation is successful"
+            body:
+              application/json:
+                type: accountsCheckResponse
+          422:
+            description: "Returns accounts check response with validation error"
+            body:
+              application/json:
+                type: accountsCheckResponse

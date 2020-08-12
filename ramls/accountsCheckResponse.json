@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Accounts check response",
+  "type": "object",
+  "properties": {
+    "accountId": {
+      "type": "string",
+      "$ref": "uuid.json"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Amount of fine which patron pays"
+    },
+    "allowed": {
+      "type": "boolean",
+      "description": "Flag which indicates if validation is successful"
+    },
+    "remainingAmount": {
+      "type": "number",
+      "description": "Amount of fine that remains after paying"
+    },
+    "errorMessage": {
+      "type": "string",
+      "description": "Error message which describes why validation is unsuccessful"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "accountId",
+    "amount",
+    "allowed"
+  ]
+}
