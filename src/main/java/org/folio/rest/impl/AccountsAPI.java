@@ -333,7 +333,7 @@ public class AccountsAPI implements Accounts {
       validationService.validatePayment(accountId, entity, asyncResultHandler);
     }
 
-  private static class AdditionalFieldsContext {
+    private static class AdditionalFieldsContext {
       final Items items;
       final HoldingsRecords holdings;
 

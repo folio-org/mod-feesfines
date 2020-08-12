@@ -17,11 +17,11 @@
     },
     "remainingAmount": {
       "type": "number",
-      "description": "Amount of fine that remains after paying"
+      "description": "Amount of fine that remains after payment"
     },
     "errorMessage": {
       "type": "string",
-      "description": "Error message which describes why validation is unsuccessful"
+      "description": "Error message which describes why validation failed"
     }
   },
   "additionalProperties": false,

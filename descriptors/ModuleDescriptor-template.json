@@ -206,10 +206,7 @@
           ],
           "pathPattern":"/accounts/{id}/check-pay",
           "permissionsRequired":[
-            "accounts.item.post"
-          ],
-          "modulePermissions": [
-            "patron-notice.post"
+            "accounts.pay.check.post"
           ]
         },
         {
@@ -818,6 +815,11 @@
       "permissionName":"payments.item.post",
       "displayName":"payments item post",
       "description":"Create a new payment record"
+    },
+    {
+      "permissionName":"accounts.pay.check.post",
+      "displayName":"accounts payment check post",
+      "description":"Checks if payment is valid"
     },
     {
       "permissionName":"payments.item.put",

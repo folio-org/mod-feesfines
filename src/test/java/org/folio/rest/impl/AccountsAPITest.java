@@ -303,63 +303,7 @@ public class AccountsAPITest extends ApiTests {
     assertFalse(eventPayload.containsKey("loanId"));
   }
 
-  @Test
-  public void payCheckAmountShouldBeAllowed() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
-    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
-    accountCheckRequest.setAmount(3.0);
-
-    accountsPayCheckClient.attemptCreate(accountCheckRequest)
-      .then()
-      .statusCode(HttpStatus.SC_OK)
-      .body("allowed", is(true))
-      .body("amount", is(3.0f))
-      .body("remainingAmount", is(4.55f));
-  }
-
-  @Test
-  public void payCheckAmountShouldNotBeAllowedWithExceededAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
-    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
-    accountCheckRequest.setAmount(10.0);
-    String expectedErrorMessage = "Payment amount exceeds the selected amount";
-
-    accountsPayCheckClient.attemptCreate(accountCheckRequest)
-      .then()
-      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(expectedErrorMessage))
-      .body("allowed", is(false))
-      .body("amount", is(10.0f));
-  }
-
-  @Test
-  public void payCheckAmountShouldNotBeAllowedWithNegativeAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
-    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
-    accountCheckRequest.setAmount(-5.0);
-    String expectedErrorMessage = "Invalid amount entered";
-
-    accountsPayCheckClient.attemptCreate(accountCheckRequest)
-      .then()
-      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(expectedErrorMessage))
-      .body("allowed", is(false))
-      .body("amount", is(-5.0f));
-  }
-
-  private Account postAccount() {
-    Account accountToPost = createAccount();
-    accountsClient.create(accountToPost)
-      .then()
-      .statusCode(HttpStatus.SC_CREATED)
-      .contentType(JSON);
-    return accountToPost;
-  }
-
-  private Account createAccount() {
+  Account createAccount() {
     return new Account()
       .withId(randomId())
       .withOwnerId(randomId())

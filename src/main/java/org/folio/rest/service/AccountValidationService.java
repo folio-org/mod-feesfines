@@ -23,16 +23,15 @@ public class AccountValidationService {
     Handler<AsyncResult<Response>> asyncResultHandler) {
 
     accountRepository.getAccountById(accountId)
-      .onComplete(account -> {
+      .onSuccess(account -> {
         double entityAmount = entity.getAmount();
-        if (entityAmount > account.result().getRemaining()) {
+        if (entityAmount > account.getRemaining()) {
           AccountsCheckResponse response = create422AccountCheckResponse(
             accountId, entityAmount, "Payment amount exceeds the selected amount");
           asyncResultHandler.handle(Future.succeededFuture(
             Accounts.PostAccountsCheckPayByAccountIdResponse
               .respond422WithApplicationJson(response)));
-        }
-        if (entityAmount < 0) {
+        } else if (entityAmount < 0) {
           AccountsCheckResponse response = create422AccountCheckResponse(
             accountId, entityAmount, "Invalid amount entered");
           asyncResultHandler.handle(Future.succeededFuture(
@@ -40,12 +39,13 @@ public class AccountValidationService {
               .respond422WithApplicationJson(response)));
         } else {
           AccountsCheckResponse response = create200AccountCheckResponse(
-            accountId, entityAmount, account.result().getRemaining());
+            accountId, entityAmount, account.getRemaining());
           asyncResultHandler.handle(Future.succeededFuture(
             Accounts.PostAccountsCheckPayByAccountIdResponse
               .respond200WithApplicationJson(response)));
         }
-      });
+      }).onFailure(e -> Future.succeededFuture(
+        Accounts.PostAccountsCheckPayByAccountIdResponse.respond500WithTextPlain(e.getMessage())));
   }
 
   private AccountsCheckResponse create422AccountCheckResponse(String accountId,
