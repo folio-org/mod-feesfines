@@ -5,6 +5,7 @@
   "properties": {
     "accountId": {
       "type": "string",
+      "description": "ID of users fine/fee account",
       "$ref": "uuid.json"
     },
     "amount": {
