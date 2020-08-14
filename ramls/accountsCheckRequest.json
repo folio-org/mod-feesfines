@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Accounts check request",
+  "type": "object",
+  "properties": {
+    "amount": {
+      "type": "number",
+      "description": "Amount of fine which patron pays"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "amount"
+  ]
+}

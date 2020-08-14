@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static io.vertx.core.json.Json.decodeValue;
+import static org.folio.rest.utils.ResourceClients.accountsPayCheckClient;
 import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -27,10 +28,12 @@ import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.AccountsCheckRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
+import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -300,7 +303,7 @@ public class AccountsAPITest extends ApiTests {
     assertFalse(eventPayload.containsKey("loanId"));
   }
 
-  private Account createAccount() {
+  Account createAccount() {
     return new Account()
       .withId(randomId())
       .withOwnerId(randomId())

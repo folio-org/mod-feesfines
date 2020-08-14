@@ -29,8 +29,12 @@ public class AccountRepository {
       return Future.failedFuture(new IllegalArgumentException("Account id is not present"));
     }
 
+    return getAccountById(optionalAccountId.get()).map(context::withAccount);
+  }
+
+  public Future<Account> getAccountById(String accountId) {
     Promise<Account> promise = Promise.promise();
-    pgClient.getById(ACCOUNTS_TABLE, optionalAccountId.get(), Account.class, promise);
-    return promise.future().map(context::withAccount);
+    pgClient.getById(ACCOUNTS_TABLE, accountId, Account.class, promise);
+    return promise.future();
   }
 }

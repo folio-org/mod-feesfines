@@ -12,6 +12,9 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
+import org.folio.rest.jaxrs.model.AccountsCheckRequest;
+import org.folio.rest.jaxrs.model.AccountsCheckResponse;
+import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
@@ -32,9 +35,13 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.service.AccountUpdateService;
+import org.folio.rest.service.AccountValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.validation.ActionValidationFailure;
+import org.folio.rest.validation.ActionValidationSuccess;
+import org.folio.rest.validation.ValidationResult;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -315,6 +322,55 @@ public class AccountsAPI implements Accounts {
 
       accountUpdateService.updateAccount(accountId, entity, okapiHeaders, vertxContext)
         .thenAccept(asyncResultHandler::handle);
+    }
+
+    @Override
+    public void postAccountsCheckPayByAccountId(String accountId, AccountsCheckRequest request,
+      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
+
+      validateAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
+    }
+
+    private void validateAction(String accountId, AccountsCheckRequest request,
+     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+     Context vertxContext) {
+
+      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
+      PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+
+      AccountValidationService validationService = new AccountValidationService(
+        new AccountRepository(pgClient));
+      Double amount = request.getAmount();
+
+      validationService.validate(accountId, amount)
+        .onSuccess(result -> {
+          if (result.isValid()) {
+            AccountsCheckResponse response = createBaseAccountCheckResponse(accountId, amount)
+              .withAllowed(true)
+              .withRemainingAmount(((ActionValidationSuccess) result).getRemainingAmount());
+            asyncResultHandler.handle(Future.succeededFuture(
+              PostAccountsCheckPayByAccountIdResponse
+                .respond200WithApplicationJson(response)));
+          } else {
+            AccountsCheckResponse response = createBaseAccountCheckResponse(accountId, amount)
+              .withAllowed(false)
+              .withErrorMessage(((ActionValidationFailure) result).getErrorMessage());
+            asyncResultHandler.handle(Future.succeededFuture(
+              PostAccountsCheckPayByAccountIdResponse
+                .respond422WithApplicationJson(response)));
+          }
+        }).onFailure(e -> Future.succeededFuture(
+        PostAccountsCheckPayByAccountIdResponse.respond500WithTextPlain(e.getMessage())));
+    }
+
+    private AccountsCheckResponse createBaseAccountCheckResponse(
+      String accountId, double entityAmount) {
+
+      AccountsCheckResponse response = new AccountsCheckResponse();
+      response.setAccountId(accountId);
+      response.setAmount(entityAmount);
+      return response;
     }
 
     private static class AdditionalFieldsContext {

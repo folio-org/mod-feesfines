@@ -202,6 +202,15 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/check-pay",
+          "permissionsRequired":[
+            "accounts.pay.check.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",
@@ -806,6 +815,11 @@
       "permissionName":"payments.item.post",
       "displayName":"payments item post",
       "description":"Create a new payment record"
+    },
+    {
+      "permissionName":"accounts.pay.check.post",
+      "displayName":"accounts payment check post",
+      "description":"Checks if payment is valid"
     },
     {
       "permissionName":"payments.item.put",
