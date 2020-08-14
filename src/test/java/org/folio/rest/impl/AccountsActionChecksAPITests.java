@@ -34,7 +34,7 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
     ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
     AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
     accountCheckRequest.withAmount(10.0);
-    String expectedErrorMessage = "Payment amount exceeds the selected amount";
+    String expectedErrorMessage = "Requested amount exceeds remaining amount";
 
     accountsPayCheckClient.attemptCreate(accountCheckRequest)
       .then()
@@ -50,7 +50,23 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
     ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
     AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
     accountCheckRequest.withAmount(-5.0);
-    String expectedErrorMessage = "Invalid amount entered";
+    String expectedErrorMessage = "Amount must be positive";
+
+    accountsPayCheckClient.attemptCreate(accountCheckRequest)
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body(containsString(expectedErrorMessage))
+      .body("allowed", is(false))
+      .body("amount", is(new Float(accountCheckRequest.getAmount())));
+  }
+
+  @Test
+  public void payCheckAmountShouldNotBeAllowedWithZeroAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
+    accountCheckRequest.withAmount(0.0);
+    String expectedErrorMessage = "Amount must be positive";
 
     accountsPayCheckClient.attemptCreate(accountCheckRequest)
       .then()
