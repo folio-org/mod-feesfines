@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Account payment request",
+  "type": "object",
+  "properties": {
+    "amount": {
+      "type": "number",
+      "description": "Amount of payment",
+      "minimum": 0
+    },
+    "comments": {
+      "type": "string",
+      "description": "Additional info for staff or patron. Format: [STAFF : staff comment \n PATRON : patron comment]"
+    },
+    "transactionInfo": {
+      "type": "string",
+      "description": "Additional transaction information, e.g. check number"
+    },
+    "notifyPatron": {
+      "type": "boolean",
+      "description": "Should send patron notification or not"
+    },
+    "servicePointId": {
+      "type": "string",
+      "$ref": "uuid.json",
+      "description": "Unique ID of the service point where the payment was made"
+    },
+    "userName": {
+      "type": "string",
+      "description": "Name of the user that was logged in when the payment was made"
+    },
+    "paymentMethod": {
+      "type": "string",
+      "description": "Name of the payment method, e.g. `Cash` or `Credit card`"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "amount",
+    "notifyPatron",
+    "servicePointId",
+    "userName",
+    "paymentMethod"
+  ]
+}

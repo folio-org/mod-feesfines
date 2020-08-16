@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Account payment response",
+  "type": "object",
+  "properties": {
+    "accountId": {
+      "type": "string",
+      "description": "Unique ID of the account",
+      "$ref": "uuid.json"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Amount of payment",
+      "minimum": 0
+    },
+    "feeFineActionId": {
+      "type": "string",
+      "description": "Unique ID of the fee/fine action",
+      "$ref": "uuid.json"
+    },
+    "errorMessage": {
+      "type": "string",
+      "description": "Optional error message returned when request processing failed"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "accountId",
+    "amount"
+  ]
+}

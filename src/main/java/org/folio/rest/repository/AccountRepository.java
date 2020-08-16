@@ -9,9 +9,10 @@ import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 public class AccountRepository {
-
   private static final String ACCOUNTS_TABLE = "accounts";
 
   private final PostgresClient pgClient;
@@ -37,4 +38,11 @@ public class AccountRepository {
     pgClient.getById(ACCOUNTS_TABLE, accountId, Account.class, promise);
     return promise.future();
   }
+
+  public Future<Account> update(Account account) {
+    Promise<RowSet<Row>> promise = Promise.promise();
+    pgClient.update(ACCOUNTS_TABLE, account, account.getId(), promise);
+    return promise.future().map(account);
+  }
+
 }

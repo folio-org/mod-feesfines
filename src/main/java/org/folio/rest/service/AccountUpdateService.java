@@ -18,23 +18,34 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.domain.FeeFineAmount;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.repository.AccountRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 
 public class AccountUpdateService {
   private static final Logger log = LoggerFactory.getLogger(AccountUpdateService.class);
   private static final String ACCOUNTS_TABLE = "accounts";
 
-  public CompletableFuture<AsyncResult<Response>> updateAccount(String accountId,
-    Account account, Map<String, String> headers, Context context) {
+  private final AccountRepository accountRepository;
+  private final AccountEventPublisher eventPublisher;
+  private final Map<String, String> okapiHeaders;
+  private final Context context;
 
-    final AccountEventPublisher eventPublisher = new AccountEventPublisher(context, headers);
+  public AccountUpdateService(Map<String, String> okapiHeaders, Context context) {
+    this.okapiHeaders = okapiHeaders;
+    this.context = context;
+    this.accountRepository = new AccountRepository(context, okapiHeaders);
+    this.eventPublisher = new AccountEventPublisher(context, okapiHeaders);
+  }
+
+  public CompletableFuture<AsyncResult<Response>> updateAccount(String accountId, Account account) {
     final CompletableFuture<AsyncResult<Response>> putCompleted = new CompletableFuture<>();
 
-    put(ACCOUNTS_TABLE, account, accountId, headers, context,
+    put(ACCOUNTS_TABLE, account, accountId, okapiHeaders, context,
       PutAccountsByAccountIdResponse.class, putCompleted::complete);
 
     return putCompleted.thenCompose(responseResult -> {
@@ -56,6 +67,16 @@ public class AccountUpdateService {
 
       return succeededFuture(respond500WithTextPlain(error.getMessage()));
     });
+  }
+
+  public Future<Account> updateAccount(Account account) {
+    return accountRepository.update(account)
+      .onSuccess(a -> {
+        eventPublisher.publishAccountBalanceChangeEvent(account);
+        if (isFeeFineWithLoanClosed(account)) {
+          eventPublisher.publishLoanRelatedFeeFineClosedEvent(account);
+        }
+      });
   }
 
   private boolean isFeeFineWithLoanClosed(Account feeFine) {

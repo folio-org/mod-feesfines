@@ -54,7 +54,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"15.2",
+      "version":"15.3",
       "handlers":[
         {
           "methods":[
@@ -208,6 +208,19 @@
           "permissionsRequired":[
             "accounts.pay.check.post"
           ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/pay",
+          "permissionsRequired":[
+            "accounts.pay.post"
+          ],
+          "modulePermissions": [
+          "patron-notice.post",
+          "pubsub.publish.post"
+        ]
         },
         {
           "methods":[
@@ -777,6 +790,16 @@
       "description":"Delete an account record"
     },
     {
+      "permissionName":"accounts.pay.check.post",
+      "displayName":"accounts payment check post",
+      "description":"Checks if payment is valid"
+    },
+    {
+      "permissionName":"accounts.pay.post",
+      "displayName":"accounts payment post",
+      "description":"Makes a payment for an account"
+    },
+    {
       "permissionName":"feefineactions.collection.get",
       "displayName":"feefineactions collection get",
       "description":"Get a list of feefineaction records"
@@ -815,11 +838,6 @@
       "permissionName":"payments.item.post",
       "displayName":"payments item post",
       "description":"Create a new payment record"
-    },
-    {
-      "permissionName":"accounts.pay.check.post",
-      "displayName":"accounts payment check post",
-      "description":"Checks if payment is valid"
     },
     {
       "permissionName":"payments.item.put",

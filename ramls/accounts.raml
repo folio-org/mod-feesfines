@@ -14,6 +14,8 @@ types:
   patronNotice: !include patronNotice.json
   accountsCheckRequest: !include accountsCheckRequest.json
   accountsCheckResponse: !include accountsCheckResponse.json
+  feeFineActionRequest: !include feeFineActionRequest.json
+  feeFineActionResponse: !include feeFineActionResponse.json
 
 traits:
   orderable: !include raml-util/traits/orderable.raml
@@ -43,10 +45,10 @@ resourceTypes:
       pageable,
       facets
     ]
-    description: Return a list of accounts
+    description: "Return a list of accounts"
   post:
     is: [validate]
-    description: Create a account
+    description: "Create a account"
   /{accountId}:
     type:
       collection-item:
@@ -76,3 +78,27 @@ resourceTypes:
             body:
               text/plain:
                 example: "Internal server error"
+      description: "Get a single account"
+    /pay:
+      post:
+        is: [validate]
+        description: "Makes fee/fine payment"
+        body:
+          application/json:
+            type: feeFineActionRequest
+        responses:
+          201:
+            description: "Fee/fine payment was made successfully"
+            body:
+              application/json:
+                type: feeFineActionResponse
+          422:
+            description: "Request validation failed"
+            body:
+              application/json:
+                type: feeFineActionResponse
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error, please contact administrator"

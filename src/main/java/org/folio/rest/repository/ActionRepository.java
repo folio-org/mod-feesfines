@@ -45,4 +45,10 @@ public class ActionRepository {
         .orElse(null)
       );
   }
+
+  public Future<String> save(Feefineaction feefineaction) {
+    Promise<String> promise = Promise.promise();
+    pgClient.save(ACTIONS_TABLE, feefineaction.getId(), feefineaction, promise);
+    return promise.future();
+  }
 }
