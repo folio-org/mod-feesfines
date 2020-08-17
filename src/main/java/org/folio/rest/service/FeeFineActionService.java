@@ -1,6 +1,7 @@
 package org.folio.rest.service;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.folio.rest.domain.FeeFineActionResult.shouldCloseAccount;
 
 import java.util.Date;
@@ -26,6 +27,7 @@ public class FeeFineActionService {
   private final ActionRepository actionRepository;
   private final AccountUpdateService accountUpdateService;
   private final FeeFineActionValidationService validationService;
+  private final PatronNoticeService patronNoticeService;
 
   public FeeFineActionService(Map<String, String> okapiHeaders, Context vertxContext) {
     PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
@@ -35,6 +37,7 @@ public class FeeFineActionService {
     this.actionRepository = new ActionRepository(postgresClient);
     this.accountUpdateService = new AccountUpdateService(okapiHeaders, vertxContext);
     this.validationService = new FeeFineActionValidationService(accountRepository);
+    this.patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
   }
 
   public Future<ActionContext> pay(String accountId, FeeFineActionRequest request) {
@@ -42,7 +45,8 @@ public class FeeFineActionService {
       .compose(this::findAccount)
       .compose(this::validateAction)
       .compose(this::createAction)
-      .compose(this::updateAccount);
+      .compose(this::updateAccount)
+      .compose(this::sendPatronNotice);
   }
 
   private Future<ActionContext> findAccount(ActionContext context) {
@@ -57,7 +61,8 @@ public class FeeFineActionService {
 
   private Future<ActionContext> createAction(ActionContext context) {
     FeeFineActionRequest request = context.getRequest();
-    double remainingAmount = context.getAccount().getRemaining() - request.getAmount();
+    Account account = context.getAccount();
+    double remainingAmount = account.getRemaining() - request.getAmount();
 
     String actionType = remainingAmount == 0
       ? FeeFineActionResult.PAID_FULLY.getName()
@@ -71,7 +76,8 @@ public class FeeFineActionService {
       .withCreatedAt(request.getServicePointId())
       .withSource(request.getUserName())
       .withPaymentMethod(request.getPaymentMethod())
-      .withAccountId(context.getAccount().getUserId())
+      .withAccountId(context.getAccountId())
+      .withUserId(account.getUserId())
       .withBalance(remainingAmount)
       .withTypeAction(actionType)
       .withId(UUID.randomUUID().toString())
@@ -95,6 +101,13 @@ public class FeeFineActionService {
 
     return accountUpdateService.updateAccount(account)
       .map(context);
+  }
+
+  private Future<ActionContext> sendPatronNotice(ActionContext context) {
+    if (isTrue(context.getRequest().getNotifyPatron())) {
+      patronNoticeService.sendPatronNotice(context.getAction());
+    }
+    return succeededFuture(context);
   }
 
   public static class ActionContext {

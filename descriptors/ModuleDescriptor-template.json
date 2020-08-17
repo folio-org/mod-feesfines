@@ -218,9 +218,25 @@
             "accounts.pay.post"
           ],
           "modulePermissions": [
-          "patron-notice.post",
-          "pubsub.publish.post"
-        ]
+            "patron-notice.post",
+            "pubsub.publish.post",
+            "inventory-storage.items.item.get",
+            "inventory-storage.items.collection.get",
+            "inventory-storage.holdings.item.get",
+            "inventory-storage.holdings.collection.get",
+            "inventory-storage.instances.item.get",
+            "inventory-storage.instances.collection.get",
+            "inventory-storage.locations.item.get",
+            "inventory-storage.locations.collection.get",
+            "inventory-storage.location-units.libraries.item.get",
+            "inventory-storage.location-units.libraries.collection.get",
+            "inventory-storage.location-units.campuses.item.get",
+            "inventory-storage.location-units.campuses.collection.get",
+            "inventory-storage.location-units.institutions.item.get",
+            "inventory-storage.location-units.institutions.collection.get",
+            "users.item.get",
+            "users.collection.get"
+          ]
         },
         {
           "methods":[

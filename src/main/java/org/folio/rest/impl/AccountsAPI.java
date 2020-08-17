@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +72,7 @@ public class AccountsAPI implements Accounts {
     List<Account> accounts) {
 
     if (accounts == null) {
-      return Future.succeededFuture(null);
+      return succeededFuture(null);
     }
 
     InventoryClient inventoryClient = new InventoryClient(WebClient.create(vertx), okapiHeaders);
@@ -79,7 +81,7 @@ public class AccountsAPI implements Accounts {
       .map(Account::getItemId)
       .collect(Collectors.toList());
 
-    return Future.succeededFuture(new AdditionalFieldsContext(null, null))
+    return succeededFuture(new AdditionalFieldsContext(null, null))
       .compose(ctx -> inventoryClient.getItemsById(itemIds)
           .map(ctx::withItems))
       .compose(ctx -> inventoryClient.getHoldingsById(ctx.items.getItems().stream()
@@ -106,7 +108,7 @@ public class AccountsAPI implements Accounts {
           account.setInstanceId(instanceId);
         });
 
-        return Future.succeededFuture(null);
+        return succeededFuture(null);
       });
   }
 
@@ -137,17 +139,17 @@ public class AccountsAPI implements Accounts {
                                           accountCollection.setAccounts(accounts);
                                           accountCollection.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                                           accountCollection.setResultInfo(reply.result().getResultInfo());
-                                          asyncResultHandler.handle(Future.succeededFuture(
+                                          asyncResultHandler.handle(succeededFuture(
                                             GetAccountsResponse.respond200WithApplicationJson(accountCollection)));
                                         });
                                     } else {
-                                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                                        asyncResultHandler.handle(succeededFuture(
                                                 GetAccountsResponse.respond500WithTextPlain(
                                                         reply.cause().getMessage())));
                                     }
                                 } catch (Exception e) {
                                     logger.debug(e.getLocalizedMessage());
-                                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                                    asyncResultHandler.handle(succeededFuture(
                                             GetAccountsResponse.respond500WithTextPlain(
                                                     reply.cause().getMessage())));
                                 }
@@ -156,10 +158,10 @@ public class AccountsAPI implements Accounts {
                     logger.error(e.getLocalizedMessage(), e);
                     if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                         logger.debug("BAD CQL");
-                        asyncResultHandler.handle(Future.succeededFuture(GetAccountsResponse.respond400WithTextPlain(
+                        asyncResultHandler.handle(succeededFuture(GetAccountsResponse.respond400WithTextPlain(
                                 "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                     } else {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                        asyncResultHandler.handle(succeededFuture(
                                 GetAccountsResponse.respond500WithTextPlain(
                                         messages.getMessage(lang,
                                                 MessageConsts.InternalServerError))));
@@ -170,10 +172,10 @@ public class AccountsAPI implements Accounts {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");
-                asyncResultHandler.handle(Future.succeededFuture(GetAccountsResponse.respond400WithTextPlain(
+                asyncResultHandler.handle(succeededFuture(GetAccountsResponse.respond400WithTextPlain(
                         "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
             } else {
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                asyncResultHandler.handle(succeededFuture(
                         GetAccountsResponse.respond500WithTextPlain(
                                 messages.getMessage(lang,
                                         MessageConsts.InternalServerError))));
@@ -218,26 +220,26 @@ public class AccountsAPI implements Accounts {
                             true, false, getReply -> {
                                 if (getReply.failed()) {
                                     logger.error(getReply.result());
-                                    asyncResultHandler.handle(Future.succeededFuture(
+                                    asyncResultHandler.handle(succeededFuture(
                                             GetAccountsByAccountIdResponse.respond500WithTextPlain(
                                                     messages.getMessage(lang, MessageConsts.InternalServerError))));
                                 } else {
                                     List<Account> accountList = getReply.result().getResults();
                                     if (accountList.isEmpty()) {
-                                        asyncResultHandler.handle(Future.succeededFuture(
+                                        asyncResultHandler.handle(succeededFuture(
                                                 GetAccountsByAccountIdResponse.respond404WithTextPlain("Account"
                                                         + messages.getMessage(lang,
                                                                 MessageConsts.ObjectDoesNotExist))));
                                     } else if (accountList.size() > 1) {
                                         logger.error("Multiple accounts found with the same id");
-                                        asyncResultHandler.handle(Future.succeededFuture(
+                                        asyncResultHandler.handle(succeededFuture(
                                                 GetAccountsByAccountIdResponse.respond500WithTextPlain(
                                                         messages.getMessage(lang,
                                                                 MessageConsts.InternalServerError))));
                                     } else {
                                           setAdditionalFields(vertxContext.owner(), okapiHeaders, accountList)
                                             .onComplete(accountsResult -> asyncResultHandler.handle(
-                                              Future.succeededFuture(
+                                              succeededFuture(
                                                 GetAccountsByAccountIdResponse.respond200WithApplicationJson(
                                                   accountList.get(0)))));
                                     }
@@ -245,13 +247,13 @@ public class AccountsAPI implements Accounts {
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
-                    asyncResultHandler.handle(Future.succeededFuture(
+                    asyncResultHandler.handle(succeededFuture(
                             GetAccountsResponse.respond500WithTextPlain(messages.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                 }
             });
         } catch (Exception e) {
-            asyncResultHandler.handle(Future.succeededFuture(
+            asyncResultHandler.handle(succeededFuture(
                     GetAccountsResponse.respond500WithTextPlain(messages.getMessage(
                             lang, MessageConsts.InternalServerError))));
         }
@@ -277,10 +279,10 @@ public class AccountsAPI implements Accounts {
                                     if (deleteReply.result().rowCount() == 1) {
                                         new AccountEventPublisher(vertxContext, okapiHeaders)
                                           .publishDeletedAccountBalanceChangeEvent(accountId);
-                                        asyncResultHandler.handle(Future.succeededFuture(
+                                        asyncResultHandler.handle(succeededFuture(
                                                 DeleteAccountsByAccountIdResponse.respond204()));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(
+                                        asyncResultHandler.handle(succeededFuture(
                                                 DeleteAccountsByAccountIdResponse.respond404WithTextPlain("Record Not Found")));
                                     }
                                 } else {
@@ -288,17 +290,17 @@ public class AccountsAPI implements Accounts {
                                     String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
                                     logger.error(error, deleteReply.cause());
                                     if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteAccountsByAccountIdResponse.respond500WithTextPlain(
+                                        asyncResultHandler.handle(succeededFuture(DeleteAccountsByAccountIdResponse.respond500WithTextPlain(
                                                 messages.getMessage(lang, MessageConsts.InternalServerError))));
                                     } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteAccountsByAccountIdResponse.respond400WithTextPlain(error)));
+                                        asyncResultHandler.handle(succeededFuture(DeleteAccountsByAccountIdResponse.respond400WithTextPlain(error)));
                                     }
                                 }
                             });
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                     asyncResultHandler.handle(
-                            Future.succeededFuture(
+                            succeededFuture(
                                     DeleteAccountsByAccountIdResponse.respond500WithTextPlain(
                                             messages.getMessage(lang,
                                                     MessageConsts.InternalServerError))));
@@ -307,7 +309,7 @@ public class AccountsAPI implements Accounts {
         } catch (Exception e) {
             logger.error(e.getMessage());
             asyncResultHandler.handle(
-                    Future.succeededFuture(
+                    succeededFuture(
                             DeleteAccountsByAccountIdResponse.respond500WithTextPlain(
                                     messages.getMessage(lang,
                                             MessageConsts.InternalServerError))));
@@ -337,8 +339,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-    PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+    PostgresClient pgClient = PostgresClient.getInstance(
+      vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
     FeeFineActionValidationService validationService = new FeeFineActionValidationService(
       new AccountRepository(pgClient));
@@ -349,34 +351,30 @@ public class AccountsAPI implements Accounts {
         AccountsCheckResponse response = createBaseAccountCheckResponse(accountId, amount)
           .withAllowed(true)
           .withRemainingAmount(result.getRemainingAmount());
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse
-            .respond200WithApplicationJson(response)));
+        asyncResultHandler.handle(succeededFuture(
+          PostAccountsCheckPayByAccountIdResponse.respond200WithApplicationJson(response)));
       }).onFailure(throwable -> {
       String errorMessage = throwable.getLocalizedMessage();
       if (throwable instanceof FailedValidationException) {
         AccountsCheckResponse response = createBaseAccountCheckResponse(accountId, amount)
           .withAllowed(false)
           .withErrorMessage(errorMessage);
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse
-            .respond422WithApplicationJson(response)));
+        asyncResultHandler.handle(succeededFuture(
+          PostAccountsCheckPayByAccountIdResponse.respond422WithApplicationJson(response)));
       } else {
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse
-            .respond500WithTextPlain(errorMessage)));
+        asyncResultHandler.handle(succeededFuture(
+          PostAccountsCheckPayByAccountIdResponse.respond500WithTextPlain(errorMessage)));
       }
     });
   }
 
-    private AccountsCheckResponse createBaseAccountCheckResponse(
-      String accountId, double entityAmount) {
+  private AccountsCheckResponse createBaseAccountCheckResponse(
+    String accountId, double entityAmount) {
 
-      AccountsCheckResponse response = new AccountsCheckResponse();
-      response.setAccountId(accountId);
-      response.setAmount(entityAmount);
-      return response;
-    }
+    return new AccountsCheckResponse()
+      .withAccountId(accountId)
+      .withAmount(entityAmount);
+  }
 
   @Override
   public void postAccountsPayByAccountId(String accountId, FeeFineActionRequest request,
@@ -390,7 +388,7 @@ public class AccountsAPI implements Accounts {
           .withAccountId(accountId)
           .withAmount(request.getAmount())
           .withFeeFineActionId(context.getAction().getId());
-        asyncResultHandler.handle(Future.succeededFuture(
+        asyncResultHandler.handle(succeededFuture(
           PostAccountsPayByAccountIdResponse.respond201WithApplicationJson(response)));
       })
       .onFailure(throwable -> {
@@ -400,10 +398,10 @@ public class AccountsAPI implements Accounts {
             .withAccountId(accountId)
             .withAmount(request.getAmount())
             .withErrorMessage(errorMessage);
-          asyncResultHandler.handle(Future.succeededFuture(
+          asyncResultHandler.handle(succeededFuture(
             PostAccountsPayByAccountIdResponse.respond422WithApplicationJson(response)));
         } else {
-          asyncResultHandler.handle(Future.succeededFuture(
+          asyncResultHandler.handle(succeededFuture(
             PostAccountsPayByAccountIdResponse.respond500WithTextPlain(errorMessage)));
         }
       });
