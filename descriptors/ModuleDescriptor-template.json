@@ -211,6 +211,15 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/check-waive",
+          "permissionsRequired":[
+            "accounts.waive.check.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",

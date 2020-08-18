@@ -4,8 +4,8 @@
   "type": "object",
   "properties": {
     "amount": {
-      "type": "number",
-      "description": "Amount of fine which patron pays"
+      "type": "string",
+      "description": "Amount of fine which patron filled in the form"
     }
   },
   "additionalProperties": false,
