@@ -17,86 +17,86 @@ import org.junit.Test;
 public class AccountsActionChecksAPITests extends AccountsAPITest {
 
   @Test
-  public void payCheckAmountShouldBeAllowed() {
+  public void checkPayAmountShouldBeAllowed() {
     Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsCheckPayClient(accountToPost.getId());
-    actionCheckAmountShouldBeAllowed(accountsPayCheckClient, accountToPost);
+    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
+    actionCheckAmountShouldBeAllowed(accountsCheckPayClient, accountToPost);
   }
 
   @Test
-  public void waiveCheckAmountShouldBeAllowed() {
+  public void checkWaiveAmountShouldBeAllowed() {
     Account accountToPost = postAccount();
-    ResourceClient accountsWaiveCheckClient = accountsCheckWaiveClient(accountToPost.getId());
-    actionCheckAmountShouldBeAllowed(accountsWaiveCheckClient, accountToPost);
+    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
+    actionCheckAmountShouldBeAllowed(accountsCheckWaiveClient, accountToPost);
   }
 
   @Test
-  public void payCheckAmountShouldNotBeAllowedWithExceededAmount() {
+  public void checkPayAmountShouldNotBeAllowedWithExceededAmount() {
     Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsCheckPayClient(accountToPost.getId());
-    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsPayCheckClient);
+    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckPayClient);
   }
 
   @Test
-  public void waiveCheckAmountShouldNotBeAllowedWithExceededAmount() {
+  public void checkWaiveAmountShouldNotBeAllowedWithExceededAmount() {
     Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsCheckWaiveClient(accountToPost.getId());
-    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsPayCheckClient);
+    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckWaiveClient);
   }
 
   @Test
-  public void payCheckAmountShouldNotBeAllowedWithNegativeAmount() {
+  public void checkPayAmountShouldNotBeAllowedWithNegativeAmount() {
     Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsCheckPayClient(accountToPost.getId());
-    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsPayCheckClient);
+    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckPayClient);
   }
 
   @Test
-  public void waiveCheckAmountShouldNotBeAllowedWithNegativeAmount() {
+  public void checkWaiveAmountShouldNotBeAllowedWithNegativeAmount() {
     Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsCheckWaiveClient(accountToPost.getId());
-    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsPayCheckClient);
+    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckWaiveClient);
   }
 
   @Test
-  public void payCheckAmountShouldNotBeAllowedWithZeroAmount() {
+  public void checkPayAmountShouldNotBeAllowedWithZeroAmount() {
     Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsCheckPayClient(accountToPost.getId());
-    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsPayCheckClient);
+    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckPayClient);
   }
 
   @Test
-  public void waiveCheckAmountShouldNotBeAllowedWithZeroAmount() {
+  public void checkWaiveAmountShouldNotBeAllowedWithZeroAmount() {
     Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsCheckWaiveClient(accountToPost.getId());
-    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsPayCheckClient);
+    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckWaiveClient);
   }
 
   @Test
-  public void payCheckAmountShouldNotBeNumber() {
+  public void checkPayAmountShouldNotBeNumber() {
     Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsCheckPayClient(accountToPost.getId());
-    actionCheckAmountShouldBeNumber(accountsPayCheckClient);
+    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
+    actionCheckAmountShouldBeNumber(accountsCheckPayClient);
   }
 
   @Test
-  public void waiveCheckAmountShouldNotBeNumber() {
+  public void checkWaiveAmountShouldNotBeNumber() {
     Account accountToPost = postAccount();
-    ResourceClient accountsWaiveCheckClient = accountsCheckWaiveClient(accountToPost.getId());
-    actionCheckAmountShouldBeNumber(accountsWaiveCheckClient);
+    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
+    actionCheckAmountShouldBeNumber(accountsCheckWaiveClient);
   }
 
   @Test
-  public void payCheckAmountShouldNotFailForNonExistentAccount() {
-    ResourceClient accountsPayCheckClient = accountsCheckPayClient(UUID.randomUUID().toString());
-    actionCheckAmountShouldNotFailForNonExistentAccount(accountsPayCheckClient);
+  public void checkPayAmountShouldNotFailForNonExistentAccount() {
+    ResourceClient accountsCheckPayClient = accountsCheckPayClient(UUID.randomUUID().toString());
+    actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckPayClient);
   }
 
   @Test
-  public void waiveCheckAmountShouldNotFailForNonExistentAccount() {
-    ResourceClient accountsWaiveCheckClient =
+  public void checkWaiveAmountShouldNotFailForNonExistentAccount() {
+    ResourceClient accountsCheckWaiveClient =
       accountsCheckWaiveClient(UUID.randomUUID().toString());
-    actionCheckAmountShouldNotFailForNonExistentAccount(accountsWaiveCheckClient);
+    actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckWaiveClient);
   }
 
   private void actionCheckAmountShouldBeAllowed(

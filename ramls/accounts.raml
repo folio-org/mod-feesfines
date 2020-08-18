@@ -62,7 +62,7 @@ resourceTypes:
             type: checkActionRequest
         responses:
           200:
-            description: "Returns accounts pay check response if validation is successful"
+            description: "Payment is allowed"
             body:
               application/json:
                 type: checkActionResponse
@@ -72,7 +72,7 @@ resourceTypes:
               text/plain:
                 example: "Account was not found"
           422:
-            description: "Returns accounts pay check response with validation error"
+            description: "Payment is not allowed"
             body:
               application/json:
                 type: checkActionResponse
@@ -89,7 +89,7 @@ resourceTypes:
             type: checkActionRequest
         responses:
           200:
-            description: "Returns accounts waive check response if validation is successful"
+            description: "Waiver is allowed"
             body:
               application/json:
                 type: checkActionResponse
@@ -99,7 +99,7 @@ resourceTypes:
               text/plain:
                 example: "Account was not found"
           422:
-            description: "Returns accounts waive check response with validation error"
+            description: "Waiver is not allowed"
             body:
               application/json:
                 type: checkActionResponse

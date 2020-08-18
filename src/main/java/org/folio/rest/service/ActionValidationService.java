@@ -9,11 +9,11 @@ import org.folio.rest.repository.AccountRepository;
 
 import io.vertx.core.Future;
 
-public class FeeFineActionValidationService {
+public class ActionValidationService {
 
   private final AccountRepository accountRepository;
 
-  public FeeFineActionValidationService(AccountRepository accountRepository) {
+  public ActionValidationService(AccountRepository accountRepository) {
     this.accountRepository = accountRepository;
   }
 

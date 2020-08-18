@@ -37,7 +37,7 @@ import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
-import org.folio.rest.service.FeeFineActionValidationService;
+import org.folio.rest.service.ActionValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -343,12 +343,13 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
+    String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
 
-    FeeFineActionValidationService validationService = new FeeFineActionValidationService(
+    ActionValidationService validationService = new ActionValidationService(
       new AccountRepository(pgClient));
     String rawAmount = request.getAmount();
+
     validationService.validate(accountId, rawAmount)
       .onSuccess(result -> {
         CheckActionResponse response = createBaseCheckActionResponse(accountId, rawAmount)
