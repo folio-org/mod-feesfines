@@ -66,6 +66,11 @@ resourceTypes:
             body:
               application/json:
                 type: accountsCheckResponse
+          404:
+            description: "Account was not found"
+            body:
+              text/plain:
+                example: "Account was not found"
           422:
             description: "Returns accounts check response with validation error"
             body:
@@ -88,6 +93,11 @@ resourceTypes:
             body:
               application/json:
                 type: accountsCheckResponse
+          404:
+            description: "Account was not found"
+            body:
+              text/plain:
+                example: "Account was not found"
           422:
             description: "Returns accounts check response with validation error"
             body:

@@ -2,6 +2,7 @@ package org.folio.rest.service;
 
 import static io.vertx.core.Future.succeededFuture;
 
+import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.repository.AccountRepository;
@@ -17,6 +18,9 @@ public class FeeFineActionValidationService {
   }
 
   public Future<ValidationResult> validate(Account account, String rawAmount) {
+    if (account == null) {
+      throw new AccountNotFoundValidationException("Account was not found");
+    }
     final Double remainingAmount = account.getRemaining();
     final double amount;
     try {

@@ -6,6 +6,8 @@ import static org.folio.rest.utils.ResourceClients.accountsWaiveCheckClient;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 
+import java.util.UUID;
+
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountsCheckRequest;
@@ -84,6 +86,19 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
     actionCheckAmountShouldBeNumber(accountsWaiveCheckClient);
   }
 
+  @Test
+  public void payCheckAmountShouldNotFailForNonExistentAccount() {
+    ResourceClient accountsPayCheckClient = accountsPayCheckClient(UUID.randomUUID().toString());
+    actionCheckAmountShouldNotFailForNonExistentAccount(accountsPayCheckClient);
+  }
+
+  @Test
+  public void waiveCheckAmountShouldNotFailForNonExistentAccount() {
+    ResourceClient accountsWaiveCheckClient =
+      accountsWaiveCheckClient(UUID.randomUUID().toString());
+    actionCheckAmountShouldNotFailForNonExistentAccount(accountsWaiveCheckClient);
+  }
+
   private void actionCheckAmountShouldBeAllowed(
     ResourceClient actionCheckClient, Account accountToPost) {
 
@@ -155,6 +170,17 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
       .body(containsString(expectedErrorMessage))
       .body("allowed", is(false))
       .body("amount", is(accountCheckRequest.getAmount()));
+  }
+
+  private void actionCheckAmountShouldNotFailForNonExistentAccount(
+    ResourceClient actionCheckClient) {
+
+    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
+    accountCheckRequest.withAmount("3.0");
+
+    actionCheckClient.attemptCreate(accountCheckRequest)
+      .then()
+      .statusCode(HttpStatus.SC_NOT_FOUND);
   }
 
   private Account postAccount() {
