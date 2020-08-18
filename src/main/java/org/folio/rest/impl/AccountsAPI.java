@@ -16,9 +16,9 @@ import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
-import org.folio.rest.jaxrs.model.AccountsCheckRequest;
-import org.folio.rest.jaxrs.model.AccountsCheckResponse;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
+import org.folio.rest.jaxrs.model.CheckActionRequest;
+import org.folio.rest.jaxrs.model.CheckActionResponse;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
@@ -324,22 +324,22 @@ public class AccountsAPI implements Accounts {
     }
 
   @Override
-  public void postAccountsCheckPayByAccountId(String accountId, AccountsCheckRequest request,
+  public void postAccountsCheckPayByAccountId(String accountId, CheckActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    validateAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
+    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
   }
 
   @Override
-  public void postAccountsCheckWaiveByAccountId(String accountId, AccountsCheckRequest request,
+  public void postAccountsCheckWaiveByAccountId(String accountId, CheckActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    validateAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
+    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
   }
 
-  private void validateAction(String accountId, AccountsCheckRequest request,
+  private void checkAction(String accountId, CheckActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -351,7 +351,7 @@ public class AccountsAPI implements Accounts {
     String rawAmount = request.getAmount();
     validationService.validate(accountId, rawAmount)
       .onSuccess(result -> {
-        AccountsCheckResponse response = createBaseAccountCheckResponse(accountId, rawAmount)
+        CheckActionResponse response = createBaseCheckActionResponse(accountId, rawAmount)
           .withAllowed(true)
           .withRemainingAmount(result.getRemainingAmount());
         asyncResultHandler.handle(Future.succeededFuture(
@@ -360,7 +360,7 @@ public class AccountsAPI implements Accounts {
       }).onFailure(throwable -> {
       String errorMessage = throwable.getLocalizedMessage();
       if (throwable instanceof FailedValidationException) {
-        AccountsCheckResponse response = createBaseAccountCheckResponse(accountId, rawAmount)
+        CheckActionResponse response = createBaseCheckActionResponse(accountId, rawAmount)
           .withAllowed(false)
           .withErrorMessage(errorMessage);
         asyncResultHandler.handle(Future.succeededFuture(
@@ -378,10 +378,10 @@ public class AccountsAPI implements Accounts {
     });
   }
 
-  private AccountsCheckResponse createBaseAccountCheckResponse(
+  private CheckActionResponse createBaseCheckActionResponse(
     String accountId, String entityAmount) {
 
-    AccountsCheckResponse response = new AccountsCheckResponse();
+    CheckActionResponse response = new CheckActionResponse();
     response.setAccountId(accountId);
     response.setAmount(entityAmount);
     return response;

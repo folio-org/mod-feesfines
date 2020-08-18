@@ -206,7 +206,7 @@
           ],
           "pathPattern":"/accounts/{id}/check-pay",
           "permissionsRequired":[
-            "accounts.pay.check.post"
+            "accounts.check-pay.post"
           ]
         },
         {
@@ -215,7 +215,7 @@
           ],
           "pathPattern":"/accounts/{id}/check-waive",
           "permissionsRequired":[
-            "accounts.waive.check.post"
+            "accounts.check-waive.post"
           ]
         },
         {

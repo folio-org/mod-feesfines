@@ -12,8 +12,8 @@ types:
   accountdataCollection: !include accountdataCollection.json
   errors: !include raml-util/schemas/errors.schema
   patronNotice: !include patronNotice.json
-  accountsCheckRequest: !include accountsCheckRequest.json
-  accountsCheckResponse: !include accountsCheckResponse.json
+  checkActionRequest: !include checkActionRequest.json
+  checkActionResponse: !include checkActionResponse.json
 
 traits:
   orderable: !include raml-util/traits/orderable.raml
@@ -59,23 +59,23 @@ resourceTypes:
         description: Checks if payment is valid
         body:
           application/json:
-            type: accountsCheckRequest
+            type: checkActionRequest
         responses:
           200:
-            description: "Returns accounts check response if validation is successful"
+            description: "Returns accounts pay check response if validation is successful"
             body:
               application/json:
-                type: accountsCheckResponse
+                type: checkActionResponse
           404:
             description: "Account was not found"
             body:
               text/plain:
                 example: "Account was not found"
           422:
-            description: "Returns accounts check response with validation error"
+            description: "Returns accounts pay check response with validation error"
             body:
               application/json:
-                type: accountsCheckResponse
+                type: checkActionResponse
           500:
             description: "Internal server error"
             body:
@@ -86,23 +86,23 @@ resourceTypes:
         description: Checks if waive is valid
         body:
           application/json:
-            type: accountsCheckRequest
+            type: checkActionRequest
         responses:
           200:
-            description: "Returns accounts check response if validation is successful"
+            description: "Returns accounts waive check response if validation is successful"
             body:
               application/json:
-                type: accountsCheckResponse
+                type: checkActionResponse
           404:
             description: "Account was not found"
             body:
               text/plain:
                 example: "Account was not found"
           422:
-            description: "Returns accounts check response with validation error"
+            description: "Returns accounts waive check response with validation error"
             body:
               application/json:
-                type: accountsCheckResponse
+                type: checkActionResponse
           500:
             description: "Internal server error"
             body:
