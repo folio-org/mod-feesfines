@@ -76,3 +76,25 @@ resourceTypes:
             body:
               text/plain:
                 example: "Internal server error"
+    /check-waive:
+      post:
+        description: Checks if waive is valid
+        body:
+          application/json:
+            type: accountsCheckRequest
+        responses:
+          200:
+            description: "Returns accounts check response if validation is successful"
+            body:
+              application/json:
+                type: accountsCheckResponse
+          422:
+            description: "Returns accounts check response with validation error"
+            body:
+              application/json:
+                type: accountsCheckResponse
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"

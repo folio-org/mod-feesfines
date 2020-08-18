@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.utils.ResourceClients.accountsPayCheckClient;
+import static org.folio.rest.utils.ResourceClients.accountsWaiveCheckClient;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 
@@ -17,23 +18,92 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
   public void payCheckAmountShouldBeAllowed() {
     Account accountToPost = postAccount();
     ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
-    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
-    accountCheckRequest.withAmount(3.0);
+    actionCheckAmountShouldBeAllowed(accountsPayCheckClient, accountToPost);
+  }
 
-    accountsPayCheckClient.attemptCreate(accountCheckRequest)
-      .then()
-      .statusCode(HttpStatus.SC_OK)
-      .body("allowed", is(true))
-      .body("amount", is(new Float(accountCheckRequest.getAmount())))
-      .body("remainingAmount", is(new Float(accountToPost.getRemaining())));
+  @Test
+  public void waiveCheckAmountShouldBeAllowed() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsWaiveCheckClient = accountsWaiveCheckClient(accountToPost.getId());
+    actionCheckAmountShouldBeAllowed(accountsWaiveCheckClient, accountToPost);
   }
 
   @Test
   public void payCheckAmountShouldNotBeAllowedWithExceededAmount() {
     Account accountToPost = postAccount();
     ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsPayCheckClient);
+  }
+
+  @Test
+  public void waiveCheckAmountShouldNotBeAllowedWithExceededAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsWaiveCheckClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsPayCheckClient);
+  }
+
+  @Test
+  public void payCheckAmountShouldNotBeAllowedWithNegativeAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsPayCheckClient);
+  }
+
+  @Test
+  public void waiveCheckAmountShouldNotBeAllowedWithNegativeAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsWaiveCheckClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsPayCheckClient);
+  }
+
+  @Test
+  public void payCheckAmountShouldNotBeAllowedWithZeroAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsPayCheckClient);
+  }
+
+  @Test
+  public void waiveCheckAmountShouldNotBeAllowedWithZeroAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsWaiveCheckClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsPayCheckClient);
+  }
+
+  @Test
+  public void payCheckAmountShouldNotBeNumber() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+    actionCheckAmountShouldBeNumber(accountsPayCheckClient);
+  }
+
+  @Test
+  public void waiveCheckAmountShouldNotBeNumber() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsWaiveCheckClient = accountsWaiveCheckClient(accountToPost.getId());
+    actionCheckAmountShouldBeNumber(accountsWaiveCheckClient);
+  }
+
+  private void actionCheckAmountShouldBeAllowed(
+    ResourceClient actionCheckClient, Account accountToPost) {
+
     AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
-    accountCheckRequest.withAmount(10.0);
+    accountCheckRequest.withAmount("3.0");
+
+    actionCheckClient.attemptCreate(accountCheckRequest)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("allowed", is(true))
+      .body("amount", is(accountCheckRequest.getAmount()))
+      .body("remainingAmount", is((float) (accountToPost.getRemaining() -
+        Double.parseDouble(accountCheckRequest.getAmount()))));
+  }
+
+  private void actionCheckAmountShouldNotBeAllowedWithExceededAmount(
+    ResourceClient accountsPayCheckClient) {
+
+    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
+    accountCheckRequest.withAmount("10.0");
     String expectedErrorMessage = "Requested amount exceeds remaining amount";
 
     accountsPayCheckClient.attemptCreate(accountCheckRequest)
@@ -41,39 +111,50 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .body(containsString(expectedErrorMessage))
       .body("allowed", is(false))
-      .body("amount", is(new Float(accountCheckRequest.getAmount())));
+      .body("amount", is(accountCheckRequest.getAmount()));
   }
 
-  @Test
-  public void payCheckAmountShouldNotBeAllowedWithNegativeAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+  private void actionCheckAmountShouldNotBeAllowedWithNegativeAmount(
+    ResourceClient accountsActionCheckClient) {
+
     AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
-    accountCheckRequest.withAmount(-5.0);
+    accountCheckRequest.withAmount("-5.0");
     String expectedErrorMessage = "Amount must be positive";
 
-    accountsPayCheckClient.attemptCreate(accountCheckRequest)
+    accountsActionCheckClient.attemptCreate(accountCheckRequest)
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .body(containsString(expectedErrorMessage))
       .body("allowed", is(false))
-      .body("amount", is(new Float(accountCheckRequest.getAmount())));
+      .body("amount", is(accountCheckRequest.getAmount()));
   }
 
-  @Test
-  public void payCheckAmountShouldNotBeAllowedWithZeroAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsPayCheckClient = accountsPayCheckClient(accountToPost.getId());
+  private void actionCheckAmountShouldNotBeAllowedWithZeroAmount(
+    ResourceClient accountsActionCheckClient) {
+
     AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
-    accountCheckRequest.withAmount(0.0);
+    accountCheckRequest.withAmount("0.0");
     String expectedErrorMessage = "Amount must be positive";
 
-    accountsPayCheckClient.attemptCreate(accountCheckRequest)
+    accountsActionCheckClient.attemptCreate(accountCheckRequest)
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .body(containsString(expectedErrorMessage))
       .body("allowed", is(false))
-      .body("amount", is(new Float(accountCheckRequest.getAmount())));
+      .body("amount", is(accountCheckRequest.getAmount()));
+  }
+
+  private void actionCheckAmountShouldBeNumber(ResourceClient accountsActionCheckClient) {
+    AccountsCheckRequest accountCheckRequest = new AccountsCheckRequest();
+    accountCheckRequest.withAmount("abc");
+    String expectedErrorMessage = "Invalid amount entered";
+
+    accountsActionCheckClient.attemptCreate(accountCheckRequest)
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body(containsString(expectedErrorMessage))
+      .body("allowed", is(false))
+      .body("amount", is(accountCheckRequest.getAmount()));
   }
 
   private Account postAccount() {
