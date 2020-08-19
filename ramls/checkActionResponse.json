@@ -9,7 +9,7 @@
       "$ref": "uuid.json"
     },
     "amount": {
-      "type": "number",
+      "type": "string",
       "description": "Amount of fine which patron pays"
     },
     "allowed": {

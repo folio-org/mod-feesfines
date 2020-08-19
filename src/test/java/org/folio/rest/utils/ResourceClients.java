@@ -8,8 +8,12 @@ public final class ResourceClients {
     return new ResourceClient("/accounts");
   }
 
-  public static ResourceClient accountsPayCheckClient(String accountId) {
+  public static ResourceClient accountsCheckPayClient(String accountId) {
     return new ResourceClient("/accounts/" + accountId + "/check-pay");
+  }
+
+  public static ResourceClient accountsCheckWaiveClient(String accountId) {
+    return new ResourceClient("/accounts/" + accountId + "/check-waive");
   }
 
   public static ResourceClient tenantClient() {

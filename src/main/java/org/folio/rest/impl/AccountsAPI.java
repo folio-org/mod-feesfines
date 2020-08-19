@@ -14,16 +14,13 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
+import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
-import org.folio.rest.jaxrs.model.FeeFineActionRequest;
-import org.folio.rest.jaxrs.model.AccountsCheckRequest;
-import org.folio.rest.jaxrs.model.AccountsCheckResponse;
-import org.folio.rest.jaxrs.model.FeeFineActionResponse;
-import org.folio.rest.repository.AccountRepository;
-import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
+import org.folio.rest.jaxrs.model.CheckActionRequest;
+import org.folio.rest.jaxrs.model.CheckActionResponse;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
@@ -39,9 +36,10 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.facets.FacetField;
 import org.folio.rest.persist.facets.FacetManager;
+import org.folio.rest.repository.AccountRepository;
+import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
-import org.folio.rest.service.FeeFineActionService;
-import org.folio.rest.service.FeeFineActionValidationService;
+import org.folio.rest.service.ActionValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -327,53 +325,69 @@ public class AccountsAPI implements Accounts {
         .thenAccept(asyncResultHandler::handle);
     }
 
-    @Override
-    public void postAccountsCheckPayByAccountId(String accountId, AccountsCheckRequest request,
-      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) {
-
-      validateAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
-    }
-
-  private void validateAction(String accountId, AccountsCheckRequest request,
+  @Override
+  public void postAccountsCheckPayByAccountId(String accountId, CheckActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    PostgresClient pgClient = PostgresClient.getInstance(
-      vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
+  }
 
-    FeeFineActionValidationService validationService = new FeeFineActionValidationService(
+  @Override
+  public void postAccountsCheckWaiveByAccountId(String accountId, CheckActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
+  }
+
+  private void checkAction(String accountId, CheckActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+    PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+
+    ActionValidationService validationService = new ActionValidationService(
       new AccountRepository(pgClient));
-    Double amount = request.getAmount();
+    String rawAmount = request.getAmount();
 
-    validationService.validate(accountId, amount)
+    validationService.validate(accountId, rawAmount)
       .onSuccess(result -> {
-        AccountsCheckResponse response = createBaseAccountCheckResponse(accountId, amount)
+        CheckActionResponse response = createBaseCheckActionResponse(accountId, rawAmount)
           .withAllowed(true)
           .withRemainingAmount(result.getRemainingAmount());
-        asyncResultHandler.handle(succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse.respond200WithApplicationJson(response)));
+        asyncResultHandler.handle(Future.succeededFuture(
+          PostAccountsCheckPayByAccountIdResponse
+            .respond200WithApplicationJson(response)));
       }).onFailure(throwable -> {
       String errorMessage = throwable.getLocalizedMessage();
       if (throwable instanceof FailedValidationException) {
-        AccountsCheckResponse response = createBaseAccountCheckResponse(accountId, amount)
+        CheckActionResponse response = createBaseCheckActionResponse(accountId, rawAmount)
           .withAllowed(false)
           .withErrorMessage(errorMessage);
-        asyncResultHandler.handle(succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse.respond422WithApplicationJson(response)));
+        asyncResultHandler.handle(Future.succeededFuture(
+          PostAccountsCheckPayByAccountIdResponse
+            .respond422WithApplicationJson(response)));
+      } else if (throwable instanceof AccountNotFoundValidationException) {
+        asyncResultHandler.handle(Future.succeededFuture(
+          PostAccountsCheckPayByAccountIdResponse
+            .respond404WithTextPlain(errorMessage)));
       } else {
-        asyncResultHandler.handle(succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse.respond500WithTextPlain(errorMessage)));
+        asyncResultHandler.handle(Future.succeededFuture(
+          PostAccountsCheckPayByAccountIdResponse
+            .respond500WithTextPlain(errorMessage)));
       }
     });
   }
 
-  private AccountsCheckResponse createBaseAccountCheckResponse(
-    String accountId, double entityAmount) {
+  private CheckActionResponse createBaseCheckActionResponse(
+    String accountId, String entityAmount) {
 
-    return new AccountsCheckResponse()
-      .withAccountId(accountId)
-      .withAmount(entityAmount);
+    CheckActionResponse response = new CheckActionResponse();
+    response.setAccountId(accountId);
+    response.setAmount(entityAmount);
+    return response;
   }
 
   @Override
@@ -407,21 +421,21 @@ public class AccountsAPI implements Accounts {
       });
   }
 
-    private static class AdditionalFieldsContext {
-      final Items items;
-      final HoldingsRecords holdings;
+  private static class AdditionalFieldsContext {
+    final Items items;
+    final HoldingsRecords holdings;
 
-      public AdditionalFieldsContext(Items items, HoldingsRecords holdings) {
-        this.items = items;
-        this.holdings = holdings;
-      }
-
-      AdditionalFieldsContext withItems(Items items) {
-        return new AdditionalFieldsContext(items, this.holdings);
-      }
-
-      AdditionalFieldsContext withHoldings(HoldingsRecords holdings) {
-        return new AdditionalFieldsContext(this.items, holdings);
-      }
+    public AdditionalFieldsContext(Items items, HoldingsRecords holdings) {
+      this.items = items;
+      this.holdings = holdings;
     }
+
+    AdditionalFieldsContext withItems(Items items) {
+      return new AdditionalFieldsContext(items, this.holdings);
+    }
+
+    AdditionalFieldsContext withHoldings(HoldingsRecords holdings) {
+      return new AdditionalFieldsContext(this.items, holdings);
+    }
+  }
 }
