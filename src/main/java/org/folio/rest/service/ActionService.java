@@ -69,13 +69,12 @@ public class ActionService {
   }
 
   private Future<ActionContext> createFeeFineAction(ActionContext context) {
-    ActionRequest request = context.getRequest();
-    Account account = context.getAccount();
-    Action action = context.getAction();
-    Double requestedAmount = context.getRequestedAmount();
-    double remainingAmount = account.getRemaining() - requestedAmount;
-
-    String actionType = remainingAmount == 0
+    final ActionRequest request = context.getRequest();
+    final Account account = context.getAccount();
+    final Action action = context.getAction();
+    final Double requestedAmount = context.getRequestedAmount();
+    final double remainingAmount = account.getRemaining() - requestedAmount;
+    final String actionType = remainingAmount == 0
       ? action.getFullResult()
       : action.getPartialResult();
 

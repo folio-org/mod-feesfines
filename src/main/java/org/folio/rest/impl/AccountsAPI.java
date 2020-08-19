@@ -431,16 +431,16 @@ public class AccountsAPI implements Accounts {
     final Items items;
     final HoldingsRecords holdings;
 
-    public AdditionalFieldsContext(Items items, HoldingsRecords holdings) {
+    private AdditionalFieldsContext(Items items, HoldingsRecords holdings) {
       this.items = items;
       this.holdings = holdings;
     }
 
-    AdditionalFieldsContext withItems(Items items) {
+    private AdditionalFieldsContext withItems(Items items) {
       return new AdditionalFieldsContext(items, this.holdings);
     }
 
-    AdditionalFieldsContext withHoldings(HoldingsRecords holdings) {
+    private AdditionalFieldsContext withHoldings(HoldingsRecords holdings) {
       return new AdditionalFieldsContext(this.items, holdings);
     }
   }
