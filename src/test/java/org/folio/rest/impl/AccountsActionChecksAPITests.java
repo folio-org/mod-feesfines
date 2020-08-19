@@ -2,105 +2,130 @@ package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.utils.ResourceClients.accountsCheckPayClient;
+import static org.folio.rest.utils.ResourceClients.accountsCheckTransferClient;
 import static org.folio.rest.utils.ResourceClients.accountsCheckWaiveClient;
+import static org.folio.test.support.EntityBuilder.createAccount;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-
-import java.util.UUID;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
 import org.folio.rest.utils.ResourceClient;
+import org.folio.test.support.ApiTests;
+import org.junit.Before;
 import org.junit.Test;
 
-public class AccountsActionChecksAPITests extends AccountsAPITest {
+public class AccountsActionChecksAPITests extends ApiTests {
+
+  private static final String ACCOUNTS_TABLE = "accounts";
+  private Account accountToPost;
+  private ResourceClient accountsCheckPayClient;
+  private ResourceClient accountsCheckWaiveClient;
+  private ResourceClient accountsCheckTransferClient;
+
+  @Before
+  public void setUp() {
+    accountToPost = postAccount();
+    accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
+    accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
+    accountsCheckTransferClient = accountsCheckTransferClient(accountToPost.getId());
+  }
 
   @Test
   public void checkPayAmountShouldBeAllowed() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
-    actionCheckAmountShouldBeAllowed(accountsCheckPayClient, accountToPost);
+    actionCheckAmountShouldBeAllowed(accountsCheckPayClient);
   }
 
   @Test
   public void checkWaiveAmountShouldBeAllowed() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
-    actionCheckAmountShouldBeAllowed(accountsCheckWaiveClient, accountToPost);
+    actionCheckAmountShouldBeAllowed(accountsCheckWaiveClient);
+  }
+
+  @Test
+  public void checkTransferAmountShouldBeAllowed() {
+    actionCheckAmountShouldBeAllowed(accountsCheckTransferClient);
   }
 
   @Test
   public void checkPayAmountShouldNotBeAllowedWithExceededAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
     actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckPayClient);
   }
 
   @Test
   public void checkWaiveAmountShouldNotBeAllowedWithExceededAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
     actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckWaiveClient);
   }
 
   @Test
+  public void checkTransferAmountShouldNotBeAllowedWithExceededAmount() {
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckTransferClient);
+  }
+
+  @Test
   public void checkPayAmountShouldNotBeAllowedWithNegativeAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
     actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckPayClient);
   }
 
   @Test
   public void checkWaiveAmountShouldNotBeAllowedWithNegativeAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
     actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckWaiveClient);
   }
 
   @Test
+  public void checkTransferAmountShouldNotBeAllowedWithNegativeAmount() {
+    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckTransferClient);
+  }
+
+  @Test
   public void checkPayAmountShouldNotBeAllowedWithZeroAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
     actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckPayClient);
   }
 
   @Test
   public void checkWaiveAmountShouldNotBeAllowedWithZeroAmount() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
     actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckWaiveClient);
   }
 
   @Test
+  public void checkTransferAmountShouldNotBeAllowedWithZeroAmount() {
+    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckTransferClient);
+  }
+
+  @Test
   public void checkPayAmountShouldNotBeNumber() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
     actionCheckAmountShouldBeNumber(accountsCheckPayClient);
   }
 
   @Test
   public void checkWaiveAmountShouldNotBeNumber() {
-    Account accountToPost = postAccount();
-    ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
     actionCheckAmountShouldBeNumber(accountsCheckWaiveClient);
   }
 
   @Test
+  public void checkTransferAmountShouldNotBeNumber() {
+    actionCheckAmountShouldBeNumber(accountsCheckTransferClient);
+  }
+
+  @Test
   public void checkPayAmountShouldNotFailForNonExistentAccount() {
-    ResourceClient accountsCheckPayClient = accountsCheckPayClient(UUID.randomUUID().toString());
+    removeAllFromTable(ACCOUNTS_TABLE);
     actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckPayClient);
   }
 
   @Test
   public void checkWaiveAmountShouldNotFailForNonExistentAccount() {
-    ResourceClient accountsCheckWaiveClient =
-      accountsCheckWaiveClient(UUID.randomUUID().toString());
+    removeAllFromTable(ACCOUNTS_TABLE);
     actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckWaiveClient);
   }
 
-  private void actionCheckAmountShouldBeAllowed(
-    ResourceClient actionCheckClient, Account accountToPost) {
+  @Test
+  public void checkTransferAmountShouldNotFailForNonExistentAccount() {
+    removeAllFromTable(ACCOUNTS_TABLE);
+    actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckTransferClient);
+  }
+
+  private void actionCheckAmountShouldBeAllowed(ResourceClient actionCheckClient) {
 
     CheckActionRequest accountCheckRequest = new CheckActionRequest();
     accountCheckRequest.withAmount("3.0");

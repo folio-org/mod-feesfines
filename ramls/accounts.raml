@@ -108,3 +108,30 @@ resourceTypes:
             body:
               text/plain:
                 example: "Internal server error"
+    /check-transfer:
+      post:
+        description: Checks if transfer is valid
+        body:
+          application/json:
+            type: checkActionRequest
+        responses:
+          200:
+            description: "Transfer is allowed"
+            body:
+              application/json:
+                type: checkActionResponse
+          404:
+            description: "Account was not found"
+            body:
+              text/plain:
+                example: "Account was not found"
+          422:
+            description: "Transfer is not allowed"
+            body:
+              application/json:
+                type: checkActionResponse
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
