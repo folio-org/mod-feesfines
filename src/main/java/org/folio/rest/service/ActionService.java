@@ -1,6 +1,7 @@
 package org.folio.rest.service;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.Double.parseDouble;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.folio.rest.domain.Action.isTerminalStatus;
 
@@ -50,7 +51,7 @@ public class ActionService {
     return succeededFuture(new ActionContext(accountId, request, action))
       .compose(this::findAccount)
       .compose(this::validateAction)
-      .compose(this::createAction)
+      .compose(this::createFeeFineAction)
       .compose(this::updateAccount)
       .compose(this::sendPatronNotice);
   }
@@ -64,10 +65,10 @@ public class ActionService {
     final String amount = context.getRequest().getAmount();
 
     return validationService.validate(context.getAccount(), amount)
-      .map(result -> context.withRequestedAmount(Double.parseDouble(amount)));
+      .map(result -> context.withRequestedAmount(parseDouble(amount)));
   }
 
-  private Future<ActionContext> createAction(ActionContext context) {
+  private Future<ActionContext> createFeeFineAction(ActionContext context) {
     ActionRequest request = context.getRequest();
     Account account = context.getAccount();
     Action action = context.getAction();
