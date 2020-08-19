@@ -795,26 +795,6 @@
       "description":"Delete an account record"
     },
     {
-      "permissionName":"feefineactions.collection.get",
-      "displayName":"feefineactions collection get",
-      "description":"Get a list of feefineaction records"
-    },
-    {
-      "permissionName":"feefineactions.item.get",
-      "displayName":"feefineactions item get",
-      "description":"Get a single feefineaction record"
-    },
-    {
-      "permissionName":"feefineactions.item.post",
-      "displayName":"feefineactions item post",
-      "description":"Create a new feefineaction record"
-    },
-    {
-      "permissionName":"feefineactions.item.put",
-      "displayName":"feefineactions item put",
-      "description":"Edit an feefineaction record"
-    },
-    {
       "permissionName":"accounts.check-pay.post",
       "displayName":"accounts payment check post",
       "description":"Checks if payment is allowed"
@@ -833,6 +813,26 @@
       "permissionName":"accounts.pay.post",
       "displayName":"accounts payment post",
       "description":"Makes payment for an account"
+    },
+    {
+      "permissionName":"feefineactions.collection.get",
+      "displayName":"feefineactions collection get",
+      "description":"Get a list of feefineaction records"
+    },
+    {
+      "permissionName":"feefineactions.item.get",
+      "displayName":"feefineactions item get",
+      "description":"Get a single feefineaction record"
+    },
+    {
+      "permissionName":"feefineactions.item.post",
+      "displayName":"feefineactions item post",
+      "description":"Create a new feefineaction record"
+    },
+    {
+      "permissionName":"feefineactions.item.put",
+      "displayName":"feefineactions item put",
+      "description":"Edit an feefineaction record"
     },
     {
       "permissionName":"feefineactions.item.delete",

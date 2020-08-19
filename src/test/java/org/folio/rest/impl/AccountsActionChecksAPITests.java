@@ -4,6 +4,7 @@ import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.utils.ResourceClients.accountsCheckPayClient;
 import static org.folio.rest.utils.ResourceClients.accountsCheckTransferClient;
 import static org.folio.rest.utils.ResourceClients.accountsCheckWaiveClient;
+import static org.folio.test.support.EntityBuilder.createAccount;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 

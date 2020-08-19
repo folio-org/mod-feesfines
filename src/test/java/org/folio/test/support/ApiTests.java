@@ -11,10 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.jaxrs.model.PaymentStatus;
-import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
@@ -131,22 +128,5 @@ public class ApiTests {
 
   protected static String randomId() {
     return UUID.randomUUID().toString();
-  }
-
-  protected Account createAccount() {
-    return new Account()
-      .withId(randomId())
-      .withOwnerId(randomId())
-      .withUserId(randomId())
-      .withItemId(randomId())
-      .withLoanId(randomId())
-      .withMaterialTypeId(randomId())
-      .withFeeFineId(randomId())
-      .withFeeFineType("book lost")
-      .withFeeFineOwner("owner")
-      .withAmount(9.00)
-      .withRemaining(4.55)
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
-      .withStatus(new Status().withName("Open"));
   }
 }

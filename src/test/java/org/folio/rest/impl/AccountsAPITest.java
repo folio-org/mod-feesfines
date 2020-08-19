@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static io.vertx.core.json.Json.decodeValue;
+import static org.folio.test.support.EntityBuilder.createAccount;
 import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
