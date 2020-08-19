@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.utils.ResourceClients.accountsCheckPayClient;
+import static org.folio.rest.utils.ResourceClients.accountsCheckTransferClient;
 import static org.folio.rest.utils.ResourceClients.accountsCheckWaiveClient;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -31,6 +32,14 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
   }
 
   @Test
+  public void checkTransferAmountShouldBeAllowed() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsCheckTransferClient =
+      accountsCheckTransferClient(accountToPost.getId());
+    actionCheckAmountShouldBeAllowed(accountsCheckTransferClient, accountToPost);
+  }
+
+  @Test
   public void checkPayAmountShouldNotBeAllowedWithExceededAmount() {
     Account accountToPost = postAccount();
     ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
@@ -42,6 +51,14 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
     Account accountToPost = postAccount();
     ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
     actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckWaiveClient);
+  }
+
+  @Test
+  public void checkTransferAmountShouldNotBeAllowedWithExceededAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsCheckTransferClient =
+      accountsCheckTransferClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckTransferClient);
   }
 
   @Test
@@ -59,6 +76,14 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
   }
 
   @Test
+  public void checkTransferAmountShouldNotBeAllowedWithNegativeAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsCheckTransferClient =
+      accountsCheckTransferClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckTransferClient);
+  }
+
+  @Test
   public void checkPayAmountShouldNotBeAllowedWithZeroAmount() {
     Account accountToPost = postAccount();
     ResourceClient accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
@@ -70,6 +95,13 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
     Account accountToPost = postAccount();
     ResourceClient accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
     actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckWaiveClient);
+  }
+
+  @Test
+  public void checkTransferAmountShouldNotBeAllowedWithZeroAmount() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsCheckTransferClient = accountsCheckTransferClient(accountToPost.getId());
+    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckTransferClient);
   }
 
   @Test
@@ -87,6 +119,14 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
   }
 
   @Test
+  public void checkTransferAmountShouldNotBeNumber() {
+    Account accountToPost = postAccount();
+    ResourceClient accountsCheckTransferClient =
+      accountsCheckTransferClient(accountToPost.getId());
+    actionCheckAmountShouldBeNumber(accountsCheckTransferClient);
+  }
+
+  @Test
   public void checkPayAmountShouldNotFailForNonExistentAccount() {
     ResourceClient accountsCheckPayClient = accountsCheckPayClient(UUID.randomUUID().toString());
     actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckPayClient);
@@ -97,6 +137,13 @@ public class AccountsActionChecksAPITests extends AccountsAPITest {
     ResourceClient accountsCheckWaiveClient =
       accountsCheckWaiveClient(UUID.randomUUID().toString());
     actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckWaiveClient);
+  }
+
+  @Test
+  public void checkTransferAmountShouldNotFailForNonExistentAccount() {
+    ResourceClient accountsCheckTransferClient =
+      accountsCheckTransferClient(UUID.randomUUID().toString());
+    actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckTransferClient);
   }
 
   private void actionCheckAmountShouldBeAllowed(

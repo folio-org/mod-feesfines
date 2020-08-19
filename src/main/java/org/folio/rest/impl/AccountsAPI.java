@@ -339,6 +339,14 @@ public class AccountsAPI implements Accounts {
     checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
   }
 
+  @Override
+  public void postAccountsCheckTransferByAccountId(String accountId, CheckActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
+  }
+
   private void checkAction(String accountId, CheckActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {

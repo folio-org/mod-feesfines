@@ -220,6 +220,15 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/check-transfer",
+          "permissionsRequired":[
+            "accounts.check-transfer.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",
