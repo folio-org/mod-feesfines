@@ -17,7 +17,7 @@ public class ActionValidationService {
     this.accountRepository = accountRepository;
   }
 
-  public Future<ValidationResult> validate(Account account, String rawAmount) {
+  Future<ValidationResult> validate(Account account, String rawAmount) {
     if (account == null) {
       throw new AccountNotFoundValidationException("Account was not found");
     }

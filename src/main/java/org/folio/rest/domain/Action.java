@@ -2,6 +2,7 @@ package org.folio.rest.domain;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public enum Action {
@@ -16,6 +17,7 @@ public enum Action {
 
   private static final List<String> terminalStatuses = Arrays.stream(values())
     .map(Action::getFullResult)
+    .filter(Objects::nonNull)
     .collect(Collectors.toList());
 
   Action(String partialResult, String fullResult) {

@@ -26,7 +26,7 @@ public class ActionService {
   private final AccountRepository accountRepository;
   private final ActionRepository actionRepository;
   private final AccountUpdateService accountUpdateService;
-  private final FeeFineActionValidationService validationService;
+  private final ActionValidationService validationService;
   private final PatronNoticeService patronNoticeService;
 
   public ActionService(Map<String, String> okapiHeaders, Context vertxContext) {
@@ -36,7 +36,7 @@ public class ActionService {
     this.accountRepository = new AccountRepository(postgresClient);
     this.actionRepository = new ActionRepository(postgresClient);
     this.accountUpdateService = new AccountUpdateService(okapiHeaders, vertxContext);
-    this.validationService = new FeeFineActionValidationService(accountRepository);
+    this.validationService = new ActionValidationService(accountRepository);
     this.patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
   }
 
@@ -44,7 +44,8 @@ public class ActionService {
     return performAction(Action.PAY, accountId, request);
   }
 
-  private Future<ActionContext> performAction(Action action, String accountId, ActionRequest request) {
+  private Future<ActionContext> performAction(Action action, String accountId,
+    ActionRequest request) {
 
     return succeededFuture(new ActionContext(accountId, request, action))
       .compose(this::findAccount)
@@ -55,27 +56,30 @@ public class ActionService {
   }
 
   private Future<ActionContext> findAccount(ActionContext context) {
-    return accountRepository.getAccountByIdOrFail(context.getAccountId())
+    return accountRepository.getAccountById(context.getAccountId())
       .map(context::withAccount);
   }
 
   private Future<ActionContext> validateAction(ActionContext context) {
-    return validationService.validate(context.getAccount(), context.getRequest().getAmount())
-      .map(context);
+    final String amount = context.getRequest().getAmount();
+
+    return validationService.validate(context.getAccount(), amount)
+      .map(result -> context.withRequestedAmount(Double.parseDouble(amount)));
   }
 
   private Future<ActionContext> createAction(ActionContext context) {
     ActionRequest request = context.getRequest();
     Account account = context.getAccount();
     Action action = context.getAction();
-    double remainingAmount = account.getRemaining() - request.getAmount();
+    Double requestedAmount = context.getRequestedAmount();
+    double remainingAmount = account.getRemaining() - requestedAmount;
 
     String actionType = remainingAmount == 0
       ? action.getFullResult()
       : action.getPartialResult();
 
     Feefineaction feeFineAction = new Feefineaction()
-      .withAmountAction(request.getAmount())
+      .withAmountAction(requestedAmount)
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
       .withTransactionInformation(request.getTransactionInfo())
@@ -91,7 +95,7 @@ public class ActionService {
       .withAccountId(context.getAccountId());
 
     return actionRepository.save(feeFineAction)
-      .map(context.withAction(feeFineAction));
+      .map(context.withFeeFineAction(feeFineAction));
   }
 
   private Future<ActionContext> updateAccount(ActionContext context) {
@@ -120,6 +124,7 @@ public class ActionService {
     private final String accountId;
     private final ActionRequest request;
     private final Action action;
+    private Double requestedAmount;
     private Account account;
     private Feefineaction feeFineAction;
 
@@ -134,8 +139,13 @@ public class ActionService {
       return this;
     }
 
-    public ActionContext withAction(Feefineaction action) {
-      this.feeFineAction = action;
+    public ActionContext withFeeFineAction(Feefineaction feefineaction) {
+      this.feeFineAction = feefineaction;
+      return this;
+    }
+
+    public ActionContext withRequestedAmount(Double requestedAmount) {
+      this.requestedAmount = requestedAmount;
       return this;
     }
 
@@ -158,5 +168,10 @@ public class ActionService {
     public Feefineaction getFeeFineAction() {
       return feeFineAction;
     }
+
+    public Double getRequestedAmount() {
+      return requestedAmount;
+    }
   }
+
 }

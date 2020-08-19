@@ -14,7 +14,6 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
-import org.folio.rest.exception.EntityNotFoundException;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
@@ -418,7 +417,7 @@ public class AccountsAPI implements Accounts {
             .withErrorMessage(errorMessage);
           asyncResultHandler.handle(succeededFuture(
             PostAccountsPayByAccountIdResponse.respond422WithApplicationJson(response)));
-        } else if (throwable instanceof EntityNotFoundException) {
+        } else if (throwable instanceof AccountNotFoundValidationException) {
           asyncResultHandler.handle(succeededFuture(
             PostAccountsPayByAccountIdResponse.respond404WithTextPlain(errorMessage)));
         } else {

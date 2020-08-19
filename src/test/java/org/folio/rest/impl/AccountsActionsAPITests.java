@@ -45,11 +45,11 @@ public class AccountsActionsAPITests extends ApiTests {
 
   @Test
   public void payShouldReturn404WhenAccountDoesNotExist() {
-    payClient.post(createRequestJson(10.0))
+    payClient.post(createRequestJson(String.valueOf(10.0)))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
-      .body(equalTo("Account not found: " + ACCOUNT_ID));
+      .body(equalTo("Account was not found"));
   }
 
   @Test
@@ -65,12 +65,32 @@ public class AccountsActionsAPITests extends ApiTests {
   private void testRequestWithNonPositiveAmount(double amount) {
     postAccount(createAccount(1.0));
 
+    String amountString = String.valueOf(amount);
+
     ActionResponse expectedResponse = new ActionResponse()
-      .withAmount(amount)
+      .withAmount(amountString)
       .withAccountId(ACCOUNT_ID)
       .withErrorMessage("Amount must be positive");
 
-    payClient.post(createRequestJson(amount))
+    payClient.post(createRequestJson(amountString))
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .contentType(JSON)
+      .body(equalTo(toJson(expectedResponse)));
+  }
+
+  @Test
+  public void payShouldReturn422WhenRequestedAmountIsInvalidString() {
+    postAccount(createAccount(1.0));
+
+    String invalidAmount = "eleven";
+
+    ActionResponse expectedResponse = new ActionResponse()
+      .withAmount(invalidAmount)
+      .withAccountId(ACCOUNT_ID)
+      .withErrorMessage("Invalid amount entered");
+
+    payClient.post(createRequestJson(invalidAmount))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
@@ -87,25 +107,25 @@ public class AccountsActionsAPITests extends ApiTests {
     paymentCreatesActionAndUpdatesAccount(Action.PAY, true);
   }
 
-  public void paymentCreatesActionAndUpdatesAccount(Action action, boolean terminalAction) {
-    // Hamcrest matching fails with doubles
-    float accountBalance = 3.45f;
-    float requestedAmount = terminalAction ? accountBalance : accountBalance - 1;
-    float balanceAfterAction = accountBalance - requestedAmount;
-    
-    String expectedPaymentStatus = terminalAction ? action.getFullResult() : action.getPartialResult();
-    String expectedAccountStatus = terminalAction ? "Closed" : "Open";
+  private void paymentCreatesActionAndUpdatesAccount(Action action, boolean terminalAction) {
+    double accountBalanceBefore = 3.45;
+    double requestedAmount = terminalAction ? accountBalanceBefore : accountBalanceBefore - 1.0;
+    double expectedAccountBalanceAfter = accountBalanceBefore - requestedAmount;
 
-    Account account = createAccount(accountBalance);
+    final Account account = createAccount(accountBalanceBefore);
     postAccount(account);
 
-    ActionRequest request = createRequest(requestedAmount);
+    String expectedPaymentStatus = terminalAction ? action.getFullResult() : action.getPartialResult();
+    String expectedAccountStatus = terminalAction ? "Closed" : "Open";
+    String requestedAmountString = String.valueOf(requestedAmount);
+
+    final ActionRequest request = createRequest(requestedAmountString);
 
     String actionId = payClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
-      .body("amount", is(new Float(request.getAmount())))
+      .body("amount", is(requestedAmountString))
       .body("accountId", is(ACCOUNT_ID))
       .extract()
       .path("feeFineActionId");
@@ -115,8 +135,8 @@ public class AccountsActionsAPITests extends ApiTests {
       .body("typeAction", is(expectedPaymentStatus))
       .body("comments", is(request.getComments()))
       .body("notify", is(request.getNotifyPatron()))
-      .body("amountAction", is(requestedAmount))
-      .body("balance", is(balanceAfterAction))
+      .body("amountAction", is((float) requestedAmount))
+      .body("balance", is((float) expectedAccountBalanceAfter))
       .body("transactionInformation", is(request.getTransactionInfo()))
       .body("createdAt", is(request.getServicePointId()))
       .body("source", is(request.getUserName()))
@@ -128,7 +148,7 @@ public class AccountsActionsAPITests extends ApiTests {
 
     accountsClient.getById(ACCOUNT_ID)
       .then()
-      .body("remaining", is(balanceAfterAction))
+      .body("remaining", is((float) expectedAccountBalanceAfter))
       .body("status.name", is(expectedAccountStatus))
       .body("paymentStatus.name", is(expectedPaymentStatus));
 
@@ -170,7 +190,7 @@ public class AccountsActionsAPITests extends ApiTests {
       .contentType(JSON);
   }
 
-  private static ActionRequest createRequest(double amount) {
+  private static ActionRequest createRequest(String amount) {
     return new ActionRequest()
       .withAmount(amount)
       .withPaymentMethod("Cash")
@@ -181,7 +201,7 @@ public class AccountsActionsAPITests extends ApiTests {
       .withComments("STAFF : staff comment \\n PATRON : patron comment");
   }
 
-  private static String createRequestJson(double amount) {
+  private static String createRequestJson(String amount) {
     return toJson(createRequest(amount));
   }
 

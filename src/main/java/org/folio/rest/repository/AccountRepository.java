@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.folio.rest.domain.FeeFineNoticeContext;
-import org.folio.rest.exception.EntityNotFoundException;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.persist.PostgresClient;
@@ -44,16 +43,6 @@ public class AccountRepository {
     Promise<Account> promise = Promise.promise();
     pgClient.getById(ACCOUNTS_TABLE, accountId, Account.class, promise);
     return promise.future();
-  }
-
-  public Future<Account> getAccountByIdOrFail(String accountId) {
-    return getAccountById(accountId)
-      .map(account -> {
-        if (account == null) {
-          throw new EntityNotFoundException("Account not found: " + accountId);
-        }
-        return account;
-      });
   }
 
   public Future<Account> update(Account account) {

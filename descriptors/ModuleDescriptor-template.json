@@ -815,14 +815,19 @@
       "description":"Delete an account record"
     },
     {
-      "permissionName":"accounts.pay.check.post",
+      "permissionName":"accounts.check-pay.post",
       "displayName":"accounts payment check post",
-      "description":"Checks if payment is valid"
+      "description":"Checks if payment is allowed"
+    },
+    {
+      "permissionName":"accounts.check-waive.post",
+      "displayName":"accounts waiver check post",
+      "description":"Checks if waiver is allowed"
     },
     {
       "permissionName":"accounts.pay.post",
       "displayName":"accounts payment post",
-      "description":"Makes a payment for an account"
+      "description":"Makes payment for an account"
     },
     {
       "permissionName":"feefineactions.collection.get",
