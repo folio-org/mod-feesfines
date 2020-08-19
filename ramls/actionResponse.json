@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Account payment response",
+  "description": "Action response",
   "type": "object",
   "properties": {
     "accountId": {
@@ -10,7 +10,7 @@
     },
     "amount": {
       "type": "string",
-      "description": "Amount of payment"
+      "description": "Action amount"
     },
     "feeFineActionId": {
       "type": "string",
