@@ -2,16 +2,16 @@ package org.folio.rest.service;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
-import static org.folio.rest.domain.FeeFineActionResult.shouldCloseAccount;
+import static org.folio.rest.domain.Action.isTerminalStatus;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
-import org.folio.rest.domain.FeeFineActionResult;
+import org.folio.rest.domain.Action;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.FeeFineActionRequest;
+import org.folio.rest.jaxrs.model.ActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
@@ -22,14 +22,14 @@ import org.folio.rest.tools.utils.TenantTool;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-public class FeeFineActionService {
+public class ActionService {
   private final AccountRepository accountRepository;
   private final ActionRepository actionRepository;
   private final AccountUpdateService accountUpdateService;
   private final FeeFineActionValidationService validationService;
   private final PatronNoticeService patronNoticeService;
 
-  public FeeFineActionService(Map<String, String> okapiHeaders, Context vertxContext) {
+  public ActionService(Map<String, String> okapiHeaders, Context vertxContext) {
     PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
       TenantTool.tenantId(okapiHeaders));
 
@@ -40,8 +40,13 @@ public class FeeFineActionService {
     this.patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
   }
 
-  public Future<ActionContext> pay(String accountId, FeeFineActionRequest request) {
-    return succeededFuture(new ActionContext(accountId, request))
+  public Future<ActionContext> pay(String accountId, ActionRequest request) {
+    return performAction(Action.PAY, accountId, request);
+  }
+
+  private Future<ActionContext> performAction(Action action, String accountId, ActionRequest request) {
+
+    return succeededFuture(new ActionContext(accountId, request, action))
       .compose(this::findAccount)
       .compose(this::validateAction)
       .compose(this::createAction)
@@ -50,7 +55,7 @@ public class FeeFineActionService {
   }
 
   private Future<ActionContext> findAccount(ActionContext context) {
-    return accountRepository.getAccountById(context.getAccountId())
+    return accountRepository.getAccountByIdOrFail(context.getAccountId())
       .map(context::withAccount);
   }
 
@@ -60,15 +65,16 @@ public class FeeFineActionService {
   }
 
   private Future<ActionContext> createAction(ActionContext context) {
-    FeeFineActionRequest request = context.getRequest();
+    ActionRequest request = context.getRequest();
     Account account = context.getAccount();
+    Action action = context.getAction();
     double remainingAmount = account.getRemaining() - request.getAmount();
 
     String actionType = remainingAmount == 0
-      ? FeeFineActionResult.PAID_FULLY.getName()
-      : FeeFineActionResult.PAID_PARTIALLY.getName();
+      ? action.getFullResult()
+      : action.getPartialResult();
 
-    Feefineaction action = new Feefineaction()
+    Feefineaction feeFineAction = new Feefineaction()
       .withAmountAction(request.getAmount())
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
@@ -84,20 +90,20 @@ public class FeeFineActionService {
       .withDateAction(new Date())
       .withAccountId(context.getAccountId());
 
-    return actionRepository.save(action)
-      .map(context.withAction(action));
+    return actionRepository.save(feeFineAction)
+      .map(context.withAction(feeFineAction));
   }
 
   private Future<ActionContext> updateAccount(ActionContext context) {
-    final Feefineaction action = context.getAction();
+    final Feefineaction feeFineAction = context.getFeeFineAction();
     final Account account = context.getAccount();
 
-    if (shouldCloseAccount(action.getTypeAction())) {
-      account.setRemaining(0.0);
+    if (isTerminalStatus(feeFineAction.getTypeAction())) {
       account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
-    } else {
-      account.setRemaining(action.getBalance());
     }
+
+    account.setRemaining(feeFineAction.getBalance());
+    account.getPaymentStatus().setName(feeFineAction.getTypeAction());
 
     return accountUpdateService.updateAccount(account)
       .map(context);
@@ -105,20 +111,22 @@ public class FeeFineActionService {
 
   private Future<ActionContext> sendPatronNotice(ActionContext context) {
     if (isTrue(context.getRequest().getNotifyPatron())) {
-      patronNoticeService.sendPatronNotice(context.getAction());
+      patronNoticeService.sendPatronNotice(context.getFeeFineAction());
     }
     return succeededFuture(context);
   }
 
   public static class ActionContext {
     private final String accountId;
-    private final FeeFineActionRequest request;
+    private final ActionRequest request;
+    private final Action action;
     private Account account;
-    private Feefineaction action;
+    private Feefineaction feeFineAction;
 
-    public ActionContext(String accountId, FeeFineActionRequest request) {
+    public ActionContext(String accountId, ActionRequest request, Action action) {
       this.accountId = accountId;
       this.request = request;
+      this.action = action;
     }
 
     public ActionContext withAccount(Account account) {
@@ -127,7 +135,7 @@ public class FeeFineActionService {
     }
 
     public ActionContext withAction(Feefineaction action) {
-      this.action = action;
+      this.feeFineAction = action;
       return this;
     }
 
@@ -135,16 +143,20 @@ public class FeeFineActionService {
       return accountId;
     }
 
-    public FeeFineActionRequest getRequest() {
+    public ActionRequest getRequest() {
       return request;
+    }
+
+    public Action getAction() {
+      return action;
     }
 
     public Account getAccount() {
       return account;
     }
 
-    public Feefineaction getAction() {
-      return action;
+    public Feefineaction getFeeFineAction() {
+      return feeFineAction;
     }
   }
 }

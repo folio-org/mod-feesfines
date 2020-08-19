@@ -14,11 +14,14 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
+import org.folio.rest.exception.EntityNotFoundException;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
+import org.folio.rest.jaxrs.model.ActionRequest;
+import org.folio.rest.jaxrs.model.ActionResponse;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionResponse;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -39,6 +42,7 @@ import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
+import org.folio.rest.service.ActionService;
 import org.folio.rest.service.ActionValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -391,29 +395,32 @@ public class AccountsAPI implements Accounts {
   }
 
   @Override
-  public void postAccountsPayByAccountId(String accountId, FeeFineActionRequest request,
+  public void postAccountsPayByAccountId(String accountId, ActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new FeeFineActionService(okapiHeaders, vertxContext)
+    new ActionService(okapiHeaders, vertxContext)
       .pay(accountId, request)
       .onSuccess(context -> {
-        FeeFineActionResponse response = new FeeFineActionResponse()
+        ActionResponse response = new ActionResponse()
           .withAccountId(accountId)
           .withAmount(request.getAmount())
-          .withFeeFineActionId(context.getAction().getId());
+          .withFeeFineActionId(context.getFeeFineAction().getId());
         asyncResultHandler.handle(succeededFuture(
           PostAccountsPayByAccountIdResponse.respond201WithApplicationJson(response)));
       })
       .onFailure(throwable -> {
         String errorMessage = throwable.getLocalizedMessage();
         if (throwable instanceof FailedValidationException) {
-          FeeFineActionResponse response = new FeeFineActionResponse()
+          ActionResponse response = new ActionResponse()
             .withAccountId(accountId)
             .withAmount(request.getAmount())
             .withErrorMessage(errorMessage);
           asyncResultHandler.handle(succeededFuture(
             PostAccountsPayByAccountIdResponse.respond422WithApplicationJson(response)));
+        } else if (throwable instanceof EntityNotFoundException) {
+          asyncResultHandler.handle(succeededFuture(
+            PostAccountsPayByAccountIdResponse.respond404WithTextPlain(errorMessage)));
         } else {
           asyncResultHandler.handle(succeededFuture(
             PostAccountsPayByAccountIdResponse.respond500WithTextPlain(errorMessage)));

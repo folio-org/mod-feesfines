@@ -5,8 +5,7 @@
   "properties": {
     "amount": {
       "type": "number",
-      "description": "Amount of payment",
-      "minimum": 0
+      "description": "Amount of payment"
     },
     "comments": {
       "type": "string",

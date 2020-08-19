@@ -14,8 +14,8 @@ types:
   patronNotice: !include patronNotice.json
   checkActionRequest: !include checkActionRequest.json
   checkActionResponse: !include checkActionResponse.json
-  feeFineActionRequest: !include feeFineActionRequest.json
-  feeFineActionResponse: !include feeFineActionResponse.json
+  actionRequest: !include actionRequest.json
+  actionResponse: !include actionResponse.json
 
 traits:
   orderable: !include raml-util/traits/orderable.raml
@@ -113,21 +113,26 @@ resourceTypes:
     /pay:
       post:
         is: [validate]
-        description: "Makes fee/fine payment"
+        description: "Makes payment"
         body:
           application/json:
-            type: feeFineActionRequest
+            type: actionRequest
         responses:
           201:
-            description: "Fee/fine payment was made successfully"
+            description: "Payment was made successfully"
             body:
               application/json:
-                type: feeFineActionResponse
+                type: actionResponse
+          404:
+            description: "Account was not found"
+            body:
+              text/plain:
+                example: "Account was not found"
           422:
-            description: "Request validation failed"
+            description: "Action is not allowed"
             body:
               application/json:
-                type: feeFineActionResponse
+                type: actionResponse
           500:
             description: "Internal server error"
             body:

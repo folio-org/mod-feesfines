@@ -10,8 +10,7 @@
     },
     "amount": {
       "type": "number",
-      "description": "Amount of payment",
-      "minimum": 0
+      "description": "Amount of payment"
     },
     "feeFineActionId": {
       "type": "string",
