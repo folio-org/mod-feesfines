@@ -815,6 +815,26 @@
       "description":"Edit an feefineaction record"
     },
     {
+      "permissionName":"accounts.check-pay.post",
+      "displayName":"accounts payment check post",
+      "description":"Checks if payment is allowed"
+    },
+    {
+      "permissionName":"accounts.check-waive.post",
+      "displayName":"accounts waiver check post",
+      "description":"Checks if waiver is allowed"
+    },
+    {
+      "permissionName":"accounts.check-transfer.post",
+      "displayName":"accounts transfer check post",
+      "description":"Checks if transfer is allowed"
+    },
+    {
+      "permissionName":"accounts.pay.post",
+      "displayName":"accounts payment post",
+      "description":"Makes payment for an account"
+    },
+    {
       "permissionName":"feefineactions.item.delete",
       "displayName":"feefineactions item delete",
       "description":"Delete an feefineaction record"
