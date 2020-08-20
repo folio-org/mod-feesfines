@@ -5,7 +5,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.utils.ResourceClients.*;
-import static org.folio.rest.utils.ResourceClients.accountsActionClient;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -16,14 +15,16 @@ import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.EventType;
+import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.ActionRequest;
-import org.folio.rest.jaxrs.model.ActionResponse;
+import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
+import org.folio.rest.utils.ResourceClients;
 import org.folio.test.support.ApiTests;
 import org.folio.util.pubsub.PubSubClientUtils;
 import org.junit.Before;
@@ -34,8 +35,8 @@ import io.vertx.core.json.JsonObject;
 
 public class AccountsActionsAPITests extends ApiTests {
   private static final String ACCOUNT_ID = randomId();
-  private final ResourceClient payClient = accountsActionClient(ACCOUNT_ID, "pay");
-  private final ResourceClient actionsClient = actionsClient();
+  private final ResourceClient payClient = ResourceClients.accountsPayClient(ACCOUNT_ID);
+  private final ResourceClient actionsClient = feeFineActionsClient();
 
   @Before
   public void beforeEach() {
@@ -67,7 +68,7 @@ public class AccountsActionsAPITests extends ApiTests {
 
     String amountString = String.valueOf(amount);
 
-    ActionResponse expectedResponse = new ActionResponse()
+    ActionFailureResponse expectedResponse = new ActionFailureResponse()
       .withAmount(amountString)
       .withAccountId(ACCOUNT_ID)
       .withErrorMessage("Amount must be positive");
@@ -85,7 +86,7 @@ public class AccountsActionsAPITests extends ApiTests {
 
     String invalidAmount = "eleven";
 
-    ActionResponse expectedResponse = new ActionResponse()
+    ActionFailureResponse expectedResponse = new ActionFailureResponse()
       .withAmount(invalidAmount)
       .withAccountId(ACCOUNT_ID)
       .withErrorMessage("Invalid amount entered");
@@ -95,6 +96,69 @@ public class AccountsActionsAPITests extends ApiTests {
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
       .body(equalTo(toJson(expectedResponse)));
+  }
+
+  @Test
+  public void payShouldReturn422WhenAccountIsClosed() {
+    payShouldReturn422WhenAccountIsEffectivelyClosed(0.00);
+  }
+
+  @Test
+  public void payShouldReturn422WhenAccountIsEffectivelyClosed() {
+    // will be rounded to 2 decimal places when compared to zero
+    payShouldReturn422WhenAccountIsEffectivelyClosed(0.0049);
+  }
+
+  private void payShouldReturn422WhenAccountIsEffectivelyClosed(double remainingAmount) {
+    Account account = createAccount(remainingAmount + 1).withRemaining(remainingAmount);
+    account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
+    postAccount(account);
+
+    String requestedAmount = "1.23";
+
+    ActionFailureResponse expectedResponse = new ActionFailureResponse()
+      .withAmount(requestedAmount)
+      .withAccountId(ACCOUNT_ID)
+      .withErrorMessage("Account is already closed");
+
+    payClient.post(createRequestJson(requestedAmount))
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .contentType(JSON)
+      .body(equalTo(toJson(expectedResponse)));
+  }
+
+  @Test
+  public void payHandlesLongDecimalsCorrectly() {
+    double accountBalanceBeforeAction = 1.004987654321;
+    final Account account = createAccount(accountBalanceBeforeAction);
+    postAccount(account);
+
+    String requestedAmountString = "1.004123456789";
+    String expectedPaymentStatus = "Paid fully";
+
+    final ActionRequest request = createRequest(requestedAmountString);
+
+    final String feeFineActionId  = payClient.post(toJson(request))
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(JSON)
+      .body("amount", is("1.00"))
+      .body("accountId", is(ACCOUNT_ID))
+      .extract()
+      .path("feeFineActionId");
+
+    actionsClient.getById(feeFineActionId)
+      .then()
+      .body("amountAction", is(1.0f))
+      .body("balance", is(0.0f))
+      .body("typeAction", is(expectedPaymentStatus));
+
+    accountsClient.getById(ACCOUNT_ID)
+      .then()
+      .body("remaining", is(0.0f))
+      .body("status.name", is("Closed"))
+      .body("paymentStatus.name", is(expectedPaymentStatus));
   }
 
   @Test
@@ -121,7 +185,7 @@ public class AccountsActionsAPITests extends ApiTests {
 
     final ActionRequest request = createRequest(requestedAmountString);
 
-    String actionId = payClient.post(toJson(request))
+    String feeFineActionId = payClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
@@ -130,7 +194,7 @@ public class AccountsActionsAPITests extends ApiTests {
       .extract()
       .path("feeFineActionId");
 
-    actionsClient.getById(actionId)
+    actionsClient.getById(feeFineActionId)
       .then()
       .body("typeAction", is(expectedPaymentStatus))
       .body("comments", is(request.getComments()))
@@ -143,7 +207,7 @@ public class AccountsActionsAPITests extends ApiTests {
       .body("paymentMethod", is(request.getPaymentMethod()))
       .body("accountId", is(ACCOUNT_ID))
       .body("userId", is(account.getUserId()))
-      .body("id", is(actionId))
+      .body("id", is(feeFineActionId))
       .body("dateAction", notNullValue(String.class));
 
     accountsClient.getById(ACCOUNT_ID)

@@ -221,6 +221,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
+      .put("remaining", 10.0)
       .put("amount", 10.0));
 
     createEntity("/feefines", new JsonObject()

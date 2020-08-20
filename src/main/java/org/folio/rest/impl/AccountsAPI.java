@@ -20,7 +20,8 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
 import org.folio.rest.jaxrs.model.ActionRequest;
-import org.folio.rest.jaxrs.model.ActionResponse;
+import org.folio.rest.jaxrs.model.ActionSuccessResponse;
+import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionResponse;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -365,7 +366,9 @@ public class AccountsAPI implements Accounts {
 
     validationService.validate(accountId, rawAmount)
       .onSuccess(result -> {
-        CheckActionResponse response = createBaseCheckActionResponse(accountId, rawAmount)
+        CheckActionResponse response = new CheckActionResponse()
+          .withAccountId(accountId)
+          .withAmount(result.getScaledAmount())
           .withAllowed(true)
           .withRemainingAmount(result.getRemainingAmount());
         asyncResultHandler.handle(Future.succeededFuture(
@@ -374,7 +377,9 @@ public class AccountsAPI implements Accounts {
       }).onFailure(throwable -> {
       String errorMessage = throwable.getLocalizedMessage();
       if (throwable instanceof FailedValidationException) {
-        CheckActionResponse response = createBaseCheckActionResponse(accountId, rawAmount)
+        CheckActionResponse response = new CheckActionResponse()
+          .withAccountId(accountId)
+          .withAmount(request.getAmount())
           .withAllowed(false)
           .withErrorMessage(errorMessage);
         asyncResultHandler.handle(Future.succeededFuture(
@@ -392,15 +397,6 @@ public class AccountsAPI implements Accounts {
     });
   }
 
-  private CheckActionResponse createBaseCheckActionResponse(
-    String accountId, String entityAmount) {
-
-    CheckActionResponse response = new CheckActionResponse();
-    response.setAccountId(accountId);
-    response.setAmount(entityAmount);
-    return response;
-  }
-
   @Override
   public void postAccountsPayByAccountId(String accountId, ActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -409,9 +405,9 @@ public class AccountsAPI implements Accounts {
     new ActionService(okapiHeaders, vertxContext)
       .pay(accountId, request)
       .onSuccess(context -> {
-        ActionResponse response = new ActionResponse()
+        ActionSuccessResponse response = new ActionSuccessResponse()
           .withAccountId(accountId)
-          .withAmount(request.getAmount())
+          .withAmount(context.getRequestedAmount().toString())
           .withFeeFineActionId(context.getFeeFineAction().getId());
         asyncResultHandler.handle(succeededFuture(
           PostAccountsPayByAccountIdResponse.respond201WithApplicationJson(response)));
@@ -419,7 +415,7 @@ public class AccountsAPI implements Accounts {
       .onFailure(throwable -> {
         String errorMessage = throwable.getLocalizedMessage();
         if (throwable instanceof FailedValidationException) {
-          ActionResponse response = new ActionResponse()
+          ActionFailureResponse response = new ActionFailureResponse()
             .withAccountId(accountId)
             .withAmount(request.getAmount())
             .withErrorMessage(errorMessage);

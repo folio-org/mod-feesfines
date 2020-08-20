@@ -306,7 +306,9 @@ public class AccountsAPITest extends ApiTests {
       .put("feeFineId", randomId())
       .put("materialTypeId", randomId())
       .put("ownerId", randomId())
-      .put("itemId", ITEM_ID);
+      .put("itemId", ITEM_ID)
+      .put("remaining", 3.33)
+      .put("amount", 7.77);
   }
 
   private JsonObject createAccountJson(String accountID) {

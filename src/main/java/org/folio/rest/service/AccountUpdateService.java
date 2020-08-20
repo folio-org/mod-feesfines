@@ -3,11 +3,10 @@ package org.folio.rest.service;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
-import static org.folio.rest.domain.FeeFineStatus.CLOSED;
-import static org.folio.rest.domain.FeeFineStatus.forValue;
 import static org.folio.rest.jaxrs.resource.Accounts.PutAccountsByAccountIdResponse;
 import static org.folio.rest.jaxrs.resource.Accounts.PutAccountsByAccountIdResponse.respond500WithTextPlain;
 import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.utils.AccountHelper.isClosedAndHasZeroRemainingAmount;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -15,8 +14,6 @@ import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
-import org.folio.rest.domain.FeeFineStatus;
-import org.folio.rest.domain.FeeFineAmount;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.repository.AccountRepository;
 import org.slf4j.Logger;
@@ -80,15 +77,7 @@ public class AccountUpdateService {
   }
 
   private boolean isFeeFineWithLoanClosed(Account feeFine) {
-    return isFeeFineAssociatedToLoan(feeFine) && isFeeFineClosed(feeFine);
-  }
-
-  private boolean isFeeFineClosed(Account feeFine) {
-    final FeeFineAmount feeFineAmount = new FeeFineAmount(feeFine.getRemaining());
-    final FeeFineStatus feeFineStatus = feeFine.getStatus() != null
-      ? forValue(feeFine.getStatus().getName()) : null;
-
-    return feeFineStatus == CLOSED && feeFineAmount.hasZeroAmount();
+    return isFeeFineAssociatedToLoan(feeFine) && isClosedAndHasZeroRemainingAmount(feeFine);
   }
 
   private boolean isFeeFineAssociatedToLoan(Account feeFine) {

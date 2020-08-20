@@ -12,11 +12,11 @@ import org.folio.rest.utils.FeeFineActionHelper;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 
-public class ActionRepository {
+public class FeeFineActionRepository {
   private static final String ACTIONS_TABLE = "feefineactions";
   private final PostgresClient pgClient;
 
-  public ActionRepository(PostgresClient pgClient) {
+  public FeeFineActionRepository(PostgresClient pgClient) {
     this.pgClient = pgClient;
   }
 

@@ -145,6 +145,8 @@
   },
   "additionalProperties": false,
   "required": [
+    "amount",
+    "remaining",
     "userId",
     "itemId",
     "materialTypeId",

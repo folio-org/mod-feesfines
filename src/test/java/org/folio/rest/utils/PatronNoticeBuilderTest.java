@@ -1,13 +1,11 @@
 package org.folio.rest.utils;
 
 import static org.folio.rest.utils.PatronNoticeBuilder.buildNotice;
-import static org.folio.rest.utils.PatronNoticeBuilder.formatCurrency;
 import static org.folio.rest.utils.PatronNoticeBuilder.parseFeeFineComments;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.text.DecimalFormat;
@@ -225,18 +223,6 @@ public class PatronNoticeBuilderTest {
     assertThat(parsedComments.size(), is(1));
 
     assertThat(parsedComments, hasEntry("STAFF", "staff comment"));
-  }
-
-  @Test
-  public void currencyIsFormattedCorrectly() {
-    assertNull(formatCurrency(null));
-    assertEquals("0.00", formatCurrency(0d));
-    assertEquals("1.00", formatCurrency(1d));
-    assertEquals("1.20", formatCurrency(1.2));
-    assertEquals("1.23", formatCurrency(1.23));
-    assertEquals("1.22", formatCurrency(1.224));
-    assertEquals("1.23", formatCurrency(1.225));
-    assertEquals("1.23", formatCurrency(1.226));
   }
 
   private static Feefineaction createAction() {

@@ -4,9 +4,8 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
+import static org.folio.rest.utils.MonetaryHelper.formatCurrency;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -255,15 +254,6 @@ public class PatronNoticeBuilder {
     return date != null
       ? new DateTime(date, DateTimeZone.UTC).toString()
       : null;
-  }
-
-  static String formatCurrency(Double value) {
-    if (value == null) {
-      return null;
-    }
-
-    NumberFormat formatter = new DecimalFormat("#0.00");
-    return formatter.format(value);
   }
 
 }

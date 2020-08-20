@@ -16,15 +16,12 @@
       "type": "string",
       "description": "Unique ID of the fee/fine action",
       "$ref": "uuid.json"
-    },
-    "errorMessage": {
-      "type": "string",
-      "description": "Optional error message returned when request processing failed"
     }
   },
   "additionalProperties": false,
   "required": [
     "accountId",
-    "amount"
+    "amount",
+    "feeFineActionId"
   ]
 }

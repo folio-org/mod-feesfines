@@ -1,6 +1,12 @@
 package org.folio.rest.service;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.utils.AccountHelper.isClosedAndHasZeroRemainingAmount;
+import static org.folio.rest.utils.MonetaryHelper.isNegative;
+import static org.folio.rest.utils.MonetaryHelper.isNotPositive;
+import static org.folio.rest.utils.MonetaryHelper.monetize;
+
+import java.math.BigDecimal;
 
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
@@ -21,19 +27,28 @@ public class ActionValidationService {
     if (account == null) {
       throw new AccountNotFoundValidationException("Account was not found");
     }
-    final Double remainingAmount = account.getRemaining();
-    final double amount;
+
+    BigDecimal requestedAmount;
     try {
-      amount = Double.parseDouble(rawAmount);
+      requestedAmount = monetize(rawAmount);
     } catch (NumberFormatException e) {
       throw new FailedValidationException("Invalid amount entered");
     }
-    if (amount > remainingAmount) {
+
+    if (isClosedAndHasZeroRemainingAmount(account)) {
+      throw new FailedValidationException("Account is already closed");
+    }
+
+    final BigDecimal remainingAmount = monetize(account.getRemaining())
+      .subtract(requestedAmount);
+
+    if (isNegative(remainingAmount)) {
       throw new FailedValidationException("Requested amount exceeds remaining amount");
-    } else if (amount <= 0) {
+    } else if (isNotPositive(requestedAmount)) {
       throw new FailedValidationException("Amount must be positive");
     } else {
-      return succeededFuture(new ValidationResult(remainingAmount - amount));
+      return succeededFuture(new ValidationResult(
+        remainingAmount.toString(), requestedAmount.toString()));
     }
   }
 
@@ -43,14 +58,20 @@ public class ActionValidationService {
   }
 
   public static class ValidationResult {
-    private final Double remainingAmount;
+    private final String remainingAmount;
+    private final String scaledAmount;
 
-    public ValidationResult(Double remainingAmount) {
+    public ValidationResult(String remainingAmount, String scaledAmount) {
       this.remainingAmount = remainingAmount;
+      this.scaledAmount = scaledAmount;
     }
 
-    public Double getRemainingAmount() {
+    public String getRemainingAmount() {
       return remainingAmount;
+    }
+
+    public String getScaledAmount() {
+      return scaledAmount;
     }
   }
 }

@@ -20,11 +20,11 @@ public final class ResourceClients {
     return new ResourceClient("/accounts/" + accountId + "/check-transfer");
   }
 
-  public static ResourceClient accountsActionClient(String accountId, String action) {
-    return new ResourceClient(String.format("/accounts/%s/%s", accountId, action));
+  public static ResourceClient accountsPayClient(String accountId) {
+    return new ResourceClient("/accounts/" + accountId + "/pay");
   }
 
-  public static ResourceClient actionsClient() {
+  public static ResourceClient feeFineActionsClient() {
     return new ResourceClient("/feefineactions");
   }
 

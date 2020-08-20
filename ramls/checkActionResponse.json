@@ -17,7 +17,7 @@
       "description": "Flag which indicates if validation is successful"
     },
     "remainingAmount": {
-      "type": "number",
+      "type": "string",
       "description": "Amount of fine that remains after payment"
     },
     "errorMessage": {
