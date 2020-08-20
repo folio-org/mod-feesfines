@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static io.vertx.core.json.Json.decodeValue;
+import static org.folio.test.support.EntityBuilder.createAccount;
 import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -29,8 +30,6 @@ import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
-import org.folio.rest.jaxrs.model.PaymentStatus;
-import org.folio.rest.jaxrs.model.Status;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -298,23 +297,6 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject eventPayload = new JsonObject(event.getEventPayload());
     assertFalse(eventPayload.containsKey("loanId"));
-  }
-
-  Account createAccount() {
-    return new Account()
-      .withId(randomId())
-      .withOwnerId(randomId())
-      .withUserId(randomId())
-      .withItemId(randomId())
-      .withLoanId(randomId())
-      .withMaterialTypeId(randomId())
-      .withFeeFineId(randomId())
-      .withFeeFineType("book lost")
-      .withFeeFineOwner("owner")
-      .withAmount(9.00)
-      .withRemaining(4.55)
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
-      .withStatus(new Status().withName("Open"));
   }
 
   private JsonObject createAccountJsonObject(String accountID) {

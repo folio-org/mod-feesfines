@@ -16,6 +16,10 @@ public final class ResourceClients {
     return new ResourceClient("/accounts/" + accountId + "/check-waive");
   }
 
+  public static ResourceClient accountsCheckTransferClient(String accountId) {
+    return new ResourceClient("/accounts/" + accountId + "/check-transfer");
+  }
+
   public static ResourceClient accountsActionClient(String accountId, String action) {
     return new ResourceClient(String.format("/accounts/%s/%s", accountId, action));
   }
