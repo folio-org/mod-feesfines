@@ -52,6 +52,10 @@ public class PatronNoticeBuilderTest {
   private static final String PRIMARY_CONTRIBUTOR = "Primary contributor";
   private static final String NON_PRIMARY_CONTRIBUTOR = "Non-primary contributor";
 
+  private static final String ACCOUNT_AMOUNT = "12.34";
+  private static final String ACCOUNT_REMAINING = "5.67";
+  private static final String ACTION_AMOUNT = "6.67";
+
   private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
 
   @Test
@@ -133,8 +137,8 @@ public class PatronNoticeBuilderTest {
     assertEquals(account.getFeeFineOwner(), chargeContext.getString("owner"));
     assertEquals(account.getFeeFineType(), chargeContext.getString("type"));
     assertEquals(account.getPaymentStatus().getName(), chargeContext.getString("paymentStatus"));
-    assertEquals(CURRENCY_FORMATTER.format(account.getAmount()), chargeContext.getString("amount"));
-    assertEquals(CURRENCY_FORMATTER.format(account.getRemaining()), chargeContext.getString("remainingAmount"));
+    assertEquals(ACCOUNT_AMOUNT, chargeContext.getString("amount"));
+    assertEquals(ACCOUNT_REMAINING, chargeContext.getString("remainingAmount"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDate"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDateTime"));
     assertEquals(CHARGE_COMMENT_FOR_PATRON, chargeContext.getString("additionalInfo"));
@@ -241,8 +245,8 @@ public class PatronNoticeBuilderTest {
     return new Feefineaction()
       .withTypeAction("Book lost")
       .withDateAction(new Date())
-      .withAmountAction(8.55)
-      .withBalance(8.55)
+      .withAmountAction(Double.valueOf(ACTION_AMOUNT))
+      .withBalance(Double.valueOf(ACCOUNT_REMAINING))
       .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }
 
@@ -270,8 +274,8 @@ public class PatronNoticeBuilderTest {
       .withFeeFineOwner("Owner")
       .withFeeFineType("Fine type")
       .withMaterialType("book")
-      .withAmount(13.0)
-      .withRemaining(8.55)
+      .withAmount(Double.valueOf(ACCOUNT_AMOUNT))
+      .withRemaining(Double.valueOf(ACCOUNT_REMAINING))
       .withMetadata(new Metadata().withCreatedDate(new Date()));
   }
 

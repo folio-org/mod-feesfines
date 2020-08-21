@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.Money;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -65,16 +65,16 @@ public class ActionService {
     final String amount = context.getRequest().getAmount();
 
     return validationService.validate(context.getAccount(), amount)
-      .map(result -> context.withRequestedAmount(new Money(amount)));
+      .map(result -> context.withRequestedAmount(new MonetaryValue(amount)));
   }
 
   private Future<ActionContext> createFeeFineAction(ActionContext context) {
     final ActionRequest request = context.getRequest();
     final Account account = context.getAccount();
     final Action action = context.getAction();
-    final Money requestedAmount = context.getRequestedAmount();
+    final MonetaryValue requestedAmount = context.getRequestedAmount();
 
-    Money remainingAmountAfterAction = new Money(account.getRemaining())
+    MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining())
          .subtract(requestedAmount);
 
     boolean shouldCloseAccount = remainingAmountAfterAction.isZero();
@@ -111,7 +111,7 @@ public class ActionService {
 
     if (context.getShouldCloseAccount()) {
       accountStatus.setName(CLOSED.getValue());
-      account.setRemaining(new Money(0.0).toDouble());
+      account.setRemaining(0.0);
     } else {
       accountStatus.setName(OPEN.getValue());
       account.setRemaining(feeFineAction.getBalance());
@@ -132,7 +132,7 @@ public class ActionService {
     private final Action action;
     private final String accountId;
     private final ActionRequest request;
-    private Money requestedAmount;
+    private MonetaryValue requestedAmount;
     private Account account;
     private Feefineaction feeFineAction;
     private boolean shouldCloseAccount;
@@ -153,7 +153,7 @@ public class ActionService {
       return this;
     }
 
-    public ActionContext withRequestedAmount(Money requestedAmount) {
+    public ActionContext withRequestedAmount(MonetaryValue requestedAmount) {
       this.requestedAmount = requestedAmount;
       return this;
     }
@@ -183,7 +183,7 @@ public class ActionService {
       return feeFineAction;
     }
 
-    public Money getRequestedAmount() {
+    public MonetaryValue getRequestedAmount() {
       return requestedAmount;
     }
 

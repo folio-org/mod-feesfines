@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.rest.domain.FeeFineNoticeContext;
-import org.folio.rest.domain.Money;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Context;
 import org.folio.rest.jaxrs.model.Contributor;
@@ -166,8 +166,8 @@ public class PatronNoticeBuilder {
       .put("owner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
       .put("paymentStatus", paymentStatus)
-      .put("amount", new Money(account.getAmount()).toString())
-      .put("remainingAmount", new Money(account.getRemaining()).toString());
+      .put("amount", new MonetaryValue(account.getAmount()).toString())
+      .put("remainingAmount", new MonetaryValue(account.getRemaining()).toString());
 
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
@@ -199,8 +199,8 @@ public class PatronNoticeBuilder {
       .put("type", action.getTypeAction())
       .put("actionDate", actionDate)
       .put("actionDateTime", actionDate)
-      .put("amount", new Money(action.getAmountAction()).toString())
-      .put("remainingAmount", new Money(action.getBalance()).toString())
+      .put("amount", new MonetaryValue(action.getAmountAction()).toString())
+      .put("remainingAmount", new MonetaryValue(action.getBalance()).toString())
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
 
     return feeActionContext;

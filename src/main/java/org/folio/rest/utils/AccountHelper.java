@@ -4,7 +4,7 @@ import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
 
 import org.folio.rest.domain.FeeFineStatus;
-import org.folio.rest.domain.Money;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Status;
 
@@ -14,7 +14,7 @@ public class AccountHelper {
   }
 
   public static boolean isClosedAndHasZeroRemainingAmount(Account account) {
-    return isClosed(account) && new Money(account.getRemaining()).isZero();
+    return isClosed(account) && new MonetaryValue(account.getRemaining()).isZero();
   }
 
   public static boolean isClosed(Account account) {

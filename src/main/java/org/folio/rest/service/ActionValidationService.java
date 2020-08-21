@@ -3,7 +3,7 @@ package org.folio.rest.service;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.utils.AccountHelper.isClosedAndHasZeroRemainingAmount;
 
-import org.folio.rest.domain.Money;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
@@ -24,9 +24,9 @@ public class ActionValidationService {
       throw new AccountNotFoundValidationException("Account was not found");
     }
 
-    Money requestedAmount;
+    MonetaryValue requestedAmount;
     try {
-      requestedAmount = new Money(rawAmount);
+      requestedAmount = new MonetaryValue(rawAmount);
     } catch (NumberFormatException e) {
       throw new FailedValidationException("Invalid amount entered");
     }
@@ -35,12 +35,12 @@ public class ActionValidationService {
       throw new FailedValidationException("Account is already closed");
     }
 
-    final Money remainingAmount = new Money(account.getRemaining())
+    final MonetaryValue remainingAmount = new MonetaryValue(account.getRemaining())
       .subtract(requestedAmount);
 
     if (remainingAmount.isNegative()) {
       throw new FailedValidationException("Requested amount exceeds remaining amount");
-    } else if (requestedAmount.isNotPositive()) {
+    } else if (!requestedAmount.isPositive()) {
       throw new FailedValidationException("Amount must be positive");
     } else {
       return succeededFuture(new ValidationResult(

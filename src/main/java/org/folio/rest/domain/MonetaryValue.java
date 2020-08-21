@@ -7,30 +7,30 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Currency;
 
-public class Money {
+public class MonetaryValue {
   private static final Currency USD = Currency.getInstance("USD");
   private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN;
 
   private final BigDecimal amount;
   private final Currency currency;
 
-  public Money(BigDecimal amount) {
+  public MonetaryValue(BigDecimal amount) {
     this(amount, USD);
   }
 
-  public Money(String amount) {
+  public MonetaryValue(String amount) {
     this(from(amount), USD);
   }
 
-  public Money(Double amount) {
+  public MonetaryValue(Double amount) {
     this(from(amount), USD);
   }
 
-  public Money(BigDecimal amount, Currency currency) {
+  public MonetaryValue(BigDecimal amount, Currency currency) {
     this(amount, currency, DEFAULT_ROUNDING);
   }
 
-  public Money(BigDecimal amount, Currency currency, RoundingMode rounding) {
+  public MonetaryValue(BigDecimal amount, Currency currency, RoundingMode rounding) {
     requireNonNull(amount);
     requireNonNull(currency);
     requireNonNull(rounding);
@@ -58,16 +58,8 @@ public class Money {
     return ZERO.compareTo(amount) > 0;
   }
 
-  public boolean isNotPositive() {
-    return !isPositive();
-  }
-
-  public boolean isNotNegative() {
-    return !isNegative();
-  }
-
-  public Money subtract(Money subtrahend) {
-    return new Money(amount.subtract(subtrahend.getAmount()));
+  public MonetaryValue subtract(MonetaryValue subtrahend) {
+    return new MonetaryValue(amount.subtract(subtrahend.getAmount()));
   }
 
   private static BigDecimal from(String value) {
