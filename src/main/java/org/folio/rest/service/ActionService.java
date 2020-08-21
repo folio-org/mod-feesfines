@@ -26,8 +26,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 
 public class ActionService {
-  private static final double ZERO_AMOUNT = 0.00;
-
   private final AccountRepository accountRepository;
   private final FeeFineActionRepository feeFineActionRepository;
   private final AccountUpdateService accountUpdateService;
@@ -114,7 +112,7 @@ public class ActionService {
 
     if (context.getShouldCloseAccount()) {
       accountStatus.setName(CLOSED.getValue());
-      account.setRemaining(ZERO_AMOUNT);
+      account.setRemaining(monetize(0.0).doubleValue());
     } else {
       accountStatus.setName(OPEN.getValue());
       account.setRemaining(feeFineAction.getBalance());

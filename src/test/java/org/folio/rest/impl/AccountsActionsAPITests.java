@@ -105,8 +105,8 @@ public class AccountsActionsAPITests extends ApiTests {
 
   @Test
   public void payShouldReturn422WhenAccountIsEffectivelyClosed() {
-    // will be rounded to 2 decimal places when compared to zero
-    payShouldReturn422WhenAccountIsEffectivelyClosed(0.0049);
+    // will be rounded to 0.00 (2 decimal places) when compared to zero
+    payShouldReturn422WhenAccountIsEffectivelyClosed(0.004987654321);
   }
 
   private void payShouldReturn422WhenAccountIsEffectivelyClosed(double remainingAmount) {
@@ -129,7 +129,7 @@ public class AccountsActionsAPITests extends ApiTests {
   }
 
   @Test
-  public void payHandlesLongDecimalsCorrectly() {
+  public void payHandlesLongDecimalsCorrectlyAndClosesAccount() {
     double accountBalanceBeforeAction = 1.004987654321;
     final Account account = createAccount(accountBalanceBeforeAction);
     postAccount(account);
@@ -158,6 +158,39 @@ public class AccountsActionsAPITests extends ApiTests {
       .then()
       .body("remaining", is(0.0f))
       .body("status.name", is("Closed"))
+      .body("paymentStatus.name", is(expectedPaymentStatus));
+  }
+
+  @Test
+  public void payHandlesLongDecimalsCorrectly() {
+    double accountBalanceBeforeAction = 1.23987654321; // should be rounded to 1.24
+    final Account account = createAccount(accountBalanceBeforeAction);
+    postAccount(account);
+
+    String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
+    String expectedPaymentStatus = "Paid partially";
+
+    final ActionRequest request = createRequest(requestedAmountString);
+
+    final String feeFineActionId  = payClient.post(toJson(request))
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(JSON)
+      .body("amount", is("1.00"))
+      .body("accountId", is(ACCOUNT_ID))
+      .extract()
+      .path("feeFineActionId");
+
+    actionsClient.getById(feeFineActionId)
+      .then()
+      .body("amountAction", is(1.00f))
+      .body("balance", is(0.24f)) // 1.24 - 1.00
+      .body("typeAction", is(expectedPaymentStatus));
+
+    accountsClient.getById(ACCOUNT_ID)
+      .then()
+      .body("remaining", is(0.24f))
+      .body("status.name", is("Open"))
       .body("paymentStatus.name", is(expectedPaymentStatus));
   }
 

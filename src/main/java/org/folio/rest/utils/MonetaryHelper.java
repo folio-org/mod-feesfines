@@ -53,7 +53,7 @@ public class MonetaryHelper {
     return value == null ? null : BigDecimal.valueOf(value);
   }
 
-  static String formatCurrency(Double value) {
+  static String format(Double value) {
     BigDecimal bigDecimal = monetize(value);
     return bigDecimal == null ? null : bigDecimal.toString();
   }

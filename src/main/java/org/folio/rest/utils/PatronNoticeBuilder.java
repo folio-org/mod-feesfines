@@ -4,7 +4,7 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
-import static org.folio.rest.utils.MonetaryHelper.formatCurrency;
+import static org.folio.rest.utils.MonetaryHelper.format;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -166,8 +166,8 @@ public class PatronNoticeBuilder {
       .put("owner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
       .put("paymentStatus", paymentStatus)
-      .put("amount", formatCurrency(account.getAmount()))
-      .put("remainingAmount", formatCurrency(account.getRemaining()));
+      .put("amount", format(account.getAmount()))
+      .put("remainingAmount", format(account.getRemaining()));
 
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
@@ -199,8 +199,8 @@ public class PatronNoticeBuilder {
       .put("type", action.getTypeAction())
       .put("actionDate", actionDate)
       .put("actionDateTime", actionDate)
-      .put("amount", formatCurrency(action.getAmountAction()))
-      .put("remainingAmount", formatCurrency(action.getBalance()))
+      .put("amount", format(action.getAmountAction()))
+      .put("remainingAmount", format(action.getBalance()))
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
 
     return feeActionContext;

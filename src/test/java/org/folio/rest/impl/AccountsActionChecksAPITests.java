@@ -178,7 +178,7 @@ public class AccountsActionChecksAPITests extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("allowed", is(true))
-      .body("amount", is("3.00")) // scaled to 2 decimal places
+      .body("amount", is("3.00")) // requested amount scaled to 2 decimal places
       .body("remainingAmount", is("1.55"));
   }
 
@@ -269,10 +269,10 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   private void successfulActionCheckHandlesLongDecimalsCorrectly(ResourceClient client) {
-    accountToPost.setRemaining(1.235123456789); // will be rounded to 1.24
+    accountToPost.setRemaining(1.235987654321); // will be rounded to 1.24
     accountsClient.update(accountToPost.getId(), accountToPost);
 
-    client.attemptCreate(new CheckActionRequest().withAmount("1.004123456789")) // rounded to 1.00
+    client.attemptCreate(new CheckActionRequest().withAmount("1.004987654321")) // rounded to 1.00
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("allowed", is(true))
