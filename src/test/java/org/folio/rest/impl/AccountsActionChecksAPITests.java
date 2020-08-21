@@ -54,7 +54,7 @@ public class AccountsActionChecksAPITests extends ApiTests {
 
   @Test
   public void checkRefundAmountShouldBeAllowed() {
-    actionCheckAmountShouldBeAllowedForRefund(accountsCheckRefundClient);
+    actionCheckRefundAmountShouldBeAllowed(accountsCheckRefundClient);
   }
 
   @Test
@@ -74,7 +74,7 @@ public class AccountsActionChecksAPITests extends ApiTests {
 
   @Test
   public void checkRefundAmountShouldNotBeAllowedWithExceededAmount() {
-    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckRefundClient);
+    actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(accountsCheckRefundClient);
   }
 
   @Test
@@ -172,7 +172,7 @@ public class AccountsActionChecksAPITests extends ApiTests {
         Double.parseDouble(accountCheckRequest.getAmount()))));
   }
 
-  private void actionCheckAmountShouldBeAllowedForRefund(ResourceClient actionCheckClient) {
+  private void actionCheckRefundAmountShouldBeAllowed(ResourceClient actionCheckClient) {
 
     CheckActionRequest accountCheckRequest = new CheckActionRequest();
     accountCheckRequest.withAmount("3.0");
@@ -193,13 +193,30 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   private void actionCheckAmountShouldNotBeAllowedWithExceededAmount(
-    ResourceClient accountsPayCheckClient) {
+    ResourceClient actionCheckClient) {
 
-    CheckActionRequest accountCheckRequest = new CheckActionRequest();
-    accountCheckRequest.withAmount("10.0");
     String expectedErrorMessage = "Requested amount exceeds remaining amount";
 
-    accountsPayCheckClient.attemptCreate(accountCheckRequest)
+    baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
+      actionCheckClient, expectedErrorMessage, "4.56");
+  }
+
+  private void actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(
+    ResourceClient actionCheckClient) {
+
+    String expectedErrorMessage = "Requested amount exceeds maximum refund amount";
+
+    baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
+      actionCheckClient, expectedErrorMessage, "4.46");
+  }
+
+  private void baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
+    ResourceClient actionCheckClient, String expectedErrorMessage, String amount) {
+
+    CheckActionRequest accountCheckRequest = new CheckActionRequest();
+    accountCheckRequest.withAmount(amount);
+
+    actionCheckClient.attemptCreate(accountCheckRequest)
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .body(containsString(expectedErrorMessage))

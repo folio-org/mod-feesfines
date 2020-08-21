@@ -12,7 +12,6 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
-import org.folio.rest.service.RemainingCalculator;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
@@ -38,7 +37,8 @@ import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
-import org.folio.rest.service.ActionValidationService;
+import org.folio.rest.service.DefaultActionValidationService;
+import org.folio.rest.service.RefundActionValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -329,8 +329,11 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext,
-      (remainingAmount, amount) -> remainingAmount - amount);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+    PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+
+    checkAction(accountId, request, asyncResultHandler,
+      new DefaultActionValidationService(new AccountRepository(pgClient)));
   }
 
   @Override
@@ -338,8 +341,11 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext,
-      (remainingAmount, amount) -> remainingAmount - amount);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+    PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+
+    checkAction(accountId, request, asyncResultHandler,
+      new DefaultActionValidationService(new AccountRepository(pgClient)));
   }
 
   @Override
@@ -347,8 +353,11 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext,
-      (remainingAmount, amount) -> remainingAmount - amount);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+    PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+
+    checkAction(accountId, request, asyncResultHandler,
+      new DefaultActionValidationService(new AccountRepository(pgClient)));
   }
 
   @Override
@@ -356,22 +365,20 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext,
-      Double::sum);
-  }
-
-  private void checkAction(String accountId, CheckActionRequest request,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext, RemainingCalculator remainingCalculator) {
-
     String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
 
-    ActionValidationService validationService = new ActionValidationService(
-      new AccountRepository(pgClient));
+    checkAction(accountId, request, asyncResultHandler,
+      new RefundActionValidationService(new AccountRepository(pgClient)));
+  }
+
+  private void checkAction(String accountId, CheckActionRequest request,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    DefaultActionValidationService validationService) {
+
     String rawAmount = request.getAmount();
 
-    validationService.validate(accountId, rawAmount, remainingCalculator)
+    validationService.validate(accountId, rawAmount)
       .onSuccess(result -> {
         CheckActionResponse response = createBaseCheckActionResponse(accountId, rawAmount)
           .withAllowed(true)
