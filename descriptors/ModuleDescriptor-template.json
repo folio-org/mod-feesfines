@@ -229,6 +229,15 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/check-refund",
+          "permissionsRequired":[
+            "accounts.check-refund.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",
@@ -808,6 +817,11 @@
       "permissionName":"accounts.check-transfer.post",
       "displayName":"accounts transfer check post",
       "description":"Checks if transfer is allowed"
+    },
+    {
+      "permissionName":"accounts.check-refund.post",
+      "displayName":"accounts refund check post",
+      "description":"Checks if refund is allowed"
     },
     {
       "permissionName":"accounts.pay.post",

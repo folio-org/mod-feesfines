@@ -135,3 +135,30 @@ resourceTypes:
             body:
               text/plain:
                 example: "Internal server error"
+    /check-refund:
+      post:
+        description: Checks if refund is valid
+        body:
+          application/json:
+            type: checkActionRequest
+        responses:
+          200:
+            description: "Refund is allowed"
+            body:
+              application/json:
+                type: checkActionResponse
+          404:
+            description: "Account was not found"
+            body:
+              text/plain:
+                example: "Account was not found"
+          422:
+            description: "Refund is not allowed"
+            body:
+              application/json:
+                type: checkActionResponse
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
