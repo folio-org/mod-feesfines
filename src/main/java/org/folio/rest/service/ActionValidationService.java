@@ -17,7 +17,9 @@ public class ActionValidationService {
     this.accountRepository = accountRepository;
   }
 
-  public Future<ValidationResult> validate(Account account, String rawAmount) {
+  public Future<ValidationResult> validate(Account account, String rawAmount,
+    RemainingCalculator remainingCalculator) {
+
     if (account == null) {
       throw new AccountNotFoundValidationException("Account was not found");
     }
@@ -33,13 +35,16 @@ public class ActionValidationService {
     } else if (amount <= 0) {
       throw new FailedValidationException("Amount must be positive");
     } else {
-      return succeededFuture(new ValidationResult(remainingAmount - amount));
+      return succeededFuture(new ValidationResult(
+        remainingCalculator.calculate(remainingAmount, amount)));
     }
   }
 
-  public Future<ValidationResult> validate(String accountId, String rawAmount) {
+  public Future<ValidationResult> validate(String accountId, String rawAmount,
+    RemainingCalculator remainingCalculator) {
+
     return accountRepository.getAccountById(accountId)
-      .compose(account -> validate(account, rawAmount));
+      .compose(account -> validate(account, rawAmount, remainingCalculator));
   }
 
   public static class ValidationResult {

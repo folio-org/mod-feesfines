@@ -12,6 +12,7 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
+import org.folio.rest.service.RemainingCalculator;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
@@ -328,7 +329,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
+    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext,
+      (remainingAmount, amount) -> remainingAmount - amount);
   }
 
   @Override
@@ -336,7 +338,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
+    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext,
+      (remainingAmount, amount) -> remainingAmount - amount);
   }
 
   @Override
@@ -344,12 +347,22 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext);
+    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext,
+      (remainingAmount, amount) -> remainingAmount - amount);
+  }
+
+  @Override
+  public void postAccountsCheckRefundByAccountId(String accountId, CheckActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    checkAction(accountId, request, okapiHeaders, asyncResultHandler, vertxContext,
+      Double::sum);
   }
 
   private void checkAction(String accountId, CheckActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+    Context vertxContext, RemainingCalculator remainingCalculator) {
 
     String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
@@ -358,7 +371,7 @@ public class AccountsAPI implements Accounts {
       new AccountRepository(pgClient));
     String rawAmount = request.getAmount();
 
-    validationService.validate(accountId, rawAmount)
+    validationService.validate(accountId, rawAmount, remainingCalculator)
       .onSuccess(result -> {
         CheckActionResponse response = createBaseCheckActionResponse(accountId, rawAmount)
           .withAllowed(true)

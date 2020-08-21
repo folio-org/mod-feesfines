@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.utils.ResourceClients.accountsCheckPayClient;
+import static org.folio.rest.utils.ResourceClients.accountsCheckRefundClient;
 import static org.folio.rest.utils.ResourceClients.accountsCheckTransferClient;
 import static org.folio.rest.utils.ResourceClients.accountsCheckWaiveClient;
 import static org.folio.test.support.EntityBuilder.createAccount;
@@ -16,6 +17,8 @@ import org.folio.test.support.ApiTests;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.restassured.response.ValidatableResponse;
+
 public class AccountsActionChecksAPITests extends ApiTests {
 
   private static final String ACCOUNTS_TABLE = "accounts";
@@ -23,6 +26,7 @@ public class AccountsActionChecksAPITests extends ApiTests {
   private ResourceClient accountsCheckPayClient;
   private ResourceClient accountsCheckWaiveClient;
   private ResourceClient accountsCheckTransferClient;
+  private ResourceClient accountsCheckRefundClient;
 
   @Before
   public void setUp() {
@@ -30,6 +34,7 @@ public class AccountsActionChecksAPITests extends ApiTests {
     accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
     accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
     accountsCheckTransferClient = accountsCheckTransferClient(accountToPost.getId());
+    accountsCheckRefundClient = accountsCheckRefundClient(accountToPost.getId());
   }
 
   @Test
@@ -48,6 +53,11 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
+  public void checkRefundAmountShouldBeAllowed() {
+    actionCheckAmountShouldBeAllowedForRefund(accountsCheckRefundClient);
+  }
+
+  @Test
   public void checkPayAmountShouldNotBeAllowedWithExceededAmount() {
     actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckPayClient);
   }
@@ -60,6 +70,11 @@ public class AccountsActionChecksAPITests extends ApiTests {
   @Test
   public void checkTransferAmountShouldNotBeAllowedWithExceededAmount() {
     actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckTransferClient);
+  }
+
+  @Test
+  public void checkRefundAmountShouldNotBeAllowedWithExceededAmount() {
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckRefundClient);
   }
 
   @Test
@@ -78,6 +93,11 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
+  public void checkRefundAmountShouldNotBeAllowedWithNegativeAmount() {
+    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckRefundClient);
+  }
+
+  @Test
   public void checkPayAmountShouldNotBeAllowedWithZeroAmount() {
     actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckPayClient);
   }
@@ -93,6 +113,11 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
+  public void checkRefundAmountShouldNotBeAllowedWithZeroAmount() {
+    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckRefundClient);
+  }
+
+  @Test
   public void checkPayAmountShouldNotBeNumber() {
     actionCheckAmountShouldBeNumber(accountsCheckPayClient);
   }
@@ -105,6 +130,11 @@ public class AccountsActionChecksAPITests extends ApiTests {
   @Test
   public void checkTransferAmountShouldNotBeNumber() {
     actionCheckAmountShouldBeNumber(accountsCheckTransferClient);
+  }
+
+  @Test
+  public void checkRefundAmountShouldNotBeNumber() {
+    actionCheckAmountShouldBeNumber(accountsCheckRefundClient);
   }
 
   @Test
@@ -125,18 +155,41 @@ public class AccountsActionChecksAPITests extends ApiTests {
     actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckTransferClient);
   }
 
+  @Test
+  public void checkRefundAmountShouldNotFailForNonExistentAccount() {
+    removeAllFromTable(ACCOUNTS_TABLE);
+    actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckRefundClient);
+  }
+
+
   private void actionCheckAmountShouldBeAllowed(ResourceClient actionCheckClient) {
 
     CheckActionRequest accountCheckRequest = new CheckActionRequest();
     accountCheckRequest.withAmount("3.0");
 
-    actionCheckClient.attemptCreate(accountCheckRequest)
+    baseActionCheckAmountShouldBeAllowed(accountCheckRequest, actionCheckClient)
+      .body("remainingAmount", is((float) (accountToPost.getRemaining() -
+        Double.parseDouble(accountCheckRequest.getAmount()))));
+  }
+
+  private void actionCheckAmountShouldBeAllowedForRefund(ResourceClient actionCheckClient) {
+
+    CheckActionRequest accountCheckRequest = new CheckActionRequest();
+    accountCheckRequest.withAmount("3.0");
+
+    baseActionCheckAmountShouldBeAllowed(accountCheckRequest, actionCheckClient)
+      .body("remainingAmount", is((float) (accountToPost.getRemaining() +
+        Double.parseDouble(accountCheckRequest.getAmount()))));
+  }
+
+  private ValidatableResponse baseActionCheckAmountShouldBeAllowed(
+    CheckActionRequest accountCheckRequest, ResourceClient actionCheckClient) {
+
+    return actionCheckClient.attemptCreate(accountCheckRequest)
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("allowed", is(true))
-      .body("amount", is(accountCheckRequest.getAmount()))
-      .body("remainingAmount", is((float) (accountToPost.getRemaining() -
-        Double.parseDouble(accountCheckRequest.getAmount()))));
+      .body("amount", is(accountCheckRequest.getAmount()));
   }
 
   private void actionCheckAmountShouldNotBeAllowedWithExceededAmount(
