@@ -4,15 +4,13 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
-import static org.folio.rest.utils.MonetaryHelper.isZero;
-import static org.folio.rest.utils.MonetaryHelper.monetize;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
 import org.folio.rest.domain.Action;
+import org.folio.rest.domain.Money;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -67,22 +65,23 @@ public class ActionService {
     final String amount = context.getRequest().getAmount();
 
     return validationService.validate(context.getAccount(), amount)
-      .map(result -> context.withRequestedAmount(monetize(amount)));
+      .map(result -> context.withRequestedAmount(new Money(amount)));
   }
 
   private Future<ActionContext> createFeeFineAction(ActionContext context) {
     final ActionRequest request = context.getRequest();
     final Account account = context.getAccount();
     final Action action = context.getAction();
-    final BigDecimal requestedAmount = context.getRequestedAmount();
+    final Money requestedAmount = context.getRequestedAmount();
 
-    BigDecimal remainingAmountAfterAction = monetize(account.getRemaining())
-      .subtract(requestedAmount) ;
-    boolean shouldCloseAccount = isZero(remainingAmountAfterAction);
+    Money remainingAmountAfterAction = new Money(account.getRemaining())
+         .subtract(requestedAmount);
+
+    boolean shouldCloseAccount = remainingAmountAfterAction.isZero();
     String actionType = shouldCloseAccount ? action.getFullResult() : action.getPartialResult();
 
     Feefineaction feeFineAction = new Feefineaction()
-      .withAmountAction(requestedAmount.doubleValue())
+      .withAmountAction(requestedAmount.toDouble())
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
       .withTransactionInformation(request.getTransactionInfo())
@@ -91,7 +90,7 @@ public class ActionService {
       .withPaymentMethod(request.getPaymentMethod())
       .withAccountId(context.getAccountId())
       .withUserId(account.getUserId())
-      .withBalance(remainingAmountAfterAction.doubleValue())
+      .withBalance(remainingAmountAfterAction.toDouble())
       .withTypeAction(actionType)
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date())
@@ -112,7 +111,7 @@ public class ActionService {
 
     if (context.getShouldCloseAccount()) {
       accountStatus.setName(CLOSED.getValue());
-      account.setRemaining(monetize(0.0).doubleValue());
+      account.setRemaining(new Money(0.0).toDouble());
     } else {
       accountStatus.setName(OPEN.getValue());
       account.setRemaining(feeFineAction.getBalance());
@@ -133,7 +132,7 @@ public class ActionService {
     private final Action action;
     private final String accountId;
     private final ActionRequest request;
-    private BigDecimal requestedAmount;
+    private Money requestedAmount;
     private Account account;
     private Feefineaction feeFineAction;
     private boolean shouldCloseAccount;
@@ -154,7 +153,7 @@ public class ActionService {
       return this;
     }
 
-    public ActionContext withRequestedAmount(BigDecimal requestedAmount) {
+    public ActionContext withRequestedAmount(Money requestedAmount) {
       this.requestedAmount = requestedAmount;
       return this;
     }
@@ -184,7 +183,7 @@ public class ActionService {
       return feeFineAction;
     }
 
-    public BigDecimal getRequestedAmount() {
+    public Money getRequestedAmount() {
       return requestedAmount;
     }
 

@@ -153,6 +153,8 @@ public class PatronNoticeBuilderTest {
   @Test
   public void useFallbackValuesFromAccountForItemContext() {
     final Account account = new Account()
+      .withAmount(10.0)
+      .withRemaining(4.56)
       .withBarcode("Account-level barcode")
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
