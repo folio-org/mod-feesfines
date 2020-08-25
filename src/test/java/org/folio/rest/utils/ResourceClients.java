@@ -20,6 +20,10 @@ public final class ResourceClients {
     return new ResourceClient("/accounts/" + accountId + "/check-transfer");
   }
 
+  public static ResourceClient accountsCheckRefundClient(String accountId) {
+    return new ResourceClient("/accounts/" + accountId + "/check-refund");
+  }
+
   public static ResourceClient accountsPayClient(String accountId) {
     return new ResourceClient("/accounts/" + accountId + "/pay");
   }

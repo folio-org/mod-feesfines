@@ -11,11 +11,11 @@ import org.folio.rest.repository.AccountRepository;
 
 import io.vertx.core.Future;
 
-public class ActionValidationService {
+public class DefaultActionValidationService {
 
   private final AccountRepository accountRepository;
 
-  public ActionValidationService(AccountRepository accountRepository) {
+  public DefaultActionValidationService(AccountRepository accountRepository) {
     this.accountRepository = accountRepository;
   }
 
@@ -38,14 +38,34 @@ public class ActionValidationService {
     final MonetaryValue remainingAmount = new MonetaryValue(account.getRemaining())
       .subtract(requestedAmount);
 
-    if (remainingAmount.isNegative()) {
+//    if (remainingAmount.isNegative()) {
+//      throw new FailedValidationException("Requested amount exceeds remaining amount");
+//    } else if (!requestedAmount.isPositive()) {
+//      throw new FailedValidationException("Amount must be positive");
+//    } else {
+//      return succeededFuture(new ValidationResult(
+//        remainingAmount.toString(), requestedAmount.toString()));
+//    }
+
+    validateAmountMaximum(account, amount);
+    validateIfAmountIsPositive(amount);
+    return succeededFuture(new ValidationResult(calculateRemainingBalance(account, amount)));
+  }
+
+  protected void validateAmountMaximum(Account account, double requestedAmount) {
+    if (requestedAmount > account.getRemaining()) {
       throw new FailedValidationException("Requested amount exceeds remaining amount");
-    } else if (!requestedAmount.isPositive()) {
-      throw new FailedValidationException("Amount must be positive");
-    } else {
-      return succeededFuture(new ValidationResult(
-        remainingAmount.toString(), requestedAmount.toString()));
     }
+  }
+
+  private void validateIfAmountIsPositive(double requestedAmount) {
+    if (requestedAmount <= 0) {
+      throw new FailedValidationException("Amount must be positive");
+    }
+  }
+
+  protected double calculateRemainingBalance(Account account, double requestedAmount) {
+    return account.getRemaining() - requestedAmount;
   }
 
   public Future<ValidationResult> validate(String accountId, String rawAmount) {
