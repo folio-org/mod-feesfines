@@ -5,7 +5,7 @@ import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.repository.AccountRepository;
 
-public class RefundActionValidationService extends DefaultActionValidationService {
+public class RefundActionValidationService extends ActionValidationService {
 
   public RefundActionValidationService(AccountRepository accountRepository) {
     super(accountRepository);

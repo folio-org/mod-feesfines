@@ -43,6 +43,7 @@ import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
 import org.folio.rest.service.action.DefaultActionService;
+import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
 import org.folio.rest.service.action.validation.RefundActionValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
@@ -380,7 +381,7 @@ public class AccountsAPI implements Accounts {
 
   private void checkAction(String accountId, CheckActionRequest request,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    DefaultActionValidationService validationService) {
+    ActionValidationService validationService) {
 
     String rawAmount = request.getAmount();
 
