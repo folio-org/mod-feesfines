@@ -10,6 +10,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 
 import org.apache.http.HttpStatus;
+import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
 import org.folio.rest.utils.ResourceClient;
@@ -162,24 +163,63 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
 
+  @Test
+  public void checkPayAmountShouldNotBeAllowedForClosedAccount() {
+    actionCheckAmountShouldNotBeAllowedForClosedAccount(accountsCheckPayClient);
+  }
+
+  @Test
+  public void checkWaiveAmountShouldNotBeAllowedForClosedAccount() {
+    actionCheckAmountShouldNotBeAllowedForClosedAccount(accountsCheckWaiveClient);
+  }
+
+  @Test
+  public void checkTransferAmountShouldNotBeAllowedForClosedAccount() {
+    actionCheckAmountShouldNotBeAllowedForClosedAccount(accountsCheckTransferClient);
+  }
+
+  @Test
+  public void checkPayAmountShouldHandleLongDecimalsCorrectly() {
+    successfulActionCheckHandlesLongDecimalsCorrectly(accountsCheckPayClient);
+  }
+
+  @Test
+  public void checkWaiveAmountShouldHandleLongDecimalsCorrectly() {
+    successfulActionCheckHandlesLongDecimalsCorrectly(accountsCheckWaiveClient);
+  }
+
+  @Test
+  public void checkTransferAmountShouldHandleLongDecimalsCorrectly() {
+    successfulActionCheckHandlesLongDecimalsCorrectly(accountsCheckTransferClient);
+  }
+
+  @Test
+  public void failedCheckPayReturnsInitialRequestedAmount() {
+    failedActionCheckReturnsInitialRequestedAmount(accountsCheckPayClient);
+  }
+
+  @Test
+  public void failedCheckWaiveReturnsInitialRequestedAmount() {
+    failedActionCheckReturnsInitialRequestedAmount(accountsCheckWaiveClient);
+  }
+
+  @Test
+  public void failedCheckTransferReturnsInitialRequestedAmount() {
+    failedActionCheckReturnsInitialRequestedAmount(accountsCheckTransferClient);
+  }
+
   private void actionCheckAmountShouldBeAllowed(ResourceClient actionCheckClient) {
+    CheckActionRequest request = new CheckActionRequest().withAmount("1.23");
 
-    CheckActionRequest accountCheckRequest = new CheckActionRequest();
-    accountCheckRequest.withAmount("3.0");
-
-    baseActionCheckAmountShouldBeAllowed(accountCheckRequest, actionCheckClient)
-      .body("remainingAmount", is((float) (accountToPost.getRemaining() -
-        Double.parseDouble(accountCheckRequest.getAmount()))));
+    baseActionCheckAmountShouldBeAllowed(request, actionCheckClient)
+    .body("remainingAmount", is("3.32"));
   }
 
   private void actionCheckRefundAmountShouldBeAllowed(ResourceClient actionCheckClient) {
+    CheckActionRequest request = new CheckActionRequest().withAmount("1.23");
 
-    CheckActionRequest accountCheckRequest = new CheckActionRequest();
-    accountCheckRequest.withAmount("3.0");
-
-    baseActionCheckAmountShouldBeAllowed(accountCheckRequest, actionCheckClient)
-      .body("remainingAmount", is((float) (accountToPost.getRemaining() +
-        Double.parseDouble(accountCheckRequest.getAmount()))));
+    baseActionCheckAmountShouldBeAllowed(request, actionCheckClient)
+      .body("remainingAmount", is("5.78"));
   }
 
   private ValidatableResponse baseActionCheckAmountShouldBeAllowed(
@@ -276,6 +316,53 @@ public class AccountsActionChecksAPITests extends ApiTests {
     actionCheckClient.attemptCreate(accountCheckRequest)
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND);
+  }
+
+  private void actionCheckAmountShouldNotBeAllowedForClosedAccount(ResourceClient client) {
+    accountToPost.setRemaining(0.00);
+    accountToPost.getStatus().setName(FeeFineStatus.CLOSED.getValue());
+    accountsClient.update(accountToPost.getId(), accountToPost);
+
+    String amount = "1.23";
+
+    client.attemptCreate(new CheckActionRequest().withAmount(amount))
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body("allowed", is(false))
+      .body("amount", is(amount))
+      .body("errorMessage", is("Account is already closed"));
+
+    removeAllFromTable(ACCOUNTS_TABLE);
+  }
+
+  private void successfulActionCheckHandlesLongDecimalsCorrectly(ResourceClient client) {
+    accountToPost.setRemaining(1.235987654321); // will be rounded to 1.24
+    accountsClient.update(accountToPost.getId(), accountToPost);
+
+    client.attemptCreate(new CheckActionRequest().withAmount("1.004987654321")) // rounded to 1.00
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("allowed", is(true))
+      .body("amount", is("1.00"))
+      .body("remainingAmount", is("0.24")); // 1.24 - 1.00
+
+    removeAllFromTable(ACCOUNTS_TABLE);
+  }
+
+  private void failedActionCheckReturnsInitialRequestedAmount(ResourceClient client) {
+    accountToPost.setRemaining(0.99);
+    accountsClient.update(accountToPost.getId(), accountToPost);
+
+    String requestedAmount = "1.004123456789"; // rounded to 1.00 when compared to account balance
+
+    client.attemptCreate(new CheckActionRequest().withAmount(requestedAmount))
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body("allowed", is(false))
+      .body("amount", is(requestedAmount))
+      .body("errorMessage", is("Requested amount exceeds remaining amount"));
+
+    removeAllFromTable(ACCOUNTS_TABLE);
   }
 
   private Account postAccount() {

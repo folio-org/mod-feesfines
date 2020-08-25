@@ -14,6 +14,9 @@ types:
   patronNotice: !include patronNotice.json
   checkActionRequest: !include checkActionRequest.json
   checkActionResponse: !include checkActionResponse.json
+  actionRequest: !include actionRequest.json
+  actionSuccessResponse: !include actionSuccessResponse.json
+  actionFailureResponse: !include actionFailureResponse.json
 
 traits:
   orderable: !include raml-util/traits/orderable.raml
@@ -43,20 +46,20 @@ resourceTypes:
       pageable,
       facets
     ]
-    description: Return a list of accounts
+    description: "Return a list of accounts"
   post:
     is: [validate]
-    description: Create a account
+    description: "Create an account"
   /{accountId}:
     type:
       collection-item:
         exampleItem: !include examples/account.sample
         schema: account
     get:
-      description: Get a single account
+      description: "Get a single account"
     /check-pay:
       post:
-        description: Checks if payment is valid
+        description: "Checks if payment is valid"
         body:
           application/json:
             type: checkActionRequest
@@ -83,7 +86,7 @@ resourceTypes:
                 example: "Internal server error"
     /check-waive:
       post:
-        description: Checks if waive is valid
+        description: "Checks if waive is valid"
         body:
           application/json:
             type: checkActionRequest
@@ -162,3 +165,31 @@ resourceTypes:
             body:
               text/plain:
                 example: "Internal server error"
+    /pay:
+      post:
+        is: [validate]
+        description: "Makes payment"
+        body:
+          application/json:
+            type: actionRequest
+        responses:
+          201:
+            description: "Payment was made successfully"
+            body:
+              application/json:
+                type: actionSuccessResponse
+          404:
+            description: "Account was not found"
+            body:
+              text/plain:
+                example: "Account was not found"
+          422:
+            description: "Payment is not allowed"
+            body:
+              application/json:
+                type: actionFailureResponse
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error, please contact administrator"

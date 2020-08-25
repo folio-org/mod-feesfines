@@ -5,8 +5,6 @@ import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -16,6 +14,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.rest.domain.FeeFineNoticeContext;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Context;
 import org.folio.rest.jaxrs.model.Contributor;
@@ -167,8 +166,8 @@ public class PatronNoticeBuilder {
       .put("owner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
       .put("paymentStatus", paymentStatus)
-      .put("amount", formatCurrency(account.getAmount()))
-      .put("remainingAmount", formatCurrency(account.getRemaining()));
+      .put("amount", new MonetaryValue(account.getAmount()).toString())
+      .put("remainingAmount", new MonetaryValue(account.getRemaining()).toString());
 
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
@@ -200,8 +199,8 @@ public class PatronNoticeBuilder {
       .put("type", action.getTypeAction())
       .put("actionDate", actionDate)
       .put("actionDateTime", actionDate)
-      .put("amount", formatCurrency(action.getAmountAction()))
-      .put("remainingAmount", formatCurrency(action.getBalance()))
+      .put("amount", new MonetaryValue(action.getAmountAction()).toString())
+      .put("remainingAmount", new MonetaryValue(action.getBalance()).toString())
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
 
     return feeActionContext;
@@ -255,15 +254,6 @@ public class PatronNoticeBuilder {
     return date != null
       ? new DateTime(date, DateTimeZone.UTC).toString()
       : null;
-  }
-
-  static String formatCurrency(Double value) {
-    if (value == null) {
-      return null;
-    }
-
-    NumberFormat formatter = new DecimalFormat("#0.00");
-    return formatter.format(value);
   }
 
 }

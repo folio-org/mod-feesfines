@@ -27,6 +27,10 @@ public class ResourceClient {
     return okapiClient.post(baseUri, body);
   }
 
+  public Response post(Object body) {
+    return attemptCreate(body);
+  }
+
   public Response update(String id, Object body) {
     return attemptUpdate(id, body)
       .then()

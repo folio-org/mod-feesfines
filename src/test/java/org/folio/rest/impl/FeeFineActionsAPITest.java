@@ -86,7 +86,9 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static final String CHARGE_COMMENT_FOR_PATRON = "Charge comment";
   private static final String ACTION_COMMENT_FOR_PATRON = "Action comment";
 
-  private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
+  private static final String ACCOUNT_AMOUNT = "12.34";
+  private static final String ACCOUNT_REMAINING = "5.67";
+  private static final String ACTION_AMOUNT = "6.67";
 
   @Before
   public void setUp() {
@@ -165,8 +167,8 @@ public class FeeFineActionsAPITest extends ApiTests {
           .put("owner", account.getFeeFineOwner())
           .put("type", account.getFeeFineType())
           .put("paymentStatus", account.getPaymentStatus().getName())
-          .put("amount", CURRENCY_FORMATTER.format(account.getAmount()))
-          .put("remainingAmount", CURRENCY_FORMATTER.format(account.getRemaining()))
+          .put("amount", ACCOUNT_AMOUNT)
+          .put("remainingAmount", ACCOUNT_REMAINING)
           .put("chargeDate", accountCreationDate)
           .put("chargeDateTime", accountCreationDate)
           .put("additionalInfo", CHARGE_COMMENT_FOR_PATRON))
@@ -185,8 +187,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("type", action.getTypeAction())
       .put("actionDate", dateToString(action.getDateAction()))
       .put("actionDateTime", dateToString(action.getDateAction()))
-      .put("amount", CURRENCY_FORMATTER.format(action.getAmountAction()))
-      .put("remainingAmount", CURRENCY_FORMATTER.format(action.getBalance()))
+      .put("amount", ACTION_AMOUNT)
+      .put("remainingAmount", ACCOUNT_REMAINING)
       .put("additionalInfo", ACTION_COMMENT_FOR_PATRON);
 
     postAction(action);
@@ -221,6 +223,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
+      .put("remaining", 10.0)
       .put("amount", 10.0));
 
     createEntity("/feefines", new JsonObject()
@@ -326,8 +329,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withNotify(notify)
       .withTypeAction("Paid partially")
       .withDateAction(new Date())
-      .withAmountAction(4.44)
-      .withBalance(7.11)
+      .withAmountAction(Double.valueOf(ACTION_AMOUNT))
+      .withBalance(Double.valueOf(ACCOUNT_REMAINING))
       .withPaymentMethod("Cash")
       .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
   }
@@ -339,8 +342,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withNotify(notify)
       .withTypeAction("Overdue fine")
       .withDateAction(new Date())
-      .withAmountAction(8.55)
-      .withBalance(8.55)
+      .withAmountAction(Double.valueOf(ACTION_AMOUNT))
+      .withBalance(Double.valueOf(ACCOUNT_REMAINING))
       .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }
 
@@ -383,8 +386,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withFeeFineType(feefine.getFeeFineType())
       .withMaterialType("book")
       .withMaterialTypeId(randomId())
-      .withAmount(13.0)
-      .withRemaining(8.55);
+      .withAmount(Double.valueOf(ACCOUNT_AMOUNT))
+      .withRemaining(Double.valueOf(ACCOUNT_REMAINING));
   }
 
   private static HoldingsRecord createHoldingsRecord(Instance instance) {

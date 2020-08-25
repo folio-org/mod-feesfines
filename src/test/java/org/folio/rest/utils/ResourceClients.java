@@ -24,6 +24,14 @@ public final class ResourceClients {
     return new ResourceClient("/accounts/" + accountId + "/check-refund");
   }
 
+  public static ResourceClient accountsPayClient(String accountId) {
+    return new ResourceClient("/accounts/" + accountId + "/pay");
+  }
+
+  public static ResourceClient feeFineActionsClient() {
+    return new ResourceClient("/feefineactions");
+  }
+
   public static ResourceClient tenantClient() {
     return new ResourceClient("/_/tenant");
   }

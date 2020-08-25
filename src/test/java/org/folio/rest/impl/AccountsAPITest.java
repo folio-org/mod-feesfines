@@ -47,7 +47,7 @@ import io.vertx.core.json.JsonObject;
 public class AccountsAPITest extends ApiTests {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ITEM_ID = "43ec57e3-3974-4d05-a2c2-95126e087b72";
-  public static final String FEEFINE_CLOSED_EVENT_NAME = "LOAN_RELATED_FEE_FINE_CLOSED";
+  private static final String FEEFINE_CLOSED_EVENT_NAME = "LOAN_RELATED_FEE_FINE_CLOSED";
 
   @Before
   public void setUp() {
@@ -306,7 +306,9 @@ public class AccountsAPITest extends ApiTests {
       .put("feeFineId", randomId())
       .put("materialTypeId", randomId())
       .put("ownerId", randomId())
-      .put("itemId", ITEM_ID);
+      .put("itemId", ITEM_ID)
+      .put("remaining", 3.33)
+      .put("amount", 7.77);
   }
 
   private JsonObject createAccountJson(String accountID) {

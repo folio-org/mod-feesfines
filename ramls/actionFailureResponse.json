@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Action response",
+  "type": "object",
+  "properties": {
+    "accountId": {
+      "type": "string",
+      "description": "Unique ID of the account",
+      "$ref": "uuid.json"
+    },
+    "amount": {
+      "type": "string",
+      "description": "Action amount"
+    },
+    "errorMessage": {
+      "type": "string",
+      "description": "Additional info about request processing failure"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "accountId",
+    "amount",
+    "errorMessage"
+  ]
+}

@@ -1,13 +1,11 @@
 package org.folio.rest.utils;
 
 import static org.folio.rest.utils.PatronNoticeBuilder.buildNotice;
-import static org.folio.rest.utils.PatronNoticeBuilder.formatCurrency;
 import static org.folio.rest.utils.PatronNoticeBuilder.parseFeeFineComments;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.text.DecimalFormat;
@@ -53,6 +51,10 @@ public class PatronNoticeBuilderTest {
 
   private static final String PRIMARY_CONTRIBUTOR = "Primary contributor";
   private static final String NON_PRIMARY_CONTRIBUTOR = "Non-primary contributor";
+
+  private static final String ACCOUNT_AMOUNT = "12.34";
+  private static final String ACCOUNT_REMAINING = "5.67";
+  private static final String ACTION_AMOUNT = "6.67";
 
   private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
 
@@ -135,8 +137,8 @@ public class PatronNoticeBuilderTest {
     assertEquals(account.getFeeFineOwner(), chargeContext.getString("owner"));
     assertEquals(account.getFeeFineType(), chargeContext.getString("type"));
     assertEquals(account.getPaymentStatus().getName(), chargeContext.getString("paymentStatus"));
-    assertEquals(CURRENCY_FORMATTER.format(account.getAmount()), chargeContext.getString("amount"));
-    assertEquals(CURRENCY_FORMATTER.format(account.getRemaining()), chargeContext.getString("remainingAmount"));
+    assertEquals(ACCOUNT_AMOUNT, chargeContext.getString("amount"));
+    assertEquals(ACCOUNT_REMAINING, chargeContext.getString("remainingAmount"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDate"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDateTime"));
     assertEquals(CHARGE_COMMENT_FOR_PATRON, chargeContext.getString("additionalInfo"));
@@ -155,6 +157,8 @@ public class PatronNoticeBuilderTest {
   @Test
   public void useFallbackValuesFromAccountForItemContext() {
     final Account account = new Account()
+      .withAmount(10.0)
+      .withRemaining(4.56)
       .withBarcode("Account-level barcode")
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
@@ -227,18 +231,6 @@ public class PatronNoticeBuilderTest {
     assertThat(parsedComments, hasEntry("STAFF", "staff comment"));
   }
 
-  @Test
-  public void currencyIsFormattedCorrectly() {
-    assertNull(formatCurrency(null));
-    assertEquals("0.00", formatCurrency(0d));
-    assertEquals("1.00", formatCurrency(1d));
-    assertEquals("1.20", formatCurrency(1.2));
-    assertEquals("1.23", formatCurrency(1.23));
-    assertEquals("1.22", formatCurrency(1.224));
-    assertEquals("1.23", formatCurrency(1.225));
-    assertEquals("1.23", formatCurrency(1.226));
-  }
-
   private static Feefineaction createAction() {
     return new Feefineaction()
       .withTypeAction("Paid partially")
@@ -253,8 +245,8 @@ public class PatronNoticeBuilderTest {
     return new Feefineaction()
       .withTypeAction("Book lost")
       .withDateAction(new Date())
-      .withAmountAction(8.55)
-      .withBalance(8.55)
+      .withAmountAction(Double.valueOf(ACTION_AMOUNT))
+      .withBalance(Double.valueOf(ACCOUNT_REMAINING))
       .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }
 
@@ -282,8 +274,8 @@ public class PatronNoticeBuilderTest {
       .withFeeFineOwner("Owner")
       .withFeeFineType("Fine type")
       .withMaterialType("book")
-      .withAmount(13.0)
-      .withRemaining(8.55)
+      .withAmount(Double.valueOf(ACCOUNT_AMOUNT))
+      .withRemaining(Double.valueOf(ACCOUNT_REMAINING))
       .withMetadata(new Metadata().withCreatedDate(new Date()));
   }
 

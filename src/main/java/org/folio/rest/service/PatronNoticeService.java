@@ -21,7 +21,7 @@ import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
-import org.folio.rest.repository.ActionRepository;
+import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.repository.FeeFineRepository;
 import org.folio.rest.repository.OwnerRepository;
 import org.folio.rest.utils.PatronNoticeBuilder;
@@ -40,7 +40,7 @@ public class PatronNoticeService {
   private final FeeFineRepository feeFineRepository;
   private final OwnerRepository ownerRepository;
   private final AccountRepository accountRepository;
-  private final ActionRepository actionRepository;
+  private final FeeFineActionRepository feeFineActionRepository;
   private final PatronNoticeClient patronNoticeClient;
   private final UsersClient usersClient;
   private final InventoryClient inventoryClient;
@@ -52,7 +52,7 @@ public class PatronNoticeService {
     feeFineRepository = new FeeFineRepository(pgClient);
     ownerRepository = new OwnerRepository(pgClient);
     accountRepository = new AccountRepository(pgClient);
-    actionRepository = new ActionRepository(pgClient);
+    feeFineActionRepository = new FeeFineActionRepository(pgClient);
 
     patronNoticeClient = new PatronNoticeClient(webClient, okapiHeaders);
     usersClient = new UsersClient(vertx, okapiHeaders);
@@ -96,7 +96,7 @@ public class PatronNoticeService {
       return succeededFuture(context);
     }
 
-    return actionRepository.findChargeForAccount(action.getAccountId())
+    return feeFineActionRepository.findChargeForAccount(action.getAccountId())
       .map(context::withCharge);
   }
 

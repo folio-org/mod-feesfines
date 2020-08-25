@@ -11,6 +11,10 @@ public enum FeeFineStatus {
     this.value = statusValue;
   }
 
+  public String getValue() {
+    return value;
+  }
+
   public static FeeFineStatus forValue(String value) {
     return Arrays.stream(values())
       .filter(currentEnum -> currentEnum.value.equalsIgnoreCase(value))

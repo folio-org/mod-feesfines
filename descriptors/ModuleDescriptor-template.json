@@ -54,7 +54,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"15.2",
+      "version":"15.3",
       "handlers":[
         {
           "methods":[
@@ -238,6 +238,19 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/pay",
+          "permissionsRequired":[
+            "accounts.pay.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",
@@ -263,23 +276,7 @@
             "feefineactions.item.post"
           ],
           "modulePermissions": [
-            "patron-notice.post",
-            "inventory-storage.items.item.get",
-            "inventory-storage.items.collection.get",
-            "inventory-storage.holdings.item.get",
-            "inventory-storage.holdings.collection.get",
-            "inventory-storage.instances.item.get",
-            "inventory-storage.instances.collection.get",
-            "inventory-storage.locations.item.get",
-            "inventory-storage.locations.collection.get",
-            "inventory-storage.location-units.libraries.item.get",
-            "inventory-storage.location-units.libraries.collection.get",
-            "inventory-storage.location-units.campuses.item.get",
-            "inventory-storage.location-units.campuses.collection.get",
-            "inventory-storage.location-units.institutions.item.get",
-            "inventory-storage.location-units.institutions.collection.get",
-            "users.item.get",
-            "users.collection.get"
+            "modperms.feesfines.patron-notices.post"
           ]
         },
         {
@@ -1082,6 +1079,31 @@
       "permissionName":"lost-item-fees-policies.item.delete",
       "displayName":"Lost-item-fees-policies item delete",
       "description":"Delete an lost-item-fees-policies record"
+    },
+    {
+      "permissionName": "modperms.feesfines.patron-notices.post",
+      "displayName" : "module permissions for sending patron notices",
+      "description" : "to reduce X-Okapi-Token size",
+      "subPermissions": [
+        "patron-notice.post",
+        "inventory-storage.items.item.get",
+        "inventory-storage.items.collection.get",
+        "inventory-storage.holdings.item.get",
+        "inventory-storage.holdings.collection.get",
+        "inventory-storage.instances.item.get",
+        "inventory-storage.instances.collection.get",
+        "inventory-storage.locations.item.get",
+        "inventory-storage.locations.collection.get",
+        "inventory-storage.location-units.libraries.item.get",
+        "inventory-storage.location-units.libraries.collection.get",
+        "inventory-storage.location-units.campuses.item.get",
+        "inventory-storage.location-units.campuses.collection.get",
+        "inventory-storage.location-units.institutions.item.get",
+        "inventory-storage.location-units.institutions.collection.get",
+        "users.item.get",
+        "users.collection.get"
+      ],
+      "visible": false
     }
   ],
   "launchDescriptor": {
