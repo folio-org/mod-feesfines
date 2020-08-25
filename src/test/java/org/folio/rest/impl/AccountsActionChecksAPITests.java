@@ -209,21 +209,17 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   private void actionCheckAmountShouldBeAllowed(ResourceClient actionCheckClient) {
-    CheckActionRequest accountCheckRequest = new CheckActionRequest().withAmount("3.0");
+    CheckActionRequest request = new CheckActionRequest().withAmount("1.23");
 
-    baseActionCheckAmountShouldBeAllowed(accountCheckRequest, actionCheckClient)
-      .body("remainingAmount", is((float) (accountToPost.getRemaining() -
-        Double.parseDouble(accountCheckRequest.getAmount()))));
+    baseActionCheckAmountShouldBeAllowed(request, actionCheckClient)
+    .body("remainingAmount", is("3.32"));
   }
 
   private void actionCheckRefundAmountShouldBeAllowed(ResourceClient actionCheckClient) {
+    CheckActionRequest request = new CheckActionRequest().withAmount("1.23");
 
-    CheckActionRequest accountCheckRequest = new CheckActionRequest();
-    accountCheckRequest.withAmount("3.0");
-
-    baseActionCheckAmountShouldBeAllowed(accountCheckRequest, actionCheckClient)
-      .body("remainingAmount", is((float) (accountToPost.getRemaining() +
-        Double.parseDouble(accountCheckRequest.getAmount()))));
+    baseActionCheckAmountShouldBeAllowed(request, actionCheckClient)
+      .body("remainingAmount", is("5.78"));
   }
 
   private ValidatableResponse baseActionCheckAmountShouldBeAllowed(
@@ -234,8 +230,6 @@ public class AccountsActionChecksAPITests extends ApiTests {
       .statusCode(HttpStatus.SC_OK)
       .body("allowed", is(true))
       .body("amount", is(accountCheckRequest.getAmount()));
-      .body("amount", is("3.00")) // requested amount scaled to 2 decimal places
-      .body("remainingAmount", is("1.55"));
   }
 
   private void actionCheckAmountShouldNotBeAllowedWithExceededAmount(

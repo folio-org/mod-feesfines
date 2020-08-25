@@ -58,8 +58,16 @@ public class MonetaryValue {
     return ZERO.compareTo(amount) > 0;
   }
 
+  public boolean isGreaterThan(MonetaryValue other) {
+    return amount.compareTo(other.getAmount()) > 0;
+  }
+
   public MonetaryValue subtract(MonetaryValue subtrahend) {
     return new MonetaryValue(amount.subtract(subtrahend.getAmount()));
+  }
+
+  public MonetaryValue add(MonetaryValue augend) {
+    return new MonetaryValue(amount.add(augend.getAmount()));
   }
 
   private static BigDecimal from(String value) {

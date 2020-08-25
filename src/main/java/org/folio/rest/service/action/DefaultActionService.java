@@ -1,4 +1,4 @@
-package org.folio.rest.service;
+package org.folio.rest.service.action;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
@@ -18,27 +18,31 @@ import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
+import org.folio.rest.service.AccountUpdateService;
+import org.folio.rest.service.PatronNoticeService;
+import org.folio.rest.service.action.validation.ActionValidationService;
+import org.folio.rest.service.action.validation.DefaultActionValidationService;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-public class ActionService {
+public class DefaultActionService {
   private final AccountRepository accountRepository;
   private final FeeFineActionRepository feeFineActionRepository;
   private final AccountUpdateService accountUpdateService;
   private final ActionValidationService validationService;
   private final PatronNoticeService patronNoticeService;
 
-  public ActionService(Map<String, String> okapiHeaders, Context vertxContext) {
+  public DefaultActionService(Map<String, String> okapiHeaders, Context vertxContext) {
     PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
       TenantTool.tenantId(okapiHeaders));
 
     this.accountRepository = new AccountRepository(postgresClient);
     this.feeFineActionRepository = new FeeFineActionRepository(postgresClient);
     this.accountUpdateService = new AccountUpdateService(okapiHeaders, vertxContext);
-    this.validationService = new ActionValidationService(accountRepository);
     this.patronNoticeService = new PatronNoticeService(vertxContext.owner(), okapiHeaders);
+    this.validationService = new DefaultActionValidationService(accountRepository);
   }
 
   public Future<ActionContext> pay(String accountId, ActionRequest request) {
@@ -126,70 +130,6 @@ public class ActionService {
       patronNoticeService.sendPatronNotice(context.getFeeFineAction());
     }
     return succeededFuture(context);
-  }
-
-  public static class ActionContext {
-    private final Action action;
-    private final String accountId;
-    private final ActionRequest request;
-    private MonetaryValue requestedAmount;
-    private Account account;
-    private Feefineaction feeFineAction;
-    private boolean shouldCloseAccount;
-
-    public ActionContext(Action action, String accountId, ActionRequest request) {
-      this.action = action;
-      this.accountId = accountId;
-      this.request = request;
-    }
-
-    public ActionContext withAccount(Account account) {
-      this.account = account;
-      return this;
-    }
-
-    public ActionContext withFeeFineAction(Feefineaction feefineaction) {
-      this.feeFineAction = feefineaction;
-      return this;
-    }
-
-    public ActionContext withRequestedAmount(MonetaryValue requestedAmount) {
-      this.requestedAmount = requestedAmount;
-      return this;
-    }
-
-    public ActionContext withShouldCloseAccount(boolean shouldCloseAccount) {
-      this.shouldCloseAccount = shouldCloseAccount;
-      return this;
-    }
-
-    public String getAccountId() {
-      return accountId;
-    }
-
-    public ActionRequest getRequest() {
-      return request;
-    }
-
-    public Action getAction() {
-      return action;
-    }
-
-    public Account getAccount() {
-      return account;
-    }
-
-    public Feefineaction getFeeFineAction() {
-      return feeFineAction;
-    }
-
-    public MonetaryValue getRequestedAmount() {
-      return requestedAmount;
-    }
-
-    public boolean getShouldCloseAccount() {
-      return shouldCloseAccount;
-    }
   }
 
 }

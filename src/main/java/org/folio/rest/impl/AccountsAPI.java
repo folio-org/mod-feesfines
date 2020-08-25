@@ -42,10 +42,9 @@ import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
-import org.folio.rest.service.ActionService;
-import org.folio.rest.service.ActionValidationService;
-import org.folio.rest.service.DefaultActionValidationService;
-import org.folio.rest.service.RefundActionValidationService;
+import org.folio.rest.service.action.DefaultActionService;
+import org.folio.rest.service.action.validation.DefaultActionValidationService;
+import org.folio.rest.service.action.validation.RefundActionValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -423,7 +422,7 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new ActionService(okapiHeaders, vertxContext)
+    new DefaultActionService(okapiHeaders, vertxContext)
       .pay(accountId, request)
       .onSuccess(context -> {
         ActionSuccessResponse response = new ActionSuccessResponse()
