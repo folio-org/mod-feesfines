@@ -62,12 +62,12 @@ public class MonetaryValue {
     return amount.compareTo(other.getAmount()) > 0;
   }
 
-  public MonetaryValue subtract(MonetaryValue subtrahend) {
-    return new MonetaryValue(amount.subtract(subtrahend.getAmount()));
+  public MonetaryValue subtract(MonetaryValue other) {
+    return new MonetaryValue(amount.subtract(other.getAmount()));
   }
 
-  public MonetaryValue add(MonetaryValue augend) {
-    return new MonetaryValue(amount.add(augend.getAmount()));
+  public MonetaryValue add(MonetaryValue other) {
+    return new MonetaryValue(amount.add(other.getAmount()));
   }
 
   private static BigDecimal from(String value) {
