@@ -251,6 +251,19 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/waive",
+          "permissionsRequired":[
+            "accounts.waive.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",
@@ -824,6 +837,11 @@
       "permissionName":"accounts.pay.post",
       "displayName":"accounts payment post",
       "description":"Makes payment for an account"
+    },
+    {
+      "permissionName":"accounts.waive.post",
+      "displayName":"accounts waiver post",
+      "description":"Waives an account"
     },
     {
       "permissionName":"feefineactions.collection.get",

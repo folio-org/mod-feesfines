@@ -6,22 +6,21 @@
     "accountId": {
       "type": "string",
       "description": "Unique ID of the account",
-      "$ref": "uuid.json"
+      "$ref": "../uuid.json"
     },
     "amount": {
       "type": "string",
       "description": "Action amount"
     },
-    "feeFineActionId": {
+    "errorMessage": {
       "type": "string",
-      "description": "Unique ID of the fee/fine action",
-      "$ref": "uuid.json"
+      "description": "Additional info about request processing failure"
     }
   },
   "additionalProperties": false,
   "required": [
     "accountId",
     "amount",
-    "feeFineActionId"
+    "errorMessage"
   ]
 }

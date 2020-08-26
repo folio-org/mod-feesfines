@@ -330,7 +330,7 @@ public class AccountsActionChecksAPITests extends ApiTests {
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .body("allowed", is(false))
       .body("amount", is(amount))
-      .body("errorMessage", is("Account is already closed"));
+      .body("errorMessage", is("Fee/fine is already closed"));
 
     removeAllFromTable(ACCOUNTS_TABLE);
   }

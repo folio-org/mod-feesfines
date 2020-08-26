@@ -49,6 +49,10 @@ public class DefaultActionService {
     return performAction(Action.PAY, accountId, request);
   }
 
+  public Future<ActionContext> waive(String accountId, ActionRequest request) {
+    return performAction(Action.WAIVE, accountId, request);
+  }
+
   private Future<ActionContext> performAction(Action action, String accountId,
     ActionRequest request) {
 
