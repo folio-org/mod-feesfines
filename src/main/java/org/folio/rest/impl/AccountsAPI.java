@@ -430,6 +430,17 @@ public class AccountsAPI implements Accounts {
        ActionResultAdapter.WAIVE));
   }
 
+  @Override
+  public void postAccountsTransferByAccountId(String accountId, ActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new DefaultActionService(okapiHeaders, vertxContext)
+      .transfer(accountId, request)
+      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+        ActionResultAdapter.TRANSFER));
+  }
+
   private void handleActionResult(String accountId, ActionRequest request,
     AsyncResult<ActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
     ActionResultAdapter resultAdapter) {
