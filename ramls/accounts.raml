@@ -31,9 +31,63 @@ resourceTypes:
   collection-item: !include raml-util/rtypes/item-collection.raml
   get-only: !include raml-util/rtypes/get-only.raml
   post-empty-body: !include raml-util/rtypes/post-empty-body.raml
-  action: !include actions/action.raml
-  check-action: !include actions/checkAction.raml
-
+  action:
+    description: "Performs an action on an account"
+    post:
+      is: [validate]
+      description: "Perform action"
+      body:
+        application/json:
+          type: actionRequest
+      responses:
+        201:
+          description: "Action was performed successfully"
+          body:
+            application/json:
+              type: actionSuccessResponse
+        404:
+          description: "Fee/fine was not found"
+          body:
+            text/plain:
+              example: "Fee/fine was not found"
+        422:
+          description: "Action is not allowed"
+          body:
+            application/json:
+              type: actionFailureResponse
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error, please contact administrator"
+  check-action:
+    description: "Checks if the requested action is allowed"
+    post:
+      description: "Checks if an action is allowed"
+      body:
+        application/json:
+          type: checkActionRequest
+      responses:
+        200:
+          description: "Action is allowed"
+          body:
+            application/json:
+              type: checkActionResponse
+        404:
+          description: "Fee/fine was not found"
+          body:
+            text/plain:
+              example: "Fee/fine was not found"
+        422:
+          description: "Action is not allowed"
+          body:
+            application/json:
+              type: checkActionResponse
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
 /accounts:
   type:
     collection:
