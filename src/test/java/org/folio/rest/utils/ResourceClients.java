@@ -9,30 +9,30 @@ public final class ResourceClients {
   }
 
   public static ResourceClient accountsCheckPayClient(String accountId) {
-    return getUrlForAction(accountId, "check-pay");
+    return buildUrlForAction(accountId, "check-pay");
   }
 
   public static ResourceClient accountsCheckWaiveClient(String accountId) {
-    return getUrlForAction(accountId, "check-waive");
+    return buildUrlForAction(accountId, "check-waive");
   }
 
   public static ResourceClient accountsCheckTransferClient(String accountId) {
-    return getUrlForAction(accountId, "check-transfer");
+    return buildUrlForAction(accountId, "check-transfer");
   }
 
   public static ResourceClient accountsCheckRefundClient(String accountId) {
-    return getUrlForAction(accountId, "check-refund");
+    return buildUrlForAction(accountId, "check-refund");
   }
 
   public static ResourceClient accountsPayClient(String accountId) {
-    return getUrlForAction(accountId, "pay");
+    return buildUrlForAction(accountId, "pay");
   }
 
   public static ResourceClient accountsWaiveClient(String accountId) {
-    return getUrlForAction(accountId, "waive");
+    return buildUrlForAction(accountId, "waive");
   }
 
-  private static ResourceClient getUrlForAction(String accountId, String action) {
+  private static ResourceClient buildUrlForAction(String accountId, String action) {
     return new ResourceClient(String.format("/accounts/%s/%s", accountId, action));
   }
 

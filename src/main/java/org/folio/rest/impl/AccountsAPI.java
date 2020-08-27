@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
@@ -30,7 +29,6 @@ import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.Accounts;
-import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -52,6 +50,7 @@ import org.folio.rest.service.action.validation.RefundActionValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.utils.ActionResultAdapter;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -417,10 +416,7 @@ public class AccountsAPI implements Accounts {
     new DefaultActionService(okapiHeaders, vertxContext)
       .pay(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-        PostAccountsPayByAccountIdResponse::respond201WithApplicationJson,
-        PostAccountsPayByAccountIdResponse::respond422WithApplicationJson,
-        PostAccountsPayByAccountIdResponse::respond404WithTextPlain,
-        PostAccountsPayByAccountIdResponse::respond500WithTextPlain));
+        ActionResultAdapter.PAY));
   }
 
   @Override
@@ -431,19 +427,12 @@ public class AccountsAPI implements Accounts {
     new DefaultActionService(okapiHeaders, vertxContext)
       .waive(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-        PostAccountsWaiveByAccountIdResponse::respond201WithApplicationJson,
-        PostAccountsWaiveByAccountIdResponse::respond422WithApplicationJson,
-        PostAccountsWaiveByAccountIdResponse::respond404WithTextPlain,
-        PostAccountsWaiveByAccountIdResponse::respond500WithTextPlain));
+       ActionResultAdapter.WAIVE));
   }
 
   private void handleActionResult(String accountId, ActionRequest request,
-    AsyncResult<ActionContext> asyncResult,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Function<ActionSuccessResponse, ResponseDelegate> handlerFor201,
-    Function<ActionFailureResponse, ResponseDelegate> handlerFor422,
-    Function<String, ResponseDelegate> handlerFor404,
-    Function<String, ResponseDelegate> handlerFor500) {
+    AsyncResult<ActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
+    ActionResultAdapter resultAdapter) {
 
     if (asyncResult.succeeded()) {
       final ActionContext actionContext = asyncResult.result();
@@ -451,7 +440,7 @@ public class AccountsAPI implements Accounts {
         .withAccountId(accountId)
         .withAmount(actionContext.getRequestedAmount().toString())
         .withFeeFineActionId(actionContext.getFeeFineAction().getId());
-      asyncResultHandler.handle(succeededFuture(handlerFor201.apply(response)));
+      asyncResultHandler.handle(succeededFuture(resultAdapter.to201(response)));
     }
     else if (asyncResult.failed()) {
       final Throwable cause = asyncResult.cause();
@@ -461,11 +450,11 @@ public class AccountsAPI implements Accounts {
           .withAccountId(accountId)
           .withAmount(request.getAmount())
           .withErrorMessage(errorMessage);
-        asyncResultHandler.handle(succeededFuture(handlerFor422.apply(response)));
+        asyncResultHandler.handle(succeededFuture(resultAdapter.to422(response)));
       } else if (cause instanceof AccountNotFoundValidationException) {
-        asyncResultHandler.handle(succeededFuture(handlerFor404.apply(errorMessage)));
+        asyncResultHandler.handle(succeededFuture(resultAdapter.to404(errorMessage)));
       } else {
-        asyncResultHandler.handle(succeededFuture(handlerFor500.apply(errorMessage)));
+        asyncResultHandler.handle(succeededFuture(resultAdapter.to500(errorMessage)));
       }
     }
   }
