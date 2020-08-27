@@ -264,6 +264,19 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/transfer",
+          "permissionsRequired":[
+            "accounts.transfer.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",
@@ -842,6 +855,11 @@
       "permissionName":"accounts.waive.post",
       "displayName":"accounts waiver post",
       "description":"Waives an account"
+    },
+    {
+      "permissionName":"accounts.transfer.post",
+      "displayName":"accounts transfer post",
+      "description":"Transfers an account"
     },
     {
       "permissionName":"feefineactions.collection.get",

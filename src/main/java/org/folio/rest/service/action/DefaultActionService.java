@@ -53,6 +53,10 @@ public class DefaultActionService {
     return performAction(Action.WAIVE, accountId, request);
   }
 
+  public Future<ActionContext> transfer(String accountId, ActionRequest request) {
+    return performAction(Action.TRANSFER, accountId, request);
+  }
+
   private Future<ActionContext> performAction(Action action, String accountId,
     ActionRequest request) {
 

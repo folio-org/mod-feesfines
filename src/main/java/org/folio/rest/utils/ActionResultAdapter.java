@@ -5,6 +5,7 @@ import java.util.function.Function;
 import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.ActionSuccessResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsPayByAccountIdResponse;
+import org.folio.rest.jaxrs.resource.Accounts.PostAccountsTransferByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsWaiveByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 
@@ -20,6 +21,12 @@ public enum ActionResultAdapter {
     PostAccountsWaiveByAccountIdResponse::respond422WithApplicationJson,
     PostAccountsWaiveByAccountIdResponse::respond404WithTextPlain,
     PostAccountsWaiveByAccountIdResponse::respond500WithTextPlain
+  ),
+  TRANSFER(
+    PostAccountsTransferByAccountIdResponse::respond201WithApplicationJson,
+    PostAccountsTransferByAccountIdResponse::respond422WithApplicationJson,
+    PostAccountsTransferByAccountIdResponse::respond404WithTextPlain,
+    PostAccountsTransferByAccountIdResponse::respond500WithTextPlain
   );
 
   private final Function<ActionSuccessResponse, ResponseDelegate> handlerFor201;

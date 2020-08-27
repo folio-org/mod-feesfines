@@ -32,6 +32,10 @@ public final class ResourceClients {
     return buildUrlForAction(accountId, "waive");
   }
 
+  public static ResourceClient accountsTransferClient(String accountId) {
+    return buildUrlForAction(accountId, "transfer");
+  }
+
   private static ResourceClient buildUrlForAction(String accountId, String action) {
     return new ResourceClient(String.format("/accounts/%s/%s", accountId, action));
   }

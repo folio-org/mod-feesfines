@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.domain.Action.PAY;
+import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
 import static org.folio.rest.utils.ResourceClients.*;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -26,6 +27,7 @@ import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
+import org.folio.rest.utils.ResourceClients;
 import org.folio.test.support.ApiTests;
 import org.folio.util.pubsub.PubSubClientUtils;
 import org.junit.Before;
@@ -49,7 +51,7 @@ public class AccountsActionsAPITests extends ApiTests {
 
   @Parameterized.Parameters(name = "{0}")
   public static Object[] parameters() {
-    return new Object[] { PAY, WAIVE };
+    return new Object[] { PAY, WAIVE, TRANSFER };
   }
 
   @Before
@@ -65,6 +67,8 @@ public class AccountsActionsAPITests extends ApiTests {
       return accountsPayClient(ACCOUNT_ID);
     case WAIVE:
       return accountsWaiveClient(ACCOUNT_ID);
+    case TRANSFER:
+      return ResourceClients.accountsTransferClient(ACCOUNT_ID);
     default:
       throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
     }
