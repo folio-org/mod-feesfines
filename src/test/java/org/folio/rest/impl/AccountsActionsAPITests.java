@@ -4,6 +4,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.http.ContentType.JSON;
+import static org.folio.rest.domain.Action.PAY;
+import static org.folio.rest.domain.Action.WAIVE;
 import static org.folio.rest.utils.ResourceClients.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -24,42 +26,66 @@ import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
-import org.folio.rest.utils.ResourceClients;
 import org.folio.test.support.ApiTests;
 import org.folio.util.pubsub.PubSubClientUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 
+@RunWith(value = Parameterized.class)
 public class AccountsActionsAPITests extends ApiTests {
   private static final String ACCOUNT_ID = randomId();
-  private final ResourceClient payClient = ResourceClients.accountsPayClient(ACCOUNT_ID);
   private final ResourceClient actionsClient = feeFineActionsClient();
+  private final Action action;
+  private ResourceClient resourceClient;
+
+  public AccountsActionsAPITests(Action action) {
+    this.action = action;
+  }
+
+  @Parameterized.Parameters(name = "{0}")
+  public static Object[] parameters() {
+    return new Object[] { PAY, WAIVE };
+  }
 
   @Before
   public void beforeEach() {
     removeAllFromTable("feefineactions");
     removeAllFromTable("accounts");
+    resourceClient = getClient();
+  }
+
+  private ResourceClient getClient() {
+    switch (action) {
+    case PAY:
+      return accountsPayClient(ACCOUNT_ID);
+    case WAIVE:
+      return accountsWaiveClient(ACCOUNT_ID);
+    default:
+      throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
+    }
   }
 
   @Test
-  public void payShouldReturn404WhenAccountDoesNotExist() {
-    payClient.post(createRequestJson(String.valueOf(10.0)))
+  public void return404WhenAccountDoesNotExist() {
+    resourceClient.post(createRequestJson(String.valueOf(10.0)))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
-      .body(equalTo("Account was not found"));
+      .body(equalTo("Fee/fine was not found"));
   }
 
   @Test
-  public void payShouldReturn422WhenRequestedAmountIsNegative() {
+  public void return422WhenRequestedAmountIsNegative() {
     testRequestWithNonPositiveAmount(-1);
   }
 
   @Test
-  public void payShouldReturn422WhenRequestedAmountIsZero() {
+  public void return422WhenRequestedAmountIsZero() {
     testRequestWithNonPositiveAmount(0);
   }
 
@@ -73,7 +99,7 @@ public class AccountsActionsAPITests extends ApiTests {
       .withAccountId(ACCOUNT_ID)
       .withErrorMessage("Amount must be positive");
 
-    payClient.post(createRequestJson(amountString))
+    resourceClient.post(createRequestJson(amountString))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
@@ -81,7 +107,7 @@ public class AccountsActionsAPITests extends ApiTests {
   }
 
   @Test
-  public void payShouldReturn422WhenRequestedAmountIsInvalidString() {
+  public void return422WhenRequestedAmountIsInvalidString() {
     postAccount(createAccount(1.0));
 
     String invalidAmount = "eleven";
@@ -91,7 +117,7 @@ public class AccountsActionsAPITests extends ApiTests {
       .withAccountId(ACCOUNT_ID)
       .withErrorMessage("Invalid amount entered");
 
-    payClient.post(createRequestJson(invalidAmount))
+    resourceClient.post(createRequestJson(invalidAmount))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
@@ -99,17 +125,17 @@ public class AccountsActionsAPITests extends ApiTests {
   }
 
   @Test
-  public void payShouldReturn422WhenAccountIsClosed() {
-    payShouldReturn422WhenAccountIsEffectivelyClosed(0.00);
+  public void return422WhenAccountIsClosed() {
+    return422WhenAccountIsEffectivelyClosed(0.00);
   }
 
   @Test
-  public void payShouldReturn422WhenAccountIsEffectivelyClosed() {
+  public void return422WhenAccountIsEffectivelyClosed() {
     // will be rounded to 0.00 (2 decimal places) when compared to zero
-    payShouldReturn422WhenAccountIsEffectivelyClosed(0.004987654321);
+    return422WhenAccountIsEffectivelyClosed(0.004987654321);
   }
 
-  private void payShouldReturn422WhenAccountIsEffectivelyClosed(double remainingAmount) {
+  private void return422WhenAccountIsEffectivelyClosed(double remainingAmount) {
     Account account = createAccount(remainingAmount + 1).withRemaining(remainingAmount);
     account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
     postAccount(account);
@@ -119,9 +145,9 @@ public class AccountsActionsAPITests extends ApiTests {
     ActionFailureResponse expectedResponse = new ActionFailureResponse()
       .withAmount(requestedAmount)
       .withAccountId(ACCOUNT_ID)
-      .withErrorMessage("Account is already closed");
+      .withErrorMessage("Fee/fine is already closed");
 
-    payClient.post(createRequestJson(requestedAmount))
+    resourceClient.post(createRequestJson(requestedAmount))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
@@ -129,17 +155,17 @@ public class AccountsActionsAPITests extends ApiTests {
   }
 
   @Test
-  public void payHandlesLongDecimalsCorrectlyAndClosesAccount() {
+  public void longDecimalsAreHandledCorrectlyAndAccountIsClosed() {
     double accountBalanceBeforeAction = 1.004987654321;
     final Account account = createAccount(accountBalanceBeforeAction);
     postAccount(account);
 
     String requestedAmountString = "1.004123456789";
-    String expectedPaymentStatus = "Paid fully";
+    String expectedPaymentStatus = action.getFullResult();
 
     final ActionRequest request = createRequest(requestedAmountString);
 
-    final String feeFineActionId  = payClient.post(toJson(request))
+    final String feeFineActionId  = resourceClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
@@ -162,17 +188,17 @@ public class AccountsActionsAPITests extends ApiTests {
   }
 
   @Test
-  public void payHandlesLongDecimalsCorrectly() {
+  public void longDecimalsAreHandledCorrectly() {
     double accountBalanceBeforeAction = 1.23987654321; // should be rounded to 1.24
     final Account account = createAccount(accountBalanceBeforeAction);
     postAccount(account);
 
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
-    String expectedPaymentStatus = "Paid partially";
+    String expectedPaymentStatus = action.getPartialResult();
 
     final ActionRequest request = createRequest(requestedAmountString);
 
-    final String feeFineActionId  = payClient.post(toJson(request))
+    final String feeFineActionId  = resourceClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
@@ -195,16 +221,16 @@ public class AccountsActionsAPITests extends ApiTests {
   }
 
   @Test
-  public void partialPaymentCreatesActionAndUpdatesAccount() {
-    paymentCreatesActionAndUpdatesAccount(Action.PAY, false);
+  public void partialActionCreatesActionAndUpdatesAccount() {
+    paymentCreatesActionAndUpdatesAccount(false);
   }
 
   @Test
-  public void fullPaymentCreatesActionAndClosesAccount() {
-    paymentCreatesActionAndUpdatesAccount(Action.PAY, true);
+  public void fullActionCreatesActionAndClosesAccount() {
+    paymentCreatesActionAndUpdatesAccount(true);
   }
 
-  private void paymentCreatesActionAndUpdatesAccount(Action action, boolean terminalAction) {
+  private void paymentCreatesActionAndUpdatesAccount(boolean terminalAction) {
     double accountBalanceBefore = 3.45;
     double requestedAmount = terminalAction ? accountBalanceBefore : accountBalanceBefore - 1.0;
     double expectedAccountBalanceAfter = accountBalanceBefore - requestedAmount;
@@ -218,7 +244,7 @@ public class AccountsActionsAPITests extends ApiTests {
 
     final ActionRequest request = createRequest(requestedAmountString);
 
-    String feeFineActionId = payClient.post(toJson(request))
+    String feeFineActionId = resourceClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)

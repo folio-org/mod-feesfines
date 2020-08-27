@@ -6,7 +6,7 @@
     "accountId": {
       "type": "string",
       "description": "ID of users fine/fee account",
-      "$ref": "uuid.json"
+      "$ref": "../uuid.json"
     },
     "amount": {
       "type": "string",

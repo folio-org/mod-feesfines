@@ -21,7 +21,7 @@
     },
     "servicePointId": {
       "type": "string",
-      "$ref": "uuid.json",
+      "$ref": "../uuid.json",
       "description": "Unique ID of the service point where the payment was made"
     },
     "userName": {

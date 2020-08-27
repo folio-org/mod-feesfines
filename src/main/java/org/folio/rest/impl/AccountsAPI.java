@@ -42,6 +42,7 @@ import org.folio.rest.persist.facets.FacetManager;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
+import org.folio.rest.service.action.ActionContext;
 import org.folio.rest.service.action.DefaultActionService;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
@@ -49,6 +50,7 @@ import org.folio.rest.service.action.validation.RefundActionValidationService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.utils.ActionResultAdapter;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -336,11 +338,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-    PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-
     checkAction(accountId, request, asyncResultHandler,
-      new DefaultActionValidationService(new AccountRepository(pgClient)));
+      new DefaultActionValidationService(new AccountRepository(vertxContext, okapiHeaders)));
   }
 
   @Override
@@ -348,11 +347,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-    PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-
     checkAction(accountId, request, asyncResultHandler,
-      new DefaultActionValidationService(new AccountRepository(pgClient)));
+      new DefaultActionValidationService(new AccountRepository(vertxContext, okapiHeaders)));
   }
 
   @Override
@@ -360,11 +356,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-    PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-
     checkAction(accountId, request, asyncResultHandler,
-      new DefaultActionValidationService(new AccountRepository(pgClient)));
+      new DefaultActionValidationService(new AccountRepository(vertxContext, okapiHeaders)));
   }
 
   @Override
@@ -372,11 +365,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-    PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-
     checkAction(accountId, request, asyncResultHandler,
-      new RefundActionValidationService(new AccountRepository(pgClient)));
+      new RefundActionValidationService(new AccountRepository(vertxContext, okapiHeaders)));
   }
 
   private void checkAction(String accountId, CheckActionRequest request,
@@ -425,31 +415,48 @@ public class AccountsAPI implements Accounts {
 
     new DefaultActionService(okapiHeaders, vertxContext)
       .pay(accountId, request)
-      .onSuccess(context -> {
-        ActionSuccessResponse response = new ActionSuccessResponse()
+      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+        ActionResultAdapter.PAY));
+  }
+
+  @Override
+  public void postAccountsWaiveByAccountId(String accountId, ActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new DefaultActionService(okapiHeaders, vertxContext)
+      .waive(accountId, request)
+      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+       ActionResultAdapter.WAIVE));
+  }
+
+  private void handleActionResult(String accountId, ActionRequest request,
+    AsyncResult<ActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
+    ActionResultAdapter resultAdapter) {
+
+    if (asyncResult.succeeded()) {
+      final ActionContext actionContext = asyncResult.result();
+      ActionSuccessResponse response = new ActionSuccessResponse()
+        .withAccountId(accountId)
+        .withAmount(actionContext.getRequestedAmount().toString())
+        .withFeeFineActionId(actionContext.getFeeFineAction().getId());
+      asyncResultHandler.handle(succeededFuture(resultAdapter.to201(response)));
+    }
+    else if (asyncResult.failed()) {
+      final Throwable cause = asyncResult.cause();
+      String errorMessage = cause.getLocalizedMessage();
+      if (cause instanceof FailedValidationException) {
+        ActionFailureResponse response = new ActionFailureResponse()
           .withAccountId(accountId)
-          .withAmount(context.getRequestedAmount().toString())
-          .withFeeFineActionId(context.getFeeFineAction().getId());
-        asyncResultHandler.handle(succeededFuture(
-          PostAccountsPayByAccountIdResponse.respond201WithApplicationJson(response)));
-      })
-      .onFailure(throwable -> {
-        String errorMessage = throwable.getLocalizedMessage();
-        if (throwable instanceof FailedValidationException) {
-          ActionFailureResponse response = new ActionFailureResponse()
-            .withAccountId(accountId)
-            .withAmount(request.getAmount())
-            .withErrorMessage(errorMessage);
-          asyncResultHandler.handle(succeededFuture(
-            PostAccountsPayByAccountIdResponse.respond422WithApplicationJson(response)));
-        } else if (throwable instanceof AccountNotFoundValidationException) {
-          asyncResultHandler.handle(succeededFuture(
-            PostAccountsPayByAccountIdResponse.respond404WithTextPlain(errorMessage)));
-        } else {
-          asyncResultHandler.handle(succeededFuture(
-            PostAccountsPayByAccountIdResponse.respond500WithTextPlain(errorMessage)));
-        }
-      });
+          .withAmount(request.getAmount())
+          .withErrorMessage(errorMessage);
+        asyncResultHandler.handle(succeededFuture(resultAdapter.to422(response)));
+      } else if (cause instanceof AccountNotFoundValidationException) {
+        asyncResultHandler.handle(succeededFuture(resultAdapter.to404(errorMessage)));
+      } else {
+        asyncResultHandler.handle(succeededFuture(resultAdapter.to500(errorMessage)));
+      }
+    }
   }
 
   private static class AdditionalFieldsContext {

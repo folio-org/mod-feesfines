@@ -12,11 +12,11 @@ types:
   accountdataCollection: !include accountdataCollection.json
   errors: !include raml-util/schemas/errors.schema
   patronNotice: !include patronNotice.json
-  checkActionRequest: !include checkActionRequest.json
-  checkActionResponse: !include checkActionResponse.json
-  actionRequest: !include actionRequest.json
-  actionSuccessResponse: !include actionSuccessResponse.json
-  actionFailureResponse: !include actionFailureResponse.json
+  checkActionRequest: !include actions/checkActionRequest.json
+  checkActionResponse: !include actions/checkActionResponse.json
+  actionRequest: !include actions/actionRequest.json
+  actionSuccessResponse: !include actions/actionSuccessResponse.json
+  actionFailureResponse: !include actions/actionFailureResponse.json
 
 traits:
   orderable: !include raml-util/traits/orderable.raml
@@ -31,6 +31,8 @@ resourceTypes:
   collection-item: !include raml-util/rtypes/item-collection.raml
   get-only: !include raml-util/rtypes/get-only.raml
   post-empty-body: !include raml-util/rtypes/post-empty-body.raml
+  action: !include actions/action.raml
+  check-action: !include actions/checkAction.raml
 
 /accounts:
   type:
@@ -58,138 +60,14 @@ resourceTypes:
     get:
       description: "Get a single account"
     /check-pay:
-      post:
-        description: "Checks if payment is valid"
-        body:
-          application/json:
-            type: checkActionRequest
-        responses:
-          200:
-            description: "Payment is allowed"
-            body:
-              application/json:
-                type: checkActionResponse
-          404:
-            description: "Account was not found"
-            body:
-              text/plain:
-                example: "Account was not found"
-          422:
-            description: "Payment is not allowed"
-            body:
-              application/json:
-                type: checkActionResponse
-          500:
-            description: "Internal server error"
-            body:
-              text/plain:
-                example: "Internal server error"
+      type: check-action
     /check-waive:
-      post:
-        description: "Checks if waive is valid"
-        body:
-          application/json:
-            type: checkActionRequest
-        responses:
-          200:
-            description: "Waiver is allowed"
-            body:
-              application/json:
-                type: checkActionResponse
-          404:
-            description: "Account was not found"
-            body:
-              text/plain:
-                example: "Account was not found"
-          422:
-            description: "Waiver is not allowed"
-            body:
-              application/json:
-                type: checkActionResponse
-          500:
-            description: "Internal server error"
-            body:
-              text/plain:
-                example: "Internal server error"
+      type: check-action
     /check-transfer:
-      post:
-        description: Checks if transfer is valid
-        body:
-          application/json:
-            type: checkActionRequest
-        responses:
-          200:
-            description: "Transfer is allowed"
-            body:
-              application/json:
-                type: checkActionResponse
-          404:
-            description: "Account was not found"
-            body:
-              text/plain:
-                example: "Account was not found"
-          422:
-            description: "Transfer is not allowed"
-            body:
-              application/json:
-                type: checkActionResponse
-          500:
-            description: "Internal server error"
-            body:
-              text/plain:
-                example: "Internal server error"
+      type: check-action
     /check-refund:
-      post:
-        description: Checks if refund is valid
-        body:
-          application/json:
-            type: checkActionRequest
-        responses:
-          200:
-            description: "Refund is allowed"
-            body:
-              application/json:
-                type: checkActionResponse
-          404:
-            description: "Account was not found"
-            body:
-              text/plain:
-                example: "Account was not found"
-          422:
-            description: "Refund is not allowed"
-            body:
-              application/json:
-                type: checkActionResponse
-          500:
-            description: "Internal server error"
-            body:
-              text/plain:
-                example: "Internal server error"
+      type: check-action
     /pay:
-      post:
-        is: [validate]
-        description: "Makes payment"
-        body:
-          application/json:
-            type: actionRequest
-        responses:
-          201:
-            description: "Payment was made successfully"
-            body:
-              application/json:
-                type: actionSuccessResponse
-          404:
-            description: "Account was not found"
-            body:
-              text/plain:
-                example: "Account was not found"
-          422:
-            description: "Payment is not allowed"
-            body:
-              application/json:
-                type: actionFailureResponse
-          500:
-            description: "Internal server error"
-            body:
-              text/plain:
-                example: "Internal server error, please contact administrator"
+      type: action
+    /waive:
+      type: action

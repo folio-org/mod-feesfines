@@ -25,7 +25,7 @@ public abstract class ActionValidationService {
 
   public Future<ActionValidationResult> validate(Account account, String rawAmount) {
     if (account == null) {
-      throw new AccountNotFoundValidationException("Account was not found");
+      throw new AccountNotFoundValidationException("Fee/fine was not found");
     }
 
     MonetaryValue requestedAmount;
@@ -42,7 +42,7 @@ public abstract class ActionValidationService {
     final MonetaryValue remainingAmount = new MonetaryValue(account.getRemaining());
 
     if (isClosed(account) && remainingAmount.isZero()) {
-      throw new FailedValidationException("Account is already closed");
+      throw new FailedValidationException("Fee/fine is already closed");
     }
 
     validateAmountMaximum(account, requestedAmount);
