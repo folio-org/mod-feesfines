@@ -7,7 +7,9 @@ import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
-import static org.folio.rest.utils.ResourceClients.*;
+import static org.folio.rest.utils.ResourceClients.accountsPayClient;
+import static org.folio.rest.utils.ResourceClients.accountsWaiveClient;
+import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -20,10 +22,10 @@ import org.folio.rest.domain.Action;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.ActionFailureResponse;
+import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
-import org.folio.rest.jaxrs.model.ActionRequest;
-import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
@@ -39,13 +41,13 @@ import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 
 @RunWith(value = Parameterized.class)
-public class AccountsActionsAPITests extends ApiTests {
+public class AccountsDefaultActionsAPITests extends ApiTests {
   private static final String ACCOUNT_ID = randomId();
   private final ResourceClient actionsClient = feeFineActionsClient();
   private final Action action;
   private ResourceClient resourceClient;
 
-  public AccountsActionsAPITests(Action action) {
+  public AccountsDefaultActionsAPITests(Action action) {
     this.action = action;
   }
 
@@ -167,7 +169,7 @@ public class AccountsActionsAPITests extends ApiTests {
     String requestedAmountString = "1.004123456789";
     String expectedPaymentStatus = action.getFullResult();
 
-    final ActionRequest request = createRequest(requestedAmountString);
+    final DefaultActionRequest request = createRequest(requestedAmountString);
 
     final String feeFineActionId  = resourceClient.post(toJson(request))
       .then()
@@ -200,7 +202,7 @@ public class AccountsActionsAPITests extends ApiTests {
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
     String expectedPaymentStatus = action.getPartialResult();
 
-    final ActionRequest request = createRequest(requestedAmountString);
+    final DefaultActionRequest request = createRequest(requestedAmountString);
 
     final String feeFineActionId  = resourceClient.post(toJson(request))
       .then()
@@ -246,7 +248,7 @@ public class AccountsActionsAPITests extends ApiTests {
     String expectedAccountStatus = terminalAction ? "Closed" : "Open";
     String requestedAmountString = String.valueOf(requestedAmount);
 
-    final ActionRequest request = createRequest(requestedAmountString);
+    final DefaultActionRequest request = createRequest(requestedAmountString);
 
     String feeFineActionId = resourceClient.post(toJson(request))
       .then()
@@ -317,8 +319,8 @@ public class AccountsActionsAPITests extends ApiTests {
       .contentType(JSON);
   }
 
-  private static ActionRequest createRequest(String amount) {
-    return new ActionRequest()
+  private static DefaultActionRequest createRequest(String amount) {
+    return new DefaultActionRequest()
       .withAmount(amount)
       .withPaymentMethod("Cash")
       .withServicePointId(randomId())

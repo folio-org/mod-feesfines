@@ -1,13 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Default action request",
+  "description": "Cancel action request",
   "type": "object",
   "javaInterfaces": ["org.folio.rest.domain.ActionRequest"],
   "properties": {
-    "amount": {
-      "type": "string",
-      "description": "Action amount"
-    },
     "comments": {
       "type": "string",
       "description": "Additional info for staff or patron. Format: [STAFF : staff comment \n PATRON : patron comment]"
@@ -36,7 +32,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "amount",
     "notifyPatron",
     "servicePointId",
     "userName",

@@ -277,6 +277,19 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/cancel",
+          "permissionsRequired":[
+            "accounts.cancel.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",
@@ -860,6 +873,11 @@
       "permissionName":"accounts.transfer.post",
       "displayName":"accounts transfer post",
       "description":"Transfers an account"
+    },
+    {
+      "permissionName":"accounts.cancel.post",
+      "displayName":"accounts cancel post",
+      "description":"Cancels an account"
     },
     {
       "permissionName":"feefineactions.collection.get",
