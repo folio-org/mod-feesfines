@@ -1,5 +1,8 @@
 package org.folio.rest.service.action;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
@@ -10,15 +13,16 @@ public class ActionContext {
   private final Action action;
   private final String accountId;
   private final ActionRequest request;
+  private final List<Feefineaction> feeFineActions;
   private MonetaryValue requestedAmount;
   private Account account;
-  private Feefineaction feeFineAction;
   private boolean shouldCloseAccount;
 
   public ActionContext(Action action, String accountId, ActionRequest request) {
     this.action = action;
     this.accountId = accountId;
     this.request = request;
+    this.feeFineActions = new ArrayList<>();
   }
 
   public ActionContext withAccount(Account account) {
@@ -26,8 +30,8 @@ public class ActionContext {
     return this;
   }
 
-  public ActionContext withFeeFineAction(Feefineaction feefineaction) {
-    this.feeFineAction = feefineaction;
+  public ActionContext withFeeFineAction(Feefineaction feeFineAction) {
+    this.feeFineActions.add(feeFineAction);
     return this;
   }
 
@@ -57,8 +61,8 @@ public class ActionContext {
     return account;
   }
 
-  public Feefineaction getFeeFineAction() {
-    return feeFineAction;
+  public List<Feefineaction> getFeeFineActions() {
+    return feeFineActions;
   }
 
   public MonetaryValue getRequestedAmount() {

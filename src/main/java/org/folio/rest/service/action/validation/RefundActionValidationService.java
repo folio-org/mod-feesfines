@@ -1,31 +1,54 @@
 package org.folio.rest.service.action.validation;
 
+import java.util.Map;
+
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.repository.AccountRepository;
+import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.repository.FeeFineActionRepository;
+
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 
 public class RefundActionValidationService extends ActionValidationService {
+  private final FeeFineActionRepository feeFineActionRepository;
 
-  public RefundActionValidationService(AccountRepository accountRepository) {
-    super(accountRepository);
+  public RefundActionValidationService(Map<String, String> headers, Context context) {
+    super(headers, context);
+    this.feeFineActionRepository = new FeeFineActionRepository(headers, context);
   }
 
   @Override
-  protected void validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
-    MonetaryValue maxAllowedRefund = new MonetaryValue(account.getAmount())
-      .subtract(new MonetaryValue(account.getRemaining()));
-
-    if (requestedAmount.isGreaterThan(maxAllowedRefund)) {
-      throw new FailedValidationException("Requested amount exceeds maximum refund amount");
-    }
+  protected void validateAccountStatus(Account account) {
+    // doing nothing as closed fee/fine can be refunded
   }
 
   @Override
-  protected MonetaryValue calculateRemainingBalance(MonetaryValue requestedAmount,
-    MonetaryValue remainingAmount) {
+  protected Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
+    return getRefundableAmount(account)
+      .map(MonetaryValue::new)
+      .map(refundableAmount -> {
+        if (requestedAmount.isGreaterThan(refundableAmount)) {
+          throw new FailedValidationException(
+            "Refund amount must be greater than zero and less than or equal to Selected amount");
+        }
+        return null;
+      });
+  }
 
-    return remainingAmount.add(requestedAmount);
+  private Future<Double> getRefundableAmount(Account account) {
+    return feeFineActionRepository.findRefundableActionsForAccount(account.getId())
+      .map(actions -> actions.stream()
+        .mapToDouble(Feefineaction::getAmountAction)
+        .sum()
+      );
+  }
+
+  @Override
+  protected MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount) {
+    // refund does not alter the fee/fine balance
+    return new MonetaryValue(account.getRemaining());
   }
 
 }

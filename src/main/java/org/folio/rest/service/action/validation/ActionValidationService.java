@@ -1,14 +1,16 @@
 package org.folio.rest.service.action.validation;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.utils.AccountHelper.isClosed;
+import java.util.Map;
 
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
+import org.folio.rest.tools.utils.TenantTool;
 
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 
 public abstract class ActionValidationService {
@@ -16,6 +18,13 @@ public abstract class ActionValidationService {
 
   public ActionValidationService(AccountRepository accountRepository) {
     this.accountRepository = accountRepository;
+  }
+
+  public ActionValidationService(Map<String, String> headers, Context context) {
+    PostgresClient postgresClient = PostgresClient.getInstance(context.owner(),
+      TenantTool.tenantId(headers));
+
+    this.accountRepository = new AccountRepository(postgresClient);
   }
 
   public Future<ActionValidationResult> validate(String accountId, String rawAmount) {
@@ -39,23 +48,17 @@ public abstract class ActionValidationService {
       throw new FailedValidationException("Amount must be positive");
     }
 
-    final MonetaryValue remainingAmount = new MonetaryValue(account.getRemaining());
+    validateAccountStatus(account);
 
-    if (isClosed(account) && remainingAmount.isZero()) {
-      throw new FailedValidationException("Fee/fine is already closed");
-    }
-
-    validateAmountMaximum(account, requestedAmount);
-
-    return succeededFuture(new ActionValidationResult(
-      calculateRemainingBalance(requestedAmount, remainingAmount).toString(),
-      requestedAmount.toString())
-    );
+    return validateAmountMaximum(account, requestedAmount)
+      .map(new ActionValidationResult(
+        calculateRemainingBalance(account, requestedAmount).toString(), requestedAmount.toString()));
   }
 
-  protected abstract void validateAmountMaximum(Account account, MonetaryValue requestedAmount);
+  protected abstract void validateAccountStatus(Account account);
 
-  protected abstract MonetaryValue calculateRemainingBalance(MonetaryValue requestedAmount,
-    MonetaryValue remainingAmount);
+  protected abstract Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount);
+
+  protected abstract MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount);
 
 }

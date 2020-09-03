@@ -44,6 +44,7 @@ import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
 import org.folio.rest.service.action.ActionContext;
 import org.folio.rest.service.action.DefaultActionService;
+import org.folio.rest.service.action.RefundActionService;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
 import org.folio.rest.service.action.validation.RefundActionValidationService;
@@ -366,7 +367,7 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     checkAction(accountId, request, asyncResultHandler,
-      new RefundActionValidationService(new AccountRepository(vertxContext, okapiHeaders)));
+      new RefundActionValidationService(okapiHeaders, vertxContext));
   }
 
   private void checkAction(String accountId, CheckActionRequest request,
@@ -441,6 +442,17 @@ public class AccountsAPI implements Accounts {
         ActionResultAdapter.TRANSFER));
   }
 
+  @Override
+  public void postAccountsRefundByAccountId(String accountId, ActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new RefundActionService(okapiHeaders, vertxContext)
+      .refund(accountId, request)
+      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+        ActionResultAdapter.REFUND));
+  }
+
   private void handleActionResult(String accountId, ActionRequest request,
     AsyncResult<ActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
     ActionResultAdapter resultAdapter) {
@@ -449,8 +461,7 @@ public class AccountsAPI implements Accounts {
       final ActionContext actionContext = asyncResult.result();
       ActionSuccessResponse response = new ActionSuccessResponse()
         .withAccountId(accountId)
-        .withAmount(actionContext.getRequestedAmount().toString())
-        .withFeeFineActionId(actionContext.getFeeFineAction().getId());
+        .withAmount(actionContext.getRequestedAmount().toString());
       asyncResultHandler.handle(succeededFuture(resultAdapter.to201(response)));
     }
     else if (asyncResult.failed()) {
