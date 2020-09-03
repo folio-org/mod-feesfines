@@ -18,11 +18,12 @@ public class CancelActionValidationService extends ActionValidationService {
 
   @Override
   protected void validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
   protected MonetaryValue calculateRemainingBalance(MonetaryValue requestedAmount, MonetaryValue remainingAmount) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
