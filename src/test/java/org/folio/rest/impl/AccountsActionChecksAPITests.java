@@ -1,10 +1,13 @@
 package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
+import static org.folio.rest.domain.Action.PAY;
+import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.ResourceClients.accountsCheckPayClient;
 import static org.folio.rest.utils.ResourceClients.accountsCheckRefundClient;
 import static org.folio.rest.utils.ResourceClients.accountsCheckTransferClient;
 import static org.folio.rest.utils.ResourceClients.accountsCheckWaiveClient;
+import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.folio.test.support.EntityBuilder.createAccount;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -13,6 +16,7 @@ import org.apache.http.HttpStatus;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
+import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.junit.Before;
@@ -23,6 +27,12 @@ import io.restassured.response.ValidatableResponse;
 public class AccountsActionChecksAPITests extends ApiTests {
 
   private static final String ACCOUNTS_TABLE = "accounts";
+
+  private static final double ACCOUNT_INITIAL_AMOUNT = 9.00;
+  private static final double ACCOUNT_REMAINING_AMOUNT = 4.55;
+  private static final double REQUESTED_AMOUNT = 1.23;
+  private static final String REQUESTED_AMOUNT_STRING = String.valueOf(REQUESTED_AMOUNT);
+
   private Account accountToPost;
   private ResourceClient accountsCheckPayClient;
   private ResourceClient accountsCheckWaiveClient;
@@ -55,6 +65,21 @@ public class AccountsActionChecksAPITests extends ApiTests {
 
   @Test
   public void checkRefundAmountShouldBeAllowed() {
+    final Feefineaction feeFineAction = new Feefineaction()
+      .withAccountId(accountToPost.getId())
+      .withUserId(accountToPost.getUserId())
+      .withAmountAction(REQUESTED_AMOUNT * 2 - 0.01);
+
+    feeFineActionsClient()
+      .post(feeFineAction.withTypeAction(PAY.getPartialResult()))
+      .then()
+      .statusCode(HttpStatus.SC_CREATED);
+
+    feeFineActionsClient()
+      .post(feeFineAction.withTypeAction(TRANSFER.getPartialResult()))
+      .then()
+      .statusCode(HttpStatus.SC_CREATED);
+
     actionCheckRefundAmountShouldBeAllowed(accountsCheckRefundClient);
   }
 
@@ -209,17 +234,17 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   private void actionCheckAmountShouldBeAllowed(ResourceClient actionCheckClient) {
-    CheckActionRequest request = new CheckActionRequest().withAmount("1.23");
+    CheckActionRequest request = new CheckActionRequest().withAmount(REQUESTED_AMOUNT_STRING);
 
     baseActionCheckAmountShouldBeAllowed(request, actionCheckClient)
     .body("remainingAmount", is("3.32"));
   }
 
   private void actionCheckRefundAmountShouldBeAllowed(ResourceClient actionCheckClient) {
-    CheckActionRequest request = new CheckActionRequest().withAmount("1.23");
+    CheckActionRequest request = new CheckActionRequest().withAmount(REQUESTED_AMOUNT_STRING);
 
     baseActionCheckAmountShouldBeAllowed(request, actionCheckClient)
-      .body("remainingAmount", is("5.78"));
+      .body("remainingAmount", is(String.valueOf(ACCOUNT_REMAINING_AMOUNT)));
   }
 
   private ValidatableResponse baseActionCheckAmountShouldBeAllowed(
@@ -238,16 +263,17 @@ public class AccountsActionChecksAPITests extends ApiTests {
     String expectedErrorMessage = "Requested amount exceeds remaining amount";
 
     baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
-      actionCheckClient, expectedErrorMessage, "4.56");
+      actionCheckClient, expectedErrorMessage, String.valueOf(REQUESTED_AMOUNT + 10));
   }
 
   private void actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(
     ResourceClient actionCheckClient) {
 
-    String expectedErrorMessage = "Requested amount exceeds maximum refund amount";
+    String expectedErrorMessage =
+      "Refund amount must be greater than zero and less than or equal to Selected amount";
 
     baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
-      actionCheckClient, expectedErrorMessage, "4.46");
+      actionCheckClient, expectedErrorMessage, String.valueOf(REQUESTED_AMOUNT + 10));
   }
 
   private void baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
@@ -259,7 +285,7 @@ public class AccountsActionChecksAPITests extends ApiTests {
     actionCheckClient.attemptCreate(accountCheckRequest)
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(expectedErrorMessage))
+      .body("errorMessage", is(expectedErrorMessage))
       .body("allowed", is(false))
       .body("amount", is(accountCheckRequest.getAmount()));
   }
@@ -310,8 +336,8 @@ public class AccountsActionChecksAPITests extends ApiTests {
   private void actionCheckAmountShouldNotFailForNonExistentAccount(
     ResourceClient actionCheckClient) {
 
-    CheckActionRequest accountCheckRequest = new CheckActionRequest();
-    accountCheckRequest.withAmount("3.0");
+    CheckActionRequest accountCheckRequest = new CheckActionRequest()
+      .withAmount(REQUESTED_AMOUNT_STRING);
 
     actionCheckClient.attemptCreate(accountCheckRequest)
       .then()
@@ -323,13 +349,11 @@ public class AccountsActionChecksAPITests extends ApiTests {
     accountToPost.getStatus().setName(FeeFineStatus.CLOSED.getValue());
     accountsClient.update(accountToPost.getId(), accountToPost);
 
-    String amount = "1.23";
-
-    client.attemptCreate(new CheckActionRequest().withAmount(amount))
+    client.attemptCreate(new CheckActionRequest().withAmount(REQUESTED_AMOUNT_STRING))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .body("allowed", is(false))
-      .body("amount", is(amount))
+      .body("amount", is(REQUESTED_AMOUNT_STRING))
       .body("errorMessage", is("Fee/fine is already closed"));
 
     removeAllFromTable(ACCOUNTS_TABLE);
@@ -366,7 +390,7 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   private Account postAccount() {
-    Account accountToPost = createAccount();
+    Account accountToPost = createAccount(ACCOUNT_INITIAL_AMOUNT, ACCOUNT_REMAINING_AMOUNT);
     accountsClient.create(accountToPost)
       .then()
       .statusCode(HttpStatus.SC_CREATED)

@@ -80,6 +80,8 @@ public abstract class ActionService {
     if (context.getShouldCloseAccount()) {
       accountStatus.setName(CLOSED.getValue());
       account.setRemaining(0.0);
+    } else {
+      account.setRemaining(feeFineAction.getBalance());
     }
 
     return accountUpdateService.updateAccount(account)
