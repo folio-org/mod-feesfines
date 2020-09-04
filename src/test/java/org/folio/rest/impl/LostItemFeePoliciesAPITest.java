@@ -61,7 +61,7 @@ public class LostItemFeePoliciesAPITest extends ApiTests {
       .put("value", "null");
 
     JsonObject error = new JsonObject()
-      .put("message", "may not be null")
+      .put("message", "must not be null")
       .put("type", "1")
       .put("code", "-1")
       .put("parameters", new JsonArray(Collections.singletonList(parameters)));
