@@ -14,36 +14,23 @@ import org.folio.rest.service.action.validation.DefaultActionValidationService;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-public class DefaultActionService extends ActionService {
+public abstract class DefaultActionService extends ActionService {
 
-  public DefaultActionService(Map<String, String> headers, Context context) {
-    super(new DefaultActionValidationService(headers, context), headers, context);
-  }
-
-  public Future<ActionContext> pay(String accountId, ActionRequest request) {
-    return performAction(Action.PAY, accountId, request);
-  }
-
-  public Future<ActionContext> waive(String accountId, ActionRequest request) {
-    return performAction(Action.WAIVE, accountId, request);
-  }
-
-  public Future<ActionContext> transfer(String accountId, ActionRequest request) {
-    return performAction(Action.TRANSFER, accountId, request);
+  public DefaultActionService(Action action, Map<String, String> headers, Context context) {
+    super(action, new DefaultActionValidationService(headers, context), headers, context);
   }
 
   @Override
-  Future<ActionContext> createFeeFineActions(ActionContext context) {
+  protected Future<ActionContext> createFeeFineActions(ActionContext context) {
     final ActionRequest request = context.getRequest();
     final Account account = context.getAccount();
-    final Action action = context.getAction();
     final MonetaryValue requestedAmount = context.getRequestedAmount();
 
     MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining())
          .subtract(requestedAmount);
 
-    boolean shouldCloseAccount = remainingAmountAfterAction.isZero();
-    String actionType = shouldCloseAccount ? action.getFullResult() : action.getPartialResult();
+    boolean isFullAction = remainingAmountAfterAction.isZero();
+    String actionType = isFullAction ? action.getFullResult() : action.getPartialResult();
 
     Feefineaction feeFineAction = new Feefineaction()
       .withAmountAction(requestedAmount.toDouble())
@@ -62,8 +49,10 @@ public class DefaultActionService extends ActionService {
       .withAccountId(context.getAccountId());
 
     return feeFineActionRepository.save(feeFineAction)
-      .map(context.withFeeFineAction(feeFineAction)
-        .withShouldCloseAccount(shouldCloseAccount)
+      .map(context
+        .withFeeFineAction(feeFineAction)
+        .withIsFullAction(isFullAction)
+        .withShouldCloseAccount(isFullAction)
       );
   }
 

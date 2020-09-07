@@ -3,6 +3,8 @@ package org.folio.rest.service.action;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
+import static org.folio.rest.persist.PostgresClient.getInstance;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.List;
 import java.util.Map;
@@ -19,24 +21,24 @@ import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.service.AccountUpdateService;
 import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.service.action.validation.ActionValidationService;
-import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
 public abstract class ActionService {
-  final AccountRepository accountRepository;
-  final FeeFineActionRepository feeFineActionRepository;
-  final AccountUpdateService accountUpdateService;
-  final ActionValidationService validationService;
-  final PatronNoticeService patronNoticeService;
+  protected final Action action;
+  protected final AccountRepository accountRepository;
+  protected final FeeFineActionRepository feeFineActionRepository;
+  protected final AccountUpdateService accountUpdateService;
+  protected final ActionValidationService validationService;
+  protected final PatronNoticeService patronNoticeService;
 
-  public ActionService(ActionValidationService validationService,
+  public ActionService(Action action, ActionValidationService validationService,
     Map<String, String> headers, Context context) {
 
-    PostgresClient postgresClient = PostgresClient.getInstance(context.owner(),
-      TenantTool.tenantId(headers));
+    PostgresClient postgresClient = getInstance(context.owner(), tenantId(headers));
 
+    this.action = action;
     this.accountRepository = new AccountRepository(postgresClient);
     this.feeFineActionRepository = new FeeFineActionRepository(postgresClient);
     this.accountUpdateService = new AccountUpdateService(headers, context);
@@ -44,10 +46,8 @@ public abstract class ActionService {
     this.validationService = validationService;
   }
 
-  Future<ActionContext> performAction(Action action, String accountId,
-    ActionRequest request) {
-
-    return succeededFuture(new ActionContext(action, accountId, request))
+  public Future<ActionContext> performAction(String accountId, ActionRequest request) {
+    return succeededFuture(new ActionContext(accountId, request))
       .compose(this::findAccount)
       .compose(this::validateAction)
       .compose(this::createFeeFineActions)
@@ -67,21 +67,26 @@ public abstract class ActionService {
       .map(result -> context.withRequestedAmount(new MonetaryValue(amount)));
   }
 
-  abstract Future<ActionContext> createFeeFineActions(ActionContext context);
+  protected abstract Future<ActionContext> createFeeFineActions(ActionContext context);
 
   private Future<ActionContext> updateAccount(ActionContext context) {
     final List<Feefineaction> feeFineActions = context.getFeeFineActions();
-    final Feefineaction feeFineAction = feeFineActions.get(feeFineActions.size() - 1);
+
+    if (feeFineActions.isEmpty()) {
+      return succeededFuture(context);
+    }
+
+    final Feefineaction lastFeeFineAction = feeFineActions.get(feeFineActions.size() - 1);
     final Account account = context.getAccount();
     final Status accountStatus = account.getStatus();
 
-    account.getPaymentStatus().setName(feeFineAction.getTypeAction());
+    account.getPaymentStatus().setName(lastFeeFineAction.getTypeAction());
 
-    if (context.getShouldCloseAccount()) {
+    if (context.isShouldCloseAccount()) {
       accountStatus.setName(CLOSED.getValue());
       account.setRemaining(0.0);
     } else {
-      account.setRemaining(feeFineAction.getBalance());
+      account.setRemaining(lastFeeFineAction.getBalance());
     }
 
     return accountUpdateService.updateAccount(account)

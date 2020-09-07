@@ -21,7 +21,7 @@ public class RefundActionValidationService extends ActionValidationService {
 
   @Override
   protected void validateAccountStatus(Account account) {
-    // doing nothing as closed fee/fine can be refunded
+    // doing nothing as closed fee/fine can also be refunded
   }
 
   @Override
@@ -47,7 +47,7 @@ public class RefundActionValidationService extends ActionValidationService {
 
   @Override
   protected MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount) {
-    // refund does not alter the fee/fine balance
+    // refund does not affect the fee/fine balance
     return new MonetaryValue(account.getRemaining());
   }
 

@@ -43,8 +43,10 @@ import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
 import org.folio.rest.service.action.ActionContext;
-import org.folio.rest.service.action.DefaultActionService;
+import org.folio.rest.service.action.PayActionService;
 import org.folio.rest.service.action.RefundActionService;
+import org.folio.rest.service.action.TransferActionService;
+import org.folio.rest.service.action.WaiveActionService;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
 import org.folio.rest.service.action.validation.RefundActionValidationService;
@@ -414,8 +416,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new DefaultActionService(okapiHeaders, vertxContext)
-      .pay(accountId, request)
+    new PayActionService(okapiHeaders, vertxContext)
+      .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
         ActionResultAdapter.PAY));
   }
@@ -425,8 +427,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new DefaultActionService(okapiHeaders, vertxContext)
-      .waive(accountId, request)
+    new WaiveActionService(okapiHeaders, vertxContext)
+      .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
        ActionResultAdapter.WAIVE));
   }
@@ -436,8 +438,8 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new DefaultActionService(okapiHeaders, vertxContext)
-      .transfer(accountId, request)
+    new TransferActionService(okapiHeaders, vertxContext)
+      .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
         ActionResultAdapter.TRANSFER));
   }
@@ -448,7 +450,7 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     new RefundActionService(okapiHeaders, vertxContext)
-      .refund(accountId, request)
+      .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
         ActionResultAdapter.REFUND));
   }
