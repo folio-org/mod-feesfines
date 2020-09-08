@@ -12,11 +12,11 @@ import static org.folio.rest.utils.ResourceClients.accountsPayClient;
 import static org.folio.rest.utils.ResourceClients.accountsTransferClient;
 import static org.folio.rest.utils.ResourceClients.accountsWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.util.concurrent.TimeUnit;
@@ -271,21 +271,10 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
     actionsClient.getAll()
       .then()
       .body(FEE_FINE_ACTIONS, hasSize(1))
-      .body(FEE_FINE_ACTIONS, hasItem(allOf(
-        hasJsonPath("typeAction", is(expectedPaymentStatus)),
-        hasJsonPath("comments", is(request.getComments())),
-        hasJsonPath("notify", is(request.getNotifyPatron())),
-        hasJsonPath("amountAction", is((float) requestedAmount)),
-        hasJsonPath("balance", is((float) expectedAccountBalanceAfter)),
-        hasJsonPath("transactionInformation", is(request.getTransactionInfo())),
-        hasJsonPath("createdAt", is(request.getServicePointId())),
-        hasJsonPath("source", is(request.getUserName())),
-        hasJsonPath("paymentMethod", is(request.getPaymentMethod())),
-        hasJsonPath("accountId", is(ACCOUNT_ID)),
-        hasJsonPath("userId", is(account.getUserId())),
-        hasJsonPath("id", notNullValue(String.class)),
-        hasJsonPath("dateAction", notNullValue(String.class))
-      )));
+      .body(FEE_FINE_ACTIONS, hasItem(
+        feeFineAction(ACCOUNT_ID, account.getUserId(), expectedAccountBalanceAfter, requestedAmount,
+        expectedPaymentStatus, request.getTransactionInfo(), request))
+      );
 
     accountsClient.getById(ACCOUNT_ID)
       .then()
