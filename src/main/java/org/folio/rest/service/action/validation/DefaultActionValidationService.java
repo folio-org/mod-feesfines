@@ -23,7 +23,8 @@ public class DefaultActionValidationService extends ActionValidationService {
     super(headers, context);
   }
 
-  @Override protected void validateAccountStatus(Account account) {
+  @Override
+  protected void validateAccountStatus(Account account) {
     if (isClosedAndHasZeroRemainingAmount(account)) {
       throw new FailedValidationException("Fee/fine is already closed");
     }

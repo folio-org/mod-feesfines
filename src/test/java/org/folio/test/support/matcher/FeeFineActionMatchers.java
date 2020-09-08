@@ -10,7 +10,6 @@ import java.util.Arrays;
 import org.folio.rest.jaxrs.model.ActionRequest;
 import org.hamcrest.Matcher;
 
-
 import io.vertx.core.json.JsonObject;
 
 public class FeeFineActionMatchers {
