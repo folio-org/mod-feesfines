@@ -36,6 +36,10 @@ public final class ResourceClients {
     return buildUrlForAction(accountId, "transfer");
   }
 
+  public static ResourceClient accountsRefundClient(String accountId) {
+    return buildUrlForAction(accountId, "refund");
+  }
+
   private static ResourceClient buildUrlForAction(String accountId, String action) {
     return new ResourceClient(String.format("/accounts/%s/%s", accountId, action));
   }

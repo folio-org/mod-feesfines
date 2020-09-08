@@ -46,7 +46,7 @@ import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 
 @RunWith(value = Parameterized.class)
-public class AccountsActionsAPITests extends ApiTests {
+public class AccountsPayWaiveTransferAPITests extends ApiTests {
   private static final String ACCOUNT_ID = randomId();
   private static final String FEE_FINE_ACTIONS = "feefineactions";
 
@@ -54,7 +54,7 @@ public class AccountsActionsAPITests extends ApiTests {
   private final Action action;
   private ResourceClient resourceClient;
 
-  public AccountsActionsAPITests(Action action) {
+  public AccountsPayWaiveTransferAPITests(Action action) {
     this.action = action;
   }
 
