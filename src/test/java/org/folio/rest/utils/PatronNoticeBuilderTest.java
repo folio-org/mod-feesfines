@@ -8,8 +8,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -55,8 +53,6 @@ public class PatronNoticeBuilderTest {
   private static final String ACCOUNT_AMOUNT = "12.34";
   private static final String ACCOUNT_REMAINING = "5.67";
   private static final String ACTION_AMOUNT = "6.67";
-
-  private static final NumberFormat CURRENCY_FORMATTER = new DecimalFormat("#0.00");
 
   @Test
   public void createContextWithAllAvailableFields() {
@@ -149,8 +145,8 @@ public class PatronNoticeBuilderTest {
     assertEquals(action.getTypeAction(), actionContext.getString("type"));
     assertEquals(dateToString(action.getDateAction()), actionContext.getString("actionDate"));
     assertEquals(dateToString(action.getDateAction()), actionContext.getString("actionDateTime"));
-    assertEquals(CURRENCY_FORMATTER.format(action.getAmountAction()), actionContext.getString("amount"));
-    assertEquals(CURRENCY_FORMATTER.format(action.getBalance()), actionContext.getString("remainingAmount"));
+    assertEquals(action.getAmountAction().toString(), actionContext.getString("amount"));
+    assertEquals(action.getBalance().toString(), actionContext.getString("remainingAmount"));
     assertEquals(ACTION_COMMENT_FOR_PATRON, actionContext.getString("additionalInfo"));
   }
 
