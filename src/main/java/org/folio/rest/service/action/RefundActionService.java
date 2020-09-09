@@ -50,21 +50,27 @@ public class RefundActionService extends ActionService {
 
     MonetaryValue refundableAmount = new MonetaryValue(refundableAmountDouble);
     MonetaryValue paidAmount = new MonetaryValue(paidAmountDouble);
+    MonetaryValue transferredAmount = refundableAmount.subtract(paidAmount);
     MonetaryValue requestedAmount = context.getRequestedAmount();
-    MonetaryValue refundAmountForPayments = paidAmount.min(requestedAmount);
-    MonetaryValue refundAmountForTransfers = requestedAmount.subtract(refundAmountForPayments);
+    MonetaryValue refundAmountPayment = paidAmount.min(requestedAmount);
+    MonetaryValue refundAmountTransfer = requestedAmount.subtract(refundAmountPayment);
 
-    boolean isFullRefund = refundableAmount.subtract(requestedAmount).isZero();
+    boolean isFullRefundPayment = paidAmount.subtract(refundAmountPayment).isZero();
+    boolean isFullRefundTransfer = transferredAmount.subtract(refundAmountTransfer).isZero();
 
-    return succeededFuture(context.withIsFullAction(isFullRefund))
-      .compose(ctx -> createFeeFineAction(ctx, CREDIT, refundAmountForPayments, REFUND_TO_PATRON))
-      .compose(ctx -> createFeeFineAction(ctx, CREDIT, refundAmountForTransfers, REFUND_TO_BURSAR))
-      .compose(ctx -> createFeeFineAction(ctx, REFUND, refundAmountForPayments, REFUNDED_TO_PATRON))
-      .compose(ctx -> createFeeFineAction(ctx, REFUND, refundAmountForTransfers, REFUNDED_TO_BURSAR));
+    return succeededFuture(context)
+      .compose(ctx -> createFeeFineAction(ctx, CREDIT, refundAmountPayment, isFullRefundPayment,
+        REFUND_TO_PATRON))
+      .compose(ctx -> createFeeFineAction(ctx, CREDIT, refundAmountTransfer, isFullRefundTransfer,
+        REFUND_TO_BURSAR))
+      .compose(ctx -> createFeeFineAction(ctx, REFUND, refundAmountPayment, isFullRefundPayment,
+        REFUNDED_TO_PATRON))
+      .compose(ctx -> createFeeFineAction(ctx, REFUND, refundAmountTransfer, isFullRefundTransfer,
+        REFUNDED_TO_BURSAR));
   }
 
   private Future<ActionContext> createFeeFineAction(ActionContext context, Action action,
-    MonetaryValue amount, String transactionInfo) {
+     MonetaryValue amount, boolean isFullAction, String transactionInfo) {
 
     if (!amount.isPositive()) {
       return succeededFuture(context);
@@ -81,7 +87,7 @@ public class RefundActionService extends ActionService {
     account.setRemaining(remainingAmountAfter.toDouble());
 
     Feefineaction feeFineAction = new Feefineaction()
-      .withTypeAction(action.getResult(context.isFullAction()))
+      .withTypeAction(action.getResult(isFullAction))
       .withAmountAction(amount.toDouble())
       .withBalance(account.getRemaining())
       .withComments(request.getComments())

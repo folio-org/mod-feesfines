@@ -14,7 +14,6 @@ public class ActionContext {
   private final List<Feefineaction> feeFineActions;
   private MonetaryValue requestedAmount;
   private Account account;
-  private boolean isFullAction;
   private boolean shouldCloseAccount;
 
   public ActionContext(String accountId, ActionRequest request) {
@@ -35,11 +34,6 @@ public class ActionContext {
 
   public ActionContext withRequestedAmount(MonetaryValue requestedAmount) {
     this.requestedAmount = requestedAmount;
-    return this;
-  }
-
-  public ActionContext withIsFullAction(boolean isFullAction) {
-    this.isFullAction = isFullAction;
     return this;
   }
 
@@ -66,10 +60,6 @@ public class ActionContext {
 
   public MonetaryValue getRequestedAmount() {
     return requestedAmount;
-  }
-
-  public boolean isFullAction() {
-    return isFullAction;
   }
 
   public boolean isShouldCloseAccount() {

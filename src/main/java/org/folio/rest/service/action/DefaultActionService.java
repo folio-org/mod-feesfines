@@ -51,7 +51,6 @@ public abstract class DefaultActionService extends ActionService {
     return feeFineActionRepository.save(feeFineAction)
       .map(context
         .withFeeFineAction(feeFineAction)
-        .withIsFullAction(isFullAction)
         .withShouldCloseAccount(isFullAction)
       );
   }

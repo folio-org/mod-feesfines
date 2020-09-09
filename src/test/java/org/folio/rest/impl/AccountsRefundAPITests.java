@@ -241,9 +241,9 @@ public class AccountsRefundAPITests extends ApiTests {
     ActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(-3.0, payAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON, request),
+      feeFineActionMatcher(-3.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON, request),
       feeFineActionMatcher(-4.0, transferRefundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR, request),
-      feeFineActionMatcher(-1.0, payAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON, request),
+      feeFineActionMatcher(-1.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON, request),
       feeFineActionMatcher( 0.0, transferRefundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR, request)
     );
 
@@ -302,9 +302,9 @@ public class AccountsRefundAPITests extends ApiTests {
     ActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(-2.0, payAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON, request),
+      feeFineActionMatcher(-2.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON, request),
       feeFineActionMatcher(-3.0, transferRefundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR, request),
-      feeFineActionMatcher(0.0, payAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON, request),
+      feeFineActionMatcher(0.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON, request),
       feeFineActionMatcher(1.0, transferRefundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR, request)
     );
 

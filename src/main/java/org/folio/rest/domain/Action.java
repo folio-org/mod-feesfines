@@ -47,7 +47,7 @@ public enum Action {
   }
 
   public boolean isActionForResult(String actionResult) {
-    if (StringUtils.isBlank(actionResult)) {
+    if (actionResult.isBlank()) {
       return false;
     }
     return actionResult.equals(partialResult) || actionResult.equals(fullResult);
