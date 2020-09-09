@@ -277,6 +277,19 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/refund",
+          "permissionsRequired":[
+            "accounts.refund.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",
@@ -860,6 +873,11 @@
       "permissionName":"accounts.transfer.post",
       "displayName":"accounts transfer post",
       "description":"Transfers an account"
+    },
+    {
+      "permissionName":"accounts.refund.post",
+      "displayName":"accounts refund post",
+      "description":"Refunds an account"
     },
     {
       "permissionName":"feefineactions.collection.get",

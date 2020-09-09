@@ -3,14 +3,21 @@ package org.folio.rest.impl;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
-import static org.folio.rest.utils.ResourceClients.*;
+import static org.folio.rest.utils.ResourceClients.accountsPayClient;
+import static org.folio.rest.utils.ResourceClients.accountsTransferClient;
+import static org.folio.rest.utils.ResourceClients.accountsWaiveClient;
+import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.hasSize;
 
 import java.util.concurrent.TimeUnit;
 
@@ -20,43 +27,45 @@ import org.folio.rest.domain.Action;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.ActionFailureResponse;
+import org.folio.rest.jaxrs.model.ActionRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
-import org.folio.rest.jaxrs.model.ActionRequest;
-import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
-import org.folio.rest.utils.ResourceClients;
 import org.folio.test.support.ApiTests;
 import org.folio.util.pubsub.PubSubClientUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 
 @RunWith(value = Parameterized.class)
-public class AccountsActionsAPITests extends ApiTests {
+public class AccountsPayWaiveTransferAPITests extends ApiTests {
   private static final String ACCOUNT_ID = randomId();
+  private static final String FEE_FINE_ACTIONS = "feefineactions";
+
   private final ResourceClient actionsClient = feeFineActionsClient();
   private final Action action;
   private ResourceClient resourceClient;
 
-  public AccountsActionsAPITests(Action action) {
+  public AccountsPayWaiveTransferAPITests(Action action) {
     this.action = action;
   }
 
-  @Parameterized.Parameters(name = "{0}")
+  @Parameters(name = "{0}")
   public static Object[] parameters() {
     return new Object[] { PAY, WAIVE, TRANSFER };
   }
 
   @Before
   public void beforeEach() {
-    removeAllFromTable("feefineactions");
+    removeAllFromTable(FEE_FINE_ACTIONS);
     removeAllFromTable("accounts");
     resourceClient = getClient();
   }
@@ -68,7 +77,7 @@ public class AccountsActionsAPITests extends ApiTests {
     case WAIVE:
       return accountsWaiveClient(ACCOUNT_ID);
     case TRANSFER:
-      return ResourceClients.accountsTransferClient(ACCOUNT_ID);
+      return accountsTransferClient(ACCOUNT_ID);
     default:
       throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
     }
@@ -169,20 +178,21 @@ public class AccountsActionsAPITests extends ApiTests {
 
     final ActionRequest request = createRequest(requestedAmountString);
 
-    final String feeFineActionId  = resourceClient.post(toJson(request))
+    resourceClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
       .body("amount", is("1.00"))
-      .body("accountId", is(ACCOUNT_ID))
-      .extract()
-      .path("feeFineActionId");
+      .body("accountId", is(ACCOUNT_ID));
 
-    actionsClient.getById(feeFineActionId)
+    actionsClient.getAll()
       .then()
-      .body("amountAction", is(1.0f))
-      .body("balance", is(0.0f))
-      .body("typeAction", is(expectedPaymentStatus));
+      .body(FEE_FINE_ACTIONS, hasSize(1))
+      .body(FEE_FINE_ACTIONS, hasItem(allOf(
+        hasJsonPath("amountAction", is(1.0f)),
+        hasJsonPath("balance", is(0.0f)),
+        hasJsonPath("typeAction", is(expectedPaymentStatus))
+      )));
 
     accountsClient.getById(ACCOUNT_ID)
       .then()
@@ -211,11 +221,14 @@ public class AccountsActionsAPITests extends ApiTests {
       .extract()
       .path("feeFineActionId");
 
-    actionsClient.getById(feeFineActionId)
+    actionsClient.getAll()
       .then()
-      .body("amountAction", is(1.00f))
-      .body("balance", is(0.24f)) // 1.24 - 1.00
-      .body("typeAction", is(expectedPaymentStatus));
+      .body(FEE_FINE_ACTIONS, hasSize(1))
+      .body(FEE_FINE_ACTIONS, hasItem(allOf(
+        hasJsonPath("amountAction", is(1.00f)),
+        hasJsonPath("balance", is(0.24f)), // 1.24 - 1.00
+        hasJsonPath("typeAction", is(expectedPaymentStatus))
+      )));
 
     accountsClient.getById(ACCOUNT_ID)
       .then()
@@ -248,30 +261,20 @@ public class AccountsActionsAPITests extends ApiTests {
 
     final ActionRequest request = createRequest(requestedAmountString);
 
-    String feeFineActionId = resourceClient.post(toJson(request))
+    resourceClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
       .body("amount", is(requestedAmountString))
-      .body("accountId", is(ACCOUNT_ID))
-      .extract()
-      .path("feeFineActionId");
+      .body("accountId", is(ACCOUNT_ID));
 
-    actionsClient.getById(feeFineActionId)
+    actionsClient.getAll()
       .then()
-      .body("typeAction", is(expectedPaymentStatus))
-      .body("comments", is(request.getComments()))
-      .body("notify", is(request.getNotifyPatron()))
-      .body("amountAction", is((float) requestedAmount))
-      .body("balance", is((float) expectedAccountBalanceAfter))
-      .body("transactionInformation", is(request.getTransactionInfo()))
-      .body("createdAt", is(request.getServicePointId()))
-      .body("source", is(request.getUserName()))
-      .body("paymentMethod", is(request.getPaymentMethod()))
-      .body("accountId", is(ACCOUNT_ID))
-      .body("userId", is(account.getUserId()))
-      .body("id", is(feeFineActionId))
-      .body("dateAction", notNullValue(String.class));
+      .body(FEE_FINE_ACTIONS, hasSize(1))
+      .body(FEE_FINE_ACTIONS, hasItem(
+        feeFineAction(ACCOUNT_ID, account.getUserId(), expectedAccountBalanceAfter, requestedAmount,
+        expectedPaymentStatus, request.getTransactionInfo(), request))
+      );
 
     accountsClient.getById(ACCOUNT_ID)
       .then()

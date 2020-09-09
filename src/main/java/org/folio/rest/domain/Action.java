@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+
 public enum Action {
   PAY("Paid partially", "Paid fully"),
   WAIVE("Waived partially", "Waived fully"),
   TRANSFER("Transferred partially", "Transferred fully"),
   REFUND("Refunded partially", "Refunded fully"),
+  CREDIT("Credited partially", "Credited fully"),
   CANCELLED(null, "Cancelled as error");
 
   private final String partialResult;
@@ -37,6 +40,17 @@ public enum Action {
 
   public String getFullResult() {
     return fullResult;
+  }
+
+  public String getResult(boolean isFull) {
+    return isFull ? getFullResult() : getPartialResult();
+  }
+
+  public boolean isActionForResult(String actionResult) {
+    if (actionResult.isBlank()) {
+      return false;
+    }
+    return actionResult.equals(partialResult) || actionResult.equals(fullResult);
   }
 
   public static boolean isFullActionResult(String result) {

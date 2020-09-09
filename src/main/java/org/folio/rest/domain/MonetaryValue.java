@@ -70,6 +70,10 @@ public class MonetaryValue {
     return new MonetaryValue(amount.add(other.getAmount()));
   }
 
+  public MonetaryValue min(MonetaryValue other) {
+    return amount.compareTo(other.getAmount()) <= 0 ? this : other;
+  }
+
   private static BigDecimal from(String value) {
     return value == null ? null : new BigDecimal(value);
   }

@@ -11,17 +11,11 @@
     "amount": {
       "type": "string",
       "description": "Action amount"
-    },
-    "feeFineActionId": {
-      "type": "string",
-      "description": "Unique ID of the fee/fine action",
-      "$ref": "../uuid.json"
     }
   },
   "additionalProperties": false,
   "required": [
     "accountId",
-    "amount",
-    "feeFineActionId"
+    "amount"
   ]
 }
