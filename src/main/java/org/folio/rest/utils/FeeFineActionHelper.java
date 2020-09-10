@@ -1,5 +1,7 @@
 package org.folio.rest.utils;
 
+import java.util.Arrays;
+
 import org.folio.rest.domain.Action;
 import org.folio.rest.jaxrs.model.Feefineaction;
 
@@ -14,5 +16,10 @@ public class FeeFineActionHelper {
 
   public static boolean isAction(Feefineaction action) {
     return Action.isActionResult(action.getTypeAction());
+  }
+
+  public static boolean isActionOfType(Feefineaction feefineaction, Action... actions) {
+    return Arrays.stream(actions)
+      .anyMatch(action -> action.isActionForResult(feefineaction.getTypeAction()));
   }
 }

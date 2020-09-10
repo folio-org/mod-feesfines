@@ -40,6 +40,10 @@ public final class ResourceClients {
     return buildAccountActionClient(accountId, "cancel");
   }
 
+  public static ResourceClient accountsRefundClient(String accountId) {
+    return buildAccountActionClient(accountId, "refund");
+  }
+
   private static ResourceClient buildAccountActionClient(String accountId, String action) {
     return new ResourceClient(String.format("/accounts/%s/%s", accountId, action));
   }

@@ -12,7 +12,8 @@ public enum Action {
   PAY("Paid partially", "Paid fully", ActionResultAdapter.PAY),
   WAIVE("Waived partially", "Waived fully", ActionResultAdapter.WAIVE),
   TRANSFER("Transferred partially", "Transferred fully", ActionResultAdapter.TRANSFER),
-  REFUND("Refunded partially", "Refunded fully", null),
+  REFUND("Refunded partially", "Refunded fully", ActionResultAdapter.REFUND),
+  CREDIT("Credited partially", "Credited fully", null),
   CANCELLED(null, "Cancelled as error", ActionResultAdapter.CANCEL);
 
   private final String partialResult;
@@ -41,6 +42,17 @@ public enum Action {
 
   public String getFullResult() {
     return fullResult;
+  }
+
+  public String getResult(boolean isFull) {
+    return isFull ? getFullResult() : getPartialResult();
+  }
+
+  public boolean isActionForResult(String actionResult) {
+    if (actionResult.isBlank()) {
+      return false;
+    }
+    return actionResult.equals(partialResult) || actionResult.equals(fullResult);
   }
 
   public static boolean isFullActionResult(String result) {

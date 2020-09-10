@@ -5,33 +5,25 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.service.action.validation.CancelActionValidationService;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
 public class CancelActionService extends ActionService {
 
-  public CancelActionService(Map<String, String> okapiHeaders, Context vertxContext) {
-    super(okapiHeaders, vertxContext);
+  public CancelActionService(Map<String, String> headers, Context context) {
+    super(Action.CANCELLED, new CancelActionValidationService(headers, context), headers, context);
   }
 
   @Override
-  public Future<ActionContext> executeAction(String accountId,
-    ActionRequest request) {
-
-    return performAction(Action.CANCELLED, accountId, request);
-  }
-
-  @Override
-  protected Future<ActionContext> createFeeFineAction(ActionContext context) {
+  protected Future<ActionContext> createFeeFineActions(ActionContext context) {
     final CancelActionRequest request = (CancelActionRequest) context.getRequest();
     final Account account = context.getAccount();
-    final Action action = context.getAction();
 
     MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining());
 
@@ -58,7 +50,7 @@ public class CancelActionService extends ActionService {
   @Override
   protected Future<ActionContext> validateAction(ActionContext context) {
 
-    return cancelValidationService.validate(context.getAccount(), null)
+    return validationService.validate(context.getAccount(), null)
       .map(result -> context.withRequestedAmount(null));
   }
 }

@@ -48,6 +48,7 @@ import org.folio.rest.service.AccountUpdateService;
 import org.folio.rest.service.action.ActionContext;
 import org.folio.rest.service.action.CancelActionService;
 import org.folio.rest.service.action.PayActionService;
+import org.folio.rest.service.action.RefundActionService;
 import org.folio.rest.service.action.TransferActionService;
 import org.folio.rest.service.action.WaiveActionService;
 import org.folio.rest.service.action.validation.ActionValidationService;
@@ -72,7 +73,6 @@ public class AccountsAPI implements Accounts {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ACCOUNT_ID_FIELD = "'id'";
   private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
-
   private final Messages messages = Messages.getInstance();
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
@@ -372,7 +372,7 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     checkAction(accountId, request, asyncResultHandler,
-      new RefundActionValidationService(new AccountRepository(vertxContext, okapiHeaders)));
+      new RefundActionValidationService(okapiHeaders, vertxContext));
   }
 
   private void checkAction(String accountId, CheckActionRequest request,
@@ -420,7 +420,7 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     new PayActionService(okapiHeaders, vertxContext)
-      .executeAction(accountId, request)
+      .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
         Action.PAY));
   }
@@ -431,7 +431,7 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     new WaiveActionService(okapiHeaders, vertxContext)
-      .executeAction(accountId, request)
+      .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
         Action.WAIVE));
   }
@@ -442,9 +442,20 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     new TransferActionService(okapiHeaders, vertxContext)
-      .executeAction(accountId, request)
+      .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
         Action.TRANSFER));
+  }
+
+  @Override
+  public void postAccountsRefundByAccountId(String accountId, DefaultActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new RefundActionService(okapiHeaders, vertxContext)
+      .performAction(accountId, request)
+      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+        Action.REFUND));
   }
 
   @Override
@@ -453,7 +464,7 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     new CancelActionService(okapiHeaders, vertxContext)
-      .executeAction(accountId, request)
+      .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
         Action.CANCELLED));
   }
@@ -463,11 +474,11 @@ public class AccountsAPI implements Accounts {
     Action action) {
 
     ActionResultAdapter resultAdapter = action.getActionResultAdapter();
+
     if (asyncResult.succeeded()) {
       final ActionContext actionContext = asyncResult.result();
       ActionSuccessResponse response = new ActionSuccessResponse()
-        .withAccountId(accountId)
-        .withFeeFineActionId(actionContext.getFeeFineAction().getId());
+        .withAccountId(accountId);
       if (actionContext.getRequestedAmount() != null) {
         response.withAmount(actionContext.getRequestedAmount().toString());
       }
@@ -480,7 +491,7 @@ public class AccountsAPI implements Accounts {
         ActionFailureResponse response = new ActionFailureResponse()
           .withAccountId(accountId)
           .withErrorMessage(errorMessage);
-        if (!"CANCELLED".equals(action.name())) {
+        if (Action.CANCELLED != action) {
           DefaultActionRequest defaultActionRequest = (DefaultActionRequest) request;
           response.withAmount(defaultActionRequest.getAmount());
         }

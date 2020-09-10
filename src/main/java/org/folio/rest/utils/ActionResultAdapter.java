@@ -6,6 +6,7 @@ import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.ActionSuccessResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsCancelByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsPayByAccountIdResponse;
+import org.folio.rest.jaxrs.resource.Accounts.PostAccountsRefundByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsTransferByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsWaiveByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
@@ -34,13 +35,13 @@ public enum ActionResultAdapter {
     PostAccountsCancelByAccountIdResponse::respond422WithApplicationJson,
     PostAccountsCancelByAccountIdResponse::respond404WithTextPlain,
     PostAccountsCancelByAccountIdResponse::respond500WithTextPlain
+  ),
+  REFUND(
+    PostAccountsRefundByAccountIdResponse::respond201WithApplicationJson,
+    PostAccountsRefundByAccountIdResponse::respond422WithApplicationJson,
+    PostAccountsRefundByAccountIdResponse::respond404WithTextPlain,
+    PostAccountsRefundByAccountIdResponse::respond500WithTextPlain
   );
-//  REFUND(
-//    PostAccountsRefundByAccountIdResponse::respond201WithApplicationJson,
-//    PostAccountsRefundByAccountIdResponse::respond422WithApplicationJson,
-//    PostAccountsRefundByAccountIdResponse::respond404WithTextPlain,
-//    PostAccountsRefundByAccountIdResponse::respond500WithTextPlain
-//  );
 
   private final Function<ActionSuccessResponse, ResponseDelegate> handlerFor201;
   private final Function<ActionFailureResponse, ResponseDelegate> handlerFor422;
