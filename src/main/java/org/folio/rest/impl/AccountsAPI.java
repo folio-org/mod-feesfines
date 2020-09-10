@@ -474,6 +474,10 @@ public class AccountsAPI implements Accounts {
     Action action) {
 
     ActionResultAdapter resultAdapter = action.getActionResultAdapter();
+    if (resultAdapter == null) {
+      logger.error("Unprocessable action: " + action.name());
+      return;
+    }
 
     if (asyncResult.succeeded()) {
       final ActionContext actionContext = asyncResult.result();
