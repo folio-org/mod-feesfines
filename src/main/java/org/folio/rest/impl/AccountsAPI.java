@@ -14,6 +14,7 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
+import org.folio.rest.domain.Action;
 import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
@@ -421,7 +422,7 @@ public class AccountsAPI implements Accounts {
     new PayActionService(okapiHeaders, vertxContext)
       .executeAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-        ActionResultAdapter.PAY));
+        Action.PAY));
   }
 
   @Override
@@ -432,7 +433,7 @@ public class AccountsAPI implements Accounts {
     new WaiveActionService(okapiHeaders, vertxContext)
       .executeAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-       ActionResultAdapter.WAIVE));
+        Action.WAIVE));
   }
 
   @Override
@@ -443,7 +444,7 @@ public class AccountsAPI implements Accounts {
     new TransferActionService(okapiHeaders, vertxContext)
       .executeAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-        ActionResultAdapter.TRANSFER));
+        Action.TRANSFER));
   }
 
   @Override
@@ -454,13 +455,14 @@ public class AccountsAPI implements Accounts {
     new CancelActionService(okapiHeaders, vertxContext)
       .executeAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-        ActionResultAdapter.CANCEL));
+        Action.CANCELLED));
   }
 
   private void handleActionResult(String accountId, ActionRequest request,
     AsyncResult<ActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
-    ActionResultAdapter resultAdapter) {
+    Action action) {
 
+    ActionResultAdapter resultAdapter = action.getActionResultAdapter();
     if (asyncResult.succeeded()) {
       final ActionContext actionContext = asyncResult.result();
       ActionSuccessResponse response = new ActionSuccessResponse()
@@ -478,7 +480,7 @@ public class AccountsAPI implements Accounts {
         ActionFailureResponse response = new ActionFailureResponse()
           .withAccountId(accountId)
           .withErrorMessage(errorMessage);
-        if (request instanceof DefaultActionRequest) {
+        if (!"CANCELLED".equals(action.name())) {
           DefaultActionRequest defaultActionRequest = (DefaultActionRequest) request;
           response.withAmount(defaultActionRequest.getAmount());
         }

@@ -35,6 +35,12 @@ public enum ActionResultAdapter {
     PostAccountsCancelByAccountIdResponse::respond404WithTextPlain,
     PostAccountsCancelByAccountIdResponse::respond500WithTextPlain
   );
+//  REFUND(
+//    PostAccountsRefundByAccountIdResponse::respond201WithApplicationJson,
+//    PostAccountsRefundByAccountIdResponse::respond422WithApplicationJson,
+//    PostAccountsRefundByAccountIdResponse::respond404WithTextPlain,
+//    PostAccountsRefundByAccountIdResponse::respond500WithTextPlain
+//  );
 
   private final Function<ActionSuccessResponse, ResponseDelegate> handlerFor201;
   private final Function<ActionFailureResponse, ResponseDelegate> handlerFor422;

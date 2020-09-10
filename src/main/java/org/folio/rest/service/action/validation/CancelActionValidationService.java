@@ -35,8 +35,9 @@ public class CancelActionValidationService extends ActionValidationService {
       throw new FailedValidationException("Account is already closed");
     }
 
+    MonetaryValue remainingAmount = new MonetaryValue("0.00");
+
     return succeededFuture(new ActionValidationResult(
-      "0.00", null)
-    );
+      remainingAmount.getAmount().toString(), remainingAmount.toString()));
   }
 }

@@ -1,6 +1,6 @@
 package org.folio.test.support;
 
-import static org.folio.rest.utils.ResourceClients.accountsClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountClient;
 import static org.folio.rest.utils.ResourceClients.tenantClient;
 
 import java.lang.invoke.MethodHandles;
@@ -41,7 +41,7 @@ public class ApiTests {
 
   protected static Vertx vertx;
 
-  protected final ResourceClient accountsClient = accountsClient();
+  protected final ResourceClient accountsClient = buildAccountClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
 
   @BeforeClass

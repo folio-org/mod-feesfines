@@ -1,7 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
-import static org.folio.rest.utils.ResourceClients.accountsCancelClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountCancelClient;
 import static org.folio.test.support.EntityBuilder.createAccount;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -31,7 +31,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
     CancelActionRequest cancelActionRequest = createCancelActionRequest();
     String accountId = accountToPost.getId();
 
-    accountCancelClient = accountsCancelClient(accountToPost.getId());
+    accountCancelClient = buildAccountCancelClient(accountToPost.getId());
     accountCancelClient.attemptCreate(cancelActionRequest)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
@@ -50,7 +50,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
   public void shouldReturn404WhenAccountDoesNotExist() {
     CancelActionRequest cancelActionRequest = createCancelActionRequest();
 
-    accountCancelClient = accountsCancelClient(randomId());
+    accountCancelClient = buildAccountCancelClient(randomId());
     accountCancelClient.attemptCreate(cancelActionRequest)
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
@@ -63,7 +63,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
     account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
     postAccount(account);
 
-    accountCancelClient = accountsCancelClient(account.getId());
+    accountCancelClient = buildAccountCancelClient(account.getId());
     CancelActionRequest cancelActionRequest = createCancelActionRequest();
 
     accountCancelClient.attemptCreate(cancelActionRequest)

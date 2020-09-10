@@ -1,7 +1,6 @@
 package org.folio.rest.domain;
 
 public interface ActionRequest {
-
     String getComments();
 
     String getTransactionInfo();

@@ -7,8 +7,8 @@ import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
-import static org.folio.rest.utils.ResourceClients.accountsPayClient;
-import static org.folio.rest.utils.ResourceClients.accountsWaiveClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -66,11 +66,11 @@ public class AccountsDefaultActionsAPITests extends ApiTests {
   private ResourceClient getClient() {
     switch (action) {
     case PAY:
-      return accountsPayClient(ACCOUNT_ID);
+      return buildAccountPayClient(ACCOUNT_ID);
     case WAIVE:
-      return accountsWaiveClient(ACCOUNT_ID);
+      return buildAccountWaiveClient(ACCOUNT_ID);
     case TRANSFER:
-      return ResourceClients.accountsTransferClient(ACCOUNT_ID);
+      return ResourceClients.buildAccountTransferClient(ACCOUNT_ID);
     default:
       throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
     }
