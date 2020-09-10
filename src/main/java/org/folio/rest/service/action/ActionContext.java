@@ -1,10 +1,9 @@
 package org.folio.rest.service.action;
 
-import org.folio.rest.domain.Action;
-import org.folio.rest.domain.ActionRequest;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
