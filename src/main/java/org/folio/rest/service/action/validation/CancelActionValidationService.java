@@ -3,6 +3,7 @@ package org.folio.rest.service.action.validation;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.utils.AccountHelper.isClosed;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 import org.folio.rest.domain.MonetaryValue;
@@ -47,7 +48,7 @@ public class CancelActionValidationService extends ActionValidationService {
       throw new FailedValidationException("Account is already closed");
     }
 
-    MonetaryValue remainingAmount = new MonetaryValue("0.00");
+    MonetaryValue remainingAmount = new MonetaryValue(BigDecimal.ZERO);
 
     return succeededFuture(new ActionValidationResult(
       remainingAmount.getAmount().toString(), remainingAmount.toString()));
