@@ -11,10 +11,10 @@ import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
-import static org.folio.rest.utils.ResourceClients.accountsPayClient;
 import static org.folio.rest.utils.ResourceClients.accountsRefundClient;
-import static org.folio.rest.utils.ResourceClients.accountsTransferClient;
-import static org.folio.rest.utils.ResourceClients.accountsWaiveClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -27,11 +27,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.ActionRequest;
+import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.utils.ResourceClient;
@@ -61,9 +62,9 @@ public class AccountsRefundAPITests extends ApiTests {
   private static final String REFUNDED_TO_BURSAR = "Refunded to Bursar";
 
   private final ResourceClient actionsClient = feeFineActionsClient();
-  private final ResourceClient payClient = accountsPayClient(ACCOUNT_ID);
-  private final ResourceClient waiveClient = accountsWaiveClient(ACCOUNT_ID);
-  private final ResourceClient transferClient = accountsTransferClient(ACCOUNT_ID);
+  private final ResourceClient payClient = buildAccountPayClient(ACCOUNT_ID);
+  private final ResourceClient waiveClient = buildAccountWaiveClient(ACCOUNT_ID);
+  private final ResourceClient transferClient = buildAccountTransferClient(ACCOUNT_ID);
   private final ResourceClient refundClient = accountsRefundClient(ACCOUNT_ID);
 
   @Before
@@ -80,7 +81,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 5.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
      List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-5.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON, request),
@@ -99,7 +100,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 5.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-5.0, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR, request),
@@ -118,7 +119,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 5.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-3.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON, request),
@@ -139,7 +140,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 3.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-1.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON, request),
@@ -158,7 +159,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 3.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-1.0, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR, request),
@@ -177,7 +178,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 5.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-2.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON, request),
@@ -198,7 +199,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 3.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-3.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON, request),
@@ -217,7 +218,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 3.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-3.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR, request),
@@ -238,7 +239,7 @@ public class AccountsRefundAPITests extends ApiTests {
 
     double transferRefundAmount = refundAmount - payAmount;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-3.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON, request),
@@ -259,7 +260,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 2.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(0.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON, request),
@@ -278,7 +279,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 2.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(0.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR, request),
@@ -299,7 +300,7 @@ public class AccountsRefundAPITests extends ApiTests {
 
     double transferRefundAmount = refundAmount - payAmount;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(-2.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON, request),
@@ -320,7 +321,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 1.0;
     double refundAmount = 6.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     testRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
       SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE);
@@ -334,7 +335,7 @@ public class AccountsRefundAPITests extends ApiTests {
     double waiveAmount = 5.0;
     double refundAmount = 4.0;
 
-    ActionRequest request = createRequest(refundAmount);
+    DefaultActionRequest request = createRequest(refundAmount);
 
     testRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
       SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE);
@@ -351,24 +352,24 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void return422WhenRequestedAmountIsNegative() {
-    ActionRequest request = createRequest(-1.0);
+    DefaultActionRequest request = createRequest(-1.0);
     testRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
   }
 
   @Test
   public void return422WhenRequestedAmountIsZero() {
-    ActionRequest request = createRequest(0.0);
+    DefaultActionRequest request = createRequest(0.0);
     testRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
   }
 
   @Test
   public void return422WhenRequestedAmountIsInvalidString() {
-    ActionRequest request = createRequest(0.0).withAmount("eleven");
+    DefaultActionRequest request = createRequest(0.0).withAmount("eleven");
     testRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Invalid amount entered");
   }
 
   private void testRefundSuccess(double initialAmount, double payAmount, double transferAmount,
-    double waiveAmount, ActionRequest request, FeeFineStatus expectedStatus,
+    double waiveAmount, DefaultActionRequest request, FeeFineStatus expectedStatus,
     String expectedPaymentStatus, List<Matcher<JsonObject>> expectedFeeFineActions) {
 
     int expectedActionCount = prepareAccountAndActions(
@@ -399,7 +400,7 @@ public class AccountsRefundAPITests extends ApiTests {
   }
 
   private void testRefundFailure(double initialAmount, double payAmount, double transferAmount,
-    double waiveAmount, ActionRequest request, int expectedStatus, String errorMessage) {
+    double waiveAmount, DefaultActionRequest request, int expectedStatus, String errorMessage) {
 
     int expectedActionCount = prepareAccountAndActions(
       initialAmount, payAmount, transferAmount, waiveAmount);
@@ -454,8 +455,8 @@ public class AccountsRefundAPITests extends ApiTests {
       .contentType(JSON);
   }
 
-  private static ActionRequest createRequest(double amount) {
-    return new ActionRequest()
+  private static DefaultActionRequest createRequest(double amount) {
+    return new DefaultActionRequest()
       .withAmount(new MonetaryValue(amount).toString())
       .withPaymentMethod("Cash")
       .withServicePointId(randomId())
@@ -521,7 +522,7 @@ public class AccountsRefundAPITests extends ApiTests {
   }
 
   public static Matcher<JsonObject> feeFineActionMatcher(double balance, double amount,
-    String actionType, String transactionInfo, ActionRequest request) {
+    String actionType, String transactionInfo, DefaultActionRequest request) {
 
     return FeeFineActionMatchers.feeFineAction(ACCOUNT_ID, USER_ID, balance, amount, actionType,
       transactionInfo, request);

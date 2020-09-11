@@ -14,7 +14,8 @@ types:
   patronNotice: !include patronNotice.json
   checkActionRequest: !include actions/checkActionRequest.json
   checkActionResponse: !include actions/checkActionResponse.json
-  actionRequest: !include actions/actionRequest.json
+  defaultActionRequest: !include actions/defaultActionRequest.json
+  cancelActionRequest: !include actions/cancelActionRequest.json
   actionSuccessResponse: !include actions/actionSuccessResponse.json
   actionFailureResponse: !include actions/actionFailureResponse.json
 
@@ -38,7 +39,7 @@ resourceTypes:
       description: "Perform action"
       body:
         application/json:
-          type: actionRequest
+          type: defaultActionRequest
       responses:
         201:
           description: "Action was performed successfully"
@@ -129,3 +130,32 @@ resourceTypes:
       type: action
     /refund:
       type: action
+    /cancel:
+      description: "Performs an action on an account"
+      post:
+        is: [validate]
+        description: "Perform action"
+        body:
+          application/json:
+            type: cancelActionRequest
+        responses:
+          201:
+            description: "Action was performed successfully"
+            body:
+              application/json:
+                type: actionSuccessResponse
+          404:
+            description: "Fee/fine was not found"
+            body:
+              text/plain:
+                example: "Fee/fine was not found"
+          422:
+            description: "Action is not allowed"
+            body:
+              application/json:
+                type: actionFailureResponse
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error, please contact administrator"

@@ -7,7 +7,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 
 import java.util.Arrays;
 
-import org.folio.rest.jaxrs.model.ActionRequest;
+import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.hamcrest.Matcher;
 
 import io.vertx.core.json.JsonObject;
@@ -16,7 +16,7 @@ public class FeeFineActionMatchers {
   private FeeFineActionMatchers(){}
 
   public static Matcher<JsonObject> feeFineAction(String accountId, String userId, double balance,
-    double amount, String actionType, String transactionInfo, ActionRequest request) {
+    double amount, String actionType, String transactionInfo, DefaultActionRequest request) {
 
     return feeFineAction(accountId, userId, balance, amount, actionType, transactionInfo,
       request.getUserName(), request.getComments(), request.getNotifyPatron(),

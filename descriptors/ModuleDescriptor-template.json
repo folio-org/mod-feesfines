@@ -54,7 +54,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"15.3",
+      "version":"15.4",
       "handlers":[
         {
           "methods":[
@@ -269,6 +269,19 @@
           "pathPattern":"/accounts/{id}/transfer",
           "permissionsRequired":[
             "accounts.transfer.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts/{id}/cancel",
+          "permissionsRequired":[
+            "accounts.cancel.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -873,6 +886,11 @@
       "permissionName":"accounts.transfer.post",
       "displayName":"accounts transfer post",
       "description":"Transfers an account"
+    },
+    {
+      "permissionName":"accounts.cancel.post",
+      "displayName":"accounts cancel post",
+      "description":"Cancels an account"
     },
     {
       "permissionName":"accounts.refund.post",

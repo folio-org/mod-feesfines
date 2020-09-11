@@ -33,9 +33,7 @@ public abstract class ActionValidationService {
   }
 
   public Future<ActionValidationResult> validate(Account account, String rawAmount) {
-    if (account == null) {
-      throw new AccountNotFoundValidationException("Fee/fine was not found");
-    }
+    validateIfAccountExists(account);
 
     MonetaryValue requestedAmount;
     try {
@@ -59,6 +57,11 @@ public abstract class ActionValidationService {
 
   protected abstract Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount);
 
-  protected abstract MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount);
+  protected void validateIfAccountExists(Account account) {
+    if (account == null) {
+      throw new AccountNotFoundValidationException("Fee/fine was not found");
+    }
+  }
 
+  protected abstract MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount);
 }

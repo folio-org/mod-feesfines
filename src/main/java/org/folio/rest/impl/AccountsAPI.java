@@ -14,16 +14,19 @@ import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
+import org.folio.rest.domain.Action;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
-import org.folio.rest.jaxrs.model.ActionRequest;
 import org.folio.rest.jaxrs.model.ActionSuccessResponse;
 import org.folio.rest.jaxrs.model.ActionFailureResponse;
+import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionResponse;
+import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
@@ -43,6 +46,7 @@ import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.AccountEventPublisher;
 import org.folio.rest.service.AccountUpdateService;
 import org.folio.rest.service.action.ActionContext;
+import org.folio.rest.service.action.CancelActionService;
 import org.folio.rest.service.action.PayActionService;
 import org.folio.rest.service.action.RefundActionService;
 import org.folio.rest.service.action.TransferActionService;
@@ -69,7 +73,6 @@ public class AccountsAPI implements Accounts {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ACCOUNT_ID_FIELD = "'id'";
   private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
-
   private final Messages messages = Messages.getInstance();
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
@@ -412,58 +415,77 @@ public class AccountsAPI implements Accounts {
   }
 
   @Override
-  public void postAccountsPayByAccountId(String accountId, ActionRequest request,
+  public void postAccountsPayByAccountId(String accountId, DefaultActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new PayActionService(okapiHeaders, vertxContext)
       .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-        ActionResultAdapter.PAY));
+        Action.PAY));
   }
 
   @Override
-  public void postAccountsWaiveByAccountId(String accountId, ActionRequest request,
+  public void postAccountsWaiveByAccountId(String accountId, DefaultActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new WaiveActionService(okapiHeaders, vertxContext)
       .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-       ActionResultAdapter.WAIVE));
+        Action.WAIVE));
   }
 
   @Override
-  public void postAccountsTransferByAccountId(String accountId, ActionRequest request,
+  public void postAccountsTransferByAccountId(String accountId, DefaultActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new TransferActionService(okapiHeaders, vertxContext)
       .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-        ActionResultAdapter.TRANSFER));
+        Action.TRANSFER));
   }
 
   @Override
-  public void postAccountsRefundByAccountId(String accountId, ActionRequest request,
+  public void postAccountsRefundByAccountId(String accountId, DefaultActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new RefundActionService(okapiHeaders, vertxContext)
       .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-        ActionResultAdapter.REFUND));
+        Action.REFUND));
+  }
+
+  @Override
+  public void postAccountsCancelByAccountId(String accountId, CancelActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new CancelActionService(okapiHeaders, vertxContext)
+      .performAction(accountId, request)
+      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+        Action.CANCELLED));
   }
 
   private void handleActionResult(String accountId, ActionRequest request,
     AsyncResult<ActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
-    ActionResultAdapter resultAdapter) {
+    Action action) {
+
+    ActionResultAdapter resultAdapter = action.getActionResultAdapter();
+    if (resultAdapter == null) {
+      logger.error("Unprocessable action: " + action.name());
+      return;
+    }
 
     if (asyncResult.succeeded()) {
       final ActionContext actionContext = asyncResult.result();
       ActionSuccessResponse response = new ActionSuccessResponse()
-        .withAccountId(accountId)
-        .withAmount(actionContext.getRequestedAmount().toString());
+        .withAccountId(accountId);
+      if (actionContext.getRequestedAmount() != null) {
+        response.withAmount(actionContext.getRequestedAmount().toString());
+      }
       asyncResultHandler.handle(succeededFuture(resultAdapter.to201(response)));
     }
     else if (asyncResult.failed()) {
@@ -472,8 +494,11 @@ public class AccountsAPI implements Accounts {
       if (cause instanceof FailedValidationException) {
         ActionFailureResponse response = new ActionFailureResponse()
           .withAccountId(accountId)
-          .withAmount(request.getAmount())
           .withErrorMessage(errorMessage);
+        if (Action.CANCELLED != action) {
+          DefaultActionRequest defaultActionRequest = (DefaultActionRequest) request;
+          response.withAmount(defaultActionRequest.getAmount());
+        }
         asyncResultHandler.handle(succeededFuture(resultAdapter.to422(response)));
       } else if (cause instanceof AccountNotFoundValidationException) {
         asyncResultHandler.handle(succeededFuture(resultAdapter.to404(errorMessage)));

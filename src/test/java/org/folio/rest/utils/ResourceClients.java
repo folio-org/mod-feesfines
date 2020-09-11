@@ -4,43 +4,47 @@ public final class ResourceClients {
 
   private ResourceClients() {}
 
-  public static ResourceClient accountsClient() {
+  public static ResourceClient buildAccountClient() {
     return new ResourceClient("/accounts");
   }
 
-  public static ResourceClient accountsCheckPayClient(String accountId) {
-    return buildUrlForAction(accountId, "check-pay");
+  public static ResourceClient buildAccountCheckPayClient(String accountId) {
+    return buildAccountActionClient(accountId, "check-pay");
   }
 
-  public static ResourceClient accountsCheckWaiveClient(String accountId) {
-    return buildUrlForAction(accountId, "check-waive");
+  public static ResourceClient buildAccountCheckWaiveClient(String accountId) {
+    return buildAccountActionClient(accountId, "check-waive");
   }
 
-  public static ResourceClient accountsCheckTransferClient(String accountId) {
-    return buildUrlForAction(accountId, "check-transfer");
+  public static ResourceClient buildAccountCheckTransferClient(String accountId) {
+    return buildAccountActionClient(accountId, "check-transfer");
   }
 
-  public static ResourceClient accountsCheckRefundClient(String accountId) {
-    return buildUrlForAction(accountId, "check-refund");
+  public static ResourceClient buildAccountCheckRefundClient(String accountId) {
+    return buildAccountActionClient(accountId, "check-refund");
   }
 
-  public static ResourceClient accountsPayClient(String accountId) {
-    return buildUrlForAction(accountId, "pay");
+  public static ResourceClient buildAccountPayClient(String accountId) {
+    return buildAccountActionClient(accountId, "pay");
   }
 
-  public static ResourceClient accountsWaiveClient(String accountId) {
-    return buildUrlForAction(accountId, "waive");
+  public static ResourceClient buildAccountWaiveClient(String accountId) {
+    return buildAccountActionClient(accountId, "waive");
   }
 
-  public static ResourceClient accountsTransferClient(String accountId) {
-    return buildUrlForAction(accountId, "transfer");
+  public static ResourceClient buildAccountTransferClient(String accountId) {
+    return buildAccountActionClient(accountId, "transfer");
+  }
+
+  public static ResourceClient buildAccountCancelClient(String accountId) {
+    return buildAccountActionClient(accountId, "cancel");
   }
 
   public static ResourceClient accountsRefundClient(String accountId) {
-    return buildUrlForAction(accountId, "refund");
+    return buildAccountActionClient(accountId, "refund");
   }
 
-  private static ResourceClient buildUrlForAction(String accountId, String action) {
+  private static ResourceClient buildAccountActionClient(String accountId, String action) {
     return new ResourceClient(String.format("/accounts/%s/%s", accountId, action));
   }
 

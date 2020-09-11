@@ -6,13 +6,16 @@ import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.folio.rest.domain.Action;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.ActionRequest;
+import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.persist.PostgresClient;
@@ -60,14 +63,47 @@ public abstract class ActionService {
       .map(context::withAccount);
   }
 
-  private Future<ActionContext> validateAction(ActionContext context) {
-    final String amount = context.getRequest().getAmount();
+  protected Future<ActionContext> validateAction(ActionContext context) {
+    DefaultActionRequest request = (DefaultActionRequest) context.getRequest();
+    final String amount = request.getAmount();
 
     return validationService.validate(context.getAccount(), amount)
       .map(result -> context.withRequestedAmount(new MonetaryValue(amount)));
   }
 
-  protected abstract Future<ActionContext> createFeeFineActions(ActionContext context);
+  protected Future<ActionContext> createFeeFineActions(ActionContext context) {
+    final DefaultActionRequest request = (DefaultActionRequest) context.getRequest();
+    final Account account = context.getAccount();
+    final MonetaryValue requestedAmount = context.getRequestedAmount();
+
+    MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining())
+      .subtract(requestedAmount);
+
+    boolean isFullAction = remainingAmountAfterAction.isZero();
+    String actionType = isFullAction ? action.getFullResult() : action.getPartialResult();
+
+    Feefineaction feeFineAction = new Feefineaction()
+      .withAmountAction(requestedAmount.toDouble())
+      .withComments(request.getComments())
+      .withNotify(request.getNotifyPatron())
+      .withTransactionInformation(request.getTransactionInfo())
+      .withCreatedAt(request.getServicePointId())
+      .withSource(request.getUserName())
+      .withPaymentMethod(request.getPaymentMethod())
+      .withAccountId(context.getAccountId())
+      .withUserId(account.getUserId())
+      .withBalance(remainingAmountAfterAction.toDouble())
+      .withTypeAction(actionType)
+      .withId(UUID.randomUUID().toString())
+      .withDateAction(new Date())
+      .withAccountId(context.getAccountId());
+
+    return feeFineActionRepository.save(feeFineAction)
+      .map(context
+        .withFeeFineAction(feeFineAction)
+        .withShouldCloseAccount(isFullAction)
+      );
+  }
 
   private Future<ActionContext> updateAccount(ActionContext context) {
     final List<Feefineaction> feeFineActions = context.getFeeFineActions();

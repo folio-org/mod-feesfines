@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Action request",
+  "description": "Default action request",
   "type": "object",
+  "javaInterfaces": ["org.folio.rest.domain.ActionRequest"],
   "properties": {
     "amount": {
       "type": "string",

@@ -13,7 +13,7 @@ import java.util.UUID;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.ActionRequest;
+import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.service.action.validation.RefundActionValidationService;
 
@@ -77,7 +77,7 @@ public class RefundActionService extends ActionService {
     }
 
     Account account = context.getAccount();
-    ActionRequest request = context.getRequest();
+    DefaultActionRequest request = (DefaultActionRequest) context.getRequest();
 
     MonetaryValue remainingAmountBefore = new MonetaryValue(account.getRemaining());
     MonetaryValue remainingAmountAfter = action == CREDIT

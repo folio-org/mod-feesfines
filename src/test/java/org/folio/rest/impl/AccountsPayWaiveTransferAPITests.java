@@ -8,9 +8,9 @@ import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
-import static org.folio.rest.utils.ResourceClients.accountsPayClient;
-import static org.folio.rest.utils.ResourceClients.accountsTransferClient;
-import static org.folio.rest.utils.ResourceClients.accountsWaiveClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -24,11 +24,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.Action;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ActionFailureResponse;
-import org.folio.rest.jaxrs.model.ActionRequest;
+import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
@@ -73,11 +74,11 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
   private ResourceClient getClient() {
     switch (action) {
     case PAY:
-      return accountsPayClient(ACCOUNT_ID);
+      return buildAccountPayClient(ACCOUNT_ID);
     case WAIVE:
-      return accountsWaiveClient(ACCOUNT_ID);
+      return buildAccountWaiveClient(ACCOUNT_ID);
     case TRANSFER:
-      return accountsTransferClient(ACCOUNT_ID);
+      return buildAccountTransferClient(ACCOUNT_ID);
     default:
       throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
     }
@@ -259,7 +260,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
     String expectedAccountStatus = terminalAction ? "Closed" : "Open";
     String requestedAmountString = String.valueOf(requestedAmount);
 
-    final ActionRequest request = createRequest(requestedAmountString);
+    final DefaultActionRequest request = createRequest(requestedAmountString);
 
     resourceClient.post(toJson(request))
       .then()
@@ -320,8 +321,8 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .contentType(JSON);
   }
 
-  private static ActionRequest createRequest(String amount) {
-    return new ActionRequest()
+  private static DefaultActionRequest createRequest(String amount) {
+    return new DefaultActionRequest()
       .withAmount(amount)
       .withPaymentMethod("Cash")
       .withServicePointId(randomId())

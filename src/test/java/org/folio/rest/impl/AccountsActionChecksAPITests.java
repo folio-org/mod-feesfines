@@ -1,12 +1,12 @@
 package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
+import static org.folio.rest.utils.ResourceClients.buildAccountCheckPayClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountCheckRefundClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountCheckTransferClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountCheckWaiveClient;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
-import static org.folio.rest.utils.ResourceClients.accountsCheckPayClient;
-import static org.folio.rest.utils.ResourceClients.accountsCheckRefundClient;
-import static org.folio.rest.utils.ResourceClients.accountsCheckTransferClient;
-import static org.folio.rest.utils.ResourceClients.accountsCheckWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.folio.test.support.EntityBuilder.createAccount;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -42,10 +42,10 @@ public class AccountsActionChecksAPITests extends ApiTests {
   @Before
   public void setUp() {
     accountToPost = postAccount();
-    accountsCheckPayClient = accountsCheckPayClient(accountToPost.getId());
-    accountsCheckWaiveClient = accountsCheckWaiveClient(accountToPost.getId());
-    accountsCheckTransferClient = accountsCheckTransferClient(accountToPost.getId());
-    accountsCheckRefundClient = accountsCheckRefundClient(accountToPost.getId());
+    accountsCheckPayClient = buildAccountCheckPayClient(accountToPost.getId());
+    accountsCheckWaiveClient = buildAccountCheckWaiveClient(accountToPost.getId());
+    accountsCheckTransferClient = buildAccountCheckTransferClient(accountToPost.getId());
+    accountsCheckRefundClient = buildAccountCheckRefundClient(accountToPost.getId());
   }
 
   @Test
