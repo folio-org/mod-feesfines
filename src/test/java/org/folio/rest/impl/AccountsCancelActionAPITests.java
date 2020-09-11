@@ -75,11 +75,9 @@ public class AccountsCancelActionAPITests extends ApiTests {
   private CancelActionRequest createCancelActionRequest() {
     return new CancelActionRequest()
       .withComments("Comment")
-      .withTransactionInfo("transactionInfo")
       .withNotifyPatron(false)
       .withServicePointId("7c5abc9f-f3d7-4856-b8d7-6712462ca007")
-      .withUserName("Test User")
-      .withPaymentMethod("Cash");
+      .withUserName("Test User");
   }
 
   private Account postAccount() {

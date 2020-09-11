@@ -522,7 +522,7 @@ public class AccountsRefundAPITests extends ApiTests {
   }
 
   public static Matcher<JsonObject> feeFineActionMatcher(double balance, double amount,
-    String actionType, String transactionInfo, ActionRequest request) {
+    String actionType, String transactionInfo, DefaultActionRequest request) {
 
     return FeeFineActionMatchers.feeFineAction(ACCOUNT_ID, USER_ID, balance, amount, actionType,
       transactionInfo, request);

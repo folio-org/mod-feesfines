@@ -72,7 +72,7 @@ public abstract class ActionService {
   }
 
   protected Future<ActionContext> createFeeFineActions(ActionContext context) {
-    final ActionRequest request = context.getRequest();
+    final DefaultActionRequest request = (DefaultActionRequest) context.getRequest();
     final Account account = context.getAccount();
     final MonetaryValue requestedAmount = context.getRequestedAmount();
 
