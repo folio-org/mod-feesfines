@@ -41,10 +41,10 @@ public class DefaultActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected MonetaryValue calculateRemainingBalance(Account account,
+  protected Future<MonetaryValue> calculateRemainingBalance(Account account,
     MonetaryValue requestedAmount) {
 
-    return new MonetaryValue(account.getRemaining()).subtract(requestedAmount);
+    return succeededFuture(new MonetaryValue(account.getRemaining()).subtract(requestedAmount));
   }
 
   @Override
@@ -59,16 +59,9 @@ public class DefaultActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected MonetaryValue calculateRemainingBalance(List<Account> accounts,
+  protected Future<MonetaryValue> calculateRemainingBalance(List<Account> accounts,
     MonetaryValue requestedAmount) {
 
-    return calculateTotalRemaining(accounts).subtract(requestedAmount);
-  }
-
-  private MonetaryValue calculateTotalRemaining(List<Account> accounts) {
-    return new MonetaryValue(accounts.stream()
-      .map(Account::getRemaining)
-      .reduce(Double::sum)
-      .orElse(0.0));
+    return succeededFuture(calculateTotalRemaining(accounts).subtract(requestedAmount));
   }
 }

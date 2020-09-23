@@ -45,8 +45,8 @@ public abstract class ActionValidationService {
     validateAccountStatus(account);
 
     return validateAmountMaximum(account, requestedAmount)
-      .map(new ActionValidationResult(
-        calculateRemainingBalance(account, requestedAmount).toString(), requestedAmount.toString()));
+      .compose(ignored -> calculateRemainingBalance(account, requestedAmount))
+      .map(remainingBalance -> new ActionValidationResult(remainingBalance, requestedAmount));
   }
 
   public Future<ActionValidationResult> validate(List<Account> accounts, String rawAmount) {
@@ -86,17 +86,23 @@ public abstract class ActionValidationService {
     accounts.forEach(this::validateIfAccountExists);
   }
 
+  protected MonetaryValue calculateTotalRemaining(List<Account> accounts) {
+    return new MonetaryValue(accounts.stream()
+      .mapToDouble(Account::getRemaining)
+      .sum());
+  }
+
   protected abstract void validateAccountStatus(Account account);
 
   protected abstract Future<Void> validateAmountMaximum(Account account,
     MonetaryValue requestedAmount);
 
-  protected abstract MonetaryValue calculateRemainingBalance(Account account,
+  protected abstract Future<MonetaryValue> calculateRemainingBalance(Account account,
     MonetaryValue requestedAmount);
 
   protected abstract Future<Void> validateAmountMaximum(List<Account> accounts,
     MonetaryValue requestedAmount);
 
-  protected abstract MonetaryValue calculateRemainingBalance(List<Account> accounts,
+  protected abstract Future<MonetaryValue> calculateRemainingBalance(List<Account> accounts,
     MonetaryValue requestedAmount);
 }

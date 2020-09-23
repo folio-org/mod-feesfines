@@ -1,7 +1,11 @@
 package org.folio.rest.service.action.validation;
 
+import static io.vertx.core.Future.succeededFuture;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.exception.FailedValidationException;
@@ -9,6 +13,7 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.repository.FeeFineActionRepository;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
@@ -28,7 +33,6 @@ public class RefundActionValidationService extends ActionValidationService {
   @Override
   protected Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
     return getRefundableAmount(account)
-      .map(MonetaryValue::new)
       .map(refundableAmount -> {
         if (requestedAmount.isGreaterThan(refundableAmount)) {
           throw new FailedValidationException(
@@ -38,20 +42,31 @@ public class RefundActionValidationService extends ActionValidationService {
       });
   }
 
-  private Future<Double> getRefundableAmount(Account account) {
+  private Future<MonetaryValue> getRefundableAmount(Account account) {
     return feeFineActionRepository.findRefundableActionsForAccount(account.getId())
       .map(actions -> actions.stream()
         .mapToDouble(Feefineaction::getAmountAction)
-        .sum()
-      );
+        .sum())
+      .map(MonetaryValue::new);
+  }
+
+  private Future<MonetaryValue> getRefundableAmount(List<Account> accounts) {
+    return CompositeFuture.all(accounts.stream()
+      .map(this::getRefundableAmount)
+      .collect(Collectors.toList()))
+      .map(cf -> cf.list().stream()
+        .filter(MonetaryValue.class::isInstance)
+        .map(MonetaryValue.class::cast)
+        .reduce(MonetaryValue::add)
+        .orElse(new MonetaryValue(BigDecimal.ZERO)));
   }
 
   @Override
-  protected MonetaryValue calculateRemainingBalance(Account account,
+  protected Future<MonetaryValue> calculateRemainingBalance(Account account,
     MonetaryValue requestedAmount) {
 
-    // refund does not affect the fee/fine balance
-    return new MonetaryValue(account.getRemaining());
+    return getRefundableAmount(account)
+      .map(refundableAmount -> refundableAmount.subtract(requestedAmount));
   }
 
   @Override
@@ -62,13 +77,11 @@ public class RefundActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected MonetaryValue calculateRemainingBalance(List<Account> accounts,
+  protected Future<MonetaryValue> calculateRemainingBalance(List<Account> accounts,
     MonetaryValue requestedAmount) {
 
-    return new MonetaryValue(accounts.stream()
-      .map(Account::getRemaining)
-      .reduce(Double::sum)
-      .orElse(0.0));
+    return getRefundableAmount(accounts)
+      .map(refundableAmount -> refundableAmount.subtract(requestedAmount));
   }
 
 }
