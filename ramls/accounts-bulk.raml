@@ -1,0 +1,46 @@
+#%RAML 1.0
+title: Accounts
+version: v1
+baseUri: http://github.com/org/folio/mod-feesfines
+
+documentation:
+  - title: Accounts bulk actions API
+    content: This documents the API calls for bulk actions against accounts
+
+types:
+  bulkCheckActionRequest: !include actions/bulkCheckActionRequest.json
+  bulkCheckActionResponse: !include actions/bulkCheckActionResponse.json
+
+resourceTypes:
+  bulk-check-action:
+      description: "Checks if the requested action is allowed"
+      post:
+        description: "Checks if an action is allowed"
+        body:
+          application/json:
+            type: bulkCheckActionRequest
+        responses:
+          200:
+            description: "Action is allowed"
+            body:
+              application/json:
+                type: bulkCheckActionResponse
+          404:
+            description: "Fee/fine was not found"
+            body:
+              text/plain:
+                example: "Fee/fine was not found"
+          422:
+            description: "Action is not allowed"
+            body:
+              application/json:
+                type: bulkCheckActionResponse
+          500:
+            description: "Internal server error"
+            body:
+              text/plain:
+                example: "Internal server error"
+
+/accounts-bulk:
+  /check-pay:
+    type: bulk-check-action

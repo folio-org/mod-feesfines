@@ -381,7 +381,7 @@ public class AccountsAPI implements Accounts {
 
     String rawAmount = request.getAmount();
 
-    validationService.validate(accountId, rawAmount)
+    validationService.validateById(accountId, rawAmount)
       .onSuccess(result -> {
         CheckActionResponse response = new CheckActionResponse()
           .withAccountId(accountId)

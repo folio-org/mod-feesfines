@@ -1,5 +1,6 @@
 package org.folio.rest.service.action.validation;
 
+import java.util.List;
 import java.util.Map;
 
 import org.folio.rest.domain.MonetaryValue;
@@ -46,9 +47,28 @@ public class RefundActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount) {
+  protected MonetaryValue calculateRemainingBalance(Account account,
+    MonetaryValue requestedAmount) {
+
     // refund does not affect the fee/fine balance
     return new MonetaryValue(account.getRemaining());
+  }
+
+  @Override
+  protected Future<Void> validateAmountMaximum(List<Account> accounts,
+    MonetaryValue requestedAmount) {
+
+    return null;
+  }
+
+  @Override
+  protected MonetaryValue calculateRemainingBalance(List<Account> accounts,
+    MonetaryValue requestedAmount) {
+
+    return new MonetaryValue(accounts.stream()
+      .map(Account::getRemaining)
+      .reduce(Double::sum)
+      .orElse(0.0));
   }
 
 }

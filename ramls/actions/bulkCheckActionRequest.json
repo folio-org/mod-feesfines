@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Accounts check request",
+  "type": "object",
+  "properties": {
+    "accountIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "$ref": "../uuid.json"
+      },
+      "description": "IDs of multiple accounts"
+    },
+    "amount": {
+      "type": "string",
+      "description": "Amount of fine which patron fulfills"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "accountIds",
+    "amount"
+  ]
+}

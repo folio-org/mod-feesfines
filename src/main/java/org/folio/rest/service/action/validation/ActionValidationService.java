@@ -1,5 +1,6 @@
 package org.folio.rest.service.action.validation;
 
+import java.util.List;
 import java.util.Map;
 
 import org.folio.rest.domain.MonetaryValue;
@@ -27,15 +28,41 @@ public abstract class ActionValidationService {
     this.accountRepository = new AccountRepository(postgresClient);
   }
 
-  public Future<ActionValidationResult> validate(String accountId, String rawAmount) {
+  public Future<ActionValidationResult> validateById(String accountId, String rawAmount) {
     return accountRepository.getAccountById(accountId)
+      .compose(account -> validate(account, rawAmount));
+  }
+
+  public Future<ActionValidationResult> validateByIds(List<String> accountIds, String rawAmount) {
+    return accountRepository.getAccountsById(accountIds)
       .compose(account -> validate(account, rawAmount));
   }
 
   public Future<ActionValidationResult> validate(Account account, String rawAmount) {
     validateIfAccountExists(account);
 
+    MonetaryValue requestedAmount = validateRawAmount(rawAmount);
+    validateAccountStatus(account);
+
+    return validateAmountMaximum(account, requestedAmount)
+      .map(new ActionValidationResult(
+        calculateRemainingBalance(account, requestedAmount).toString(), requestedAmount.toString()));
+  }
+
+  public Future<ActionValidationResult> validate(List<Account> accounts, String rawAmount) {
+    validateIfAccountsExist(accounts);
+    MonetaryValue requestedAmount = validateRawAmount(rawAmount);
+    accounts.forEach(this::validateAccountStatus);
+
+    return validateAmountMaximum(accounts, requestedAmount)
+      .map(new ActionValidationResult(
+        calculateRemainingBalance(accounts, requestedAmount).toString(),
+        requestedAmount.toString()));
+  }
+
+  private MonetaryValue validateRawAmount(String rawAmount) {
     MonetaryValue requestedAmount;
+
     try {
       requestedAmount = new MonetaryValue(rawAmount);
     } catch (NumberFormatException e) {
@@ -46,16 +73,8 @@ public abstract class ActionValidationService {
       throw new FailedValidationException("Amount must be positive");
     }
 
-    validateAccountStatus(account);
-
-    return validateAmountMaximum(account, requestedAmount)
-      .map(new ActionValidationResult(
-        calculateRemainingBalance(account, requestedAmount).toString(), requestedAmount.toString()));
+    return requestedAmount;
   }
-
-  protected abstract void validateAccountStatus(Account account);
-
-  protected abstract Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount);
 
   protected void validateIfAccountExists(Account account) {
     if (account == null) {
@@ -63,5 +82,21 @@ public abstract class ActionValidationService {
     }
   }
 
-  protected abstract MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount);
+  protected void validateIfAccountsExist(List<Account> accounts) {
+    accounts.forEach(this::validateIfAccountExists);
+  }
+
+  protected abstract void validateAccountStatus(Account account);
+
+  protected abstract Future<Void> validateAmountMaximum(Account account,
+    MonetaryValue requestedAmount);
+
+  protected abstract MonetaryValue calculateRemainingBalance(Account account,
+    MonetaryValue requestedAmount);
+
+  protected abstract Future<Void> validateAmountMaximum(List<Account> accounts,
+    MonetaryValue requestedAmount);
+
+  protected abstract MonetaryValue calculateRemainingBalance(List<Account> accounts,
+    MonetaryValue requestedAmount);
 }
