@@ -27,7 +27,6 @@ public class RefundActionValidationService extends ActionValidationService {
   @Override
   protected Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
     return getRefundableAmount(account)
-      .map(MonetaryValue::new)
       .map(refundableAmount -> {
         if (requestedAmount.isGreaterThan(refundableAmount)) {
           throw new FailedValidationException(
@@ -37,18 +36,20 @@ public class RefundActionValidationService extends ActionValidationService {
       });
   }
 
-  private Future<Double> getRefundableAmount(Account account) {
+  private Future<MonetaryValue> getRefundableAmount(Account account) {
     return feeFineActionRepository.findRefundableActionsForAccount(account.getId())
       .map(actions -> actions.stream()
         .mapToDouble(Feefineaction::getAmountAction)
-        .sum()
-      );
+        .sum())
+      .map(MonetaryValue::new);
   }
 
   @Override
-  protected MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount) {
-    // refund does not affect the fee/fine balance
-    return new MonetaryValue(account.getRemaining());
+  protected Future<MonetaryValue> calculateRemainingBalance(Account account,
+    MonetaryValue requestedAmount) {
+
+    return getRefundableAmount(account)
+      .map(refundableAmount -> refundableAmount.subtract(requestedAmount));
   }
 
 }

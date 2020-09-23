@@ -49,8 +49,8 @@ public abstract class ActionValidationService {
     validateAccountStatus(account);
 
     return validateAmountMaximum(account, requestedAmount)
-      .map(new ActionValidationResult(
-        calculateRemainingBalance(account, requestedAmount).toString(), requestedAmount.toString()));
+      .compose(ignored -> calculateRemainingBalance(account, requestedAmount))
+      .map(remainingBalance -> new ActionValidationResult(remainingBalance, requestedAmount));
   }
 
   protected abstract void validateAccountStatus(Account account);
@@ -63,5 +63,6 @@ public abstract class ActionValidationService {
     }
   }
 
-  protected abstract MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount);
+  protected abstract Future<MonetaryValue> calculateRemainingBalance(Account account,
+    MonetaryValue requestedAmount);
 }

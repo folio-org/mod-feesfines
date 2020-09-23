@@ -40,8 +40,10 @@ public class DefaultActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected MonetaryValue calculateRemainingBalance(Account account, MonetaryValue requestedAmount) {
-    return new MonetaryValue(account.getRemaining()).subtract(requestedAmount);
+  protected Future<MonetaryValue> calculateRemainingBalance(Account account,
+    MonetaryValue requestedAmount) {
+
+    return succeededFuture(new MonetaryValue(account.getRemaining()).subtract(requestedAmount));
   }
 
 }

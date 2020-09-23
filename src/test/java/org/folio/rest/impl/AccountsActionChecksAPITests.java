@@ -65,10 +65,12 @@ public class AccountsActionChecksAPITests extends ApiTests {
 
   @Test
   public void checkRefundAmountShouldBeAllowed() {
+    double expectedRemainingAmount = 0.77;
+
     final Feefineaction feeFineAction = new Feefineaction()
       .withAccountId(accountToPost.getId())
       .withUserId(accountToPost.getUserId())
-      .withAmountAction(REQUESTED_AMOUNT * 2 - 0.01);
+      .withAmountAction((REQUESTED_AMOUNT + expectedRemainingAmount) / 2);
 
     feeFineActionsClient()
       .post(feeFineAction.withTypeAction(PAY.getPartialResult()))
@@ -80,7 +82,10 @@ public class AccountsActionChecksAPITests extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_CREATED);
 
-    actionCheckRefundAmountShouldBeAllowed(accountsCheckRefundClient);
+    CheckActionRequest request = new CheckActionRequest().withAmount(REQUESTED_AMOUNT_STRING);
+
+    baseActionCheckAmountShouldBeAllowed(request, accountsCheckRefundClient)
+      .body("remainingAmount", is(String.valueOf(expectedRemainingAmount)));
   }
 
   @Test
@@ -238,13 +243,6 @@ public class AccountsActionChecksAPITests extends ApiTests {
 
     baseActionCheckAmountShouldBeAllowed(request, actionCheckClient)
     .body("remainingAmount", is("3.32"));
-  }
-
-  private void actionCheckRefundAmountShouldBeAllowed(ResourceClient actionCheckClient) {
-    CheckActionRequest request = new CheckActionRequest().withAmount(REQUESTED_AMOUNT_STRING);
-
-    baseActionCheckAmountShouldBeAllowed(request, actionCheckClient)
-      .body("remainingAmount", is(String.valueOf(ACCOUNT_REMAINING_AMOUNT)));
   }
 
   private ValidatableResponse baseActionCheckAmountShouldBeAllowed(

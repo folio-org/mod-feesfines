@@ -385,7 +385,7 @@ public class AccountsAPI implements Accounts {
       .onSuccess(result -> {
         CheckActionResponse response = new CheckActionResponse()
           .withAccountId(accountId)
-          .withAmount(result.getFormattedAmount())
+          .withAmount(result.getRequestedAmount())
           .withAllowed(true)
           .withRemainingAmount(result.getRemainingAmount());
         asyncResultHandler.handle(Future.succeededFuture(
@@ -466,7 +466,7 @@ public class AccountsAPI implements Accounts {
     new CancelActionService(okapiHeaders, vertxContext)
       .performAction(accountId, request)
       .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-        Action.CANCELLED));
+        Action.CANCEL));
   }
 
   private void handleActionResult(String accountId, ActionRequest request,
@@ -495,7 +495,7 @@ public class AccountsAPI implements Accounts {
         ActionFailureResponse response = new ActionFailureResponse()
           .withAccountId(accountId)
           .withErrorMessage(errorMessage);
-        if (Action.CANCELLED != action) {
+        if (Action.CANCEL != action) {
           DefaultActionRequest defaultActionRequest = (DefaultActionRequest) request;
           response.withAmount(defaultActionRequest.getAmount());
         }

@@ -17,7 +17,7 @@ import io.vertx.core.Future;
 public class CancelActionService extends ActionService {
 
   public CancelActionService(Map<String, String> headers, Context context) {
-    super(Action.CANCELLED, new CancelActionValidationService(headers, context), headers, context);
+    super(Action.CANCEL, new CancelActionValidationService(headers, context), headers, context);
   }
 
   @Override
