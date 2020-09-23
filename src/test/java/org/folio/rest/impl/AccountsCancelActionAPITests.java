@@ -69,7 +69,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
     accountCancelClient.attemptCreate(cancelActionRequest)
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body("errorMessage", is("Account is already closed"));
+      .body("errorMessage", is("Fee/fine is already closed"));
   }
 
   private CancelActionRequest createCancelActionRequest() {

@@ -14,7 +14,7 @@ public enum Action {
   TRANSFER("Transferred partially", "Transferred fully", ActionResultAdapter.TRANSFER),
   REFUND("Refunded partially", "Refunded fully", ActionResultAdapter.REFUND),
   CREDIT("Credited partially", "Credited fully", null),
-  CANCELLED(null, "Cancelled as error", ActionResultAdapter.CANCEL);
+  CANCEL(null, "Cancelled as error", ActionResultAdapter.CANCEL);
 
   private final String partialResult;
   private final String fullResult;
