@@ -12,8 +12,7 @@ public class ActionValidationResult {
   }
 
   public ActionValidationResult(MonetaryValue remainingAmount, MonetaryValue requestedAmount) {
-    this.remainingAmount = remainingAmount.toString();
-    this.requestedAmount = requestedAmount.toString();
+    this(remainingAmount.toString(), requestedAmount.toString());
   }
 
   public String getRemainingAmount() {
