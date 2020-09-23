@@ -385,7 +385,7 @@ public class AccountsAPI implements Accounts {
       .onSuccess(result -> {
         CheckActionResponse response = new CheckActionResponse()
           .withAccountId(accountId)
-          .withAmount(result.getFormattedAmount())
+          .withAmount(result.getRequestedAmount())
           .withAllowed(true)
           .withRemainingAmount(result.getRemainingAmount());
         asyncResultHandler.handle(Future.succeededFuture(

@@ -4,23 +4,23 @@ import org.folio.rest.domain.MonetaryValue;
 
 public class ActionValidationResult {
   private final String remainingAmount;
-  private final String formattedAmount;
+  private final String requestedAmount;
 
-  public ActionValidationResult(String remainingAmount, String formattedAmount) {
+  public ActionValidationResult(String remainingAmount, String requestedAmount) {
     this.remainingAmount = remainingAmount;
-    this.formattedAmount = formattedAmount;
+    this.requestedAmount = requestedAmount;
   }
 
-  public ActionValidationResult(MonetaryValue remainingAmount, MonetaryValue formattedAmount) {
+  public ActionValidationResult(MonetaryValue remainingAmount, MonetaryValue requestedAmount) {
     this.remainingAmount = remainingAmount.toString();
-    this.formattedAmount = formattedAmount.toString();
+    this.requestedAmount = requestedAmount.toString();
   }
 
   public String getRemainingAmount() {
     return remainingAmount;
   }
 
-  public String getFormattedAmount() {
-    return formattedAmount;
+  public String getRequestedAmount() {
+    return requestedAmount;
   }
 }
