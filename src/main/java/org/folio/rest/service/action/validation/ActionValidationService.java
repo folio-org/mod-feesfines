@@ -1,5 +1,10 @@
 package org.folio.rest.service.action.validation;
 
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,35 +34,31 @@ public abstract class ActionValidationService {
   }
 
   public Future<ActionValidationResult> validateById(String accountId, String rawAmount) {
-    return accountRepository.getAccountById(accountId)
-      .compose(account -> validate(account, rawAmount));
+    return validateByIds(singletonList(accountId), rawAmount);
   }
 
   public Future<ActionValidationResult> validateByIds(List<String> accountIds, String rawAmount) {
     return accountRepository.getAccountsById(accountIds)
-      .compose(account -> validate(account, rawAmount));
+      .compose(accountsMap -> validate(accountsMap, rawAmount));
   }
 
   public Future<ActionValidationResult> validate(Account account, String rawAmount) {
     validateIfAccountExists(account);
-
-    MonetaryValue requestedAmount = validateRawAmount(rawAmount);
-    validateAccountStatus(account);
-
-    return validateAmountMaximum(account, requestedAmount)
-      .compose(ignored -> calculateRemainingBalance(account, requestedAmount))
-      .map(remainingBalance -> new ActionValidationResult(remainingBalance, requestedAmount));
+    return validate(singletonMap(account.getId(), account), rawAmount);
   }
 
-  public Future<ActionValidationResult> validate(List<Account> accounts, String rawAmount) {
-    validateIfAccountsExist(accounts);
+  public Future<ActionValidationResult> validate(Map<String, Account> accountsMap,
+    String rawAmount) {
+
+    validateIfAccountsExist(accountsMap);
     MonetaryValue requestedAmount = validateRawAmount(rawAmount);
-    accounts.forEach(this::validateAccountStatus);
+
+    List<Account> accounts = new ArrayList<>(accountsMap.values());
+    validateAccountStatuses(accounts);
 
     return validateAmountMaximum(accounts, requestedAmount)
-      .map(new ActionValidationResult(
-        calculateRemainingBalance(accounts, requestedAmount).toString(),
-        requestedAmount.toString()));
+      .compose(v -> calculateRemainingBalance(accounts, requestedAmount))
+      .map(remainingBalance -> new ActionValidationResult(remainingBalance, requestedAmount));
   }
 
   private MonetaryValue validateRawAmount(String rawAmount) {
@@ -82,23 +83,19 @@ public abstract class ActionValidationService {
     }
   }
 
-  protected void validateIfAccountsExist(List<Account> accounts) {
-    accounts.forEach(this::validateIfAccountExists);
+  protected void validateIfAccountsExist(Map<String, Account> accounts) {
+    accounts.values().forEach(this::validateIfAccountExists);
   }
 
   protected MonetaryValue calculateTotalRemaining(List<Account> accounts) {
-    return new MonetaryValue(accounts.stream()
-      .mapToDouble(Account::getRemaining)
-      .sum());
+    return accounts.stream()
+      .map(Account::getRemaining)
+      .map(MonetaryValue::new)
+      .reduce(MonetaryValue::add)
+      .orElse(new MonetaryValue(BigDecimal.ZERO));
   }
 
-  protected abstract void validateAccountStatus(Account account);
-
-  protected abstract Future<Void> validateAmountMaximum(Account account,
-    MonetaryValue requestedAmount);
-
-  protected abstract Future<MonetaryValue> calculateRemainingBalance(Account account,
-    MonetaryValue requestedAmount);
+  protected abstract void validateAccountStatuses(List<Account> account);
 
   protected abstract Future<Void> validateAmountMaximum(List<Account> accounts,
     MonetaryValue requestedAmount);

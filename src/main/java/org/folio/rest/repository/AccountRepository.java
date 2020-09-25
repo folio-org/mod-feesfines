@@ -1,6 +1,6 @@
 package org.folio.rest.repository;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,12 +48,12 @@ public class AccountRepository {
     return promise.future();
   }
 
-  public Future<List<Account>> getAccountsById(List<String> accountIds) {
+  public Future<Map<String, Account>> getAccountsById(List<String> accountIds) {
     Promise<Map<String, Account>> promise = Promise.promise();
     pgClient.getById(ACCOUNTS_TABLE, new JsonArray(accountIds), Account.class, promise);
     return promise.future()
-      .map(Map::values)
-      .map(ArrayList::new);
+      .map(accountsMap -> accountIds.stream()
+          .collect(HashMap::new, (m, v) -> m.put(v, accountsMap.get(v)), HashMap::putAll));
   }
 
   public Future<Account> update(Account account) {

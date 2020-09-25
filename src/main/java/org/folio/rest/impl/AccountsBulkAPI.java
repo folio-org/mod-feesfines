@@ -1,87 +1,94 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+
 import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.rest.domain.Action;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
 import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
-import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.service.action.validation.ActionValidationService;
-import org.folio.rest.service.action.validation.DefaultActionValidationService;
 import org.folio.rest.service.action.validation.RefundActionValidationService;
+import org.folio.rest.utils.ActionResultAdapter;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class AccountsBulkAPI implements AccountsBulk {
+  private final static Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
+
   @Override
   public void postAccountsBulkCheckPay(BulkCheckActionRequest entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    AccountRepository accountRepository = new AccountRepository(vertxContext, okapiHeaders);
-    ActionValidationService actionValidationService = new DefaultActionValidationService(
-      accountRepository);
-
     checkBulkAction(entity, asyncResultHandler,
-      new RefundActionValidationService(okapiHeaders, vertxContext));
+      new RefundActionValidationService(okapiHeaders, vertxContext), Action.PAY);
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    ActionValidationService validationService) {
+    ActionValidationService validationService, Action action) {
 
     List<String> accountIds = request.getAccountIds();
     String rawAmount = request.getAmount();
 
+    ActionResultAdapter resultAdapter = action.getActionResultAdapter();
+    if (resultAdapter == null) {
+      logger.error("Unprocessable action: " + action.name());
+      return;
+    }
+
     validationService.validateByIds(accountIds, rawAmount)
       .onSuccess(result -> {
-        BulkCheckActionResponse response = new BulkCheckActionResponse()
-          .withAccountIds(accountIds)
-          .withAmount(request.getAmount())
-          .withAllowed(true)
-          .withRemainingAmount(result.getRemainingAmount());
+        BulkCheckActionResponse response = buildResponse(accountIds, request.getAmount(), true,
+          result.getRemainingAmount(), null);
+        asyncResultHandler.handle(succeededFuture(resultAdapter.bulkCheck200.apply(response)));
+      })
+      .onFailure(throwable -> {
+        String errorMessage = throwable.getLocalizedMessage();
 
-        asyncResultHandler.handle(Future.succeededFuture(
-          AccountsBulk.PostAccountsBulkCheckPayResponse
-            .respond200WithApplicationJson(response)));
-      }).onFailure(throwable -> {
-      String errorMessage = throwable.getLocalizedMessage();
-      if (throwable instanceof FailedValidationException) {
-        BulkCheckActionResponse response = new BulkCheckActionResponse()
-          .withAccountIds(accountIds)
-          .withAmount(request.getAmount())
-          .withAllowed(false)
-          .withErrorMessage(errorMessage);
-        asyncResultHandler.handle(Future.succeededFuture(
-          AccountsBulk.PostAccountsBulkCheckPayResponse
-            .respond422WithApplicationJson(response)));
-      } else if (throwable instanceof AccountNotFoundValidationException) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          AccountsBulk.PostAccountsBulkCheckPayResponse
-            .respond404WithTextPlain(errorMessage)));
-      } else {
-        asyncResultHandler.handle(Future.succeededFuture(
-          AccountsBulk.PostAccountsBulkCheckPayResponse
-            .respond500WithTextPlain(errorMessage)));
-      }
-    });
+        if (throwable instanceof FailedValidationException) {
+          BulkCheckActionResponse response = buildResponse(accountIds, request.getAmount(), false,
+            null, errorMessage);
+          asyncResultHandler.handle(succeededFuture(resultAdapter.bulkCheck422.apply(response)));
+        }
+        else if (throwable instanceof AccountNotFoundValidationException) {
+          asyncResultHandler.handle(succeededFuture(
+            resultAdapter.bulkCheck404.apply(errorMessage)));
+        }
+        else {
+          asyncResultHandler.handle(succeededFuture(
+            resultAdapter.bulkCheck500.apply(errorMessage)));
+        }
+      });
   }
 
   private BulkCheckActionResponse buildResponse(List<String> accountIds, String amount,
-    boolean allowed, String remainingAmount) {
+    boolean allowed, String remainingAmount, String errorMessage) {
 
-    return new BulkCheckActionResponse()
+    BulkCheckActionResponse bulkCheckActionResponse = new BulkCheckActionResponse()
       .withAccountIds(accountIds)
       .withAmount(amount)
-      .withAllowed(allowed)
-      .withRemainingAmount(remainingAmount);
+      .withAllowed(allowed);
+
+    if (remainingAmount != null) {
+      bulkCheckActionResponse.withRemainingAmount(remainingAmount);
+    }
+
+    if (errorMessage != null) {
+      bulkCheckActionResponse.withErrorMessage(errorMessage);
+    }
+
+    return bulkCheckActionResponse;
   }
 }

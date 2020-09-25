@@ -1,7 +1,5 @@
 package org.folio.rest.service.action.validation;
 
-import static io.vertx.core.Future.succeededFuture;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -26,31 +24,12 @@ public class RefundActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected void validateAccountStatus(Account account) {
+  protected void validateAccountStatuses(List<Account> account) {
     // doing nothing as closed fee/fine can also be refunded
   }
 
-  @Override
-  protected Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
-    return getRefundableAmount(account)
-      .map(refundableAmount -> {
-        if (requestedAmount.isGreaterThan(refundableAmount)) {
-          throw new FailedValidationException(
-            "Refund amount must be greater than zero and less than or equal to Selected amount");
-        }
-        return null;
-      });
-  }
-
-  private Future<MonetaryValue> getRefundableAmount(Account account) {
-    return feeFineActionRepository.findRefundableActionsForAccount(account.getId())
-      .map(actions -> actions.stream()
-        .mapToDouble(Feefineaction::getAmountAction)
-        .sum())
-      .map(MonetaryValue::new);
-  }
-
   private Future<MonetaryValue> getRefundableAmount(List<Account> accounts) {
+    // Sum of the refundable amounts of all accounts
     return CompositeFuture.all(accounts.stream()
       .map(this::getRefundableAmount)
       .collect(Collectors.toList()))
@@ -61,19 +40,26 @@ public class RefundActionValidationService extends ActionValidationService {
         .orElse(new MonetaryValue(BigDecimal.ZERO)));
   }
 
-  @Override
-  protected Future<MonetaryValue> calculateRemainingBalance(Account account,
-    MonetaryValue requestedAmount) {
-
-    return getRefundableAmount(account)
-      .map(refundableAmount -> refundableAmount.subtract(requestedAmount));
+  private Future<MonetaryValue> getRefundableAmount(Account account) {
+    return feeFineActionRepository.findRefundableActionsForAccount(account.getId())
+      .map(actions -> actions.stream()
+        .mapToDouble(Feefineaction::getAmountAction)
+        .sum())
+      .map(MonetaryValue::new);
   }
 
   @Override
   protected Future<Void> validateAmountMaximum(List<Account> accounts,
     MonetaryValue requestedAmount) {
 
-    return null;
+    return getRefundableAmount(accounts)
+      .map(refundableAmount -> {
+        if (requestedAmount.isGreaterThan(refundableAmount)) {
+          throw new FailedValidationException(
+            "Refund amount must be greater than zero and less than or equal to Selected amount");
+        }
+        return null;
+      });
   }
 
   @Override

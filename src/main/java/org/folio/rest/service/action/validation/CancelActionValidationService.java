@@ -21,19 +21,7 @@ public class CancelActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  protected Future<MonetaryValue> calculateRemainingBalance(Account account,
-    MonetaryValue requestedAmount) {
-
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  protected void validateAccountStatus(Account account) {
+  protected void validateAccountStatuses(List<Account> accounts) {
     throw new UnsupportedOperationException();
   }
 

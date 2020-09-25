@@ -25,26 +25,14 @@ public class DefaultActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected void validateAccountStatus(Account account) {
+  protected void validateAccountStatuses(List<Account> accounts) {
+    accounts.forEach(this::validateAccountStatus);
+  }
+
+  private void validateAccountStatus(Account account) {
     if (isClosedAndHasZeroRemainingAmount(account)) {
       throw new FailedValidationException("Fee/fine is already closed");
     }
-  }
-
-  @Override
-  protected Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
-    if (requestedAmount.isGreaterThan(new MonetaryValue(account.getRemaining()))) {
-      throw new FailedValidationException("Requested amount exceeds remaining amount");
-    }
-
-    return succeededFuture();
-  }
-
-  @Override
-  protected Future<MonetaryValue> calculateRemainingBalance(Account account,
-    MonetaryValue requestedAmount) {
-
-    return succeededFuture(new MonetaryValue(account.getRemaining()).subtract(requestedAmount));
   }
 
   @Override
@@ -52,7 +40,7 @@ public class DefaultActionValidationService extends ActionValidationService {
     MonetaryValue requestedAmount) {
 
     if (requestedAmount.isGreaterThan(calculateTotalRemaining(accounts))) {
-      throw new FailedValidationException("Requested amount exceeds the selected remaining amount");
+      throw new FailedValidationException("Requested amount exceeds remaining amount");
     }
 
     return succeededFuture();
