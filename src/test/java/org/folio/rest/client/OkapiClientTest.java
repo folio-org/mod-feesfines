@@ -51,7 +51,7 @@ public class OkapiClientTest {
     okapiHeaders.put(URL, OKAPI_URL);
     okapiHeaders.put(TENANT, TENANT_NAME);
     okapiHeaders.put(TOKEN, OKAPI_TOKEN);
-    okapiClient = new OkapiClient(WebClient.create(Vertx.vertx()), okapiHeaders);
+    okapiClient = new OkapiClient(Vertx.vertx(), okapiHeaders);
   }
 
   @Before
