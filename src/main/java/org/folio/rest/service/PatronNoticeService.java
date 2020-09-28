@@ -6,9 +6,13 @@ import static org.folio.rest.utils.FeeFineActionHelper.isAction;
 import static org.folio.rest.utils.FeeFineActionHelper.isCharge;
 import static org.folio.util.UuidUtil.isUuid;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import java.util.Map;
 import java.util.Optional;
-
 import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.client.UsersClient;
@@ -27,13 +31,6 @@ import org.folio.rest.repository.OwnerRepository;
 import org.folio.rest.utils.PatronNoticeBuilder;
 import org.folio.util.UuidUtil;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.web.client.WebClient;
-
 public class PatronNoticeService {
   private static final Logger logger = LoggerFactory.getLogger(PatronNoticeService.class);
 
@@ -47,16 +44,15 @@ public class PatronNoticeService {
 
   public PatronNoticeService(Vertx vertx, Map<String, String> okapiHeaders) {
     PostgresClient pgClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
-    WebClient webClient = WebClient.create(vertx);
 
     feeFineRepository = new FeeFineRepository(pgClient);
     ownerRepository = new OwnerRepository(pgClient);
     accountRepository = new AccountRepository(pgClient);
     feeFineActionRepository = new FeeFineActionRepository(pgClient);
 
-    patronNoticeClient = new PatronNoticeClient(webClient, okapiHeaders);
+    patronNoticeClient = new PatronNoticeClient(vertx, okapiHeaders);
     usersClient = new UsersClient(vertx, okapiHeaders);
-    inventoryClient = new InventoryClient(webClient, okapiHeaders);
+    inventoryClient = new InventoryClient(vertx, okapiHeaders);
   }
 
   public void sendPatronNotice(Feefineaction action) {
