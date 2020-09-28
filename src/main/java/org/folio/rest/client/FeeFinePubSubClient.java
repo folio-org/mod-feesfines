@@ -1,28 +1,25 @@
 package org.folio.rest.client;
 
-import static io.vertx.ext.web.client.WebClient.create;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
 import org.folio.rest.exception.InternalServerErrorException;
 import org.folio.rest.jaxrs.model.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.ext.web.client.HttpResponse;
 
 public class FeeFinePubSubClient {
   private static final Logger log = LoggerFactory.getLogger(FeeFinePubSubClient.class);
   private final OkapiClient okapiClient;
 
   public FeeFinePubSubClient(Vertx vertx, Map<String, String> okapiHeaders) {
-    this.okapiClient = new OkapiClient(create(vertx), okapiHeaders);
+    this.okapiClient = new OkapiClient(vertx, okapiHeaders);
   }
 
   /**

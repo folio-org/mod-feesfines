@@ -2,19 +2,17 @@ package org.folio.rest.service;
 
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
 import org.folio.rest.client.FeeFinePubSubClient;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.util.pubsub.PubSubClientUtils;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class EventPublisher {
   private final Logger logger = LoggerFactory.getLogger(EventPublisher.class);

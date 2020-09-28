@@ -10,21 +10,19 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.util.UuidUtil.isUuid;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OkapiClient {
   private static final Logger log = LoggerFactory.getLogger(OkapiClient.class);
@@ -36,8 +34,8 @@ public class OkapiClient {
   private final String tenant;
   private final String token;
 
-  OkapiClient(WebClient webClient, Map<String, String> okapiHeaders) {
-    this.webClient = webClient;
+  OkapiClient(Vertx vertx, Map<String, String> okapiHeaders) {
+    this.webClient = WebClientProvider.getWebClient(vertx) ;
     okapiUrl = okapiHeaders.get(OKAPI_URL_HEADER);
     tenant = okapiHeaders.get(OKAPI_HEADER_TENANT);
     token = okapiHeaders.get(OKAPI_HEADER_TOKEN);
