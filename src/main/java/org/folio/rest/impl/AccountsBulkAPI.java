@@ -25,7 +25,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 public class AccountsBulkAPI implements AccountsBulk {
 
-  private final static Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
   private static final Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
 
   @Override
@@ -44,6 +43,15 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     checkBulkAction(entity, asyncResultHandler,
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.TRANSFER);
+  }
+
+  @Override
+  public void postAccountsBulkCheckWaive(BulkCheckActionRequest entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    checkBulkAction(entity, asyncResultHandler,
+      new DefaultActionValidationService(okapiHeaders, vertxContext), Action.WAIVE);
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
