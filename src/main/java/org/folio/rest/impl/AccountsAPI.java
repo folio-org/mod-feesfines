@@ -2,14 +2,18 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 
-import java.io.IOException;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import javax.ws.rs.core.Response;
-
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
@@ -21,8 +25,8 @@ import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AccountdataCollection;
 import org.folio.rest.jaxrs.model.AccountsGetOrder;
-import org.folio.rest.jaxrs.model.ActionSuccessResponse;
 import org.folio.rest.jaxrs.model.ActionFailureResponse;
+import org.folio.rest.jaxrs.model.ActionSuccessResponse;
 import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionResponse;
@@ -59,15 +63,6 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.utils.ActionResultAdapter;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.web.client.WebClient;
-
 public class AccountsAPI implements Accounts {
   private final static Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
   private static final String ACCOUNTS_TABLE = "accounts";
@@ -75,7 +70,7 @@ public class AccountsAPI implements Accounts {
   private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
   private final Messages messages = Messages.getInstance();
 
-  private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
+  private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException{
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(ACCOUNTS_TABLE + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
@@ -87,7 +82,7 @@ public class AccountsAPI implements Accounts {
       return succeededFuture(null);
     }
 
-    InventoryClient inventoryClient = new InventoryClient(WebClient.create(vertx), okapiHeaders);
+    InventoryClient inventoryClient = new InventoryClient(vertx, okapiHeaders);
 
     List<String> itemIds = accounts.stream()
       .map(Account::getItemId)
@@ -180,7 +175,7 @@ public class AccountsAPI implements Accounts {
                     }
                 }
             });
-        } catch (IOException | CQL2PgJSONException e) {
+        } catch (CQL2PgJSONException e) {
             logger.error(e.getLocalizedMessage(), e);
             if (e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                 logger.debug("BAD CQL");

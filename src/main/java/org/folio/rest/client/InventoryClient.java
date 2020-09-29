@@ -5,12 +5,17 @@ import static io.vertx.core.Future.succeededFuture;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import org.folio.rest.jaxrs.model.Campus;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
@@ -21,20 +26,13 @@ import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Location;
 
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
-
 public class InventoryClient extends OkapiClient {
 
   private static final String ITEMS_LIMIT = "1000";
   private static final String HOLDINGS_LIMIT = "1000";
 
-  public InventoryClient(WebClient webClient, Map<String, String> okapiHeaders) {
-    super(webClient, okapiHeaders);
+  public InventoryClient(Vertx vertx, Map<String, String> okapiHeaders) {
+    super(vertx, okapiHeaders);
   }
 
   public Future<Items> getItemsById(List<String> itemIds) {
