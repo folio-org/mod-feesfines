@@ -2,7 +2,7 @@ package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.utils.ResourceClients.buildAccountCancelClient;
-import static org.folio.test.support.EntityBuilder.createAccount;
+import static org.folio.test.support.EntityBuilder.buildAccount;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 
@@ -59,7 +59,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
 
   @Test
   public void shouldReturn422WhenAccountIsClosed() {
-    Account account = createAccount();
+    Account account = buildAccount();
     account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
     postAccount(account);
 
@@ -81,7 +81,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
   }
 
   private Account postAccount() {
-    Account accountToPost = createAccount();
+    Account accountToPost = buildAccount();
     postAccount(accountToPost);
     return accountToPost;
   }

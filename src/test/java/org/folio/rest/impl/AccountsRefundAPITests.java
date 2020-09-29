@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
-import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.domain.MonetaryValue;
@@ -495,7 +494,7 @@ public class AccountsRefundAPITests extends ApiTests {
   }
 
   private Account createAccount(double amount, double remainingAmount) {
-    return EntityBuilder.createAccount(amount, remainingAmount)
+    return EntityBuilder.buildAccount(amount, remainingAmount)
       .withId(ACCOUNT_ID)
       .withUserId(USER_ID);
   }

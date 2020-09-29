@@ -1,5 +1,7 @@
 package org.folio.rest.utils;
 
+import static java.lang.String.format;
+
 public final class ResourceClients {
 
   private ResourceClients() {}
@@ -45,7 +47,15 @@ public final class ResourceClients {
   }
 
   private static ResourceClient buildAccountActionClient(String accountId, String action) {
-    return new ResourceClient(String.format("/accounts/%s/%s", accountId, action));
+    return new ResourceClient(format("/accounts/%s/%s", accountId, action));
+  }
+
+  public static ResourceClient buildAccountBulkCheckPayClient() {
+    return buildAccountBulkActionClient("check-pay");
+  }
+
+  private static ResourceClient buildAccountBulkActionClient(String action) {
+    return new ResourceClient(format("/accounts-bulk/%s", action));
   }
 
   public static ResourceClient feeFineActionsClient() {

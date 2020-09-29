@@ -1,28 +1,32 @@
 package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
+import static org.folio.rest.domain.Action.PAY;
+import static org.folio.rest.domain.Action.TRANSFER;
+import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckWaiveClient;
-import static org.folio.rest.domain.Action.PAY;
-import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
-import static org.folio.test.support.EntityBuilder.createAccount;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
+import org.folio.test.support.EntityBuilder;
 import org.junit.Before;
 import org.junit.Test;
-
-import io.restassured.response.ValidatableResponse;
 
 public class AccountsActionChecksAPITests extends ApiTests {
 
@@ -32,35 +36,47 @@ public class AccountsActionChecksAPITests extends ApiTests {
   private static final double ACCOUNT_REMAINING_AMOUNT = 4.55;
   private static final double REQUESTED_AMOUNT = 1.23;
   private static final String REQUESTED_AMOUNT_STRING = String.valueOf(REQUESTED_AMOUNT);
+  private static final String ERROR_MESSAGE_MUST_BE_POSITIVE = "Amount must be positive";
+  private static final String ERROR_MESSAGE_INVALID_AMOUNT= "Invalid amount entered";
+  private static final String ERROR_MESSAGE_ALREADY_CLOSED= "Fee/fine is already closed";
 
-  private Account accountToPost;
+  private Account firstAccount;
+  private Account secondAccount;
   private ResourceClient accountsCheckPayClient;
   private ResourceClient accountsCheckWaiveClient;
   private ResourceClient accountsCheckTransferClient;
   private ResourceClient accountsCheckRefundClient;
+  private ResourceClient accountsBulkCheckPayClient;
 
   @Before
   public void setUp() {
-    accountToPost = postAccount();
-    accountsCheckPayClient = buildAccountCheckPayClient(accountToPost.getId());
-    accountsCheckWaiveClient = buildAccountCheckWaiveClient(accountToPost.getId());
-    accountsCheckTransferClient = buildAccountCheckTransferClient(accountToPost.getId());
-    accountsCheckRefundClient = buildAccountCheckRefundClient(accountToPost.getId());
+    firstAccount = createAccount();
+    secondAccount = createAccount();
+    accountsCheckPayClient = buildAccountCheckPayClient(firstAccount.getId());
+    accountsCheckWaiveClient = buildAccountCheckWaiveClient(firstAccount.getId());
+    accountsCheckTransferClient = buildAccountCheckTransferClient(firstAccount.getId());
+    accountsCheckRefundClient = buildAccountCheckRefundClient(firstAccount.getId());
+    accountsBulkCheckPayClient = buildAccountBulkCheckPayClient();
   }
 
   @Test
   public void checkPayAmountShouldBeAllowed() {
-    actionCheckAmountShouldBeAllowed(accountsCheckPayClient);
+    actionShouldBeAllowed(false, accountsCheckPayClient, "3.32");
+  }
+
+  @Test
+  public void bulkCheckPayAmountShouldBeAllowed() {
+    actionShouldBeAllowed(true, accountsBulkCheckPayClient, "7.87");
   }
 
   @Test
   public void checkWaiveAmountShouldBeAllowed() {
-    actionCheckAmountShouldBeAllowed(accountsCheckWaiveClient);
+    actionShouldBeAllowed(false, accountsCheckWaiveClient, "3.32");
   }
 
   @Test
   public void checkTransferAmountShouldBeAllowed() {
-    actionCheckAmountShouldBeAllowed(accountsCheckTransferClient);
+    actionShouldBeAllowed(false, accountsCheckTransferClient, "3.32");
   }
 
   @Test
@@ -68,8 +84,8 @@ public class AccountsActionChecksAPITests extends ApiTests {
     double expectedRemainingAmount = 0.77;
 
     final Feefineaction feeFineAction = new Feefineaction()
-      .withAccountId(accountToPost.getId())
-      .withUserId(accountToPost.getUserId())
+      .withAccountId(firstAccount.getId())
+      .withUserId(firstAccount.getUserId())
       .withAmountAction((REQUESTED_AMOUNT + expectedRemainingAmount) / 2);
 
     feeFineActionsClient()
@@ -82,25 +98,28 @@ public class AccountsActionChecksAPITests extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_CREATED);
 
-    CheckActionRequest request = new CheckActionRequest().withAmount(REQUESTED_AMOUNT_STRING);
-
-    baseActionCheckAmountShouldBeAllowed(request, accountsCheckRefundClient)
-      .body("remainingAmount", is(String.valueOf(expectedRemainingAmount)));
+    actionShouldBeAllowed(false, accountsCheckRefundClient,
+      String.valueOf(expectedRemainingAmount));
   }
 
   @Test
   public void checkPayAmountShouldNotBeAllowedWithExceededAmount() {
-    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckPayClient);
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(false, accountsCheckPayClient);
+  }
+
+  @Test
+  public void bulkCheckPayAmountShouldNotBeAllowedWithExceededAmount() {
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(true, accountsBulkCheckPayClient);
   }
 
   @Test
   public void checkWaiveAmountShouldNotBeAllowedWithExceededAmount() {
-    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckWaiveClient);
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(false, accountsCheckWaiveClient);
   }
 
   @Test
   public void checkTransferAmountShouldNotBeAllowedWithExceededAmount() {
-    actionCheckAmountShouldNotBeAllowedWithExceededAmount(accountsCheckTransferClient);
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(false, accountsCheckTransferClient);
   }
 
   @Test
@@ -110,102 +129,143 @@ public class AccountsActionChecksAPITests extends ApiTests {
 
   @Test
   public void checkPayAmountShouldNotBeAllowedWithNegativeAmount() {
-    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckPayClient);
+    actionShouldNotBeAllowed(false, accountsCheckPayClient, "-5.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
+  }
+
+  @Test
+  public void bulkCheckPayAmountShouldNotBeAllowedWithNegativeAmount() {
+    actionShouldNotBeAllowed(true, accountsBulkCheckPayClient, "-5.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
   @Test
   public void checkWaiveAmountShouldNotBeAllowedWithNegativeAmount() {
-    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckWaiveClient);
+    actionShouldNotBeAllowed(false, accountsCheckWaiveClient, "-5.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
   @Test
   public void checkTransferAmountShouldNotBeAllowedWithNegativeAmount() {
-    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckTransferClient);
+    actionShouldNotBeAllowed(false, accountsCheckTransferClient, "-5.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
   @Test
   public void checkRefundAmountShouldNotBeAllowedWithNegativeAmount() {
-    actionCheckAmountShouldNotBeAllowedWithNegativeAmount(accountsCheckRefundClient);
+    actionShouldNotBeAllowed(false, accountsCheckRefundClient, "-5.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
   @Test
   public void checkPayAmountShouldNotBeAllowedWithZeroAmount() {
-    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckPayClient);
+    actionShouldNotBeAllowed(false, accountsCheckPayClient, "0.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
+  }
+
+  @Test
+  public void bulkCheckPayAmountShouldNotBeAllowedWithZeroAmount() {
+    actionShouldNotBeAllowed(true, accountsBulkCheckPayClient, "0.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
   @Test
   public void checkWaiveAmountShouldNotBeAllowedWithZeroAmount() {
-    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckWaiveClient);
+    actionShouldNotBeAllowed(false, accountsCheckWaiveClient, "0.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
   @Test
   public void checkTransferAmountShouldNotBeAllowedWithZeroAmount() {
-    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckTransferClient);
+    actionShouldNotBeAllowed(false, accountsCheckTransferClient, "0.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
   @Test
   public void checkRefundAmountShouldNotBeAllowedWithZeroAmount() {
-    actionCheckAmountShouldNotBeAllowedWithZeroAmount(accountsCheckRefundClient);
+    actionShouldNotBeAllowed(false, accountsCheckRefundClient, "0.0",
+      ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
   @Test
-  public void checkPayAmountShouldNotBeNumber() {
-    actionCheckAmountShouldBeNumber(accountsCheckPayClient);
+  public void checkPayAmountShouldBeNumeric() {
+    actionShouldNotBeAllowed(false, accountsCheckPayClient, "abc",
+      ERROR_MESSAGE_INVALID_AMOUNT);
   }
 
   @Test
-  public void checkWaiveAmountShouldNotBeNumber() {
-    actionCheckAmountShouldBeNumber(accountsCheckWaiveClient);
+  public void bulkCheckPayAmountShouldBeNumeric() {
+    actionShouldNotBeAllowed(true, accountsBulkCheckPayClient, "abc",
+      ERROR_MESSAGE_INVALID_AMOUNT);
   }
 
   @Test
-  public void checkTransferAmountShouldNotBeNumber() {
-    actionCheckAmountShouldBeNumber(accountsCheckTransferClient);
+  public void checkWaiveAmountShouldBeNumeric() {
+    actionShouldNotBeAllowed(false, accountsCheckWaiveClient, "abc",
+      ERROR_MESSAGE_INVALID_AMOUNT);
   }
 
   @Test
-  public void checkRefundAmountShouldNotBeNumber() {
-    actionCheckAmountShouldBeNumber(accountsCheckRefundClient);
+  public void checkTransferAmountShouldBeNumeric() {
+    actionShouldNotBeAllowed(false, accountsCheckTransferClient, "abc",
+      ERROR_MESSAGE_INVALID_AMOUNT);
+  }
+
+  @Test
+  public void checkRefundAmountShouldBeNumeric() {
+    actionShouldNotBeAllowed(false, accountsCheckRefundClient, "abc",
+      ERROR_MESSAGE_INVALID_AMOUNT);
   }
 
   @Test
   public void checkPayAmountShouldNotFailForNonExistentAccount() {
     removeAllFromTable(ACCOUNTS_TABLE);
-    actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckPayClient);
+    actionCheckShouldNotFailForNonExistentAccount(false, accountsCheckPayClient);
+  }
+
+  @Test
+  public void bulkCheckPayAmountShouldNotFailForNonExistentAccount() {
+    removeAllFromTable(ACCOUNTS_TABLE);
+    actionCheckShouldNotFailForNonExistentAccount(true, accountsBulkCheckPayClient);
   }
 
   @Test
   public void checkWaiveAmountShouldNotFailForNonExistentAccount() {
     removeAllFromTable(ACCOUNTS_TABLE);
-    actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckWaiveClient);
+    actionCheckShouldNotFailForNonExistentAccount(false, accountsCheckWaiveClient);
   }
 
   @Test
   public void checkTransferAmountShouldNotFailForNonExistentAccount() {
     removeAllFromTable(ACCOUNTS_TABLE);
-    actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckTransferClient);
+    actionCheckShouldNotFailForNonExistentAccount(false, accountsCheckTransferClient);
   }
 
   @Test
   public void checkRefundAmountShouldNotFailForNonExistentAccount() {
     removeAllFromTable(ACCOUNTS_TABLE);
-    actionCheckAmountShouldNotFailForNonExistentAccount(accountsCheckRefundClient);
+    actionCheckShouldNotFailForNonExistentAccount(false, accountsCheckRefundClient);
   }
 
 
   @Test
   public void checkPayAmountShouldNotBeAllowedForClosedAccount() {
-    actionCheckAmountShouldNotBeAllowedForClosedAccount(accountsCheckPayClient);
+    actionCheckAmountShouldNotBeAllowedForClosedAccount(false, accountsCheckPayClient);
+  }
+
+  @Test
+  public void bulkCheckPayAmountShouldNotBeAllowedForClosedAccount() {
+    actionCheckAmountShouldNotBeAllowedForClosedAccount(true, accountsBulkCheckPayClient);
   }
 
   @Test
   public void checkWaiveAmountShouldNotBeAllowedForClosedAccount() {
-    actionCheckAmountShouldNotBeAllowedForClosedAccount(accountsCheckWaiveClient);
+    actionCheckAmountShouldNotBeAllowedForClosedAccount(false, accountsCheckWaiveClient);
   }
 
   @Test
   public void checkTransferAmountShouldNotBeAllowedForClosedAccount() {
-    actionCheckAmountShouldNotBeAllowedForClosedAccount(accountsCheckTransferClient);
+    actionCheckAmountShouldNotBeAllowedForClosedAccount(false, accountsCheckTransferClient);
   }
 
   @Test
@@ -238,30 +298,27 @@ public class AccountsActionChecksAPITests extends ApiTests {
     failedActionCheckReturnsInitialRequestedAmount(accountsCheckTransferClient);
   }
 
-  private void actionCheckAmountShouldBeAllowed(ResourceClient actionCheckClient) {
-    CheckActionRequest request = new CheckActionRequest().withAmount(REQUESTED_AMOUNT_STRING);
+  private void actionShouldBeAllowed(boolean bulk, ResourceClient actionCheckClient,
+    String remaining) {
 
-    baseActionCheckAmountShouldBeAllowed(request, actionCheckClient)
-    .body("remainingAmount", is("3.32"));
-  }
-
-  private ValidatableResponse baseActionCheckAmountShouldBeAllowed(
-    CheckActionRequest accountCheckRequest, ResourceClient actionCheckClient) {
-
-    return actionCheckClient.attemptCreate(accountCheckRequest)
+    actionCheckClient.attemptCreate(createRequest(bulk, REQUESTED_AMOUNT_STRING))
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("allowed", is(true))
-      .body("amount", is(accountCheckRequest.getAmount()));
+      .body("accountIds", bulk ? is(Arrays.asList(firstAccount.getId(), secondAccount.getId()))
+        : nullValue())
+      .body("amount", is(REQUESTED_AMOUNT_STRING))
+      .body("remainingAmount", is(remaining));
   }
 
-  private void actionCheckAmountShouldNotBeAllowedWithExceededAmount(
+  private void actionCheckAmountShouldNotBeAllowedWithExceededAmount(boolean bulk,
     ResourceClient actionCheckClient) {
 
     String expectedErrorMessage = "Requested amount exceeds remaining amount";
+    String amount = String.valueOf(bulk ? ACCOUNT_REMAINING_AMOUNT * 2 + 1 : REQUESTED_AMOUNT + 10);
 
-    baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
-      actionCheckClient, expectedErrorMessage, String.valueOf(REQUESTED_AMOUNT + 10));
+    baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(actionCheckClient,
+      expectedErrorMessage, amount);
   }
 
   private void actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(
@@ -288,78 +345,66 @@ public class AccountsActionChecksAPITests extends ApiTests {
       .body("amount", is(accountCheckRequest.getAmount()));
   }
 
-  private void actionCheckAmountShouldNotBeAllowedWithNegativeAmount(
-    ResourceClient accountsActionCheckClient) {
+  private void actionShouldNotBeAllowed(boolean bulk,
+    ResourceClient accountsActionCheckClient, String amount, String errorMessage) {
 
-    CheckActionRequest accountCheckRequest = new CheckActionRequest();
-    accountCheckRequest.withAmount("-5.0");
-    String expectedErrorMessage = "Amount must be positive";
-
-    accountsActionCheckClient.attemptCreate(accountCheckRequest)
+    accountsActionCheckClient.attemptCreate(createRequest(bulk, amount))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(expectedErrorMessage))
+      .body(containsString(errorMessage))
       .body("allowed", is(false))
-      .body("amount", is(accountCheckRequest.getAmount()));
+      .body("accountIds", bulk ? is(Arrays.asList(firstAccount.getId(), secondAccount.getId()))
+        : nullValue())
+      .body("amount", is(amount));
   }
 
-  private void actionCheckAmountShouldNotBeAllowedWithZeroAmount(
-    ResourceClient accountsActionCheckClient) {
-
-    CheckActionRequest accountCheckRequest = new CheckActionRequest();
-    accountCheckRequest.withAmount("0.0");
-    String expectedErrorMessage = "Amount must be positive";
-
-    accountsActionCheckClient.attemptCreate(accountCheckRequest)
-      .then()
-      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(expectedErrorMessage))
-      .body("allowed", is(false))
-      .body("amount", is(accountCheckRequest.getAmount()));
-  }
-
-  private void actionCheckAmountShouldBeNumber(ResourceClient accountsActionCheckClient) {
-    CheckActionRequest accountCheckRequest = new CheckActionRequest();
-    accountCheckRequest.withAmount("abc");
-    String expectedErrorMessage = "Invalid amount entered";
-
-    accountsActionCheckClient.attemptCreate(accountCheckRequest)
-      .then()
-      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(expectedErrorMessage))
-      .body("allowed", is(false))
-      .body("amount", is(accountCheckRequest.getAmount()));
-  }
-
-  private void actionCheckAmountShouldNotFailForNonExistentAccount(
+  private void actionCheckShouldNotFailForNonExistentAccount(boolean bulk,
     ResourceClient actionCheckClient) {
 
-    CheckActionRequest accountCheckRequest = new CheckActionRequest()
-      .withAmount(REQUESTED_AMOUNT_STRING);
-
-    actionCheckClient.attemptCreate(accountCheckRequest)
+    actionCheckClient.attemptCreate(createRequest(bulk, REQUESTED_AMOUNT_STRING))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND);
   }
 
-  private void actionCheckAmountShouldNotBeAllowedForClosedAccount(ResourceClient client) {
-    accountToPost.setRemaining(0.00);
-    accountToPost.getStatus().setName(FeeFineStatus.CLOSED.getValue());
-    accountsClient.update(accountToPost.getId(), accountToPost);
+  private void actionCheckAmountShouldNotBeAllowedForClosedAccount(boolean bulk,
+    ResourceClient client) {
 
-    client.attemptCreate(new CheckActionRequest().withAmount(REQUESTED_AMOUNT_STRING))
+    closeAllAccounts();
+
+    client.attemptCreate(createRequest(bulk, REQUESTED_AMOUNT_STRING))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .body("allowed", is(false))
+      .body("accountIds", bulk ? is(Arrays.asList(firstAccount.getId(), secondAccount.getId()))
+        : nullValue())
       .body("amount", is(REQUESTED_AMOUNT_STRING))
-      .body("errorMessage", is("Fee/fine is already closed"));
+      .body("errorMessage", is(ERROR_MESSAGE_ALREADY_CLOSED));
 
     removeAllFromTable(ACCOUNTS_TABLE);
   }
 
+  private void closeAllAccounts() {
+    Stream.of(firstAccount, secondAccount)
+      .forEach(account -> {
+        account.setRemaining(0.00);
+        account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
+        accountsClient.update(account.getId(), account);
+      });
+  }
+
+  private Object createRequest(boolean bulk, String amount) {
+    if (bulk) {
+      return new BulkCheckActionRequest()
+        .withAccountIds(Arrays.asList(firstAccount.getId(), secondAccount.getId()))
+        .withAmount(amount);
+    } else {
+      return new CheckActionRequest().withAmount(amount);
+    }
+  }
+
   private void successfulActionCheckHandlesLongDecimalsCorrectly(ResourceClient client) {
-    accountToPost.setRemaining(1.235987654321); // will be rounded to 1.24
-    accountsClient.update(accountToPost.getId(), accountToPost);
+    firstAccount.setRemaining(1.235987654321); // will be rounded to 1.24
+    accountsClient.update(firstAccount.getId(), firstAccount);
 
     client.attemptCreate(new CheckActionRequest().withAmount("1.004987654321")) // rounded to 1.00
       .then()
@@ -372,8 +417,8 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   private void failedActionCheckReturnsInitialRequestedAmount(ResourceClient client) {
-    accountToPost.setRemaining(0.99);
-    accountsClient.update(accountToPost.getId(), accountToPost);
+    firstAccount.setRemaining(0.99);
+    accountsClient.update(firstAccount.getId(), firstAccount);
 
     String requestedAmount = "1.004123456789"; // rounded to 1.00 when compared to account balance
 
@@ -387,8 +432,9 @@ public class AccountsActionChecksAPITests extends ApiTests {
     removeAllFromTable(ACCOUNTS_TABLE);
   }
 
-  private Account postAccount() {
-    Account accountToPost = createAccount(ACCOUNT_INITIAL_AMOUNT, ACCOUNT_REMAINING_AMOUNT);
+  private Account createAccount() {
+    Account accountToPost = EntityBuilder.buildAccount(ACCOUNT_INITIAL_AMOUNT,
+      ACCOUNT_REMAINING_AMOUNT);
     accountsClient.create(accountToPost)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
