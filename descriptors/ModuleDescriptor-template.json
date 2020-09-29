@@ -312,6 +312,15 @@
         },
         {
           "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts-bulk/check-transfer",
+          "permissionsRequired":[
+            "accounts.bulk.check-transfer.post"
+          ]
+        },
+        {
+          "methods":[
             "GET"
           ],
           "pathPattern":"/feefineactions",
@@ -865,6 +874,11 @@
       "permissionName":"accounts.check-pay.post",
       "displayName":"accounts payment check post",
       "description":"Checks if payment is allowed"
+    },
+    {
+      "permissionName":"accounts.bulk.check-transfer.post",
+      "displayName":"accounts transfer check post",
+      "description":"Checks if transfer is allowed"
     },
     {
       "permissionName":"accounts.check-waive.post",
