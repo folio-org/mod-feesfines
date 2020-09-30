@@ -48,7 +48,7 @@ public class CancelActionService extends ActionService {
   @Override
   protected Future<ActionContext> validateAction(ActionContext context) {
 
-    return validationService.validate(context.getAccount(), null)
+    return validationService.validate(context.getAccountId(), context.getAccount(), null)
       .map(result -> context.withRequestedAmount(null));
   }
 }

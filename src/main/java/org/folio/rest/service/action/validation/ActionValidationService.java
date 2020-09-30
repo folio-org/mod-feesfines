@@ -1,10 +1,12 @@
 package org.folio.rest.service.action.validation;
 
+import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,8 +20,12 @@ import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public abstract class ActionValidationService {
+  private static final Logger logger = LoggerFactory.getLogger(ActionValidationService.class);
+
   private final AccountRepository accountRepository;
 
   public ActionValidationService(AccountRepository accountRepository) {
@@ -39,12 +45,16 @@ public abstract class ActionValidationService {
 
   public Future<ActionValidationResult> validateByIds(List<String> accountIds, String rawAmount) {
     return accountRepository.getAccountsById(accountIds)
+      .map(accountsMap -> accountIds.stream()
+        .collect(HashMap<String, Account>::new, (m, v) -> m.put(v, accountsMap.get(v)),
+          HashMap::putAll))
       .compose(accountsMap -> validate(accountsMap, rawAmount));
   }
 
-  public Future<ActionValidationResult> validate(Account account, String rawAmount) {
-    validateIfAccountExists(account);
-    return validate(singletonMap(account.getId(), account), rawAmount);
+  public Future<ActionValidationResult> validate(String accountId, Account account,
+    String rawAmount) {
+
+    return validate(singletonMap(accountId, account), rawAmount);
   }
 
   public Future<ActionValidationResult> validate(Map<String, Account> accountsMap,
@@ -77,14 +87,14 @@ public abstract class ActionValidationService {
     return requestedAmount;
   }
 
-  protected void validateIfAccountExists(Account account) {
-    if (account == null) {
-      throw new AccountNotFoundValidationException("Fee/fine was not found");
-    }
-  }
-
   protected void validateIfAccountsExist(Map<String, Account> accounts) {
-    accounts.values().forEach(this::validateIfAccountExists);
+    accounts.keySet().forEach(accountId -> {
+      if (accounts.get(accountId) == null) {
+        String errorMessage = format("Fee/fine ID %s not found", accountId);
+        logger.error(errorMessage);
+        throw new AccountNotFoundValidationException(errorMessage);
+      }
+    });
   }
 
   protected MonetaryValue calculateTotalRemaining(List<Account> accounts) {

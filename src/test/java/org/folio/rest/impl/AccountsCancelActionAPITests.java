@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
+import static java.lang.String.format;
 import static org.folio.rest.utils.ResourceClients.buildAccountCancelClient;
 import static org.folio.test.support.EntityBuilder.buildAccount;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -50,11 +51,12 @@ public class AccountsCancelActionAPITests extends ApiTests {
   public void shouldReturn404WhenAccountDoesNotExist() {
     CancelActionRequest cancelActionRequest = createCancelActionRequest();
 
-    accountCancelClient = buildAccountCancelClient(randomId());
+    String accountId = randomId();
+    accountCancelClient = buildAccountCancelClient(accountId);
     accountCancelClient.attemptCreate(cancelActionRequest)
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
-      .body(equalTo("Fee/fine was not found"));
+      .body(equalTo(format("Fee/fine ID %s not found", accountId)));
   }
 
   @Test

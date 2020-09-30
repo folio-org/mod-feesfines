@@ -51,9 +51,7 @@ public class AccountRepository {
   public Future<Map<String, Account>> getAccountsById(List<String> accountIds) {
     Promise<Map<String, Account>> promise = Promise.promise();
     pgClient.getById(ACCOUNTS_TABLE, new JsonArray(accountIds), Account.class, promise);
-    return promise.future()
-      .map(accountsMap -> accountIds.stream()
-          .collect(HashMap::new, (m, v) -> m.put(v, accountsMap.get(v)), HashMap::putAll));
+    return promise.future();
   }
 
   public Future<Account> update(Account account) {
