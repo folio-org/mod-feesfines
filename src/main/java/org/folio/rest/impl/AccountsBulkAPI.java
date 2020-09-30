@@ -24,7 +24,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 public class AccountsBulkAPI implements AccountsBulk {
-  private final static Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
+  private static final Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
 
   @Override
   public void postAccountsBulkCheckPay(BulkCheckActionRequest entity,
@@ -44,7 +44,10 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     ActionResultAdapter resultAdapter = action.getActionResultAdapter();
     if (resultAdapter == null) {
-      logger.error("Unprocessable action: " + action.name());
+      String errorMessage = "Unprocessable action: " + action.name();
+      logger.error(errorMessage);
+      asyncResultHandler.handle(succeededFuture(AccountsBulk.PostAccountsBulkCheckPayResponse
+        .respond500WithTextPlain(errorMessage)));
       return;
     }
 

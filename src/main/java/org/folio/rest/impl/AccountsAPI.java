@@ -36,6 +36,7 @@ import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.Accounts;
+import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -64,7 +65,7 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.utils.ActionResultAdapter;
 
 public class AccountsAPI implements Accounts {
-  private final static Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+  private static final Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ACCOUNT_ID_FIELD = "'id'";
   private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
@@ -381,7 +382,10 @@ public class AccountsAPI implements Accounts {
 
     ActionResultAdapter resultAdapter = action.getActionResultAdapter();
     if (resultAdapter == null) {
-      logger.error("Unprocessable action: " + action.name());
+      String errorMessage = "Unprocessable action: " + action.name();
+      logger.error(errorMessage);
+      asyncResultHandler.handle(succeededFuture(Accounts.PostAccountsCheckPayByAccountIdResponse
+        .respond500WithTextPlain(errorMessage)));
       return;
     }
 
