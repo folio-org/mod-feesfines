@@ -5,7 +5,7 @@
   "properties": {
     "amount": {
       "type": "string",
-      "description": "Amount of fine which patron fulfills"
+      "description": "Action amount to be validated"
     }
   },
   "additionalProperties": false,
