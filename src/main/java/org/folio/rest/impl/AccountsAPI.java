@@ -36,6 +36,7 @@ import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.Accounts;
+import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -64,7 +65,7 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.utils.ActionResultAdapter;
 
 public class AccountsAPI implements Accounts {
-  private final static Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+  private static final Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ACCOUNT_ID_FIELD = "'id'";
   private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
@@ -340,7 +341,8 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     checkAction(accountId, request, asyncResultHandler,
-      new DefaultActionValidationService(new AccountRepository(vertxContext, okapiHeaders)));
+      new DefaultActionValidationService(new AccountRepository(vertxContext, okapiHeaders)),
+      Action.PAY);
   }
 
   @Override
@@ -349,7 +351,8 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     checkAction(accountId, request, asyncResultHandler,
-      new DefaultActionValidationService(new AccountRepository(vertxContext, okapiHeaders)));
+      new DefaultActionValidationService(new AccountRepository(vertxContext, okapiHeaders)),
+      Action.WAIVE);
   }
 
   @Override
@@ -358,7 +361,8 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     checkAction(accountId, request, asyncResultHandler,
-      new DefaultActionValidationService(new AccountRepository(vertxContext, okapiHeaders)));
+      new DefaultActionValidationService(new AccountRepository(vertxContext, okapiHeaders)),
+      Action.TRANSFER);
   }
 
   @Override
@@ -367,46 +371,49 @@ public class AccountsAPI implements Accounts {
     Context vertxContext) {
 
     checkAction(accountId, request, asyncResultHandler,
-      new RefundActionValidationService(okapiHeaders, vertxContext));
+      new RefundActionValidationService(okapiHeaders, vertxContext), Action.REFUND);
   }
 
   private void checkAction(String accountId, CheckActionRequest request,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    ActionValidationService validationService) {
+    ActionValidationService validationService, Action action) {
 
     String rawAmount = request.getAmount();
 
-    validationService.validate(accountId, rawAmount)
+    ActionResultAdapter resultAdapter = action.getActionResultAdapter();
+    if (resultAdapter == null) {
+      String errorMessage = "Unprocessable action: " + action.name();
+      logger.error(errorMessage);
+      asyncResultHandler.handle(succeededFuture(Accounts.PostAccountsCheckPayByAccountIdResponse
+        .respond500WithTextPlain(errorMessage)));
+      return;
+    }
+
+    validationService.validateById(accountId, rawAmount)
       .onSuccess(result -> {
         CheckActionResponse response = new CheckActionResponse()
           .withAccountId(accountId)
           .withAmount(result.getRequestedAmount())
           .withAllowed(true)
           .withRemainingAmount(result.getRemainingAmount());
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse
-            .respond200WithApplicationJson(response)));
-      }).onFailure(throwable -> {
-      String errorMessage = throwable.getLocalizedMessage();
-      if (throwable instanceof FailedValidationException) {
-        CheckActionResponse response = new CheckActionResponse()
-          .withAccountId(accountId)
-          .withAmount(request.getAmount())
-          .withAllowed(false)
-          .withErrorMessage(errorMessage);
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse
-            .respond422WithApplicationJson(response)));
-      } else if (throwable instanceof AccountNotFoundValidationException) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse
-            .respond404WithTextPlain(errorMessage)));
-      } else {
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostAccountsCheckPayByAccountIdResponse
-            .respond500WithTextPlain(errorMessage)));
-      }
-    });
+
+        asyncResultHandler.handle(succeededFuture(resultAdapter.check200.apply(response)));
+      })
+      .onFailure(throwable -> {
+        String errorMessage = throwable.getLocalizedMessage();
+        if (throwable instanceof FailedValidationException) {
+          CheckActionResponse response = new CheckActionResponse()
+            .withAccountId(accountId)
+            .withAmount(request.getAmount())
+            .withAllowed(false)
+            .withErrorMessage(errorMessage);
+          asyncResultHandler.handle(succeededFuture(resultAdapter.check422.apply(response)));
+        } else if (throwable instanceof AccountNotFoundValidationException) {
+          asyncResultHandler.handle(succeededFuture(resultAdapter.check404.apply(errorMessage)));
+        } else {
+          asyncResultHandler.handle(succeededFuture(resultAdapter.check500.apply(errorMessage)));
+        }
+      });
   }
 
   @Override
@@ -481,7 +488,8 @@ public class AccountsAPI implements Accounts {
       if (actionContext.getRequestedAmount() != null) {
         response.withAmount(actionContext.getRequestedAmount().toString());
       }
-      asyncResultHandler.handle(succeededFuture(resultAdapter.to201(response)));
+
+      asyncResultHandler.handle(succeededFuture(resultAdapter.action201.apply(response)));
     }
     else if (asyncResult.failed()) {
       final Throwable cause = asyncResult.cause();
@@ -494,11 +502,11 @@ public class AccountsAPI implements Accounts {
           DefaultActionRequest defaultActionRequest = (DefaultActionRequest) request;
           response.withAmount(defaultActionRequest.getAmount());
         }
-        asyncResultHandler.handle(succeededFuture(resultAdapter.to422(response)));
+        asyncResultHandler.handle(succeededFuture(resultAdapter.action422.apply(response)));
       } else if (cause instanceof AccountNotFoundValidationException) {
-        asyncResultHandler.handle(succeededFuture(resultAdapter.to404(errorMessage)));
+        asyncResultHandler.handle(succeededFuture(resultAdapter.action404.apply(errorMessage)));
       } else {
-        asyncResultHandler.handle(succeededFuture(resultAdapter.to500(errorMessage)));
+        asyncResultHandler.handle(succeededFuture(resultAdapter.action500.apply(errorMessage)));
       }
     }
   }

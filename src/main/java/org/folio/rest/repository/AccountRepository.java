@@ -1,5 +1,7 @@
 package org.folio.rest.repository;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -12,6 +14,7 @@ import org.folio.rest.tools.utils.TenantTool;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
@@ -42,6 +45,12 @@ public class AccountRepository {
   public Future<Account> getAccountById(String accountId) {
     Promise<Account> promise = Promise.promise();
     pgClient.getById(ACCOUNTS_TABLE, accountId, Account.class, promise);
+    return promise.future();
+  }
+
+  public Future<Map<String, Account>> getAccountsById(List<String> accountIds) {
+    Promise<Map<String, Account>> promise = Promise.promise();
+    pgClient.getById(ACCOUNTS_TABLE, new JsonArray(accountIds), Account.class, promise);
     return promise.future();
   }
 

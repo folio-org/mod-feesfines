@@ -3,6 +3,14 @@
   "description": "Accounts check request",
   "type": "object",
   "properties": {
+    "accountIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "$ref": "../uuid.json"
+      },
+      "description": "IDs of multiple accounts"
+    },
     "amount": {
       "type": "string",
       "description": "Action amount to be validated"
@@ -10,6 +18,7 @@
   },
   "additionalProperties": false,
   "required": [
+    "accountIds",
     "amount"
   ]
 }

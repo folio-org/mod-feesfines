@@ -1,9 +1,11 @@
 package org.folio.rest.service.action.validation;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.Collections.singletonMap;
 import static org.folio.rest.utils.AccountHelper.isClosed;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 import org.folio.rest.domain.MonetaryValue;
@@ -20,25 +22,15 @@ public class CancelActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
+  protected void validateAccountStatuses(List<Account> accounts) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  protected Future<MonetaryValue> calculateRemainingBalance(Account account,
-    MonetaryValue requestedAmount) {
+  public Future<ActionValidationResult> validate(String accountId, Account account,
+    String rawAmount) {
 
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  protected void validateAccountStatus(Account account) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Future<ActionValidationResult> validate(Account account, String rawAmount) {
-    validateIfAccountExists(account);
+    validateIfAccountsExist(singletonMap(accountId, account));
 
     if (isClosed(account)) {
       throw new FailedValidationException("Fee/fine is already closed");
@@ -47,5 +39,19 @@ public class CancelActionValidationService extends ActionValidationService {
     MonetaryValue remainingAmount = new MonetaryValue(BigDecimal.ZERO);
 
     return succeededFuture(new ActionValidationResult(remainingAmount, remainingAmount));
+  }
+
+  @Override
+  protected Future<Void> validateAmountMaximum(List<Account> accounts,
+    MonetaryValue requestedAmount) {
+
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  protected Future<MonetaryValue> calculateRemainingBalance(List<Account> accounts,
+    MonetaryValue requestedAmount) {
+
+    throw new UnsupportedOperationException();
   }
 }

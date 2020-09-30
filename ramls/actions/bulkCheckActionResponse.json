@@ -3,10 +3,13 @@
   "description": "Accounts check response",
   "type": "object",
   "properties": {
-    "accountId": {
-      "type": "string",
-      "description": "ID of users fine/fee account",
-      "$ref": "../uuid.json"
+    "accountIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "$ref": "../uuid.json"
+      },
+      "description": "IDs of multiple accounts"
     },
     "amount": {
       "type": "string",
@@ -27,8 +30,7 @@
   },
   "additionalProperties": false,
   "required": [
-    "accountId",
-    "amount",
+    "amounts",
     "allowed"
   ]
 }

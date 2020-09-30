@@ -1,8 +1,9 @@
 package org.folio.rest.impl;
 
 import static io.restassured.http.ContentType.JSON;
+import static java.lang.String.format;
 import static org.folio.rest.utils.ResourceClients.buildAccountCancelClient;
-import static org.folio.test.support.EntityBuilder.createAccount;
+import static org.folio.test.support.EntityBuilder.buildAccount;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 
@@ -50,16 +51,17 @@ public class AccountsCancelActionAPITests extends ApiTests {
   public void shouldReturn404WhenAccountDoesNotExist() {
     CancelActionRequest cancelActionRequest = createCancelActionRequest();
 
-    accountCancelClient = buildAccountCancelClient(randomId());
+    String accountId = randomId();
+    accountCancelClient = buildAccountCancelClient(accountId);
     accountCancelClient.attemptCreate(cancelActionRequest)
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
-      .body(equalTo("Fee/fine was not found"));
+      .body(equalTo(format("Fee/fine ID %s not found", accountId)));
   }
 
   @Test
   public void shouldReturn422WhenAccountIsClosed() {
-    Account account = createAccount();
+    Account account = buildAccount();
     account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
     postAccount(account);
 
@@ -81,7 +83,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
   }
 
   private Account postAccount() {
-    Account accountToPost = createAccount();
+    Account accountToPost = buildAccount();
     postAccount(accountToPost);
     return accountToPost;
   }

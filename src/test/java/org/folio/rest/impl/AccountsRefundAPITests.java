@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.http.ContentType.JSON;
+import static java.lang.String.format;
 import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
@@ -27,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
-import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.domain.MonetaryValue;
@@ -347,7 +347,7 @@ public class AccountsRefundAPITests extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
-      .body(equalTo("Fee/fine was not found"));
+      .body(equalTo(format("Fee/fine ID %s not found", ACCOUNT_ID)));
   }
 
   @Test
@@ -495,7 +495,7 @@ public class AccountsRefundAPITests extends ApiTests {
   }
 
   private Account createAccount(double amount, double remainingAmount) {
-    return EntityBuilder.createAccount(amount, remainingAmount)
+    return EntityBuilder.buildAccount(amount, remainingAmount)
       .withId(ACCOUNT_ID)
       .withUserId(USER_ID);
   }

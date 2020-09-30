@@ -67,7 +67,7 @@ public abstract class ActionService {
     DefaultActionRequest request = (DefaultActionRequest) context.getRequest();
     final String amount = request.getAmount();
 
-    return validationService.validate(context.getAccount(), amount)
+    return validationService.validate(context.getAccountId(), context.getAccount(), amount)
       .map(result -> context.withRequestedAmount(new MonetaryValue(amount)));
   }
 

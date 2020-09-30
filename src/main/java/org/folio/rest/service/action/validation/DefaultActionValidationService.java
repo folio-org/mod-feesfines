@@ -3,6 +3,7 @@ package org.folio.rest.service.action.validation;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.utils.AccountHelper.isClosedAndHasZeroRemainingAmount;
 
+import java.util.List;
 import java.util.Map;
 
 import org.folio.rest.domain.MonetaryValue;
@@ -24,15 +25,21 @@ public class DefaultActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected void validateAccountStatus(Account account) {
+  protected void validateAccountStatuses(List<Account> accounts) {
+    accounts.forEach(this::validateAccountStatus);
+  }
+
+  private void validateAccountStatus(Account account) {
     if (isClosedAndHasZeroRemainingAmount(account)) {
       throw new FailedValidationException("Fee/fine is already closed");
     }
   }
 
   @Override
-  protected Future<Void> validateAmountMaximum(Account account, MonetaryValue requestedAmount) {
-    if (requestedAmount.isGreaterThan(new MonetaryValue(account.getRemaining()))) {
+  protected Future<Void> validateAmountMaximum(List<Account> accounts,
+    MonetaryValue requestedAmount) {
+
+    if (requestedAmount.isGreaterThan(calculateTotalRemaining(accounts))) {
       throw new FailedValidationException("Requested amount exceeds remaining amount");
     }
 
@@ -40,10 +47,9 @@ public class DefaultActionValidationService extends ActionValidationService {
   }
 
   @Override
-  protected Future<MonetaryValue> calculateRemainingBalance(Account account,
+  protected Future<MonetaryValue> calculateRemainingBalance(List<Account> accounts,
     MonetaryValue requestedAmount) {
 
-    return succeededFuture(new MonetaryValue(account.getRemaining()).subtract(requestedAmount));
+    return succeededFuture(calculateTotalRemaining(accounts).subtract(requestedAmount));
   }
-
 }

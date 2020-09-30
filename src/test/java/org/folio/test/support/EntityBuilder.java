@@ -10,7 +10,7 @@ public class EntityBuilder {
 
   private EntityBuilder() {}
 
-  public static Account createAccount() {
+  public static Account buildAccount() {
     return new Account()
       .withId(randomId())
       .withOwnerId(randomId())
@@ -27,8 +27,8 @@ public class EntityBuilder {
       .withStatus(new Status().withName("Open"));
   }
 
-  public static Account createAccount(double amount, double remaining) {
-    return createAccount()
+  public static Account buildAccount(double amount, double remaining) {
+    return buildAccount()
       .withAmount(amount)
       .withRemaining(remaining);
   }

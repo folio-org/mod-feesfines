@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
+import static java.lang.String.format;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
@@ -90,7 +91,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
-      .body(equalTo("Fee/fine was not found"));
+      .body(equalTo(format("Fee/fine ID %s not found", ACCOUNT_ID)));
   }
 
   @Test
