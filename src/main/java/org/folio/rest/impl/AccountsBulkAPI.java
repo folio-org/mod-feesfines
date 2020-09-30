@@ -12,6 +12,7 @@ import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
 import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
+import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
@@ -33,6 +34,13 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     checkBulkAction(entity, asyncResultHandler,
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.PAY);
+  }
+
+  @Override
+  public void postAccountsBulkWaive(DefaultBulkActionRequest entity, Map<String,
+    String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
