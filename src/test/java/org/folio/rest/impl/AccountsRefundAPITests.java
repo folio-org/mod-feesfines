@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.http.ContentType.JSON;
+import static java.lang.String.format;
 import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
@@ -346,7 +347,7 @@ public class AccountsRefundAPITests extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
-      .body(equalTo("Fee/fine was not found"));
+      .body(equalTo(format("Fee/fine ID %s not found", ACCOUNT_ID)));
   }
 
   @Test

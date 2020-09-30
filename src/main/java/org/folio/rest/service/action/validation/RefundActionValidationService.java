@@ -30,9 +30,10 @@ public class RefundActionValidationService extends ActionValidationService {
 
   private Future<MonetaryValue> getRefundableAmount(List<Account> accounts) {
     // Sum of the refundable amounts of all accounts
-    return CompositeFuture.all(accounts.stream()
-      .map(this::getRefundableAmount)
-      .collect(Collectors.toList()))
+    return CompositeFuture.all(
+      accounts.stream()
+        .map(this::getRefundableAmount)
+        .collect(Collectors.toList()))
       .map(cf -> cf.list().stream()
         .filter(MonetaryValue.class::isInstance)
         .map(MonetaryValue.class::cast)

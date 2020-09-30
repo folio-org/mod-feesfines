@@ -1,6 +1,7 @@
 package org.folio.rest.service.action.validation;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.Collections.singletonMap;
 import static org.folio.rest.utils.AccountHelper.isClosed;
 
 import java.math.BigDecimal;
@@ -26,8 +27,10 @@ public class CancelActionValidationService extends ActionValidationService {
   }
 
   @Override
-  public Future<ActionValidationResult> validate(Account account, String rawAmount) {
-    validateIfAccountExists(account);
+  public Future<ActionValidationResult> validate(String accountId, Account account,
+    String rawAmount) {
+
+    validateIfAccountsExist(singletonMap(accountId, account));
 
     if (isClosed(account)) {
       throw new FailedValidationException("Fee/fine is already closed");
