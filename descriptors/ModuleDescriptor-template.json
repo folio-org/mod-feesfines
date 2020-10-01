@@ -54,7 +54,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"15.5",
+      "version":"15.6",
       "handlers":[
         {
           "methods":[
@@ -306,6 +306,15 @@
             "POST"
           ],
           "pathPattern":"/accounts-bulk/check-pay",
+          "permissionsRequired":[
+            "accounts.check-pay.post"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts-bulk/pay",
           "permissionsRequired":[
             "accounts.check-pay.post"
           ]
