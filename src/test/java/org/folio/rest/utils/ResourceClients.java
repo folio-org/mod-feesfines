@@ -54,6 +54,14 @@ public final class ResourceClients {
     return buildAccountBulkActionClient("check-pay");
   }
 
+  public static ResourceClient buildAccountBulkCheckWaiveClient() {
+    return buildAccountBulkActionClient("check-waive");
+  }
+
+  public static ResourceClient buildAccountBulkCheckTransferClient() {
+    return buildAccountBulkActionClient("check-transfer");
+  }
+
   private static ResourceClient buildAccountBulkActionClient(String action) {
     return new ResourceClient(format("/accounts-bulk/%s", action));
   }
