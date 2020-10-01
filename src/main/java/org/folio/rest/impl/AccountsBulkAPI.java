@@ -17,7 +17,9 @@ import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
 import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
-import org.folio.rest.service.action.BulkActionContext;
+import org.folio.rest.service.action.BulkPayActionService;
+import org.folio.rest.service.action.BulkWaiveActionService;
+import org.folio.rest.service.action.context.BulkActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
 import org.folio.rest.utils.ActionResultAdapter;
@@ -40,10 +42,14 @@ public class AccountsBulkAPI implements AccountsBulk {
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.PAY);
   }
 
-  @Override public void postAccountsBulkPay(DefaultBulkActionRequest request,
+  @Override
+  public void postAccountsBulkPay(DefaultBulkActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    new BulkPayActionService(okapiHeaders, vertxContext)
+      .performAction(request)
+      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.PAY));
   }
 
   @Override
@@ -51,6 +57,9 @@ public class AccountsBulkAPI implements AccountsBulk {
     String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    new BulkWaiveActionService(okapiHeaders, vertxContext)
+      .performAction(request)
+      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.WAIVE));
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,

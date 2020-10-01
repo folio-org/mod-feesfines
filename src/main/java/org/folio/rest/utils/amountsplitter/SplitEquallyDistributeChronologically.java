@@ -32,7 +32,7 @@ public class SplitEquallyDistributeChronologically implements BulkActionAmountSp
       .orElse(BigDecimal.ZERO));
 
     return accounts.stream()
-      .sorted(Comparator.comparingLong(account -> account.getDateCreated().getTime()))
+      .sorted(Comparator.comparingLong(account -> account.getMetadata().getCreatedDate().getTime()))
       .map(account -> {
         BigDecimal actionableAmount = actionableAmounts.get(account.getId()).getAmount();
         BigDecimal surplus = equalAmount.subtract(actionableAmount);

@@ -19,6 +19,7 @@ import org.folio.rest.jaxrs.resource.Accounts.PostAccountsTransferByAccountIdRes
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsWaiveByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckPayResponse;
+import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkPayResponse;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 
 public enum ActionResultAdapter {
@@ -35,10 +36,10 @@ public enum ActionResultAdapter {
     PostAccountsBulkCheckPayResponse::respond404WithTextPlain,
     PostAccountsBulkCheckPayResponse::respond422WithApplicationJson,
     PostAccountsBulkCheckPayResponse::respond500WithTextPlain,
-    null,
-    null,
-    null,
-    null
+    PostAccountsBulkPayResponse::respond201WithApplicationJson,
+    PostAccountsBulkPayResponse::respond404WithTextPlain,
+    PostAccountsBulkPayResponse::respond422WithApplicationJson,
+    PostAccountsBulkPayResponse::respond500WithTextPlain
   ),
   WAIVE(
     PostAccountsCheckWaiveByAccountIdResponse::respond200WithApplicationJson,

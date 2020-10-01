@@ -1,58 +1,57 @@
-package org.folio.rest.service.action;
+package org.folio.rest.service.action.context;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.folio.rest.domain.ActionRequest;
-import org.folio.rest.domain.BulkActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 
-public class BulkActionContext {
-  private final List<String> accountIds;
-  private final BulkActionRequest request;
+public class ActionContext {
+  private final String accountId;
+  private final ActionRequest request;
   private final List<Feefineaction> feeFineActions;
   private MonetaryValue requestedAmount;
-  private List<Account> accounts;
+  private Account account;
   private boolean shouldCloseAccount;
 
-  public BulkActionContext(List<String> accountIds, BulkActionRequest request) {
-    this.accountIds = accountIds;
+  public ActionContext(String accountId, ActionRequest request) {
+    this.accountId = accountId;
     this.request = request;
     this.feeFineActions = new ArrayList<>();
   }
 
-  public BulkActionContext withAccounts(List<Account> accounts) {
-    this.accounts = accounts;
+  public ActionContext withAccount(Account account) {
+    this.account = account;
     return this;
   }
 
-  public BulkActionContext withFeeFineAction(Feefineaction feeFineAction) {
+  public ActionContext withFeeFineAction(Feefineaction feeFineAction) {
     this.feeFineActions.add(feeFineAction);
     return this;
   }
 
-  public BulkActionContext withRequestedAmount(MonetaryValue requestedAmount) {
+  public ActionContext withRequestedAmount(MonetaryValue requestedAmount) {
     this.requestedAmount = requestedAmount;
     return this;
   }
 
-  public BulkActionContext withShouldCloseAccount(boolean shouldCloseAccount) {
+  public ActionContext withShouldCloseAccount(boolean shouldCloseAccount) {
     this.shouldCloseAccount = shouldCloseAccount;
     return this;
   }
 
-  public List<String> getAccountIds() {
-    return accountIds;
+  public String getAccountId() {
+    return accountId;
   }
 
   public ActionRequest getRequest() {
     return request;
   }
 
-  public List<Account> getAccounts() {
-    return accounts;
+  public Account getAccount() {
+    return account;
   }
 
   public List<Feefineaction> getFeeFineActions() {

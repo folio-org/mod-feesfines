@@ -316,7 +316,24 @@
           ],
           "pathPattern":"/accounts-bulk/pay",
           "permissionsRequired":[
-            "accounts.check-pay.post"
+            "accounts.pay.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts-bulk/waive",
+          "permissionsRequired":[
+            "accounts.waive.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
           ]
         },
         {
