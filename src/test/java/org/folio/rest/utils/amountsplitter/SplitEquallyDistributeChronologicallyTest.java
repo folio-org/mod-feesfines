@@ -1,4 +1,4 @@
-package org.folio.rest.utils;
+package org.folio.rest.utils.amountsplitter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -15,16 +15,16 @@ import org.folio.test.support.EntityBuilder;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-public class BulkActionAmountSplitterTest {
+public class SplitEquallyDistributeChronologicallyTest {
 
   @Test
-  public void didUniqueConstraintViolationOccurNullResponse() {
+  public void partialAmountShouldBeSplitCorrectly() {
     MonetaryValue requestedAmount = new MonetaryValue(50.0);
     List<Account> accounts = buildAccountsEqualSequential(10, 1, 1, new Date());
     Map<String, MonetaryValue> actionableAmounts = buildActionableAmountsEqualToRemaining(accounts);
 
-    Map<String, MonetaryValue> splitAmount = BulkActionAmountSplitter.splitEqually(requestedAmount,
-      accounts, actionableAmounts);
+    Map<String, MonetaryValue> splitAmount = new SplitEquallyDistributeChronologically()
+      .split(requestedAmount, accounts, actionableAmounts);
 
     assertEquals(10, splitAmount.size());
     assertEquals(1, numberOfValueOccurrences(splitAmount, 1.0));

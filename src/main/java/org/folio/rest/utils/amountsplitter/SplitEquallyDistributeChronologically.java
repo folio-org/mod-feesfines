@@ -1,4 +1,4 @@
-package org.folio.rest.utils;
+package org.folio.rest.utils.amountsplitter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,14 +12,14 @@ import org.assertj.core.data.MapEntry;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 
-public class BulkActionAmountSplitter {
-  public static Map<String, MonetaryValue> splitEqually(MonetaryValue totalRequestedAmount,
+public class SplitEquallyDistributeChronologically implements BulkActionAmountSplitterStrategy {
+  public Map<String, MonetaryValue> split(MonetaryValue totalRequestedAmount,
     List<Account> accounts, Map<String, MonetaryValue> actionableAmounts) {
 
     BigDecimal equalAmount = totalRequestedAmount.getAmount().divide(
       new BigDecimal(accounts.size()), RoundingMode.HALF_EVEN);
 
-    AtomicReference<BigDecimal> totalExtraAmount = new AtomicReference<>(accounts.stream()
+    AtomicReference<BigDecimal> totalSurplus = new AtomicReference<>(accounts.stream()
       .map(account -> {
         BigDecimal actionableAmount = actionableAmounts.get(account.getId()).getAmount();
         if (equalAmount.compareTo(actionableAmount) > 0) {
@@ -42,8 +42,8 @@ public class BulkActionAmountSplitter {
           calculatedActionAmount = actionableAmount;
         }
         else {
-          BigDecimal additionalAmount = surplus.abs().min(totalExtraAmount.get());
-          totalExtraAmount.set(totalExtraAmount.get().subtract(additionalAmount));
+          BigDecimal additionalAmount = surplus.abs().min(totalSurplus.get());
+          totalSurplus.set(totalSurplus.get().subtract(additionalAmount));
           calculatedActionAmount = equalAmount.add(additionalAmount);
         }
 
