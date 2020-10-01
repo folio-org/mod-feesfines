@@ -31,14 +31,15 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 public class AccountsBulkAPI implements AccountsBulk {
+
   private static final Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
 
   @Override
-  public void postAccountsBulkCheckPay(BulkCheckActionRequest request,
+  public void postAccountsBulkCheckPay(BulkCheckActionRequest entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkBulkAction(request, asyncResultHandler,
+    checkBulkAction(entity, asyncResultHandler,
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.PAY);
   }
 
@@ -77,6 +78,13 @@ public class AccountsBulkAPI implements AccountsBulk {
     new BulkWaiveActionService(okapiHeaders, vertxContext)
       .performAction(request)
       .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.WAIVE));
+  }
+
+  @Override
+  public void postAccountsBulkCheckRefund(BulkCheckActionRequest entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
