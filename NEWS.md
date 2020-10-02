@@ -1,3 +1,6 @@
+## 15.8.3 2020-10-02
+* Fixes memory leak (MODFEE-93)
+
 ## 15.8.2 2020-08-03
 * Extend/rename tokens available to manual fee/fine notices (MODFEE-72)
 * Fix incorrect formatting of monetary values in patron notices (MODFEE-87)
