@@ -44,10 +44,7 @@ public abstract class ActionValidationService {
   }
 
   public Future<ActionValidationResult> validateByIds(List<String> accountIds, String rawAmount) {
-    return accountRepository.getAccountsById(accountIds)
-      .map(accountsMap -> accountIds.stream()
-        .collect(HashMap<String, Account>::new, (m, v) -> m.put(v, accountsMap.get(v)),
-          HashMap::putAll))
+    return accountRepository.getAccountsByIdWithNulls(accountIds)
       .compose(accountsMap -> validate(accountsMap, rawAmount));
   }
 

@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.test.support.EntityBuilder;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -44,7 +45,7 @@ public class SplitEquallyDistributeChronologicallyTest {
       .mapToObj(num -> EntityBuilder.buildAccount()
         .withAmount(startAmount + num * step)
         .withRemaining(startAmount + num * step)
-        .withDateCreated(new DateTime(startDate).minusDays(num + 1).toDate())
+        .withMetadata(new Metadata().withCreatedDate(new DateTime(startDate).minusDays(num + 1).toDate()))
       )
     .collect(Collectors.toList());
   }

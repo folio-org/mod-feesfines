@@ -3,7 +3,10 @@ package org.folio.rest.impl;
 import static io.restassured.http.ContentType.JSON;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
+import static org.folio.rest.domain.Action.WAIVE;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckPayClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckTransferClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckWaiveClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckTransferClient;
@@ -17,6 +20,7 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
+import org.folio.rest.domain.Action;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
@@ -27,7 +31,10 @@ import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class AccountsActionChecksAPITests extends ApiTests {
 
   private static final String ACCOUNTS_TABLE = "accounts";
@@ -40,13 +47,20 @@ public class AccountsActionChecksAPITests extends ApiTests {
   private static final String ERROR_MESSAGE_INVALID_AMOUNT= "Invalid amount entered";
   private static final String ERROR_MESSAGE_ALREADY_CLOSED= "Fee/fine is already closed";
 
+  private final Action action;
+  private ResourceClient bulkClient;
+
   private Account firstAccount;
   private Account secondAccount;
   private ResourceClient accountsCheckPayClient;
   private ResourceClient accountsCheckWaiveClient;
   private ResourceClient accountsCheckTransferClient;
   private ResourceClient accountsCheckRefundClient;
-  private ResourceClient accountsBulkCheckPayClient;
+  private final ResourceClient accountsBulkCheckPayClient = buildAccountBulkCheckPayClient();
+  private final ResourceClient accountsBulkCheckWaiveClient = buildAccountBulkCheckWaiveClient();
+  private final ResourceClient accountsBulkCheckTransferClient = buildAccountBulkCheckTransferClient();
+
+
 
   @Before
   public void setUp() {
@@ -56,7 +70,29 @@ public class AccountsActionChecksAPITests extends ApiTests {
     accountsCheckWaiveClient = buildAccountCheckWaiveClient(firstAccount.getId());
     accountsCheckTransferClient = buildAccountCheckTransferClient(firstAccount.getId());
     accountsCheckRefundClient = buildAccountCheckRefundClient(firstAccount.getId());
-    accountsBulkCheckPayClient = buildAccountBulkCheckPayClient();
+    bulkClient = getAccountsBulkClient();
+  }
+
+  public AccountsActionChecksAPITests(Action action) {
+    this.action = action;
+  }
+
+  @Parameterized.Parameters(name = "{0}")
+  public static Object[] parameters() {
+    return new Object[] { PAY, WAIVE, TRANSFER };
+  }
+
+  private ResourceClient getAccountsBulkClient() {
+    switch (action) {
+      case PAY:
+        return accountsBulkCheckPayClient;
+      case WAIVE:
+        return accountsBulkCheckWaiveClient;
+      case TRANSFER:
+        return accountsBulkCheckTransferClient;
+      default:
+        throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
+    }
   }
 
   @Test
@@ -65,8 +101,8 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
-  public void bulkCheckPayAmountShouldBeAllowed() {
-    actionShouldBeAllowed(true, accountsBulkCheckPayClient, "7.87");
+  public void bulkCheckAmountShouldBeAllowed() {
+    actionShouldBeAllowed(true, bulkClient, "7.87");
   }
 
   @Test
@@ -108,8 +144,8 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
-  public void bulkCheckPayAmountShouldNotBeAllowedWithExceededAmount() {
-    actionCheckAmountShouldNotBeAllowedWithExceededAmount(true, accountsBulkCheckPayClient);
+  public void bulkCheckAmountShouldNotBeAllowedWithExceededAmount() {
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(true, bulkClient);
   }
 
   @Test
@@ -134,8 +170,8 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
-  public void bulkCheckPayAmountShouldNotBeAllowedWithNegativeAmount() {
-    actionShouldNotBeAllowed(true, accountsBulkCheckPayClient, "-5.0",
+  public void bulkCheckAmountShouldNotBeAllowedWithNegativeAmount() {
+    actionShouldNotBeAllowed(true, bulkClient, "-5.0",
       ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
@@ -164,8 +200,8 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
-  public void bulkCheckPayAmountShouldNotBeAllowedWithZeroAmount() {
-    actionShouldNotBeAllowed(true, accountsBulkCheckPayClient, "0.0",
+  public void bulkCheckAmountShouldNotBeAllowedWithZeroAmount() {
+    actionShouldNotBeAllowed(true, bulkClient, "0.0",
       ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
@@ -194,8 +230,8 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
-  public void bulkCheckPayAmountShouldBeNumeric() {
-    actionShouldNotBeAllowed(true, accountsBulkCheckPayClient, "abc",
+  public void bulkCheckAmountShouldBeNumeric() {
+    actionShouldNotBeAllowed(true, bulkClient, "abc",
       ERROR_MESSAGE_INVALID_AMOUNT);
   }
 
@@ -224,9 +260,9 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
-  public void bulkCheckPayAmountShouldNotFailForNonExistentAccount() {
+  public void bulkCheckAmountShouldNotFailForNonExistentAccount() {
     removeAllFromTable(ACCOUNTS_TABLE);
-    actionCheckShouldNotFailForNonExistentAccount(true, accountsBulkCheckPayClient);
+    actionCheckShouldNotFailForNonExistentAccount(true, bulkClient);
   }
 
   @Test
@@ -254,8 +290,8 @@ public class AccountsActionChecksAPITests extends ApiTests {
   }
 
   @Test
-  public void bulkCheckPayAmountShouldNotBeAllowedForClosedAccount() {
-    actionCheckAmountShouldNotBeAllowedForClosedAccount(true, accountsBulkCheckPayClient);
+  public void bulkCheckAmountShouldNotBeAllowedForClosedAccount() {
+    actionCheckAmountShouldNotBeAllowedForClosedAccount(true, bulkClient);
   }
 
   @Test

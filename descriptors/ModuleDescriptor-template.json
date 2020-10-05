@@ -314,6 +314,24 @@
           "methods":[
             "POST"
           ],
+          "pathPattern":"/accounts-bulk/check-transfer",
+          "permissionsRequired":[
+            "accounts.check-transfer.post"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts-bulk/check-waive",
+          "permissionsRequired":[
+            "accounts.check-waive.post"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
           "pathPattern":"/accounts-bulk/pay",
           "permissionsRequired":[
             "accounts.pay.post"

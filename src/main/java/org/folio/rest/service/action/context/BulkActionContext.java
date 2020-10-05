@@ -1,6 +1,7 @@
 package org.folio.rest.service.action.context;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ public class BulkActionContext {
   public BulkActionContext(BulkActionRequest request) {
     this.request = request;
     this.feeFineActions = new ArrayList<>();
+    this.accounts = new HashMap<>();
   }
 
   public BulkActionContext withAccounts(Map<String, Account> accounts) {
