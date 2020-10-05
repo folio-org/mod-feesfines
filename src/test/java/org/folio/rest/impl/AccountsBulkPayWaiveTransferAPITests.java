@@ -6,12 +6,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static org.folio.rest.domain.Action.PAY;
-import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
-import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
-import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
-import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountBulkPayClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountBulkWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -20,17 +19,17 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.ActionFailureResponse;
-import org.folio.rest.jaxrs.model.DefaultActionRequest;
+import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
@@ -48,21 +47,30 @@ import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 
 @RunWith(value = Parameterized.class)
-public class AccountsPayWaiveTransferAPITests extends ApiTests {
-  private static final String ACCOUNT_ID = randomId();
+public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
   private static final String FEE_FINE_ACTIONS = "feefineactions";
+
+  private static final String AMOUNT_KEY = "amount";
+  private static final String ACCOUNT_IDS_KEY = "accountIds";
+  private static final String ERROR_MESSAGE_KEY = "errorMessage";
+
+  private static final String USER_ID = randomId();
+  private static final String FIRST_ACCOUNT_ID = randomId();
+  private static final String SECOND_ACCOUNT_ID = randomId();
+  private static final List<String> FIRST_ACCOUNT_ID_AS_LIST = singletonList(FIRST_ACCOUNT_ID);
+  private static final List<String> TWO_ACCOUNT_IDS = Arrays.asList(FIRST_ACCOUNT_ID, SECOND_ACCOUNT_ID);
 
   private final ResourceClient actionsClient = feeFineActionsClient();
   private final Action action;
   private ResourceClient resourceClient;
 
-  public AccountsPayWaiveTransferAPITests(Action action) {
+  public AccountsBulkPayWaiveTransferAPITests(Action action) {
     this.action = action;
   }
 
   @Parameters(name = "{0}")
   public static Object[] parameters() {
-    return new Object[] { PAY, WAIVE, TRANSFER };
+    return new Object[] { PAY, WAIVE };
   }
 
   @Before
@@ -75,11 +83,9 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
   private ResourceClient getClient() {
     switch (action) {
     case PAY:
-      return buildAccountPayClient(ACCOUNT_ID);
+      return buildAccountBulkPayClient();
     case WAIVE:
-      return buildAccountWaiveClient(ACCOUNT_ID);
-    case TRANSFER:
-      return buildAccountTransferClient(ACCOUNT_ID);
+      return buildAccountBulkWaiveClient();
     default:
       throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
     }
@@ -87,11 +93,11 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
 
   @Test
   public void return404WhenAccountDoesNotExist() {
-    resourceClient.post(createRequestJson(String.valueOf(10.0)))
+    resourceClient.post(createRequestJson(String.valueOf(10.0), FIRST_ACCOUNT_ID_AS_LIST))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
-      .body(equalTo(format("Fee/fine ID %s not found", ACCOUNT_ID)));
+      .body(equalTo(format("Fee/fine ID %s not found", FIRST_ACCOUNT_ID)));
   }
 
   @Test
@@ -105,38 +111,49 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
   }
 
   private void testRequestWithNonPositiveAmount(double amount) {
-    postAccount(createAccount(1.0));
+    postAccount(createAccount(FIRST_ACCOUNT_ID, 1.0));
 
     String amountString = String.valueOf(amount);
 
-    ActionFailureResponse expectedResponse = new ActionFailureResponse()
-      .withAmount(amountString)
-      .withAccountId(ACCOUNT_ID)
-      .withErrorMessage("Amount must be positive");
-
-    resourceClient.post(createRequestJson(amountString))
+    resourceClient.post(createRequestJson(amountString, FIRST_ACCOUNT_ID_AS_LIST))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
-      .body(equalTo(toJson(expectedResponse)));
+      .body(AMOUNT_KEY, is(amountString))
+      .body(ACCOUNT_IDS_KEY, hasItem(FIRST_ACCOUNT_ID))
+      .body(ERROR_MESSAGE_KEY, is("Amount must be positive"));
   }
 
   @Test
   public void return422WhenRequestedAmountIsInvalidString() {
-    postAccount(createAccount(1.0));
+    postAccount(createAccount(FIRST_ACCOUNT_ID, 1.0));
 
     String invalidAmount = "eleven";
 
-    ActionFailureResponse expectedResponse = new ActionFailureResponse()
-      .withAmount(invalidAmount)
-      .withAccountId(ACCOUNT_ID)
-      .withErrorMessage("Invalid amount entered");
-
-    resourceClient.post(createRequestJson(invalidAmount))
+    resourceClient.post(createRequestJson(invalidAmount, FIRST_ACCOUNT_ID_AS_LIST))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
-      .body(equalTo(toJson(expectedResponse)));
+      .body(AMOUNT_KEY, is(invalidAmount))
+      .body(ACCOUNT_IDS_KEY, hasItem(FIRST_ACCOUNT_ID))
+      .body(ERROR_MESSAGE_KEY, is("Invalid amount entered"));
+  }
+
+  @Test
+  public void return422WhenRequestedAmountExceedsRemainingAmount() {
+    postAccount(createAccount(FIRST_ACCOUNT_ID, 1.0));
+    postAccount(createAccount(SECOND_ACCOUNT_ID, 1.0));
+
+    String requestedAmount = "3.0";
+
+    resourceClient.post(createRequestJson(requestedAmount, TWO_ACCOUNT_IDS))
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .contentType(JSON)
+      .body(AMOUNT_KEY, is(requestedAmount))
+      .body(ACCOUNT_IDS_KEY, hasItem(FIRST_ACCOUNT_ID))
+      .body(ACCOUNT_IDS_KEY, hasItem(SECOND_ACCOUNT_ID))
+      .body(ERROR_MESSAGE_KEY, is("Requested amount exceeds remaining amount"));
   }
 
   @Test
@@ -151,41 +168,40 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
   }
 
   private void return422WhenAccountIsEffectivelyClosed(double remainingAmount) {
-    Account account = createAccount(remainingAmount + 1).withRemaining(remainingAmount);
-    account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
-    postAccount(account);
+    Account closedAccount = createAccount(FIRST_ACCOUNT_ID, remainingAmount)
+      .withAmount(remainingAmount + 1)
+      .withStatus(new Status().withName(FeeFineStatus.CLOSED.getValue()));
+
+    postAccount(closedAccount);
 
     String requestedAmount = "1.23";
 
-    ActionFailureResponse expectedResponse = new ActionFailureResponse()
-      .withAmount(requestedAmount)
-      .withAccountId(ACCOUNT_ID)
-      .withErrorMessage("Fee/fine is already closed");
-
-    resourceClient.post(createRequestJson(requestedAmount))
+    resourceClient.post(createRequestJson(requestedAmount, FIRST_ACCOUNT_ID_AS_LIST))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
-      .body(equalTo(toJson(expectedResponse)));
+      .body(AMOUNT_KEY, is(requestedAmount))
+      .body(ACCOUNT_IDS_KEY, hasItem(FIRST_ACCOUNT_ID))
+      .body(ERROR_MESSAGE_KEY, is("Fee/fine is already closed"));
   }
 
   @Test
   public void longDecimalsAreHandledCorrectlyAndAccountIsClosed() {
     double accountBalanceBeforeAction = 1.004987654321;
-    final Account account = createAccount(accountBalanceBeforeAction);
+    final Account account = createAccount(FIRST_ACCOUNT_ID, accountBalanceBeforeAction);
     postAccount(account);
 
     String requestedAmountString = "1.004123456789";
     String expectedPaymentStatus = action.getFullResult();
 
-    final ActionRequest request = createRequest(requestedAmountString);
+    DefaultBulkActionRequest request = createRequest(requestedAmountString, FIRST_ACCOUNT_ID_AS_LIST);
 
     resourceClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
-      .body("amount", is("1.00"))
-      .body("accountId", is(ACCOUNT_ID));
+      .body(AMOUNT_KEY, is("1.00"))
+      .body(ACCOUNT_IDS_KEY, hasItem(FIRST_ACCOUNT_ID));
 
     actionsClient.getAll()
       .then()
@@ -196,7 +212,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    accountsClient.getById(ACCOUNT_ID)
+    accountsClient.getById(FIRST_ACCOUNT_ID)
       .then()
       .body("remaining", is(0.0f))
       .body("status.name", is("Closed"))
@@ -206,20 +222,20 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
   @Test
   public void longDecimalsAreHandledCorrectly() {
     double accountBalanceBeforeAction = 1.23987654321; // should be rounded to 1.24
-    final Account account = createAccount(accountBalanceBeforeAction);
+    Account account = createAccount(FIRST_ACCOUNT_ID, accountBalanceBeforeAction);
     postAccount(account);
 
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
     String expectedPaymentStatus = action.getPartialResult();
 
-    final ActionRequest request = createRequest(requestedAmountString);
+    DefaultBulkActionRequest request = createRequest(requestedAmountString, FIRST_ACCOUNT_ID_AS_LIST);
 
     resourceClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
-      .body("amount", is("1.00"))
-      .body("accountId", is(ACCOUNT_ID));
+      .body(AMOUNT_KEY, is("1.00"))
+      .body(ACCOUNT_IDS_KEY, hasItem(FIRST_ACCOUNT_ID));
 
     actionsClient.getAll()
       .then()
@@ -230,7 +246,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    accountsClient.getById(ACCOUNT_ID)
+    accountsClient.getById(FIRST_ACCOUNT_ID)
       .then()
       .body("remaining", is(0.24f))
       .body("status.name", is("Open"))
@@ -238,69 +254,84 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
   }
 
   @Test
-  public void partialActionCreatesActionAndUpdatesAccount() {
-    paymentCreatesActionAndUpdatesAccount(false);
-  }
+  public void paymentCreatesActionsAndUpdatesAccounts() {
+    double remainingAmount1 = 2.0;
+    double remainingAmount2 = 1.5;
+    String requestedAmount = "3.00";
 
-  @Test
-  public void fullActionCreatesActionAndClosesAccount() {
-    paymentCreatesActionAndUpdatesAccount(true);
-  }
+    Account account1 = createAccount(FIRST_ACCOUNT_ID, remainingAmount1);
+    Account account2 = createAccount(SECOND_ACCOUNT_ID, remainingAmount2);
 
-  private void paymentCreatesActionAndUpdatesAccount(boolean terminalAction) {
-    double accountBalanceBefore = 3.45;
-    double requestedAmount = terminalAction ? accountBalanceBefore : accountBalanceBefore - 1.0;
-    double expectedAccountBalanceAfter = accountBalanceBefore - requestedAmount;
+    postAccount(account1);
+    postAccount(account2);
 
-    final Account account = createAccount(accountBalanceBefore);
-    postAccount(account);
-
-    String expectedPaymentStatus = terminalAction ? action.getFullResult() : action.getPartialResult();
-    String expectedAccountStatus = terminalAction ? "Closed" : "Open";
-    String requestedAmountString = String.valueOf(requestedAmount);
-
-    final DefaultActionRequest request = createRequest(requestedAmountString);
+    DefaultBulkActionRequest request = createRequest(requestedAmount, TWO_ACCOUNT_IDS);
 
     resourceClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
-      .body("amount", is(requestedAmountString))
-      .body("accountId", is(ACCOUNT_ID));
+      .body(AMOUNT_KEY, is(requestedAmount))
+      .body(ACCOUNT_IDS_KEY, is(TWO_ACCOUNT_IDS));
+
+    double expectedActionAmount = 1.5;
+    double expectedRemainingAmount1 = 0.5;
+    double expectedRemainingAmount2 = 0.0;
+
+    String expectedPaymentStatus1 = action.getPartialResult();
+    String expectedPaymentStatus2 = action.getFullResult();
+
+    String expectedAccountStatus1 = FeeFineStatus.OPEN.getValue();
+    String expectedAccountStatus2 = FeeFineStatus.CLOSED.getValue();
 
     actionsClient.getAll()
       .then()
-      .body(FEE_FINE_ACTIONS, hasSize(1))
-      .body(FEE_FINE_ACTIONS, hasItem(
-        feeFineAction(ACCOUNT_ID, account.getUserId(), expectedAccountBalanceAfter, requestedAmount,
-        expectedPaymentStatus, request.getTransactionInfo(), request))
+      .body(FEE_FINE_ACTIONS, hasSize(2))
+      .body(FEE_FINE_ACTIONS, allOf(
+        hasItem(
+          feeFineAction(FIRST_ACCOUNT_ID, account1.getUserId(), expectedRemainingAmount1,
+            expectedActionAmount, expectedPaymentStatus1, request.getTransactionInfo(), request)),
+        hasItem(
+          feeFineAction(SECOND_ACCOUNT_ID, account2.getUserId(), expectedRemainingAmount2,
+            expectedActionAmount, expectedPaymentStatus2, request.getTransactionInfo(), request)))
       );
 
-    accountsClient.getById(ACCOUNT_ID)
+    accountsClient.getById(FIRST_ACCOUNT_ID)
       .then()
-      .body("remaining", is((float) expectedAccountBalanceAfter))
-      .body("status.name", is(expectedAccountStatus))
-      .body("paymentStatus.name", is(expectedPaymentStatus));
+      .body("remaining", is((float) expectedRemainingAmount1))
+      .body("status.name", is(expectedAccountStatus1))
+      .body("paymentStatus.name", is(expectedPaymentStatus1));
+
+    accountsClient.getById(SECOND_ACCOUNT_ID)
+      .then()
+      .body("remaining", is((float) expectedRemainingAmount2))
+      .body("status.name", is(expectedAccountStatus2))
+      .body("paymentStatus.name", is(expectedPaymentStatus2));
 
     verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
-      .put("userId", account.getUserId())
-      .put("feeFineId", account.getId())
-      .put("feeFineTypeId", account.getFeeFineId())
-      .put("balance", account.getRemaining())
-      .put("loanId", account.getLoanId()));
+      .put("userId", account1.getUserId())
+      .put("feeFineId", account1.getId())
+      .put("feeFineTypeId", account1.getFeeFineId())
+      .put("balance", expectedRemainingAmount1)
+      .put("loanId", account1.getLoanId()));
 
-    if (terminalAction && account.getLoanId() != null) {
-      verifyThatEventWasSent(EventType.LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
-        .put("loanId", account.getLoanId())
-        .put("feeFineId", account.getId()));
-    }
+    verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
+      .put("userId", account2.getUserId())
+      .put("feeFineId", account2.getId())
+      .put("feeFineTypeId", account2.getFeeFineId())
+      .put("balance", expectedRemainingAmount2)
+      .put("loanId", account2.getLoanId()));
+
+    verifyThatEventWasSent(EventType.LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
+      .put("loanId", account2.getLoanId())
+      .put("feeFineId", account2.getId()));
   }
 
-  private Account createAccount(double amount) {
+  private Account createAccount(String accountId, double amount) {
     return new Account()
-      .withId(ACCOUNT_ID)
+      .withId(accountId)
       .withOwnerId(randomId())
-      .withUserId(randomId())
+      .withUserId(USER_ID)
       .withItemId(randomId())
       .withLoanId(randomId())
       .withMaterialTypeId(randomId())
@@ -320,9 +351,10 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .contentType(JSON);
   }
 
-  private static DefaultActionRequest createRequest(String amount) {
-    return new DefaultActionRequest()
+  private static DefaultBulkActionRequest createRequest(String amount, List<String> accountIds) {
+    return new DefaultBulkActionRequest()
       .withAmount(amount)
+      .withAccountIds(accountIds)
       .withPaymentMethod("Cash")
       .withServicePointId(randomId())
       .withTransactionInfo("Check #12345")
@@ -331,8 +363,8 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .withComments("STAFF : staff comment \\n PATRON : patron comment");
   }
 
-  private static String createRequestJson(String amount) {
-    return toJson(createRequest(amount));
+  private static String createRequestJson(String amount, List<String> accountIds) {
+    return toJson(createRequest(amount, accountIds));
   }
 
   private static String toJson(Object object) {

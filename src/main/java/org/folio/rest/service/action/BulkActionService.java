@@ -67,7 +67,7 @@ public abstract class BulkActionService {
   }
 
   private Future<BulkActionContext> findAccounts(BulkActionContext context) {
-    return accountRepository.getAccountsById(context.getRequest().getAccountIds())
+    return accountRepository.getAccountsByIdWithNulls(context.getRequest().getAccountIds())
       .map(context::withAccounts);
   }
 
