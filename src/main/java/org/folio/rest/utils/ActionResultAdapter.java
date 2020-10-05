@@ -10,16 +10,19 @@ import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
 import org.folio.rest.jaxrs.model.CheckActionResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsCancelByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsCheckPayByAccountIdResponse;
-import org.folio.rest.jaxrs.resource.Accounts.PostAccountsCheckWaiveByAccountIdResponse;
-import org.folio.rest.jaxrs.resource.Accounts.PostAccountsCheckTransferByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsCheckRefundByAccountIdResponse;
+import org.folio.rest.jaxrs.resource.Accounts.PostAccountsCheckTransferByAccountIdResponse;
+import org.folio.rest.jaxrs.resource.Accounts.PostAccountsCheckWaiveByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsPayByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsRefundByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsTransferByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsWaiveByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckPayResponse;
+import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckTransferResponse;
+import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckWaiveResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkPayResponse;
+import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkWaiveResponse;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 
 public enum ActionResultAdapter {
@@ -50,14 +53,14 @@ public enum ActionResultAdapter {
     PostAccountsWaiveByAccountIdResponse::respond404WithTextPlain,
     PostAccountsWaiveByAccountIdResponse::respond422WithApplicationJson,
     PostAccountsWaiveByAccountIdResponse::respond500WithTextPlain,
-    null,
-    null,
-    null,
-    null,
-    AccountsBulk.PostAccountsBulkWaiveResponse::respond201WithApplicationJson,
-    AccountsBulk.PostAccountsBulkWaiveResponse::respond404WithTextPlain,
-    AccountsBulk.PostAccountsBulkWaiveResponse::respond422WithApplicationJson,
-    AccountsBulk.PostAccountsBulkWaiveResponse::respond500WithTextPlain
+    PostAccountsBulkCheckWaiveResponse::respond200WithApplicationJson,
+    PostAccountsBulkCheckWaiveResponse::respond404WithTextPlain,
+    PostAccountsBulkCheckWaiveResponse::respond422WithApplicationJson,
+    PostAccountsBulkCheckWaiveResponse::respond500WithTextPlain,
+    PostAccountsBulkWaiveResponse::respond201WithApplicationJson,
+    PostAccountsBulkWaiveResponse::respond404WithTextPlain,
+    PostAccountsBulkWaiveResponse::respond422WithApplicationJson,
+    PostAccountsBulkWaiveResponse::respond500WithTextPlain
   ),
   TRANSFER(
     PostAccountsCheckTransferByAccountIdResponse::respond200WithApplicationJson,
@@ -68,10 +71,10 @@ public enum ActionResultAdapter {
     PostAccountsTransferByAccountIdResponse::respond404WithTextPlain,
     PostAccountsTransferByAccountIdResponse::respond422WithApplicationJson,
     PostAccountsTransferByAccountIdResponse::respond500WithTextPlain,
-    null,
-    null,
-    null,
-    null,
+    PostAccountsBulkCheckTransferResponse::respond200WithApplicationJson,
+    PostAccountsBulkCheckTransferResponse::respond404WithTextPlain,
+    PostAccountsBulkCheckTransferResponse::respond422WithApplicationJson,
+    PostAccountsBulkCheckTransferResponse::respond500WithTextPlain,
     null,
     null,
     null,

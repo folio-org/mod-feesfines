@@ -43,7 +43,24 @@ public class AccountsBulkAPI implements AccountsBulk {
   }
 
   @Override
-  public void postAccountsBulkPay(DefaultBulkActionRequest request,
+  public void postAccountsBulkCheckTransfer(BulkCheckActionRequest entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    checkBulkAction(entity, asyncResultHandler,
+      new DefaultActionValidationService(okapiHeaders, vertxContext), Action.TRANSFER);
+  }
+
+  @Override
+  public void postAccountsBulkCheckWaive(BulkCheckActionRequest entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    checkBulkAction(entity, asyncResultHandler,
+      new DefaultActionValidationService(okapiHeaders, vertxContext), Action.WAIVE);
+  }
+
+  @Override public void postAccountsBulkPay(DefaultBulkActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
