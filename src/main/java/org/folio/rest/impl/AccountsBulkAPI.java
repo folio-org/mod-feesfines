@@ -22,6 +22,7 @@ import org.folio.rest.service.action.BulkWaiveActionService;
 import org.folio.rest.service.action.context.BulkActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
+import org.folio.rest.service.action.validation.RefundActionValidationService;
 import org.folio.rest.utils.ActionResultAdapter;
 
 import io.vertx.core.AsyncResult;
@@ -84,7 +85,8 @@ public class AccountsBulkAPI implements AccountsBulk {
   public void postAccountsBulkCheckRefund(BulkCheckActionRequest entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
+    checkBulkAction(entity, asyncResultHandler,
+      new RefundActionValidationService(okapiHeaders, vertxContext), Action.REFUND);
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
