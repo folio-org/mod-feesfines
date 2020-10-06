@@ -25,7 +25,6 @@ public class AccountsActionBulkCheckPayWaiveTransferAPITests extends AccountsAct
   private final ResourceClient accountsBulkCheckWaiveClient = buildAccountBulkCheckWaiveClient();
   private final ResourceClient accountsBulkCheckTransferClient = buildAccountBulkCheckTransferClient();
 
-
   @Before
   public void setUp() {
     firstAccount = createAccount();

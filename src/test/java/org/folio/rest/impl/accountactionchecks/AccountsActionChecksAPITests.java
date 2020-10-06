@@ -26,7 +26,6 @@ public class AccountsActionChecksAPITests extends AccountsActionChecksAPITestsBa
     accountsCheckTransferClient = buildAccountCheckTransferClient(firstAccount.getId());
   }
 
-
   @Test
   public void checkPayAmountShouldBeAllowed() {
     actionShouldBeAllowed(false, accountsCheckPayClient, "3.32");

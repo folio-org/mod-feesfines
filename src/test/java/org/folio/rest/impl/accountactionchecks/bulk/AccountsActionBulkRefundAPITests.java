@@ -15,7 +15,6 @@ import org.junit.Test;
 
 public class AccountsActionBulkRefundAPITests extends AccountsActionChecksAPITestsBase {
 
-
   private static final ResourceClient accountsBulkCheckRefundClient = buildAccountBulkCheckRefundClient();
   private ResourceClient accountsCheckRefundClient;
 

@@ -34,7 +34,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   private static final String REQUESTED_AMOUNT_STRING = String.valueOf(REQUESTED_AMOUNT);
 
   protected void actionShouldNotBeAllowed(boolean bulk,
-                                          ResourceClient accountsActionCheckClient, String amount, String errorMessage) {
+    ResourceClient accountsActionCheckClient, String amount, String errorMessage) {
 
     accountsActionCheckClient.attemptCreate(createRequest(bulk, amount))
       .then()
@@ -48,7 +48,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   }
 
   protected void actionShouldBeAllowed(boolean bulk, ResourceClient actionCheckClient,
-                                       String remaining) {
+    String remaining) {
 
     final var request = createRequest(bulk,
       REQUESTED_AMOUNT_STRING);
@@ -64,7 +64,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   }
 
   protected void actionCheckAmountShouldNotBeAllowedWithExceededAmount(boolean bulk,
-                                                                       ResourceClient actionCheckClient) {
+    ResourceClient actionCheckClient) {
 
     String expectedErrorMessage = "Requested amount exceeds remaining amount";
     String amount = String.valueOf(bulk ? ACCOUNT_REMAINING_AMOUNT * 2 + 1 : REQUESTED_AMOUNT
@@ -100,7 +100,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   }
 
   protected void actionCheckShouldNotFailForNonExistentAccount(boolean bulk,
-                                                               ResourceClient actionCheckClient) {
+    ResourceClient actionCheckClient) {
 
     actionCheckClient.attemptCreate(createRequest(bulk,
       REQUESTED_AMOUNT_STRING))
@@ -109,7 +109,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   }
 
   protected void actionCheckAmountShouldNotBeAllowedForClosedAccount(boolean bulk,
-                                                                     ResourceClient client) {
+    ResourceClient client) {
 
     closeAllAccounts();
 
