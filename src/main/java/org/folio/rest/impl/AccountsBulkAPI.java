@@ -22,6 +22,7 @@ import org.folio.rest.service.action.BulkWaiveActionService;
 import org.folio.rest.service.action.context.BulkActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
+import org.folio.rest.service.action.validation.RefundActionValidationService;
 import org.folio.rest.utils.ActionResultAdapter;
 
 import io.vertx.core.AsyncResult;
@@ -31,14 +32,15 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 public class AccountsBulkAPI implements AccountsBulk {
+
   private static final Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
 
   @Override
-  public void postAccountsBulkCheckPay(BulkCheckActionRequest request,
+  public void postAccountsBulkCheckPay(BulkCheckActionRequest entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkBulkAction(request, asyncResultHandler,
+    checkBulkAction(entity, asyncResultHandler,
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.PAY);
   }
 
@@ -77,6 +79,14 @@ public class AccountsBulkAPI implements AccountsBulk {
     new BulkWaiveActionService(okapiHeaders, vertxContext)
       .performAction(request)
       .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.WAIVE));
+  }
+
+  @Override
+  public void postAccountsBulkCheckRefund(BulkCheckActionRequest entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+    checkBulkAction(entity, asyncResultHandler,
+      new RefundActionValidationService(okapiHeaders, vertxContext), Action.REFUND);
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
