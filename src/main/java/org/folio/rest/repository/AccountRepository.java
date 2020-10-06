@@ -54,6 +54,14 @@ public class AccountRepository {
     return promise.future();
   }
 
+  public Future<Map<String, Account>> getAccountsByIdWithNulls(List<String> accountIds) {
+    return getAccountsById(accountIds)
+      .map(accountsMap -> accountIds.stream()
+        // keys are ALL requested IDs, value is null if not found
+        .collect(HashMap<String, Account>::new, (m, v) -> m.put(v, accountsMap.get(v)), HashMap::putAll)
+      );
+  }
+
   public Future<Account> update(Account account) {
     Promise<RowSet<Row>> promise = Promise.promise();
     pgClient.update(ACCOUNTS_TABLE, account, account.getId(), promise);

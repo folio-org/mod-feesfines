@@ -8,11 +8,18 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.domain.Action;
+import org.folio.rest.domain.BulkActionRequest;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
+import org.folio.rest.jaxrs.model.BulkActionFailureResponse;
+import org.folio.rest.jaxrs.model.BulkActionSuccessResponse;
 import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
 import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
+import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
+import org.folio.rest.service.action.BulkPayActionService;
+import org.folio.rest.service.action.BulkWaiveActionService;
+import org.folio.rest.service.action.context.BulkActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
 import org.folio.rest.utils.ActionResultAdapter;
@@ -24,15 +31,14 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 public class AccountsBulkAPI implements AccountsBulk {
-
   private static final Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
 
   @Override
-  public void postAccountsBulkCheckPay(BulkCheckActionRequest entity,
+  public void postAccountsBulkCheckPay(BulkCheckActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkBulkAction(entity, asyncResultHandler,
+    checkBulkAction(request, asyncResultHandler,
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.PAY);
   }
 
@@ -52,6 +58,25 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     checkBulkAction(entity, asyncResultHandler,
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.WAIVE);
+  }
+
+  @Override public void postAccountsBulkPay(DefaultBulkActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new BulkPayActionService(okapiHeaders, vertxContext)
+      .performAction(request)
+      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.PAY));
+  }
+
+  @Override
+  public void postAccountsBulkWaive(DefaultBulkActionRequest request, Map<String,
+    String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new BulkWaiveActionService(okapiHeaders, vertxContext)
+      .performAction(request)
+      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.WAIVE));
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
@@ -112,5 +137,45 @@ public class AccountsBulkAPI implements AccountsBulk {
     }
 
     return bulkCheckActionResponse;
+  }
+
+  private void handleActionResult(BulkActionRequest request,
+    AsyncResult<BulkActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
+    Action action) {
+
+    ActionResultAdapter resultAdapter = action.getActionResultAdapter();
+    if (resultAdapter == null) {
+      String errorMessage = "Unprocessable action: " + action.name();
+      logger.error(errorMessage);
+      asyncResultHandler.handle(succeededFuture(AccountsBulk.PostAccountsBulkPayResponse
+        .respond500WithTextPlain(errorMessage)));
+      return;
+    }
+
+    if (asyncResult.succeeded()) {
+      final BulkActionContext actionContext = asyncResult.result();
+      BulkActionSuccessResponse response = new BulkActionSuccessResponse()
+        .withAccountIds(request.getAccountIds());
+      if (actionContext.getRequestedAmount() != null) {
+        response.withAmount(actionContext.getRequestedAmount().toString());
+      }
+      asyncResultHandler.handle(succeededFuture(resultAdapter.bulkAction201.apply(response)));
+    } else if (asyncResult.failed()) {
+      final Throwable cause = asyncResult.cause();
+      String errorMessage = cause.getLocalizedMessage();
+      if (cause instanceof FailedValidationException) {
+        BulkActionFailureResponse response = new BulkActionFailureResponse()
+          .withAccountIds(request.getAccountIds())
+          .withErrorMessage(errorMessage);
+        if (Action.CANCEL != action) {
+          response.withAmount(((DefaultBulkActionRequest) request).getAmount());
+        }
+        asyncResultHandler.handle(succeededFuture(resultAdapter.bulkAction422.apply(response)));
+      } else if (cause instanceof AccountNotFoundValidationException) {
+        asyncResultHandler.handle(succeededFuture(resultAdapter.bulkAction404.apply(errorMessage)));
+      } else {
+        asyncResultHandler.handle(succeededFuture(resultAdapter.bulkAction500.apply(errorMessage)));
+      }
+    }
   }
 }

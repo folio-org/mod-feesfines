@@ -54,7 +54,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"15.5",
+      "version":"15.6",
       "handlers":[
         {
           "methods":[
@@ -316,7 +316,7 @@
           ],
           "pathPattern":"/accounts-bulk/check-transfer",
           "permissionsRequired":[
-            "accounts.bulk.check-transfer.post"
+            "accounts.check-transfer.post"
           ]
         },
         {
@@ -325,7 +325,33 @@
           ],
           "pathPattern":"/accounts-bulk/check-waive",
           "permissionsRequired":[
-            "accounts.bulk.check-waive.post"
+            "accounts.check-waive.post"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts-bulk/pay",
+          "permissionsRequired":[
+            "accounts.pay.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/accounts-bulk/waive",
+          "permissionsRequired":[
+            "accounts.waive.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
           ]
         },
         {
@@ -883,16 +909,6 @@
       "permissionName":"accounts.check-pay.post",
       "displayName":"accounts payment check post",
       "description":"Checks if payment is allowed"
-    },
-    {
-      "permissionName":"accounts.bulk.check-transfer.post",
-      "displayName":"accounts transfer check",
-      "description":"Checks if transfer is allowed"
-    },
-    {
-      "permissionName":"accounts.bulk.check-waive.post",
-      "displayName":"accounts waive check",
-      "description":"Checks if waive is allowed"
     },
     {
       "permissionName":"accounts.check-waive.post",

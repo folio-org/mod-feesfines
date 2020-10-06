@@ -8,10 +8,46 @@ documentation:
     content: This documents the API calls for bulk actions against accounts
 
 types:
+  errors: !include raml-util/schemas/errors.schema
   bulkCheckActionRequest: !include actions/bulkCheckActionRequest.json
   bulkCheckActionResponse: !include actions/bulkCheckActionResponse.json
+  defaultBulkActionRequest: !include actions/defaultBulkActionRequest.json
+  bulkActionSuccessResponse: !include actions/bulkActionSuccessResponse.json
+  bulkActionFailureResponse: !include actions/bulkActionFailureResponse.json
+
+traits:
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
+  bulk-action:
+    description: "Performs an action on multiple accounts"
+    post:
+      is: [validate]
+      description: "Perform an action"
+      body:
+        application/json:
+          type: defaultBulkActionRequest
+      responses:
+        201:
+          description: "Action was performed successfully"
+          body:
+            application/json:
+              type: bulkActionSuccessResponse
+        404:
+          description: "Fee/fine was not found"
+          body:
+            text/plain:
+              example: "Fee/fine was not found"
+        422:
+          description: "Action is not allowed"
+          body:
+            application/json:
+              type: bulkActionFailureResponse
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error, please contact administrator"
   bulk-check-action:
       description: "Checks if the requested action is allowed"
       post:
@@ -44,11 +80,13 @@ resourceTypes:
 /accounts-bulk:
   /check-pay:
     type: bulk-check-action
-
   /check-transfer:
     type:
       bulk-check-action
-
   /check-waive:
     type:
       bulk-check-action
+  /pay:
+    type: bulk-action
+  /waive:
+    type: bulk-action

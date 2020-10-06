@@ -4,6 +4,8 @@ import java.util.function.Function;
 
 import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.ActionSuccessResponse;
+import org.folio.rest.jaxrs.model.BulkActionFailureResponse;
+import org.folio.rest.jaxrs.model.BulkActionSuccessResponse;
 import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
 import org.folio.rest.jaxrs.model.CheckActionResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsCancelByAccountIdResponse;
@@ -15,9 +17,12 @@ import org.folio.rest.jaxrs.resource.Accounts.PostAccountsPayByAccountIdResponse
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsRefundByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsTransferByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsWaiveByAccountIdResponse;
+import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckPayResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckTransferResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckWaiveResponse;
+import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkPayResponse;
+import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkWaiveResponse;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 
 public enum ActionResultAdapter {
@@ -34,10 +39,10 @@ public enum ActionResultAdapter {
     PostAccountsBulkCheckPayResponse::respond404WithTextPlain,
     PostAccountsBulkCheckPayResponse::respond422WithApplicationJson,
     PostAccountsBulkCheckPayResponse::respond500WithTextPlain,
-    null,
-    null,
-    null,
-    null
+    PostAccountsBulkPayResponse::respond201WithApplicationJson,
+    PostAccountsBulkPayResponse::respond404WithTextPlain,
+    PostAccountsBulkPayResponse::respond422WithApplicationJson,
+    PostAccountsBulkPayResponse::respond500WithTextPlain
   ),
   WAIVE(
     PostAccountsCheckWaiveByAccountIdResponse::respond200WithApplicationJson,
@@ -52,10 +57,10 @@ public enum ActionResultAdapter {
     PostAccountsBulkCheckWaiveResponse::respond404WithTextPlain,
     PostAccountsBulkCheckWaiveResponse::respond422WithApplicationJson,
     PostAccountsBulkCheckWaiveResponse::respond500WithTextPlain,
-    null,
-    null,
-    null,
-    null
+    PostAccountsBulkWaiveResponse::respond201WithApplicationJson,
+    PostAccountsBulkWaiveResponse::respond404WithTextPlain,
+    PostAccountsBulkWaiveResponse::respond422WithApplicationJson,
+    PostAccountsBulkWaiveResponse::respond500WithTextPlain
   ),
   TRANSFER(
     PostAccountsCheckTransferByAccountIdResponse::respond200WithApplicationJson,
@@ -124,9 +129,9 @@ public enum ActionResultAdapter {
   public final Function<String, ResponseDelegate> bulkCheck404;
   public final Function<BulkCheckActionResponse, ResponseDelegate> bulkCheck422;
   public final Function<String, ResponseDelegate> bulkCheck500;
-  public final Function<ActionSuccessResponse, ResponseDelegate> bulkAction201;
+  public final Function<BulkActionSuccessResponse, ResponseDelegate> bulkAction201;
   public final Function<String, ResponseDelegate> bulkAction404;
-  public final Function<ActionFailureResponse, ResponseDelegate> bulkAction422;
+  public final Function<BulkActionFailureResponse, ResponseDelegate> bulkAction422;
   public final Function<String, ResponseDelegate> bulkAction500;
 
   ActionResultAdapter(Function<CheckActionResponse, ResponseDelegate> check200,
@@ -141,9 +146,9 @@ public enum ActionResultAdapter {
     Function<String, ResponseDelegate> bulkCheck404,
     Function<BulkCheckActionResponse, ResponseDelegate> bulkCheck422,
     Function<String, ResponseDelegate> bulkCheck500,
-    Function<ActionSuccessResponse, ResponseDelegate> bulkAction201,
+    Function<BulkActionSuccessResponse, ResponseDelegate> bulkAction201,
     Function<String, ResponseDelegate> bulkAction404,
-    Function<ActionFailureResponse, ResponseDelegate> bulkAction422,
+    Function<BulkActionFailureResponse, ResponseDelegate> bulkAction422,
     Function<String, ResponseDelegate> bulkAction500) {
 
     this.check200 = check200;
