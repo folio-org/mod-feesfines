@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.service.action.BulkPayActionService;
+import org.folio.rest.service.action.BulkTransferActionService;
 import org.folio.rest.service.action.BulkWaiveActionService;
 import org.folio.rest.service.action.context.BulkActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
@@ -77,6 +78,16 @@ public class AccountsBulkAPI implements AccountsBulk {
     new BulkWaiveActionService(okapiHeaders, vertxContext)
       .performAction(request)
       .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.WAIVE));
+  }
+
+  @Override
+  public void postAccountsBulkTransfer(DefaultBulkActionRequest request,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new BulkTransferActionService(okapiHeaders, vertxContext)
+      .performAction(request)
+      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.TRANSFER));
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
