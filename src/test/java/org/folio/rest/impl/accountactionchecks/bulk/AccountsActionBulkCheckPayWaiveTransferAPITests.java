@@ -6,10 +6,6 @@ import static org.folio.rest.domain.Action.WAIVE;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckWaiveClient;
-import static org.folio.rest.utils.ResourceClients.buildAccountCheckPayClient;
-import static org.folio.rest.utils.ResourceClients.buildAccountCheckRefundClient;
-import static org.folio.rest.utils.ResourceClients.buildAccountCheckTransferClient;
-import static org.folio.rest.utils.ResourceClients.buildAccountCheckWaiveClient;
 
 import org.folio.rest.domain.Action;
 import org.folio.rest.impl.accountactionchecks.AccountsActionChecksAPITestsBase;
@@ -24,8 +20,6 @@ public class AccountsActionBulkCheckPayWaiveTransferAPITests extends AccountsAct
 
   private final Action action;
   private ResourceClient bulkClient;
-  private static final String ERROR_MESSAGE_MUST_BE_POSITIVE = "Amount must be positive";
-  private static final String ERROR_MESSAGE_INVALID_AMOUNT = "Invalid amount entered";
 
   private final ResourceClient accountsBulkCheckPayClient = buildAccountBulkCheckPayClient();
   private final ResourceClient accountsBulkCheckWaiveClient = buildAccountBulkCheckWaiveClient();

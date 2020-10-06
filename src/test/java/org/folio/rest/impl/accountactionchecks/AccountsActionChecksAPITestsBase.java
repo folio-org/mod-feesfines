@@ -23,12 +23,14 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   protected Account firstAccount;
   protected Account secondAccount;
 
-  public static final String ACCOUNTS_TABLE = "accounts";
-  public static final String ERROR_MESSAGE_ALREADY_CLOSED = "Fee/fine is already closed";
+  protected static final String ACCOUNTS_TABLE = "accounts";
+  protected static final String ERROR_MESSAGE_ALREADY_CLOSED = "Fee/fine is already closed";
+  protected static final double ACCOUNT_INITIAL_AMOUNT = 9.00;
+  protected static final double ACCOUNT_REMAINING_AMOUNT = 4.55;
+  protected static final double REQUESTED_AMOUNT = 1.23;
+  protected static final String ERROR_MESSAGE_MUST_BE_POSITIVE = "Amount must be positive";
+  protected static final String ERROR_MESSAGE_INVALID_AMOUNT = "Invalid amount entered";
 
-  private static final double ACCOUNT_INITIAL_AMOUNT = 9.00;
-  private static final double ACCOUNT_REMAINING_AMOUNT = 4.55;
-  private static final double REQUESTED_AMOUNT = 1.23;
   private static final String REQUESTED_AMOUNT_STRING = String.valueOf(REQUESTED_AMOUNT);
 
   protected void actionShouldNotBeAllowed(boolean bulk,
@@ -48,8 +50,10 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   protected void actionShouldBeAllowed(boolean bulk, ResourceClient actionCheckClient,
                                        String remaining) {
 
-    actionCheckClient.attemptCreate(createRequest(bulk,
-      REQUESTED_AMOUNT_STRING))
+    final var request = createRequest(bulk,
+      REQUESTED_AMOUNT_STRING);
+    final var response = actionCheckClient.attemptCreate(request);
+    response
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("allowed", is(true))
