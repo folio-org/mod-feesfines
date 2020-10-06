@@ -29,7 +29,7 @@ import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.service.action.context.BulkActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.utils.amountsplitter.BulkActionAmountSplitterStrategy;
-import org.folio.rest.utils.amountsplitter.SplitEquallyDistributeChronologically;
+import org.folio.rest.utils.amountsplitter.SplitEvenlyRecursively;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -54,7 +54,7 @@ public abstract class BulkActionService {
     this.accountUpdateService = new AccountUpdateService(headers, context);
     this.patronNoticeService = new PatronNoticeService(context.owner(), headers);
     this.validationService = validationService;
-    this.amountSplitterStrategy = new SplitEquallyDistributeChronologically();
+    this.amountSplitterStrategy = new SplitEvenlyRecursively();
   }
 
   public Future<BulkActionContext> performAction(BulkActionRequest request) {

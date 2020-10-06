@@ -145,7 +145,10 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     ActionResultAdapter resultAdapter = action.getActionResultAdapter();
     if (resultAdapter == null) {
-      logger.error("Unprocessable action: " + action.name());
+      String errorMessage = "Unprocessable action: " + action.name();
+      logger.error(errorMessage);
+      asyncResultHandler.handle(succeededFuture(AccountsBulk.PostAccountsBulkPayResponse
+        .respond500WithTextPlain(errorMessage)));
       return;
     }
 

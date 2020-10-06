@@ -37,7 +37,6 @@ public class BulkActionContext {
     return this;
   }
 
-
   public BulkActionRequest getRequest() {
     return request;
   }
