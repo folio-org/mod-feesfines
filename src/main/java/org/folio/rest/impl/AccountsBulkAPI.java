@@ -90,6 +90,13 @@ public class AccountsBulkAPI implements AccountsBulk {
   }
 
   @Override
+  public void postAccountsBulkCancel(DefaultBulkActionRequest entity, Map<String,
+    String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+  }
+
+  @Override
   public void postAccountsBulkTransfer(DefaultBulkActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
