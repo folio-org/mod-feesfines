@@ -17,7 +17,6 @@ import org.folio.rest.jaxrs.resource.Accounts.PostAccountsPayByAccountIdResponse
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsRefundByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsTransferByAccountIdResponse;
 import org.folio.rest.jaxrs.resource.Accounts.PostAccountsWaiveByAccountIdResponse;
-import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckPayResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckRefundResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckTransferResponse;

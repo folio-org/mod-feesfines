@@ -27,6 +27,10 @@ public class EntityBuilder {
       .withStatus(new Status().withName("Open"));
   }
 
+  public static Account buildAccount(String accountId) {
+    return buildAccount().withId(accountId);
+  }
+
   public static Account buildAccount(double amount, double remaining) {
     return buildAccount()
       .withAmount(amount)

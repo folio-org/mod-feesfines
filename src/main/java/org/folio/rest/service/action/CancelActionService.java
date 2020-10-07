@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -26,8 +25,6 @@ public class CancelActionService extends ActionService {
     final CancelActionRequest request = (CancelActionRequest) context.getRequest();
     final Account account = context.getAccount();
 
-    MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining());
-
     Feefineaction feeFineAction = new Feefineaction()
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
@@ -35,7 +32,8 @@ public class CancelActionService extends ActionService {
       .withSource(request.getUserName())
       .withAccountId(context.getAccountId())
       .withUserId(account.getUserId())
-      .withBalance(remainingAmountAfterAction.toDouble())
+      .withBalance(0.0)
+      .withAmountAction(account.getAmount())
       .withTypeAction(action.getFullResult())
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date())
