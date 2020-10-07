@@ -15,6 +15,7 @@ import org.folio.rest.jaxrs.model.BulkActionFailureResponse;
 import org.folio.rest.jaxrs.model.BulkActionSuccessResponse;
 import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
 import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
+import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.service.action.BulkPayActionService;
@@ -90,10 +91,18 @@ public class AccountsBulkAPI implements AccountsBulk {
   }
 
   @Override
-  public void postAccountsBulkCancel(DefaultBulkActionRequest entity, Map<String,
+  public void postAccountsBulkCancel(CancelBulkActionRequest entity, Map<String,
     String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
+//
+//    final var cancelActionService = new CancelActionService(okapiHeaders, vertxContext);
+//
+//    entity.getAccountIds().stream().forEach(accountId-> {
+//      cancelActionService
+//        .performAction(accountId, request)
+//        .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+//          Action.CANCEL));
+//    });
   }
 
   @Override

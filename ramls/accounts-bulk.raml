@@ -12,6 +12,7 @@ types:
   bulkCheckActionRequest: !include actions/bulkCheckActionRequest.json
   bulkCheckActionResponse: !include actions/bulkCheckActionResponse.json
   defaultBulkActionRequest: !include actions/defaultBulkActionRequest.json
+  cancelBulkActionRequest: !include actions/cancelBulkActionRequest.json
   bulkActionSuccessResponse: !include actions/bulkActionSuccessResponse.json
   bulkActionFailureResponse: !include actions/bulkActionFailureResponse.json
 
@@ -93,4 +94,31 @@ resourceTypes:
   /transfer:
     type: bulk-action
   /cancel:
-    type: bulk-action
+    description: "Performs an action on multiple accounts"
+    post:
+      is: [validate]
+      description: "Perform an action"
+      body:
+        application/json:
+          type: cancelBulkActionRequest
+      responses:
+        200:
+          description: "Action is allowed"
+          body:
+            application/json:
+              type: bulkCheckActionResponse
+        404:
+          description: "Fee/fine was not found"
+          body:
+            text/plain:
+              example: "Fee/fine was not found"
+        422:
+          description: "Action is not allowed"
+          body:
+            application/json:
+              type: bulkCheckActionResponse
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
