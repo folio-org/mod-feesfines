@@ -165,7 +165,8 @@ public class AccountsBulkAPI implements AccountsBulk {
     if (asyncResult.succeeded()) {
       final BulkActionContext actionContext = asyncResult.result();
       BulkActionSuccessResponse response = new BulkActionSuccessResponse()
-        .withAccountIds(request.getAccountIds());
+        .withAccountIds(request.getAccountIds())
+        .withFeefineactions(actionContext.getFeeFineActions());
       if (actionContext.getRequestedAmount() != null) {
         response.withAmount(actionContext.getRequestedAmount().toString());
       }
