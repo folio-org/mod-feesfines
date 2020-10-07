@@ -11,14 +11,23 @@
       },
       "description": "IDs of multiple accounts"
     },
+    "feefineactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "../feefineactiondata.json"
+      },
+      "description": "Fee/fine actions created during a bulk action"
+    },
     "amount": {
       "type": "string",
-      "description": "Action amount"
+      "description": "Action total amount"
     }
   },
   "additionalProperties": false,
   "required": [
     "accountIds",
+    "feefineactions",
     "amount"
   ]
 }
