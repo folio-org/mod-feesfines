@@ -323,6 +323,15 @@
           "methods":[
             "POST"
           ],
+          "pathPattern":"/accounts-bulk/check-refund",
+          "permissionsRequired":[
+            "accounts.check-refund.post"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
           "pathPattern":"/accounts-bulk/check-waive",
           "permissionsRequired":[
             "accounts.check-waive.post"

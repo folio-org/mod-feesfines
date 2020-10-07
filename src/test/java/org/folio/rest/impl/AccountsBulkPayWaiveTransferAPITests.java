@@ -39,6 +39,7 @@ import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.util.pubsub.PubSubClientUtils;
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -271,13 +272,6 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
 
     DefaultBulkActionRequest request = createRequest(requestedAmount, TWO_ACCOUNT_IDS);
 
-    resourceClient.post(toJson(request))
-      .then()
-      .statusCode(HttpStatus.SC_CREATED)
-      .contentType(JSON)
-      .body(AMOUNT_KEY, is(requestedAmount))
-      .body(ACCOUNT_IDS_KEY, is(TWO_ACCOUNT_IDS));
-
     double expectedActionAmount = 1.5;
     double expectedRemainingAmount1 = 0.5;
     double expectedRemainingAmount2 = 0.0;
@@ -288,17 +282,26 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
     String expectedAccountStatus1 = FeeFineStatus.OPEN.getValue();
     String expectedAccountStatus2 = FeeFineStatus.CLOSED.getValue();
 
+    Matcher<JsonObject> feeFineActionsMatcher = allOf(
+      hasItem(
+        feeFineAction(FIRST_ACCOUNT_ID, account1.getUserId(), expectedRemainingAmount1,
+          expectedActionAmount, expectedPaymentStatus1, request.getTransactionInfo(), request)),
+      hasItem(
+        feeFineAction(SECOND_ACCOUNT_ID, account2.getUserId(), expectedRemainingAmount2,
+          expectedActionAmount, expectedPaymentStatus2, request.getTransactionInfo(), request)));
+
+    resourceClient.post(toJson(request))
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .contentType(JSON)
+      .body(AMOUNT_KEY, is(requestedAmount))
+      .body(ACCOUNT_IDS_KEY, is(TWO_ACCOUNT_IDS))
+      .body(FEE_FINE_ACTIONS, feeFineActionsMatcher);
+
     actionsClient.getAll()
       .then()
       .body(FEE_FINE_ACTIONS, hasSize(2))
-      .body(FEE_FINE_ACTIONS, allOf(
-        hasItem(
-          feeFineAction(FIRST_ACCOUNT_ID, account1.getUserId(), expectedRemainingAmount1,
-            expectedActionAmount, expectedPaymentStatus1, request.getTransactionInfo(), request)),
-        hasItem(
-          feeFineAction(SECOND_ACCOUNT_ID, account2.getUserId(), expectedRemainingAmount2,
-            expectedActionAmount, expectedPaymentStatus2, request.getTransactionInfo(), request)))
-      );
+      .body(FEE_FINE_ACTIONS, feeFineActionsMatcher);
 
     accountsClient.getById(FIRST_ACCOUNT_ID)
       .then()

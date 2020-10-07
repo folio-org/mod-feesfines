@@ -23,6 +23,7 @@ import org.folio.rest.service.action.BulkWaiveActionService;
 import org.folio.rest.service.action.context.BulkActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
+import org.folio.rest.service.action.validation.RefundActionValidationService;
 import org.folio.rest.utils.ActionResultAdapter;
 
 import io.vertx.core.AsyncResult;
@@ -59,6 +60,14 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     checkBulkAction(entity, asyncResultHandler,
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.WAIVE);
+  }
+
+  @Override
+  public void postAccountsBulkCheckRefund(BulkCheckActionRequest entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+    checkBulkAction(entity, asyncResultHandler,
+      new RefundActionValidationService(okapiHeaders, vertxContext), Action.REFUND);
   }
 
   @Override public void postAccountsBulkPay(DefaultBulkActionRequest request,
@@ -166,7 +175,8 @@ public class AccountsBulkAPI implements AccountsBulk {
     if (asyncResult.succeeded()) {
       final BulkActionContext actionContext = asyncResult.result();
       BulkActionSuccessResponse response = new BulkActionSuccessResponse()
-        .withAccountIds(request.getAccountIds());
+        .withAccountIds(request.getAccountIds())
+        .withFeefineactions(actionContext.getFeeFineActions());
       if (actionContext.getRequestedAmount() != null) {
         response.withAmount(actionContext.getRequestedAmount().toString());
       }
