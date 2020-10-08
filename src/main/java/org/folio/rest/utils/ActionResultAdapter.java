@@ -22,6 +22,7 @@ import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckRefundRes
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckTransferResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkCheckWaiveResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkPayResponse;
+import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkRefundResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkTransferResponse;
 import org.folio.rest.jaxrs.resource.AccountsBulk.PostAccountsBulkWaiveResponse;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
@@ -112,10 +113,10 @@ public enum ActionResultAdapter {
     PostAccountsBulkCheckRefundResponse::respond404WithTextPlain,
     PostAccountsBulkCheckRefundResponse::respond422WithApplicationJson,
     PostAccountsBulkCheckRefundResponse::respond500WithTextPlain,
-    null,
-    null,
-    null,
-    null
+    PostAccountsBulkRefundResponse::respond201WithApplicationJson,
+    PostAccountsBulkRefundResponse::respond404WithTextPlain,
+    PostAccountsBulkRefundResponse::respond422WithApplicationJson,
+    PostAccountsBulkRefundResponse::respond500WithTextPlain
   );
 
   public final Function<CheckActionResponse, ResponseDelegate> check200;
