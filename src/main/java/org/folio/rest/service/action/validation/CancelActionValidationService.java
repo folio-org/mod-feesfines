@@ -17,6 +17,8 @@ import io.vertx.core.Future;
 
 public class CancelActionValidationService extends ActionValidationService {
 
+  private static final String FEEFINE_CLOSED_MSG = "Fee/fine is already closed";
+
   public CancelActionValidationService(Map<String, String> headers, Context context) {
     super(headers, context);
   }
@@ -33,8 +35,18 @@ public class CancelActionValidationService extends ActionValidationService {
     validateIfAccountsExist(singletonMap(accountId, account));
 
     if (isClosed(account)) {
-      throw new FailedValidationException("Fee/fine is already closed");
+      throw new FailedValidationException(FEEFINE_CLOSED_MSG);
     }
+
+    MonetaryValue remainingAmount = new MonetaryValue(BigDecimal.ZERO);
+
+    return succeededFuture(new ActionValidationResult(remainingAmount, remainingAmount));
+  }
+
+  @Override
+  public Future<ActionValidationResult> validate(Map<String, Account> accounts, String rawAmount) {
+
+    accounts.forEach((accountId, account) -> validate(accountId, account, rawAmount));
 
     MonetaryValue remainingAmount = new MonetaryValue(BigDecimal.ZERO);
 

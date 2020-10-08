@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
 import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
+import org.folio.rest.service.action.BulkCancelActionService;
 import org.folio.rest.service.action.BulkPayActionService;
 import org.folio.rest.service.action.BulkTransferActionService;
 import org.folio.rest.service.action.BulkWaiveActionService;
@@ -91,18 +92,15 @@ public class AccountsBulkAPI implements AccountsBulk {
   }
 
   @Override
-  public void postAccountsBulkCancel(CancelBulkActionRequest entity, Map<String,
+  public void postAccountsBulkCancel(CancelBulkActionRequest request, Map<String,
     String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-//
-//    final var cancelActionService = new CancelActionService(okapiHeaders, vertxContext);
-//
-//    entity.getAccountIds().stream().forEach(accountId-> {
-//      cancelActionService
-//        .performAction(accountId, request)
-//        .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
-//          Action.CANCEL));
-//    });
+
+    new BulkCancelActionService(okapiHeaders, vertxContext)
+      .performAction(request)
+      .onComplete(result -> {
+        handleActionResult(request, result, asyncResultHandler, Action.CANCEL);
+      });
   }
 
   @Override
@@ -200,6 +198,7 @@ public class AccountsBulkAPI implements AccountsBulk {
     } else if (asyncResult.failed()) {
       final Throwable cause = asyncResult.cause();
       String errorMessage = cause.getLocalizedMessage();
+      logger.error(errorMessage, cause);
       if (cause instanceof FailedValidationException) {
         BulkActionFailureResponse response = new BulkActionFailureResponse()
           .withAccountIds(request.getAccountIds())

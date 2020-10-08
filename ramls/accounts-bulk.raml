@@ -102,11 +102,11 @@ resourceTypes:
         application/json:
           type: cancelBulkActionRequest
       responses:
-        200:
-          description: "Action is allowed"
+        201:
+          description: "Action was performed successfully"
           body:
             application/json:
-              type: bulkCheckActionResponse
+              type: bulkActionSuccessResponse
         404:
           description: "Fee/fine was not found"
           body:
@@ -116,9 +116,9 @@ resourceTypes:
           description: "Action is not allowed"
           body:
             application/json:
-              type: bulkCheckActionResponse
+              type: bulkActionFailureResponse
         500:
           description: "Internal server error"
           body:
             text/plain:
-              example: "Internal server error"
+              example: "Internal server error, please contact administrator"

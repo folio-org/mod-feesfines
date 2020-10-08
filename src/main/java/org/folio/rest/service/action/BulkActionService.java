@@ -57,6 +57,22 @@ public abstract class BulkActionService {
     this.amountSplitterStrategy = new SplitEvenlyRecursively();
   }
 
+  public BulkActionService(Action action, ActionValidationService validationService,
+                           BulkActionAmountSplitterStrategy bulkActionAmountSplitterStrategy,
+                           Map<String, String> headers, Context context) {
+
+    PostgresClient postgresClient = getInstance(context.owner(), tenantId(headers));
+
+    this.action = action;
+    this.accountRepository = new AccountRepository(postgresClient);
+    this.feeFineActionRepository = new FeeFineActionRepository(postgresClient);
+    this.accountUpdateService = new AccountUpdateService(headers, context);
+    this.patronNoticeService = new PatronNoticeService(context.owner(), headers);
+    this.validationService = validationService;
+    this.amountSplitterStrategy = bulkActionAmountSplitterStrategy;
+  }
+
+
   public Future<BulkActionContext> performAction(BulkActionRequest request) {
     return succeededFuture(new BulkActionContext(request))
       .compose(this::findAccounts)
@@ -67,6 +83,7 @@ public abstract class BulkActionService {
   }
 
   private Future<BulkActionContext> findAccounts(BulkActionContext context) {
+
     return accountRepository.getAccountsByIdWithNulls(context.getRequest().getAccountIds())
       .map(context::withAccounts);
   }
@@ -79,7 +96,8 @@ public abstract class BulkActionService {
   }
 
   protected Future<BulkActionContext> createFeeFineActions(BulkActionContext context) {
-    final DefaultBulkActionRequest request = (DefaultBulkActionRequest) context.getRequest();
+
+    final var request = context.getRequest();
     final List<Account> accounts = new ArrayList<>(context.getAccounts().values());
     final MonetaryValue requestedAmount = context.getRequestedAmount();
 
@@ -101,7 +119,6 @@ public abstract class BulkActionService {
   protected Feefineaction createFeeFineActionAndUpdateAccount(Account account, MonetaryValue amount,
     BulkActionRequest request) {
 
-    final DefaultBulkActionRequest defaultRequest = (DefaultBulkActionRequest) request;
     final MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining())
       .subtract(amount);
     boolean isFullAction = remainingAmountAfterAction.isZero();
@@ -110,17 +127,21 @@ public abstract class BulkActionService {
     final Feefineaction feeFineAction = new Feefineaction()
       .withAmountAction(amount.toDouble())
       .withComments(request.getComments())
-      .withNotify(request.getNotifyPatron())
-      .withTransactionInformation(((DefaultBulkActionRequest) request).getTransactionInfo())
       .withCreatedAt(request.getServicePointId())
       .withSource(request.getUserName())
-      .withPaymentMethod(defaultRequest.getPaymentMethod())
       .withAccountId(account.getId())
       .withUserId(account.getUserId())
       .withBalance(remainingAmountAfterAction.toDouble())
       .withTypeAction(actionType)
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date());
+
+    if (request instanceof DefaultBulkActionRequest) {
+      DefaultBulkActionRequest defaultBulkActionRequest = (DefaultBulkActionRequest) request;
+      feeFineAction.setPaymentMethod(defaultBulkActionRequest.getPaymentMethod());
+      feeFineAction.setNotify(defaultBulkActionRequest.getNotifyPatron());
+      feeFineAction.setTransactionInformation(defaultBulkActionRequest.getTransactionInfo());
+    }
 
     account.getPaymentStatus().setName(actionType);
 
