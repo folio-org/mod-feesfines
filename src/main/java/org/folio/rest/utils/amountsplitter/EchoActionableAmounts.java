@@ -6,7 +6,7 @@ import java.util.Map;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 
-public class DummyBulkSplitterStrategy implements BulkActionAmountSplitterStrategy {
+public class EchoActionableAmounts implements BulkActionAmountSplitterStrategy {
   @Override
   public Map<String, MonetaryValue> split(MonetaryValue totalRequestedAmount,
     List<Account> accounts, Map<String, MonetaryValue> actionableAmounts) {

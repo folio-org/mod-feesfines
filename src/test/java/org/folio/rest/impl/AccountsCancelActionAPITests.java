@@ -12,10 +12,13 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.BulkActionRequest;
@@ -26,6 +29,7 @@ import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
+import org.folio.test.support.EntityBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -115,10 +119,14 @@ public class AccountsCancelActionAPITests extends ApiTests {
 
   @Test
   public void bulkCancelActionShouldCancelAccount() {
-    Account accountToPost = postAccount();
+    List<String> accountIds = List.of(randomId(), randomId());
+    List<Account> accountsToPost = accountIds.stream()
+      .map(EntityBuilder::buildAccount)
+      .collect(Collectors.toList());
 
-    final var id = accountToPost.getId();
-    final var cancelActionRequest = createBulkCancelActionRequest(List.of(id));
+    accountsToPost.forEach(this::postAccount);
+
+    final var cancelActionRequest = createBulkCancelActionRequest(accountIds);
 
     final var resp = accountBulkCancelClient.attemptCreate(cancelActionRequest)
       .then()
@@ -126,27 +134,35 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .log().body()
       .extract().as(BulkActionSuccessResponse.class);
 
-    Assert.assertThat(resp.getAccountIds(), contains(id));
+    Assert.assertThat(resp.getAccountIds(),
+      containsInAnyOrder(accountIds.get(0), accountIds.get(1)));
 
-    accountsClient.getById(ACCOUNT_ID)
+    accountIds.forEach(accountId -> accountsClient.getById(accountId)
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON)
       .body("status.name", is("Closed"))
       .body("paymentStatus.name", is("Cancelled as error"))
-      .body("remaining", is(0.0f));
+      .body("remaining", is(0.0f)));
 
     actionsClient.getAll()
       .then()
       .log().body()
-      .body(FEE_FINE_ACTIONS, hasSize(1))
+      .body(FEE_FINE_ACTIONS, hasSize(2))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
-        hasJsonPath("amountAction", is((float) accountToPost.getAmount().doubleValue())),
+        hasJsonPath("accountId", is(accountIds.get(0))),
+        hasJsonPath("amountAction", is((float) accountsToPost.get(0).getAmount().doubleValue())),
         hasJsonPath("balance", is(0.0f)),
         hasJsonPath("typeAction", is("Cancelled as error"))
-      )));
+      )))
+      .body(FEE_FINE_ACTIONS, hasItem(allOf(
+        hasJsonPath("accountId", is(accountIds.get(1))),
+        hasJsonPath("amountAction", is((float) accountsToPost.get(1).getAmount().doubleValue())),
+        hasJsonPath("balance", is(0.0f)),
+        hasJsonPath("typeAction", is("Cancelled as error"))
+        )
+      ));
   }
-
 
   private CancelActionRequest createCancelActionRequest() {
     return new CancelActionRequest()

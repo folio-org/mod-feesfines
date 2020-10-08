@@ -95,7 +95,7 @@ public abstract class BulkActionService {
   }
 
   protected Future<BulkActionContext> createFeeFineActions(BulkActionContext context) {
-    final var request = context.getRequest();
+    final BulkActionRequest request = context.getRequest();
     final List<Account> accounts = new ArrayList<>(context.getAccounts().values());
     final MonetaryValue requestedAmount = context.getRequestedAmount();
 
@@ -117,7 +117,7 @@ public abstract class BulkActionService {
   protected Feefineaction createFeeFineActionAndUpdateAccount(Account account, MonetaryValue amount,
     BulkActionRequest request) {
 
-    final var defaultRequest = (DefaultBulkActionRequest) request;
+    final DefaultBulkActionRequest defaultRequest = (DefaultBulkActionRequest) request;
     final MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining())
       .subtract(amount);
     boolean isFullAction = remainingAmountAfterAction.isZero();
@@ -127,7 +127,7 @@ public abstract class BulkActionService {
       .withAmountAction(amount.toDouble())
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
-      .withTransactionInformation(((DefaultBulkActionRequest) request).getTransactionInfo())
+      .withTransactionInformation(defaultRequest.getTransactionInfo())
       .withCreatedAt(request.getServicePointId())
       .withSource(request.getUserName())
       .withPaymentMethod(defaultRequest.getPaymentMethod())
