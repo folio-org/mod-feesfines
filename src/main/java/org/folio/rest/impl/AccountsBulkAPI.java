@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
 import org.folio.rest.service.action.BulkPayActionService;
+import org.folio.rest.service.action.BulkTransferActionService;
 import org.folio.rest.service.action.BulkWaiveActionService;
 import org.folio.rest.service.action.context.BulkActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
@@ -32,15 +33,14 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 public class AccountsBulkAPI implements AccountsBulk {
-
   private static final Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
 
   @Override
-  public void postAccountsBulkCheckPay(BulkCheckActionRequest entity,
+  public void postAccountsBulkCheckPay(BulkCheckActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    checkBulkAction(entity, asyncResultHandler,
+    checkBulkAction(request, asyncResultHandler,
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.PAY);
   }
 
@@ -60,6 +60,14 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     checkBulkAction(entity, asyncResultHandler,
       new DefaultActionValidationService(okapiHeaders, vertxContext), Action.WAIVE);
+  }
+
+  @Override
+  public void postAccountsBulkCheckRefund(BulkCheckActionRequest entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+    checkBulkAction(entity, asyncResultHandler,
+      new RefundActionValidationService(okapiHeaders, vertxContext), Action.REFUND);
   }
 
   @Override public void postAccountsBulkPay(DefaultBulkActionRequest request,
@@ -82,11 +90,13 @@ public class AccountsBulkAPI implements AccountsBulk {
   }
 
   @Override
-  public void postAccountsBulkCheckRefund(BulkCheckActionRequest entity,
+  public void postAccountsBulkTransfer(DefaultBulkActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    checkBulkAction(entity, asyncResultHandler,
-      new RefundActionValidationService(okapiHeaders, vertxContext), Action.REFUND);
+
+    new BulkTransferActionService(okapiHeaders, vertxContext)
+      .performAction(request)
+      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.TRANSFER));
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
