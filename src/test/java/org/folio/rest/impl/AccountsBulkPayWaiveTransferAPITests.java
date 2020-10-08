@@ -8,8 +8,10 @@ import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static org.folio.rest.domain.Action.PAY;
+import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkPayClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountBulkTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
@@ -71,7 +73,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
 
   @Parameters(name = "{0}")
   public static Object[] parameters() {
-    return new Object[] { PAY, WAIVE };
+    return new Object[] { PAY, WAIVE, TRANSFER };
   }
 
   @Before
@@ -87,6 +89,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
       return buildAccountBulkPayClient();
     case WAIVE:
       return buildAccountBulkWaiveClient();
+    case TRANSFER:
+      return buildAccountBulkTransferClient();
     default:
       throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
     }
