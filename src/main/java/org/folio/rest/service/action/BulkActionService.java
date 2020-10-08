@@ -58,8 +58,8 @@ public abstract class BulkActionService {
   }
 
   public BulkActionService(Action action, ActionValidationService validationService,
-                           BulkActionAmountSplitterStrategy bulkActionAmountSplitterStrategy,
-                           Map<String, String> headers, Context context) {
+    BulkActionAmountSplitterStrategy bulkActionAmountSplitterStrategy,
+    Map<String, String> headers, Context context) {
 
     PostgresClient postgresClient = getInstance(context.owner(), tenantId(headers));
 
@@ -83,7 +83,6 @@ public abstract class BulkActionService {
   }
 
   private Future<BulkActionContext> findAccounts(BulkActionContext context) {
-
     return accountRepository.getAccountsByIdWithNulls(context.getRequest().getAccountIds())
       .map(context::withAccounts);
   }
@@ -96,7 +95,6 @@ public abstract class BulkActionService {
   }
 
   protected Future<BulkActionContext> createFeeFineActions(BulkActionContext context) {
-
     final var request = context.getRequest();
     final List<Account> accounts = new ArrayList<>(context.getAccounts().values());
     final MonetaryValue requestedAmount = context.getRequestedAmount();

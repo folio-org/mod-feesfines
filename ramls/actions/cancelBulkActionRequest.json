@@ -33,9 +33,9 @@
   "additionalProperties": false,
   "required": [
     "accountIds",
-    "amount",
     "notifyPatron",
     "servicePointId",
-    "userName"
+    "userName",
+    "comments"
   ]
 }
