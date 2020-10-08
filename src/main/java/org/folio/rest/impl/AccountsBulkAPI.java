@@ -98,9 +98,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     new BulkCancelActionService(okapiHeaders, vertxContext)
       .performAction(request)
-      .onComplete(result -> {
-        handleActionResult(request, result, asyncResultHandler, Action.CANCEL);
-      });
+      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.CANCEL));
   }
 
   @Override

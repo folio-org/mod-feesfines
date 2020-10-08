@@ -117,6 +117,7 @@ public abstract class BulkActionService {
   protected Feefineaction createFeeFineActionAndUpdateAccount(Account account, MonetaryValue amount,
     BulkActionRequest request) {
 
+    final var defaultRequest = (DefaultBulkActionRequest) request;
     final MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining())
       .subtract(amount);
     boolean isFullAction = remainingAmountAfterAction.isZero();
@@ -125,21 +126,17 @@ public abstract class BulkActionService {
     final Feefineaction feeFineAction = new Feefineaction()
       .withAmountAction(amount.toDouble())
       .withComments(request.getComments())
+      .withNotify(request.getNotifyPatron())
+      .withTransactionInformation(((DefaultBulkActionRequest) request).getTransactionInfo())
       .withCreatedAt(request.getServicePointId())
       .withSource(request.getUserName())
+      .withPaymentMethod(defaultRequest.getPaymentMethod())
       .withAccountId(account.getId())
       .withUserId(account.getUserId())
       .withBalance(remainingAmountAfterAction.toDouble())
       .withTypeAction(actionType)
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date());
-
-    if (request instanceof DefaultBulkActionRequest) {
-      DefaultBulkActionRequest defaultBulkActionRequest = (DefaultBulkActionRequest) request;
-      feeFineAction.setPaymentMethod(defaultBulkActionRequest.getPaymentMethod());
-      feeFineAction.setNotify(defaultBulkActionRequest.getNotifyPatron());
-      feeFineAction.setTransactionInformation(defaultBulkActionRequest.getTransactionInfo());
-    }
 
     account.getPaymentStatus().setName(actionType);
 
