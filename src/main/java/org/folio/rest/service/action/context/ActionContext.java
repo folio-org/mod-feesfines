@@ -16,9 +16,9 @@ public class ActionContext {
   private Account account;
   private boolean shouldCloseAccount;
 
-  public ActionContext(String accountId, ActionRequest request) {
-    this.accountId = accountId;
+  public ActionContext(ActionRequest request) {
     this.request = request;
+    this.accountId = request.getAccountIds().get(0);
     this.feeFineActions = new ArrayList<>();
   }
 

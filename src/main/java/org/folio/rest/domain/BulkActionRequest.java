@@ -2,6 +2,6 @@ package org.folio.rest.domain;
 
 import java.util.List;
 
-public interface BulkActionRequest extends ActionRequest {
+public interface BulkActionRequest extends ActionRequestBak {
     List<String> getAccountIds();
 }

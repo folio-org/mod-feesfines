@@ -8,7 +8,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.BulkActionRequest;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.BulkActionFailureResponse;
@@ -69,6 +69,7 @@ public class AccountsBulkAPI implements AccountsBulk {
   public void postAccountsBulkCheckRefund(BulkCheckActionRequest entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
     checkBulkAction(entity, asyncResultHandler,
       new RefundActionValidationService(okapiHeaders, vertxContext), Action.REFUND);
   }
@@ -77,9 +78,11 @@ public class AccountsBulkAPI implements AccountsBulk {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request);
+
     new BulkPayActionService(okapiHeaders, vertxContext)
-      .performAction(request)
-      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.PAY));
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.PAY));
   }
 
   @Override
@@ -87,9 +90,11 @@ public class AccountsBulkAPI implements AccountsBulk {
     String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request);
+
     new BulkWaiveActionService(okapiHeaders, vertxContext)
-      .performAction(request)
-      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.WAIVE));
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.WAIVE));
   }
 
   @Override
@@ -97,9 +102,11 @@ public class AccountsBulkAPI implements AccountsBulk {
     String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request);
+
     new BulkCancelActionService(okapiHeaders, vertxContext)
-      .performAction(request)
-      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.CANCEL));
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.CANCEL));
   }
 
   @Override
@@ -107,9 +114,11 @@ public class AccountsBulkAPI implements AccountsBulk {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request);
+
     new BulkTransferActionService(okapiHeaders, vertxContext)
-      .performAction(request)
-      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.TRANSFER));
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.TRANSFER));
   }
 
   @Override
@@ -117,9 +126,11 @@ public class AccountsBulkAPI implements AccountsBulk {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request);
+
     new BulkRefundActionService(okapiHeaders, vertxContext)
-      .performAction(request)
-      .onComplete(result -> handleActionResult(request, result, asyncResultHandler, Action.REFUND));
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.REFUND));
   }
 
   private void checkBulkAction(BulkCheckActionRequest request,
@@ -182,7 +193,7 @@ public class AccountsBulkAPI implements AccountsBulk {
     return bulkCheckActionResponse;
   }
 
-  private void handleActionResult(BulkActionRequest request,
+  private void handleActionResult(ActionRequest request,
     AsyncResult<BulkActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
     Action action) {
 
@@ -211,10 +222,8 @@ public class AccountsBulkAPI implements AccountsBulk {
       if (cause instanceof FailedValidationException) {
         BulkActionFailureResponse response = new BulkActionFailureResponse()
           .withAccountIds(request.getAccountIds())
-          .withErrorMessage(errorMessage);
-        if (Action.CANCEL != action) {
-          response.withAmount(((DefaultBulkActionRequest) request).getAmount());
-        }
+          .withErrorMessage(errorMessage)
+          .withAmount(request.getAmount());
         asyncResultHandler.handle(succeededFuture(resultAdapter.bulkAction422.apply(response)));
       } else if (cause instanceof AccountNotFoundValidationException) {
         asyncResultHandler.handle(succeededFuture(resultAdapter.bulkAction404.apply(errorMessage)));

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.folio.rest.domain.Action;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -22,7 +23,7 @@ public class CancelActionService extends ActionService {
 
   @Override
   protected Future<ActionContext> createFeeFineActions(ActionContext context) {
-    final CancelActionRequest request = (CancelActionRequest) context.getRequest();
+    final ActionRequest request = context.getRequest();
     final Account account = context.getAccount();
 
     Feefineaction feeFineAction = new Feefineaction()

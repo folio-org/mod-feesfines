@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.BulkActionRequest;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -33,7 +33,7 @@ public class BulkCancelActionService extends BulkActionService {
 
   @Override
   protected Feefineaction createFeeFineActionAndUpdateAccount(Account account, MonetaryValue amount,
-    BulkActionRequest request) {
+    ActionRequest request) {
 
     final MonetaryValue remainingAmountAfterAction = new MonetaryValue(0.0);
     String actionType = action.getFullResult();

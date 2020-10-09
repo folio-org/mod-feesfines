@@ -172,7 +172,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .withUserName("Test User");
   }
 
-  private BulkActionRequest createBulkCancelActionRequest(List<String> accountIds) {
+  private CancelBulkActionRequest createBulkCancelActionRequest(List<String> accountIds) {
     return new CancelBulkActionRequest()
       .withComments("Comment")
       .withAccountIds(accountIds)

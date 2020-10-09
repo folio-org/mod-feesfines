@@ -423,9 +423,11 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request, accountId);
+
     new PayActionService(okapiHeaders, vertxContext)
-      .performAction(accountId, request)
-      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(accountId, actionRequest, result, asyncResultHandler,
         Action.PAY));
   }
 
@@ -434,9 +436,11 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request, accountId);
+
     new WaiveActionService(okapiHeaders, vertxContext)
-      .performAction(accountId, request)
-      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(accountId, actionRequest, result, asyncResultHandler,
         Action.WAIVE));
   }
 
@@ -445,9 +449,11 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request, accountId);
+
     new TransferActionService(okapiHeaders, vertxContext)
-      .performAction(accountId, request)
-      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(accountId, actionRequest, result, asyncResultHandler,
         Action.TRANSFER));
   }
 
@@ -456,9 +462,11 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request, accountId);
+
     new RefundActionService(okapiHeaders, vertxContext)
-      .performAction(accountId, request)
-      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(accountId, actionRequest, result, asyncResultHandler,
         Action.REFUND));
   }
 
@@ -467,9 +475,11 @@ public class AccountsAPI implements Accounts {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    ActionRequest actionRequest = ActionRequest.from(request, accountId);
+
     new CancelActionService(okapiHeaders, vertxContext)
-      .performAction(accountId, request)
-      .onComplete(result -> handleActionResult(accountId, request, result, asyncResultHandler,
+      .performAction(actionRequest)
+      .onComplete(result -> handleActionResult(accountId, actionRequest, result, asyncResultHandler,
         Action.CANCEL));
   }
 
@@ -499,11 +509,8 @@ public class AccountsAPI implements Accounts {
       if (cause instanceof FailedValidationException) {
         ActionFailureResponse response = new ActionFailureResponse()
           .withAccountId(accountId)
-          .withErrorMessage(errorMessage);
-        if (Action.CANCEL != action) {
-          DefaultActionRequest defaultActionRequest = (DefaultActionRequest) request;
-          response.withAmount(defaultActionRequest.getAmount());
-        }
+          .withErrorMessage(errorMessage)
+          .withAmount(request.getAmount());
         asyncResultHandler.handle(succeededFuture(resultAdapter.action422.apply(response)));
       } else if (cause instanceof AccountNotFoundValidationException) {
         asyncResultHandler.handle(succeededFuture(resultAdapter.action404.apply(errorMessage)));

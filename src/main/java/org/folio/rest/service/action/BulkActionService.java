@@ -17,10 +17,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.BulkActionRequest;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
@@ -74,7 +73,7 @@ public abstract class BulkActionService {
   }
 
 
-  public Future<BulkActionContext> performAction(BulkActionRequest request) {
+  public Future<BulkActionContext> performAction(ActionRequest request) {
     return succeededFuture(new BulkActionContext(request))
       .compose(this::findAccounts)
       .compose(this::validateAction)
@@ -89,14 +88,14 @@ public abstract class BulkActionService {
   }
 
   protected Future<BulkActionContext> validateAction(BulkActionContext context) {
-    String requestedAmount = ((DefaultBulkActionRequest) context.getRequest()).getAmount();
+    String requestedAmount = context.getRequest().getAmount();
 
     return validationService.validate(context.getAccounts(), requestedAmount)
       .map(ignored -> context.withRequestedAmount(new MonetaryValue(requestedAmount)));
   }
 
   protected Future<BulkActionContext> createFeeFineActions(BulkActionContext context) {
-    final BulkActionRequest request = context.getRequest();
+    final ActionRequest request = context.getRequest();
     final List<Account> accounts = new ArrayList<>(context.getAccounts().values());
     final MonetaryValue requestedAmount = context.getRequestedAmount();
 
@@ -116,9 +115,8 @@ public abstract class BulkActionService {
   }
 
   protected Feefineaction createFeeFineActionAndUpdateAccount(Account account, MonetaryValue amount,
-    BulkActionRequest request) {
+    ActionRequest request) {
 
-    final DefaultBulkActionRequest defaultRequest = (DefaultBulkActionRequest) request;
     final MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining())
       .subtract(amount);
     boolean isFullAction = remainingAmountAfterAction.isZero();
@@ -128,10 +126,10 @@ public abstract class BulkActionService {
       .withAmountAction(amount.toDouble())
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
-      .withTransactionInformation(defaultRequest.getTransactionInfo())
+      .withTransactionInformation(request.getTransactionInfo())
       .withCreatedAt(request.getServicePointId())
       .withSource(request.getUserName())
-      .withPaymentMethod(defaultRequest.getPaymentMethod())
+      .withPaymentMethod(request.getPaymentMethod())
       .withAccountId(account.getId())
       .withUserId(account.getUserId())
       .withBalance(remainingAmountAfterAction.toDouble())

@@ -5,18 +5,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.folio.rest.domain.BulkActionRequest;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 
 public class BulkActionContext {
-  private final BulkActionRequest request;
+  private final ActionRequest request;
   private List<Feefineaction> feeFineActions;
   private MonetaryValue requestedAmount;
   private Map<String, Account> accounts;
 
-  public BulkActionContext(BulkActionRequest request) {
+  public BulkActionContext(ActionRequest request) {
     this.request = request;
     this.feeFineActions = new ArrayList<>();
     this.accounts = new HashMap<>();
@@ -42,7 +42,7 @@ public class BulkActionContext {
     return this;
   }
 
-  public BulkActionRequest getRequest() {
+  public ActionRequest getRequest() {
     return request;
   }
 

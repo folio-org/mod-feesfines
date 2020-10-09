@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.folio.rest.domain.Action;
+import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
@@ -109,7 +110,7 @@ public class BulkRefundActionService extends BulkActionService {
       return succeededFuture(context);
     }
 
-    DefaultBulkActionRequest request = (DefaultBulkActionRequest) context.getRequest();
+    ActionRequest request = context.getRequest();
 
     MonetaryValue remainingAmountBefore = new MonetaryValue(account.getRemaining());
     MonetaryValue remainingAmountAfter = action == CREDIT
