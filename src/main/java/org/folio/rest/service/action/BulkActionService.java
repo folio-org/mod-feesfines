@@ -58,6 +58,22 @@ public abstract class BulkActionService {
     this.amountSplitterStrategy = new SplitEvenlyRecursively();
   }
 
+  public BulkActionService(Action action, ActionValidationService validationService,
+    BulkActionAmountSplitterStrategy bulkActionAmountSplitterStrategy,
+    Map<String, String> headers, Context context) {
+
+    PostgresClient postgresClient = getInstance(context.owner(), tenantId(headers));
+
+    this.action = action;
+    this.accountRepository = new AccountRepository(postgresClient);
+    this.feeFineActionRepository = new FeeFineActionRepository(postgresClient);
+    this.accountUpdateService = new AccountUpdateService(headers, context);
+    this.patronNoticeService = new PatronNoticeService(context.owner(), headers);
+    this.validationService = validationService;
+    this.amountSplitterStrategy = bulkActionAmountSplitterStrategy;
+  }
+
+
   public Future<BulkActionContext> performAction(BulkActionRequest request) {
     return succeededFuture(new BulkActionContext(request))
       .compose(this::findAccounts)
@@ -80,7 +96,7 @@ public abstract class BulkActionService {
   }
 
   protected Future<BulkActionContext> createFeeFineActions(BulkActionContext context) {
-    final DefaultBulkActionRequest request = (DefaultBulkActionRequest) context.getRequest();
+    final BulkActionRequest request = context.getRequest();
     final List<Account> accounts = new ArrayList<>(context.getAccounts().values());
     final MonetaryValue requestedAmount = context.getRequestedAmount();
 
@@ -112,7 +128,7 @@ public abstract class BulkActionService {
       .withAmountAction(amount.toDouble())
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
-      .withTransactionInformation(((DefaultBulkActionRequest) request).getTransactionInfo())
+      .withTransactionInformation(defaultRequest.getTransactionInfo())
       .withCreatedAt(request.getServicePointId())
       .withSource(request.getUserName())
       .withPaymentMethod(defaultRequest.getPaymentMethod())

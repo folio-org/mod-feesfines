@@ -380,6 +380,19 @@
           "methods":[
             "POST"
           ],
+          "pathPattern":"/accounts-bulk/cancel",
+          "permissionsRequired":[
+            "accounts.cancel.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post",
+            "modperms.feesfines.patron-notices.post"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
           "pathPattern":"/accounts-bulk/refund",
           "permissionsRequired":[
             "accounts.refund.post"

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Bulk cancel action request",
+  "type": "object",
+  "javaInterfaces": ["org.folio.rest.domain.BulkActionRequest"],
+  "properties": {
+    "accountIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "$ref": "../uuid.json"
+      },
+      "description": "IDs of multiple accounts"
+    },
+    "comments": {
+      "type": "string",
+      "description": "Additional info for staff or patron. Format: [STAFF : staff comment \n PATRON : patron comment]"
+    },
+    "notifyPatron": {
+      "type": "boolean",
+      "description": "Should send patron notification or not"
+    },
+    "servicePointId": {
+      "type": "string",
+      "$ref": "../uuid.json",
+      "description": "Unique ID of the service point where the payment was made"
+    },
+    "userName": {
+      "type": "string",
+      "description": "Name of the user that was logged in when the action was performed"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "accountIds",
+    "notifyPatron",
+    "servicePointId",
+    "userName",
+    "comments"
+  ]
+}
