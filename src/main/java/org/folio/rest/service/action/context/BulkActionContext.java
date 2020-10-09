@@ -27,6 +27,11 @@ public class BulkActionContext {
     return this;
   }
 
+  public BulkActionContext withFeeFineAction(Feefineaction feeFineAction) {
+    this.feeFineActions.add(feeFineAction);
+    return this;
+  }
+
   public BulkActionContext withFeeFineActions(List<Feefineaction> feeFineActions) {
     this.feeFineActions = feeFineActions;
     return this;

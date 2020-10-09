@@ -1,6 +1,5 @@
 package org.folio.rest.service.action.validation;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -11,7 +10,6 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.repository.FeeFineActionRepository;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
@@ -29,24 +27,17 @@ public class RefundActionValidationService extends ActionValidationService {
   }
 
   private Future<MonetaryValue> getRefundableAmount(List<Account> accounts) {
-    // Sum of the refundable amounts of all accounts
-    return CompositeFuture.all(
-      accounts.stream()
-        .map(this::getRefundableAmount)
-        .collect(Collectors.toList()))
-      .map(cf -> cf.list().stream()
-        .filter(MonetaryValue.class::isInstance)
-        .map(MonetaryValue.class::cast)
-        .reduce(MonetaryValue::add)
-        .orElse(new MonetaryValue(BigDecimal.ZERO)));
-  }
+    List<String> accountIds = accounts.stream()
+      .map(Account::getId)
+      .collect(Collectors.toList());
 
-  private Future<MonetaryValue> getRefundableAmount(Account account) {
-    return feeFineActionRepository.findRefundableActionsForAccount(account.getId())
-      .map(actions -> actions.stream()
-        .mapToDouble(Feefineaction::getAmountAction)
-        .sum())
-      .map(MonetaryValue::new);
+    // Sum of the refundable amounts of all accounts
+    return feeFineActionRepository.findRefundableActionsForAccounts(accountIds)
+      .map(actions -> new MonetaryValue(
+        actions.stream()
+          .mapToDouble(Feefineaction::getAmountAction)
+          .sum()
+      ));
   }
 
   @Override

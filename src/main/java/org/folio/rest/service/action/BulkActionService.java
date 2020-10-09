@@ -5,6 +5,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
+import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
@@ -146,7 +147,9 @@ public abstract class BulkActionService {
 
   private Future<BulkActionContext> sendPatronNotice(BulkActionContext context) {
     if (isTrue(context.getRequest().getNotifyPatron())) {
-      context.getFeeFineActions()
+      context.getFeeFineActions().stream()
+        // do not send notices for CREDIT actions
+        .filter(ffa -> !CREDIT.isActionForResult(ffa.getTypeAction()))
         .forEach(patronNoticeService::sendPatronNotice);
     }
     return succeededFuture(context);

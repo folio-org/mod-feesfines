@@ -2,6 +2,7 @@ package org.folio.rest.utils.amountsplitter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +15,7 @@ import org.folio.rest.jaxrs.model.Account;
 public class SplitEvenlyRecursively implements BulkActionAmountSplitterStrategy {
   @Override
   public Map<String, MonetaryValue> split(MonetaryValue totalRequestedAmount,
-    List<Account> accounts, Map<String, MonetaryValue> actionableAmounts) {
+    Collection<Account> accounts, Map<String, MonetaryValue> actionableAmounts) {
 
     int numberOfAccountsToProcess = accounts.size();
     BigDecimal amountToDistribute = totalRequestedAmount.getAmount();
