@@ -18,12 +18,12 @@ import org.folio.rest.jaxrs.model.BulkCheckActionResponse;
 import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.resource.AccountsBulk;
-import org.folio.rest.service.action.BulkCancelActionService;
-import org.folio.rest.service.action.BulkPayActionService;
-import org.folio.rest.service.action.BulkRefundActionService;
-import org.folio.rest.service.action.BulkTransferActionService;
-import org.folio.rest.service.action.BulkWaiveActionService;
-import org.folio.rest.service.action.context.BulkActionContext;
+import org.folio.rest.service.action.CancelActionService;
+import org.folio.rest.service.action.PayActionService;
+import org.folio.rest.service.action.RefundActionService;
+import org.folio.rest.service.action.TransferActionService;
+import org.folio.rest.service.action.WaiveActionService;
+import org.folio.rest.service.action.context.ActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
 import org.folio.rest.service.action.validation.DefaultActionValidationService;
 import org.folio.rest.service.action.validation.RefundActionValidationService;
@@ -80,7 +80,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     ActionRequest actionRequest = ActionRequest.from(request);
 
-    new BulkPayActionService(okapiHeaders, vertxContext)
+    new PayActionService(okapiHeaders, vertxContext)
       .performAction(actionRequest)
       .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.PAY));
   }
@@ -92,7 +92,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     ActionRequest actionRequest = ActionRequest.from(request);
 
-    new BulkWaiveActionService(okapiHeaders, vertxContext)
+    new WaiveActionService(okapiHeaders, vertxContext)
       .performAction(actionRequest)
       .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.WAIVE));
   }
@@ -104,7 +104,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     ActionRequest actionRequest = ActionRequest.from(request);
 
-    new BulkCancelActionService(okapiHeaders, vertxContext)
+    new CancelActionService(okapiHeaders, vertxContext)
       .performAction(actionRequest)
       .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.CANCEL));
   }
@@ -116,7 +116,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     ActionRequest actionRequest = ActionRequest.from(request);
 
-    new BulkTransferActionService(okapiHeaders, vertxContext)
+    new TransferActionService(okapiHeaders, vertxContext)
       .performAction(actionRequest)
       .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.TRANSFER));
   }
@@ -128,7 +128,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     ActionRequest actionRequest = ActionRequest.from(request);
 
-    new BulkRefundActionService(okapiHeaders, vertxContext)
+    new RefundActionService(okapiHeaders, vertxContext)
       .performAction(actionRequest)
       .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.REFUND));
   }
@@ -194,7 +194,7 @@ public class AccountsBulkAPI implements AccountsBulk {
   }
 
   private void handleActionResult(ActionRequest request,
-    AsyncResult<BulkActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
+    AsyncResult<ActionContext> asyncResult, Handler<AsyncResult<Response>> asyncResultHandler,
     Action action) {
 
     ActionResultAdapter resultAdapter = action.getActionResultAdapter();
@@ -207,7 +207,7 @@ public class AccountsBulkAPI implements AccountsBulk {
     }
 
     if (asyncResult.succeeded()) {
-      final BulkActionContext actionContext = asyncResult.result();
+      final ActionContext actionContext = asyncResult.result();
       BulkActionSuccessResponse response = new BulkActionSuccessResponse()
         .withAccountIds(request.getAccountIds())
         .withFeefineactions(actionContext.getFeeFineActions());

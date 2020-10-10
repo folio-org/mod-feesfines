@@ -13,7 +13,7 @@ import org.folio.rest.utils.ResourceClient;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AccountsActionBulkRefundAPITests extends AccountsActionChecksAPITestsBase {
+public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksAPITestsBase {
 
   private static final ResourceClient accountsBulkCheckRefundClient = buildAccountBulkCheckRefundClient();
   private ResourceClient accountsCheckRefundClient;
@@ -54,7 +54,7 @@ public class AccountsActionBulkRefundAPITests extends AccountsActionChecksAPITes
   @Test
   public void checkRefundAmountShouldNotBeAllowedWithExceededAmount() {
     actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(accountsCheckRefundClient);
-    actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(accountsBulkCheckRefundClient);
+//    actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(accountsBulkCheckRefundClient);
   }
 
   @Test
