@@ -82,6 +82,10 @@ public final class ResourceClients {
     return buildAccountBulkActionClient("transfer");
   }
 
+  public static ResourceClient buildAccountBulkCancelClient() {
+    return buildAccountBulkActionClient("cancel");
+  }
+
   private static ResourceClient buildAccountBulkActionClient(String action) {
     return new ResourceClient(format("/accounts-bulk/%s", action));
   }
