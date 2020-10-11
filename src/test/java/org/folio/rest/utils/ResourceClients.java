@@ -42,7 +42,7 @@ public final class ResourceClients {
     return buildAccountActionClient(accountId, "cancel");
   }
 
-  public static ResourceClient accountsRefundClient(String accountId) {
+  public static ResourceClient buildAccountsRefundClient(String accountId) {
     return buildAccountActionClient(accountId, "refund");
   }
 
