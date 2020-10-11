@@ -719,6 +719,9 @@
           "pathPattern":"/manualblocks",
           "permissionsRequired":[
             "manualblocks.item.post"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post"
           ]
         },
         {
@@ -728,6 +731,9 @@
           "pathPattern":"/manualblocks/{id}",
           "permissionsRequired":[
             "manualblocks.item.put"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post"
           ]
         },
         {
@@ -737,6 +743,9 @@
           "pathPattern":"/manualblocks/{id}",
           "permissionsRequired":[
             "manualblocks.item.delete"
+          ],
+          "modulePermissions": [
+            "pubsub.publish.post"
           ]
         },
         {
