@@ -355,7 +355,8 @@
             "feefineactions.item.post"
           ],
           "modulePermissions": [
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "pubsub.publish.post"
           ]
         },
         {

@@ -5,44 +5,30 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.MediaType;
 
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
-import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.Campus;
-import org.folio.rest.jaxrs.model.Contributor;
-import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
-import org.folio.rest.jaxrs.model.Feefine;
-import org.folio.rest.jaxrs.model.Feefineaction;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.Institution;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Library;
-import org.folio.rest.jaxrs.model.Location;
-import org.folio.rest.jaxrs.model.Owner;
-import org.folio.rest.jaxrs.model.PaymentStatus;
-import org.folio.rest.jaxrs.model.Personal;
-import org.folio.rest.jaxrs.model.User;
+import org.folio.rest.jaxrs.model.*;
 import org.folio.test.support.ApiTests;
+import org.hamcrest.Matcher;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -100,6 +86,9 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   @Test
   public void postActionWithPatronNotice() {
+    getOkapi().stubFor(WireMock.post(urlPathMatching("/patron-notice"))
+      .willReturn(aResponse().withStatus(200)));
+
     final Library library = createLibrary();
     final Campus campus = createCampus();
     final Institution institution = createInstitution();
@@ -177,6 +166,9 @@ public class FeeFineActionsAPITest extends ApiTests {
       );
 
     checkResult(expectedChargeContext);
+    assertThatSentMessagesCountIsEqualTo(1);
+    // there should be 2 log record events published: one FEE_FINE and one NOTICE
+    assertThatPublishedLogRecordsCountIsEqualTo(2);
 
     final JsonObject expectedActionContext = expectedChargeContext
       .put("templateId", feefine.getActionNoticeId());
@@ -193,6 +185,10 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     postAction(action);
     checkResult(expectedActionContext);
+    assertThatSentMessagesCountIsEqualTo(2);
+    // there should be 4 log record events published: two FEE_FINEs and two NOTICEs
+    assertThatPublishedLogRecordsCountIsEqualTo(4);
+    assertThatPublishedLogRecordsAreValid();
   }
 
   @Test
@@ -201,7 +197,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     final String feeFineId = randomId();
     final String accountId = randomId();
     final String defaultChargeTemplateId = randomId();
-    final String userId = randomId();
+    final User user = createUser();
     final String feeFineType = "damaged book";
     final String typeAction = "damaged book";
     final boolean notify = false;
@@ -209,7 +205,9 @@ public class FeeFineActionsAPITest extends ApiTests {
     final double balance = 100;
     final String dateAction = "2019-12-23T14:25:59.550+0000";
     final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
-      amountAction, balance, accountId, userId);
+      amountAction, balance, accountId, user.getId());
+
+    createStub(USERS_PATH, user, user.getId());
 
     createEntity("/owners", new JsonObject()
       .put("id", ownerId)
@@ -218,7 +216,7 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     createEntity("/accounts", new JsonObject()
       .put("id", accountId)
-      .put("userId", userId)
+      .put("userId", user.getId())
       .put("itemId", randomId())
       .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
@@ -235,6 +233,9 @@ public class FeeFineActionsAPITest extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .body(equalTo(feeFineActionJson));
+
+    assertThatPublishedLogRecordsCountIsEqualTo(1);
+    assertThatPublishedLogRecordsAreValid();
   }
 
   private String createFeeFineActionJson(String dateAction, String typeAction, boolean notify,
@@ -376,8 +377,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withFeeFineId(feefine.getId())
       .withOwnerId(owner.getId())
       .withFeeFineOwner(owner.getOwner())
-      .withInstanceId(instance.getId())
-      .withHoldingsRecordId(holdingsRecord.getId())
+      .withInstanceId(null)
+      .withHoldingsRecordId(null)
       .withBarcode("Account-level barcode")
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
@@ -492,6 +493,77 @@ public class FeeFineActionsAPITest extends ApiTests {
       .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/patron-notice"))
         .withRequestBody(equalToJson(expectedRequest.encodePrettily()))
       ));
+  }
+
+  private void assertThatSentMessagesCountIsEqualTo(int count) {
+    int messagesCount = getOkapi()
+      .findRequestsMatching(postRequestedFor(urlPathMatching("/patron-notice")).build()).getRequests().size();
+    assertThat(count, equalTo(messagesCount));
+  }
+
+  private void assertThatPublishedLogRecordsCountIsEqualTo(int count) {
+    int messagesCount = fetchPublishedLogRecords().size();
+    assertThat(count, equalTo(messagesCount));
+  }
+
+  private List<JsonObject> fetchPublishedLogRecords() {
+    return getOkapi()
+      .findRequestsMatching(postRequestedFor(urlPathMatching("/pubsub/publish")).build())
+      .getRequests().stream()
+      .map(LoggedRequest::getBody)
+      .map(String::new)
+      .filter(s -> s.contains("LOG_RECORD"))
+      .map(JsonObject::new)
+      .collect(Collectors.toList());
+  }
+
+  private void assertThatPublishedLogRecordsAreValid() {
+    fetchPublishedLogRecords().forEach(record -> {
+      if (record.getString("eventPayload").contains("NOTICE")) {
+        isValidNoticeLogRecordEvent(record);
+      } else if (record.getString("eventPayload").contains("FEE_FINE")) {
+        isValidFeeFineLogRecordEvent(record);
+      }
+    });
+  }
+
+  public static Matcher<JsonObject> isValidNoticeLogRecordEvent(JsonObject noticeEvent) {
+    return allOf(
+      hasJsonPath("eventPayload", allOf(
+        hasJsonPath("logEventType", is("NOTICE")),
+        hasJsonPath("userBarcode", is(noticeEvent.getString("userBarcode"))),
+        hasJsonPath("userId", is(noticeEvent.getString("userId"))),
+        hasJsonPath("items", allOf(
+          hasJsonPath("itemId", is(noticeEvent.getString("itemId"))),
+          hasJsonPath("itemBarcode", is(noticeEvent.getString("barcode"))),
+          hasJsonPath("instanceId", is(noticeEvent.getString("instanceId"))),
+          hasJsonPath("holdingsRecordId", is(noticeEvent.getString("holdingsRecordId"))),
+          hasJsonPath("servicePointId", is(noticeEvent.getString("servicePointId"))),
+          hasJsonPath("templateId", is(noticeEvent.getString("templateId"))),
+          hasJsonPath("triggeringEvent", is(noticeEvent.getString("triggeringEvent"))),
+          hasJsonPath("noticePolicyId", is(noticeEvent.getString("noticePolicyId")))
+        )),
+        hasJsonPath("date", is(noticeEvent.getString("date")))
+      )));
+  }
+
+  public static Matcher<JsonObject> isValidFeeFineLogRecordEvent(JsonObject feeFineEvent) {
+    return allOf(
+      hasJsonPath("eventPayload", allOf(
+        hasJsonPath("logEventType", is("FEE_FINE")),
+        hasJsonPath("userBarcode", is(feeFineEvent.getString("userBarcode"))),
+        hasJsonPath("userId", is(feeFineEvent.getString("userId"))),
+        hasJsonPath("itemId", is(feeFineEvent.getString("itemId"))),
+        hasJsonPath("itemBarcode", is(feeFineEvent.getString("barcode"))),
+        hasJsonPath("instanceId", is(feeFineEvent.getString("instanceId"))),
+        hasJsonPath("holdingsRecordId", is(feeFineEvent.getString("holdingsRecordId"))),
+        hasJsonPath("servicePointId", is(feeFineEvent.getString("servicePointId"))),
+        hasJsonPath("templateId", is(feeFineEvent.getString("templateId"))),
+        hasJsonPath("triggeringEvent", is(feeFineEvent.getString("triggeringEvent"))),
+        hasJsonPath("noticePolicyId", is(feeFineEvent.getString("noticePolicyId"))),
+        hasJsonPath("comment", is(feeFineEvent.getString("comment"))),
+        hasJsonPath("date", is(feeFineEvent.getString("date")))
+      )));
   }
 }
 
