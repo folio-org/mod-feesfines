@@ -72,7 +72,6 @@ public abstract class ActionService {
     this.amountSplitterStrategy = bulkActionAmountSplitterStrategy;
   }
 
-
   public Future<ActionContext> performAction(ActionRequest request) {
     return succeededFuture(new ActionContext(request))
       .compose(this::findAccounts)

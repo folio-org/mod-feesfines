@@ -53,8 +53,8 @@ public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksA
 
   @Test
   public void checkRefundAmountShouldNotBeAllowedWithExceededAmount() {
-    actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(accountsCheckRefundClient);
-//    actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(accountsBulkCheckRefundClient);
+    actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(false, accountsCheckRefundClient);
+    actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(true, accountsBulkCheckRefundClient);
   }
 
   @Test
