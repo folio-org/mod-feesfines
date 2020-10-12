@@ -1,7 +1,9 @@
-package org.folio.rest.service.action;
+package org.folio.rest.service.action.context;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
@@ -9,26 +11,24 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 
 public class ActionContext {
-  private final String accountId;
   private final ActionRequest request;
-  private final List<Feefineaction> feeFineActions;
+  private List<Feefineaction> feeFineActions;
   private MonetaryValue requestedAmount;
-  private Account account;
-  private boolean shouldCloseAccount;
+  private Map<String, Account> accounts;
 
-  public ActionContext(String accountId, ActionRequest request) {
-    this.accountId = accountId;
+  public ActionContext(ActionRequest request) {
     this.request = request;
     this.feeFineActions = new ArrayList<>();
-  }
-
-  public ActionContext withAccount(Account account) {
-    this.account = account;
-    return this;
+    this.accounts = new HashMap<>();
   }
 
   public ActionContext withFeeFineAction(Feefineaction feeFineAction) {
     this.feeFineActions.add(feeFineAction);
+    return this;
+  }
+
+  public ActionContext withFeeFineActions(List<Feefineaction> feeFineActions) {
+    this.feeFineActions = feeFineActions;
     return this;
   }
 
@@ -37,21 +37,17 @@ public class ActionContext {
     return this;
   }
 
-  public ActionContext withShouldCloseAccount(boolean shouldCloseAccount) {
-    this.shouldCloseAccount = shouldCloseAccount;
+  public ActionContext withAccounts(Map<String, Account> accounts) {
+    this.accounts = accounts;
     return this;
-  }
-
-  public String getAccountId() {
-    return accountId;
   }
 
   public ActionRequest getRequest() {
     return request;
   }
 
-  public Account getAccount() {
-    return account;
+  public Map<String, Account> getAccounts() {
+    return accounts;
   }
 
   public List<Feefineaction> getFeeFineActions() {
@@ -62,7 +58,4 @@ public class ActionContext {
     return requestedAmount;
   }
 
-  public boolean isShouldCloseAccount() {
-    return shouldCloseAccount;
-  }
 }

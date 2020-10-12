@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Action response",
+  "type": "object",
+  "properties": {
+    "accountIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "$ref": "../uuid.json"
+      },
+      "description": "IDs of multiple accounts"
+    },
+    "amount": {
+      "type": "string",
+      "description": "Action amount"
+    },
+    "errorMessage": {
+      "type": "string",
+      "description": "Additional info about request processing failure"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "accountIds",
+    "amount",
+    "errorMessage"
+  ]
+}

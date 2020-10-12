@@ -2,7 +2,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Cancel action request",
   "type": "object",
-  "javaInterfaces": ["org.folio.rest.domain.ActionRequest"],
   "properties": {
     "comments": {
       "type": "string",

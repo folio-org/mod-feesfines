@@ -42,7 +42,7 @@ public final class ResourceClients {
     return buildAccountActionClient(accountId, "cancel");
   }
 
-  public static ResourceClient accountsRefundClient(String accountId) {
+  public static ResourceClient buildAccountsRefundClient(String accountId) {
     return buildAccountActionClient(accountId, "refund");
   }
 
@@ -58,8 +58,32 @@ public final class ResourceClients {
     return buildAccountBulkActionClient("check-waive");
   }
 
+  public static ResourceClient buildAccountBulkCheckRefundClient() {
+    return buildAccountBulkActionClient("check-refund");
+  }
+
   public static ResourceClient buildAccountBulkCheckTransferClient() {
     return buildAccountBulkActionClient("check-transfer");
+  }
+
+  public static ResourceClient buildAccountBulkPayClient() {
+    return buildAccountBulkActionClient("pay");
+  }
+
+  public static ResourceClient buildAccountBulkWaiveClient() {
+    return buildAccountBulkActionClient("waive");
+  }
+
+  public static ResourceClient buildAccountBulkTransferClient() {
+    return buildAccountBulkActionClient("transfer");
+  }
+
+  public static ResourceClient buildAccountBulkCancelClient() {
+    return buildAccountBulkActionClient("cancel");
+  }
+
+  public static ResourceClient buildAccountBulkRefundClient() {
+    return buildAccountBulkActionClient("refund");
   }
 
   private static ResourceClient buildAccountBulkActionClient(String action) {

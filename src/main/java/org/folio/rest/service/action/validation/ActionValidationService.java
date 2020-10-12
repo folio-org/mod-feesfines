@@ -6,7 +6,6 @@ import static java.util.Collections.singletonMap;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,14 +43,11 @@ public abstract class ActionValidationService {
   }
 
   public Future<ActionValidationResult> validateByIds(List<String> accountIds, String rawAmount) {
-    return accountRepository.getAccountsById(accountIds)
-      .map(accountsMap -> accountIds.stream()
-        .collect(HashMap<String, Account>::new, (m, v) -> m.put(v, accountsMap.get(v)),
-          HashMap::putAll))
+    return accountRepository.getAccountsByIdWithNulls(accountIds)
       .compose(accountsMap -> validate(accountsMap, rawAmount));
   }
 
-  public Future<ActionValidationResult> validate(String accountId, Account account,
+  protected Future<ActionValidationResult> validate(String accountId, Account account,
     String rawAmount) {
 
     return validate(singletonMap(accountId, account), rawAmount);

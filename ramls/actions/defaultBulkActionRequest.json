@@ -3,6 +3,14 @@
   "description": "Default action request",
   "type": "object",
   "properties": {
+    "accountIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "$ref": "../uuid.json"
+      },
+      "description": "IDs of multiple accounts"
+    },
     "amount": {
       "type": "string",
       "description": "Action amount"
@@ -35,6 +43,7 @@
   },
   "additionalProperties": false,
   "required": [
+    "accountIds",
     "amount",
     "notifyPatron",
     "servicePointId",
