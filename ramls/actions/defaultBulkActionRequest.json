@@ -2,7 +2,6 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Default action request",
   "type": "object",
-  "javaInterfaces": ["org.folio.rest.domain.BulkActionRequest"],
   "properties": {
     "accountIds": {
       "type": "array",
