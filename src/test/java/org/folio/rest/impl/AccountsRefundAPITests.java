@@ -23,6 +23,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isOneOf;
 
 import java.util.Arrays;
 import java.util.List;
@@ -435,11 +436,16 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void bulkReturn404WhenAccountDoesNotExist() {
+    String errorMessageTemplate = "Fee/fine ID %s not found";
+
     bulkRefundClient.post(toJson(createBulkRequest(10.0, TWO_ACCOUNT_IDS)))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
-      .body(equalTo(format("Fee/fine ID %s not found", FIRST_ACCOUNT_ID)));
+      .body(isOneOf(
+        format(errorMessageTemplate, FIRST_ACCOUNT_ID),
+        format(errorMessageTemplate, SECOND_ACCOUNT_ID))
+      );
   }
 
   @Test
