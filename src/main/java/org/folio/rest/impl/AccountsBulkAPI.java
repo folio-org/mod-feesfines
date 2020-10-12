@@ -1,6 +1,10 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.domain.Action.CANCEL;
+import static org.folio.rest.domain.Action.PAY;
+import static org.folio.rest.domain.Action.TRANSFER;
+import static org.folio.rest.domain.Action.WAIVE;
 
 import java.util.List;
 import java.util.Map;
@@ -44,7 +48,7 @@ public class AccountsBulkAPI implements AccountsBulk {
     Context vertxContext) {
 
     checkBulkAction(request, asyncResultHandler,
-      new DefaultActionValidationService(okapiHeaders, vertxContext), Action.PAY);
+      new DefaultActionValidationService(okapiHeaders, vertxContext), PAY);
   }
 
   @Override
@@ -53,7 +57,7 @@ public class AccountsBulkAPI implements AccountsBulk {
     Context vertxContext) {
 
     checkBulkAction(entity, asyncResultHandler,
-      new DefaultActionValidationService(okapiHeaders, vertxContext), Action.TRANSFER);
+      new DefaultActionValidationService(okapiHeaders, vertxContext), TRANSFER);
   }
 
   @Override
@@ -62,7 +66,7 @@ public class AccountsBulkAPI implements AccountsBulk {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     checkBulkAction(entity, asyncResultHandler,
-      new DefaultActionValidationService(okapiHeaders, vertxContext), Action.WAIVE);
+      new DefaultActionValidationService(okapiHeaders, vertxContext), WAIVE);
   }
 
   @Override
@@ -74,7 +78,8 @@ public class AccountsBulkAPI implements AccountsBulk {
       new RefundActionValidationService(okapiHeaders, vertxContext), Action.REFUND);
   }
 
-  @Override public void postAccountsBulkPay(DefaultBulkActionRequest request,
+  @Override
+  public void postAccountsBulkPay(DefaultBulkActionRequest request,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -82,7 +87,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     new PayActionService(okapiHeaders, vertxContext)
       .performAction(actionRequest)
-      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.PAY));
+      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, PAY));
   }
 
   @Override
@@ -94,7 +99,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     new WaiveActionService(okapiHeaders, vertxContext)
       .performAction(actionRequest)
-      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.WAIVE));
+      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, WAIVE));
   }
 
   @Override
@@ -106,7 +111,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     new CancelActionService(okapiHeaders, vertxContext)
       .performAction(actionRequest)
-      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.CANCEL));
+      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, CANCEL));
   }
 
   @Override
@@ -118,7 +123,7 @@ public class AccountsBulkAPI implements AccountsBulk {
 
     new TransferActionService(okapiHeaders, vertxContext)
       .performAction(actionRequest)
-      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, Action.TRANSFER));
+      .onComplete(result -> handleActionResult(actionRequest, result, asyncResultHandler, TRANSFER));
   }
 
   @Override
