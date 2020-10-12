@@ -52,7 +52,7 @@ public class ResourceClient {
   }
 
   public Response getAll() {
-    return okapiClient.get(baseUri)
+    return okapiClient.get(baseUri + "?limit=1000")
       .then()
       .statusCode(HttpStatus.HTTP_OK.toInt())
       .extract()

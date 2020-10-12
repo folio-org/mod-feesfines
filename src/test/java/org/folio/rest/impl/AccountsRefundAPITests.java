@@ -55,6 +55,9 @@ import io.vertx.core.json.JsonObject;
 public class AccountsRefundAPITests extends ApiTests {
   private static final String FIRST_ACCOUNT_ID = randomId();
   private static final String SECOND_ACCOUNT_ID = randomId();
+  private static final String THIRD_ACCOUNT_ID = randomId();
+  private static final String[] TWO_ACCOUNT_IDS = {FIRST_ACCOUNT_ID, SECOND_ACCOUNT_ID};
+
   private static final String USER_ID = randomId();
   private static final String SERVICE_POINT_ID = randomId();
 
@@ -308,7 +311,7 @@ public class AccountsRefundAPITests extends ApiTests {
 
     DefaultActionRequest request = createRequest(refundAmount);
 
-    testSingleAccountRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
+    testSingleRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
       SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE);
   }
 
@@ -322,7 +325,7 @@ public class AccountsRefundAPITests extends ApiTests {
 
     DefaultActionRequest request = createRequest(refundAmount);
 
-    testSingleAccountRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
+    testSingleRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
       SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE);
   }
 
@@ -338,54 +341,126 @@ public class AccountsRefundAPITests extends ApiTests {
   @Test
   public void return422WhenRequestedAmountIsNegative() {
     DefaultActionRequest request = createRequest(-1.0);
-    testSingleAccountRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
+    testSingleRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
   }
 
   @Test
   public void return422WhenRequestedAmountIsZero() {
     DefaultActionRequest request = createRequest(0.0);
-    testSingleAccountRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
+    testSingleRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
   }
 
   @Test
   public void return422WhenRequestedAmountIsInvalidString() {
     DefaultActionRequest request = createRequest(0.0).withAmount("eleven");
-    testSingleAccountRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Invalid amount entered");
+    testSingleRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Invalid amount entered");
   }
 
   @Test
-  public void bulkRefund() {
-    double initialAmount = 6.0;
-    double payAmount = 5.0;
-    double transferAmount = 0.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 10.0;
+  public void bulkRefundAmountIsDistributedBetweenAccountsEvenlyRecursively() {
+    final double refundAmount = 15.0; // even split is 15/3=5 per account
 
-    double expectedRemainingAmount = initialAmount - payAmount - transferAmount - waiveAmount;
+    // Closed, served third, full payment refund, partial transfer refund
+    double initialAmount1 = 10.0;
+    double payAmount1 = 5.0;
+    double transferAmount1 = 5.0;
+    double waiveAmount1 = 0.0;
+    double expectedRemainingAmount1 = initialAmount1 - payAmount1 - transferAmount1 - waiveAmount1;
+    prepareAccount(FIRST_ACCOUNT_ID, initialAmount1, payAmount1, transferAmount1, waiveAmount1);
 
-    prepareAccount(FIRST_ACCOUNT_ID, initialAmount, payAmount, transferAmount, waiveAmount);
-    prepareAccount(SECOND_ACCOUNT_ID, initialAmount, payAmount, transferAmount, waiveAmount);
+    // Open, served first, full payment refund, full transfer refund
+    double initialAmount2 = 10.0;
+    double payAmount2 = 2.0;
+    double transferAmount2 = 1.0;
+    double waiveAmount2 = 0.0;
+    double expectedRemainingAmount2 = initialAmount2 - payAmount2 - transferAmount2 - waiveAmount2;
+    prepareAccount(SECOND_ACCOUNT_ID, initialAmount2, payAmount2, transferAmount2, waiveAmount2);
 
-    Response response = bulkRefundClient.post(createBulkRequest(refundAmount));
+    // Open, served second, full payment refund, partial transfer refund
+    double initialAmount3 = 10.0;
+    double payAmount3 = 4.0;
+    double transferAmount3 = 3.0;
+    double waiveAmount3 = 0.0;
+    double expectedRemainingAmount3 = initialAmount3 - payAmount3 - transferAmount3 - waiveAmount3;
+    prepareAccount(THIRD_ACCOUNT_ID, initialAmount3, payAmount3, transferAmount3, waiveAmount3);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -5.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON),
-      feeFineActionMatcher(SECOND_ACCOUNT_ID, -5.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(SECOND_ACCOUNT_ID, 0.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, -5.0, payAmount1, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, -6.0, 1.0, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, -1.0, payAmount1, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, 1.0, REFUND.getPartialResult(), REFUNDED_TO_BURSAR),
+
+      feeFineActionMatcher(SECOND_ACCOUNT_ID, 5.0, payAmount2, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID, 4.0, transferAmount2, CREDIT.getFullResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID, 6.0, payAmount2, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID, 7.0, transferAmount2, REFUND.getFullResult(), REFUNDED_TO_BURSAR),
+
+      feeFineActionMatcher(THIRD_ACCOUNT_ID, -1.0, payAmount3, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(THIRD_ACCOUNT_ID, -3.0, 2.0, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(THIRD_ACCOUNT_ID, 1.0, payAmount3, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(THIRD_ACCOUNT_ID, 3.0, 2.0, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
     );
 
+    Response response = bulkRefundClient.post(
+      createBulkRequest(refundAmount, FIRST_ACCOUNT_ID, SECOND_ACCOUNT_ID, THIRD_ACCOUNT_ID));
+
     verifyBulkResponse(response, refundAmount, expectedFeeFineActions);
-    verifyActions(8, expectedFeeFineActions);
+    verifyActions(18, expectedFeeFineActions); // 6 payments/transfer actions + 12 refund actions
 
-    Account firstAccount = verifyAccountAndGet(FIRST_ACCOUNT_ID, expectedRemainingAmount,
-      CLOSED, REFUND.getFullResult());
+    Account firstAccount = verifyAccountAndGet(
+      FIRST_ACCOUNT_ID, expectedRemainingAmount1, CLOSED, REFUND.getPartialResult());
 
-    Account secondAccount = verifyAccountAndGet(SECOND_ACCOUNT_ID, expectedRemainingAmount,
-      CLOSED, REFUND.getFullResult());
+    Account secondAccount = verifyAccountAndGet(
+      SECOND_ACCOUNT_ID, expectedRemainingAmount2, OPEN, REFUND.getFullResult());
 
-    verifyThatFeeFineBalanceChangedEventWasSent(firstAccount);
-    verifyThatFeeFineBalanceChangedEventWasSent(secondAccount);
+    Account thirdAccount = verifyAccountAndGet(
+      THIRD_ACCOUNT_ID, expectedRemainingAmount3, OPEN, REFUND.getPartialResult());
+
+    verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount, thirdAccount);
+  }
+
+  @Test
+  public void bulkRefundFailsWhenRequestedAmountExceedsRefundableAmount() {
+    DefaultBulkActionRequest request = createBulkRequest(11, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(10, 2, 3, 4, request, SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE,
+      TWO_ACCOUNT_IDS);
+  }
+
+  @Test
+  public void bulkRefundFailsWhenThereAreNoRefundableActionsForAccount() {
+    DefaultBulkActionRequest request = createBulkRequest(5, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(10, 0, 0, 4, request, SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE,
+      TWO_ACCOUNT_IDS);
+  }
+
+  @Test
+  public void bulkReturn404WhenAccountDoesNotExist() {
+    bulkRefundClient.post(toJson(createBulkRequest(10.0, TWO_ACCOUNT_IDS)))
+      .then()
+      .statusCode(HttpStatus.SC_NOT_FOUND)
+      .contentType(ContentType.TEXT)
+      .body(equalTo(format("Fee/fine ID %s not found", FIRST_ACCOUNT_ID)));
+  }
+
+  @Test
+  public void bulkReturn422WhenRequestedAmountIsNegative() {
+    DefaultBulkActionRequest request = createBulkRequest(-1.0, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive",
+      TWO_ACCOUNT_IDS);
+  }
+
+  @Test
+  public void bulkReturn422WhenRequestedAmountIsZero() {
+    DefaultBulkActionRequest request = createBulkRequest(0.0, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive",
+      TWO_ACCOUNT_IDS);
+  }
+
+  @Test
+  public void bulkReturn422WhenRequestedAmountIsInvalidString() {
+    DefaultBulkActionRequest request = createBulkRequest(0.0, TWO_ACCOUNT_IDS).withAmount("eleven");
+    testBulkRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Invalid amount entered",
+      TWO_ACCOUNT_IDS);
   }
 
   private void testSingleAccountRefundSuccess(double initialAmount, double payAmount, double transferAmount,
@@ -406,7 +481,7 @@ public class AccountsRefundAPITests extends ApiTests {
     Account accountAfterRefund = verifyAccountAndGet(FIRST_ACCOUNT_ID, expectedRemainingAmount,
       expectedStatus, expectedPaymentStatus);
 
-    verifyThatFeeFineBalanceChangedEventWasSent(accountAfterRefund);
+    verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund);
   }
 
   private void verifyResponse(Response response, double requestedAmount) {
@@ -417,11 +492,11 @@ public class AccountsRefundAPITests extends ApiTests {
   }
 
   private void verifyBulkResponse(Response response, double requestedAmount,
-    List<Matcher<JsonObject>> expectedFeeFineActions) {
+    List<Matcher<JsonObject>> expectedFeeFineActions, String... accountIds) {
 
     response.then()
       .statusCode(SC_CREATED)
-      .body("accountIds", hasItems(FIRST_ACCOUNT_ID, SECOND_ACCOUNT_ID))
+      .body("accountIds", hasItems(accountIds))
       .body("amount", is(new MonetaryValue(requestedAmount).toString()));
 
     for (Matcher<JsonObject> feeFineAction : expectedFeeFineActions) {
@@ -442,7 +517,7 @@ public class AccountsRefundAPITests extends ApiTests {
     }
   }
 
-  private void testSingleAccountRefundFailure(double initialAmount, double payAmount,
+  private void testSingleRefundFailure(double initialAmount, double payAmount,
     double transferAmount, double waiveAmount, DefaultActionRequest request, int expectedStatus,
     String errorMessage) {
 
@@ -459,6 +534,29 @@ public class AccountsRefundAPITests extends ApiTests {
     actionsClient.getAll()
       .then()
       .body(FEE_FINE_ACTIONS, hasSize(expectedActionCount));
+  }
+
+  private void testBulkRefundFailure(double initialAmount, double payAmount, double transferAmount,
+    double waiveAmount, DefaultBulkActionRequest request, int expectedStatus, String errorMessage,
+    String... accountIds) {
+
+    int expectedActionsCount = 0;
+
+    for (String accountId : accountIds) {
+      expectedActionsCount += prepareAccount(
+        accountId, initialAmount, payAmount, transferAmount, waiveAmount);
+    }
+
+    bulkRefundClient.post(request)
+      .then()
+      .statusCode(expectedStatus)
+      .body("accountIds", hasItems(accountIds))
+      .body("amount", is(request.getAmount()))
+      .body("errorMessage", is(errorMessage));
+
+    actionsClient.getAll()
+      .then()
+      .body(FEE_FINE_ACTIONS, hasSize(expectedActionsCount));
   }
 
   private int prepareAccount(String accountId, double initialAmount, double payAmount,
@@ -505,9 +603,9 @@ public class AccountsRefundAPITests extends ApiTests {
       .withComments(COMMENTS);
   }
 
-  private static DefaultBulkActionRequest createBulkRequest(double amount) {
+  private static DefaultBulkActionRequest createBulkRequest(double amount, String... accountIds) {
     return new DefaultBulkActionRequest()
-      .withAccountIds(Arrays.asList(FIRST_ACCOUNT_ID, SECOND_ACCOUNT_ID))
+      .withAccountIds(Arrays.asList(accountIds))
       .withAmount(new MonetaryValue(amount).toString())
       .withPaymentMethod(PAYMENT_METHOD)
       .withServicePointId(SERVICE_POINT_ID)
@@ -520,13 +618,15 @@ public class AccountsRefundAPITests extends ApiTests {
     return JsonObject.mapFrom(object).encodePrettily();
   }
 
-  private void verifyThatFeeFineBalanceChangedEventWasSent(Account account) {
-    verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
-      .put("userId", account.getUserId())
-      .put("feeFineId", account.getId())
-      .put("feeFineTypeId", account.getFeeFineId())
-      .put("balance", account.getRemaining())
-      .put("loanId", account.getLoanId()));
+  private void verifyThatFeeFineBalanceChangedEventsWereSent(Account... accounts) {
+    for (Account account : accounts) {
+      verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
+        .put("userId", account.getUserId())
+        .put("feeFineId", account.getId())
+        .put("feeFineTypeId", account.getFeeFineId())
+        .put("balance", account.getRemaining())
+        .put("loanId", account.getLoanId()));
+    }
   }
 
   private void verifyThatEventWasSent(EventType eventType, JsonObject eventPayload) {
@@ -545,7 +645,7 @@ public class AccountsRefundAPITests extends ApiTests {
       ));
   }
 
-  private Account createAccount(String accountId, double amount, double remainingAmount) {
+  private static Account createAccount(String accountId, double amount, double remainingAmount) {
     return EntityBuilder.buildAccount(amount, remainingAmount)
       .withId(accountId)
       .withUserId(USER_ID);
