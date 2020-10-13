@@ -47,7 +47,7 @@ public abstract class ActionValidationService {
       .compose(accountsMap -> validate(accountsMap, rawAmount));
   }
 
-  public Future<ActionValidationResult> validate(String accountId, Account account,
+  protected Future<ActionValidationResult> validate(String accountId, Account account,
     String rawAmount) {
 
     return validate(singletonMap(accountId, account), rawAmount);

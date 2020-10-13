@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
@@ -178,7 +177,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
     String requestedAmountString = "1.004123456789";
     String expectedPaymentStatus = action.getFullResult();
 
-    final ActionRequest request = createRequest(requestedAmountString);
+    final DefaultActionRequest request = createRequest(requestedAmountString);
 
     resourceClient.post(toJson(request))
       .then()
@@ -212,7 +211,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
     String expectedPaymentStatus = action.getPartialResult();
 
-    final ActionRequest request = createRequest(requestedAmountString);
+    final DefaultActionRequest request = createRequest(requestedAmountString);
 
     resourceClient.post(toJson(request))
       .then()

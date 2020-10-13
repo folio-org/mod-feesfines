@@ -67,36 +67,43 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
     ResourceClient actionCheckClient) {
 
     String expectedErrorMessage = "Requested amount exceeds remaining amount";
-    String amount = String.valueOf(bulk ? ACCOUNT_REMAINING_AMOUNT * 2 + 1 : REQUESTED_AMOUNT
-      + 10);
+    String amount = String.valueOf(bulk ? ACCOUNT_REMAINING_AMOUNT * 2 + 1 : REQUESTED_AMOUNT + 10);
+    Object request = buildRequest(bulk, amount);
 
     baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(actionCheckClient,
-      expectedErrorMessage, amount);
+      expectedErrorMessage, request, amount);
   }
 
-  protected void actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(
+  protected void actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(boolean bulk,
     ResourceClient actionCheckClient) {
 
     String expectedErrorMessage =
       "Refund amount must be greater than zero and less than or equal to Selected amount";
 
+    String amount = String.valueOf(REQUESTED_AMOUNT + 10);
+    Object request = buildRequest(bulk, amount);
+
     baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
-      actionCheckClient, expectedErrorMessage, String.valueOf(
-        REQUESTED_AMOUNT + 10));
+      actionCheckClient, expectedErrorMessage, request, amount);
+  }
+
+  private Object buildRequest(boolean bulk, String amount) {
+    return bulk
+      ? new BulkCheckActionRequest()
+      .withAmount(amount)
+      .withAccountIds(Arrays.asList(firstAccount.getId(), secondAccount.getId()))
+      : new CheckActionRequest().withAmount(amount);
   }
 
   void baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
-    ResourceClient actionCheckClient, String expectedErrorMessage, String amount) {
+    ResourceClient actionCheckClient, String expectedErrorMessage, Object request, String amount) {
 
-    CheckActionRequest accountCheckRequest = new CheckActionRequest();
-    accountCheckRequest.withAmount(amount);
-
-    actionCheckClient.attemptCreate(accountCheckRequest)
+    actionCheckClient.attemptCreate(request)
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .body("errorMessage", is(expectedErrorMessage))
       .body("allowed", is(false))
-      .body("amount", is(accountCheckRequest.getAmount()));
+      .body("amount", is(amount));
   }
 
   protected void actionCheckShouldNotFailForNonExistentAccount(boolean bulk,
