@@ -3,8 +3,11 @@ package org.folio.test.support;
 import static org.folio.test.support.ApiTests.randomId;
 
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
+
+import java.util.Date;
 
 public class EntityBuilder {
 
@@ -37,4 +40,16 @@ public class EntityBuilder {
       .withRemaining(remaining);
   }
 
+  public static Manualblock buildManualBlock() {
+    return new Manualblock()
+      .withId(randomId())
+      .withUserId(randomId())
+      .withDesc("Description")
+      .withPatronMessage("Patron message")
+      .withStaffInformation("Staff information")
+      .withRequests(true)
+      .withRenewals(true)
+      .withBorrowing(true)
+      .withExpirationDate(new Date());
+  }
 }

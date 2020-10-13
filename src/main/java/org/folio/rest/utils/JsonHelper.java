@@ -18,6 +18,12 @@ public class JsonHelper {
     }
   }
 
+  public static void write(JsonObject target, String property, JsonObject value) {
+    if(value != null) {
+      target.put(property, value);
+    }
+  }
+
   public static void write(JsonObject target, String property, Double value) {
     if (value != null) {
       target.put(property, value);

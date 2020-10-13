@@ -10,6 +10,10 @@ public final class ResourceClients {
     return new ResourceClient("/accounts");
   }
 
+  public static ResourceClient buildManualBlockClient() {
+    return new ResourceClient("/manualblocks");
+  }
+
   public static ResourceClient buildAccountCheckPayClient(String accountId) {
     return buildAccountActionClient(accountId, "check-pay");
   }
