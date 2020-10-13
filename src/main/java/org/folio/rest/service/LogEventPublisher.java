@@ -32,6 +32,8 @@ public class LogEventPublisher {
     JsonObject logEventPayload = new JsonObject();
     write(logEventPayload, LOG_EVENT_TYPE, logEventPayloadType.value());
     write(logEventPayload, PAYLOAD, jsonObject.encode());
+    return logEventPayload;
+  }
 
   public void publishLogEvent(Manualblock manualBlock, LogEventPayloadType logEventPayloadType) {
     final JsonObject payload = createLogRecordPayload(manualBlock, logEventPayloadType);
