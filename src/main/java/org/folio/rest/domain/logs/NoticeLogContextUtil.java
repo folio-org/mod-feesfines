@@ -1,5 +1,6 @@
 package org.folio.rest.domain.logs;
 
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.folio.rest.domain.logs.LogEventPayloadField.FEE_FINE_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.HOLDINGS_RECORD_ID;
@@ -30,7 +31,7 @@ public class NoticeLogContextUtil {
       write(contextJson, USER_ID.value(), user.getId());
       write(contextJson, USER_BARCODE.value(), user.getBarcode());
     });
-    ofNullable(context.getAction()).ifPresent(action -> {
+    ofNullable(nonNull(context.getAction()) ? context.getAction() : context.getCharge()).ifPresent(action -> {
       write(contextJson, SOURCE.value(), action.getSource());
       write(itemJson, SERVICE_POINT_ID.value(), action.getCreatedAt());
       write(itemJson, TRIGGERING_EVENT.value(), action.getTypeAction());

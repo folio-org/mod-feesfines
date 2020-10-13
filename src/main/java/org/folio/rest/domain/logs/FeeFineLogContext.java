@@ -2,6 +2,7 @@ package org.folio.rest.domain.logs;
 
 import static org.folio.rest.domain.logs.LogEventPayloadField.ACTION;
 import static org.folio.rest.domain.logs.LogEventPayloadField.AMOUNT;
+import static org.folio.rest.domain.logs.LogEventPayloadField.AUTOMATED;
 import static org.folio.rest.domain.logs.LogEventPayloadField.BALANCE;
 import static org.folio.rest.domain.logs.LogEventPayloadField.COMMENT;
 import static org.folio.rest.domain.logs.LogEventPayloadField.DATE;
@@ -33,8 +34,8 @@ public class FeeFineLogContext {
   private String loanId;
   private Boolean automated;
   private String type;
-  private double amount;
-  private double balance;
+  private Double amount;
+  private Double balance;
   private String paymentMethod;
   private String comment;
 
@@ -98,12 +99,12 @@ public class FeeFineLogContext {
     return this;
   }
 
-  public FeeFineLogContext withAmount(double amount) {
+  public FeeFineLogContext withAmount(Double amount) {
     this.amount = amount;
     return this;
   }
 
-  public FeeFineLogContext withBalance(double balance) {
+  public FeeFineLogContext withBalance(Double balance) {
     this.balance = balance;
     return this;
   }
@@ -128,8 +129,9 @@ public class FeeFineLogContext {
     write(json, SERVICE_POINT_ID.value(), servicePointId);
     write(json, SOURCE.value(), source);
     write(json, FEE_FINE_ID.value(), feeFineId);
-    write(json, LOAN_ID.value(), loanId);
     write(json, FEE_FINE_OWNER.value(), feeFineOwner);
+    write(json, LOAN_ID.value(), loanId);
+    write(json, AUTOMATED.value(), automated);
     write(json, TYPE.value(), type);
     write(json, AMOUNT.value(), amount);
     write(json, BALANCE.value(), balance);

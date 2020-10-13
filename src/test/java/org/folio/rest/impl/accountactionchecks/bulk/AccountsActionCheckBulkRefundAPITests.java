@@ -22,6 +22,8 @@ public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksA
   public void setUp() {
     firstAccount = createAccount();
     secondAccount = createAccount();
+    stubFor(createUser(firstAccount.getUserId()));
+    stubFor(createUser(secondAccount.getUserId()));
     accountsCheckRefundClient = buildAccountCheckRefundClient(firstAccount.getId());
   }
 

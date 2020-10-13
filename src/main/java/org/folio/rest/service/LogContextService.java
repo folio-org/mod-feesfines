@@ -1,6 +1,7 @@
 package org.folio.rest.service;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.Optional.ofNullable;
 import static org.folio.rest.utils.FeeFineActionHelper.isAction;
 import static org.folio.rest.utils.FeeFineActionHelper.isCharge;
 
@@ -80,7 +81,7 @@ public class LogContextService {
   }
 
   private Future<FeeFineLogContext> addFeeFineData(Feefine feefine) {
-    context = context.withAutomated(feefine.getAutomatic());
+    ofNullable(feefine).ifPresent(f -> context = context.withAutomated(f.getAutomatic()));
     return succeededFuture(context);
   }
 }
