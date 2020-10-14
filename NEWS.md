@@ -1,3 +1,6 @@
+## 15.9.1 2020-10-14
+* Publish log events related to fees/fines (MODFEE-124)
+
 ## 15.9.0 2020-10-14
 * Add loanId to the FEE_FINE_BALANCE_CHANGED event payload (MODFEE-71)
 * Extend/rename tokens available to manual fee/fine notices (MODFEE-72)
