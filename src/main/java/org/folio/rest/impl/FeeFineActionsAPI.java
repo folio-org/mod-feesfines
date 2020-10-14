@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
+import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,6 +24,8 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.service.LogContextService;
+import org.folio.rest.service.LogEventPublisher;
 import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -127,9 +130,9 @@ public class FeeFineActionsAPI implements Feefineactions {
 
       Promise<Response> postCompleted = Promise.promise();
       PgUtil.post(FEEFINEACTIONS_TABLE, entity, okapiHeaders, vertxContext, PostFeefineactionsResponse.class, postCompleted);
-
-      postCompleted.future().map(response ->
-        sendPatronNoticeIfNeedBe(entity, okapiHeaders, vertxContext, response))
+      postCompleted.future()
+        .compose(response -> publishLogEvent(entity, okapiHeaders, vertxContext, response))
+        .map(response -> sendPatronNoticeIfNeedBe(entity, okapiHeaders, vertxContext, response))
         .onComplete(asyncResultHandler);
     }
 
@@ -140,6 +143,16 @@ public class FeeFineActionsAPI implements Feefineactions {
         .sendPatronNotice(entity);
     }
     return response;
+  }
+
+  private Future<Response> publishLogEvent(Feefineaction entity, Map<String, String> okapiHeaders,
+    Context vertxContext, Response response) {
+    return new LogContextService(vertxContext.owner(), okapiHeaders).createLogContext(entity)
+      .map(context -> {
+        new LogEventPublisher(vertxContext, okapiHeaders).publishLogEvent(context.asJson(), FEE_FINE);
+        return Future.succeededFuture();
+      })
+      .map(v -> response);
   }
 
   @Validate

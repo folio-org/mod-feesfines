@@ -3,6 +3,8 @@ package org.folio.rest.utils;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 
 import io.vertx.core.json.JsonObject;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 
 public class JsonHelper {
 
@@ -25,6 +27,18 @@ public class JsonHelper {
   public static void write(JsonObject target, String property, Double value) {
     if (value != null) {
       target.put(property, value);
+    }
+  }
+
+  public static void write(JsonObject to, String propertyName, DateTime value) {
+    if(value != null) {
+      write(to, propertyName, value.toString(ISODateTimeFormat.dateTime()));
+    }
+  }
+
+  public static void write(JsonObject to, String propertyName, Boolean value) {
+    if(value != null) {
+      to.put(propertyName, value);
     }
   }
 

@@ -2,6 +2,8 @@ package org.folio.rest.service;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.domain.logs.LogEventPayloadField.DATE;
+import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
 import static org.folio.rest.utils.FeeFineActionHelper.isAction;
 import static org.folio.rest.utils.FeeFineActionHelper.isCharge;
 import static org.folio.util.UuidUtil.isUuid;
@@ -9,14 +11,18 @@ import static org.folio.util.UuidUtil.isUuid;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
 import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.client.UsersClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
+import org.folio.rest.domain.logs.NoticeLogContextUtil;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -30,6 +36,8 @@ import org.folio.rest.repository.FeeFineRepository;
 import org.folio.rest.repository.OwnerRepository;
 import org.folio.rest.utils.PatronNoticeBuilder;
 import org.folio.util.UuidUtil;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 
 public class PatronNoticeService {
   private static final Logger logger = LoggerFactory.getLogger(PatronNoticeService.class);
@@ -41,6 +49,9 @@ public class PatronNoticeService {
   private final PatronNoticeClient patronNoticeClient;
   private final UsersClient usersClient;
   private final InventoryClient inventoryClient;
+  private final LogEventPublisher logEventPublisher;
+
+  private JsonObject noticeLogContext;
 
   public PatronNoticeService(Vertx vertx, Map<String, String> okapiHeaders) {
     PostgresClient pgClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
@@ -53,6 +64,8 @@ public class PatronNoticeService {
     patronNoticeClient = new PatronNoticeClient(vertx, okapiHeaders);
     usersClient = new UsersClient(vertx, okapiHeaders);
     inventoryClient = new InventoryClient(vertx, okapiHeaders);
+
+    logEventPublisher = new LogEventPublisher(vertx, okapiHeaders);
   }
 
   public void sendPatronNotice(Feefineaction action) {
@@ -67,8 +80,10 @@ public class PatronNoticeService {
       .compose(this::fetchHolding)
       .compose(this::fetchInstance)
       .compose(this::fetchLocation)
+      .compose(this::prepareLogContext)
       .map(PatronNoticeBuilder::buildNotice)
       .compose(patronNoticeClient::postPatronNotice)
+      .compose(v -> publishLogEvent())
       .onComplete(this::handleSendPatronNoticeResult);
   }
 
@@ -158,6 +173,11 @@ public class PatronNoticeService {
       .map(context::withEffectiveLocation);
   }
 
+  private Future<FeeFineNoticeContext> prepareLogContext(FeeFineNoticeContext context) {
+    noticeLogContext = NoticeLogContextUtil.buildNoticeLogContext(context);
+    return succeededFuture(context);
+  }
+
   private Future<Location> fetchInstitution(Location location) {
     final String institutionId = location.getInstitutionId();
 
@@ -202,5 +222,11 @@ public class PatronNoticeService {
     } else {
       logger.info("Patron notice has been successfully sent");
     }
+  }
+
+  private Future<Void> publishLogEvent() {
+    noticeLogContext.put(DATE.value(), DateTime.now().toString(ISODateTimeFormat.dateTime()));
+    CompletableFuture.runAsync(() -> logEventPublisher.publishLogEvent(noticeLogContext, NOTICE));
+    return succeededFuture();
   }
 }

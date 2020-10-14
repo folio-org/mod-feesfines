@@ -1,6 +1,5 @@
 package org.folio.rest.repository;
 
-
 import java.util.Optional;
 
 import org.folio.rest.domain.FeeFineNoticeContext;
@@ -30,8 +29,12 @@ public class FeeFineRepository {
       return Future.failedFuture(new IllegalArgumentException("Fee fine id is not present"));
     }
 
+    return getById(optionalFeeFineId.get()).map(context::withFeefine);
+  }
+
+  public Future<Feefine> getById(String id) {
     Promise<Feefine> promise = Promise.promise();
-    pgClient.getById(FEEFINES_TABLE, optionalFeeFineId.get(), Feefine.class, promise);
-    return promise.future().map(context::withFeefine);
+    pgClient.getById(FEEFINES_TABLE, id, Feefine.class, promise);
+    return promise.future();
   }
 }
