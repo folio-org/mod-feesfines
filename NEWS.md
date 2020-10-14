@@ -1,3 +1,14 @@
+## 15.9.0 2020-10-14
+* Add loanId to the FEE_FINE_BALANCE_CHANGED event payload (MODFEE-71)
+* Extend/rename tokens available to manual fee/fine notices (MODFEE-72)
+* Fix incorrect formatting of monetary values in patron notices (MODFEE-87)
+* Fix missing permissions for fee/fine actions endpoint (MODFEE-89)
+* Fix memory leak (MODFEE-93)
+* Upgrade to RMB v31 and JDK 11 (MODFEE-103)
+* Publish log events related to fees/fines (MODFEE-124)
+* Publish log events related to manual blocks (MODFEE-125)
+* Fee/fine actions refactoring (MODFEE-79, MODFEE-80, MODFEE-81, MODFEE-82, MODFEE-83, MODFEE-84, MODFEE-85, MODFEE-86, MODFEE-105, MODFEE-106, MODFEE-107, MODFEE-108, MODFEE-109, MODFEE-110, MODFEE-111, MODFEE-112, MODFEE-113)
+
 ## 15.8.0 2020-06-12
 * Enable user-related tokens for manual fee/fine patron notices (MODFEE-66)
 * Update RMB version to 30.0.1 and Vertx to 3.9 (MODFEE-59, MODFEE-62)
