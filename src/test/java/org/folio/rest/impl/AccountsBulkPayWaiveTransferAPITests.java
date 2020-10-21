@@ -18,7 +18,7 @@ import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.folio.rest.utils.LogEventUtils.createUser;
 import static org.folio.rest.utils.LogEventUtils.stubFor;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
-import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogContext;
+import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -346,9 +346,9 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
       .atMost(5, TimeUnit.SECONDS);
 
     fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
-      is(either(feeFineActionLogContext(account1, request, user, action.getPartialResult(),
+      is(either(feeFineActionLogEventPayload(account1, request, user, action.getPartialResult(),
           expectedActionAmount, expectedRemainingAmount1))
-        .or(feeFineActionLogContext(account2, request, user, action.getFullResult(),
+        .or(feeFineActionLogEventPayload(account2, request, user, action.getFullResult(),
         expectedActionAmount, expectedRemainingAmount2)))));
   }
 

@@ -21,7 +21,7 @@ import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.folio.rest.utils.LogEventUtils.createUser;
 import static org.folio.rest.utils.LogEventUtils.stubFor;
-import static org.folio.test.support.matcher.LogEventMatcher.notCreditOrRefundActionLogContext;
+import static org.folio.test.support.matcher.LogEventMatcher.notCreditOrRefundActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -426,7 +426,7 @@ public class AccountsRefundAPITests extends ApiTests {
     verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount, thirdAccount);
 
     fetchLogEventPayloads(getOkapi()).forEach(payload ->
-      assertThat(payload, is(notCreditOrRefundActionLogContext())));
+      assertThat(payload, is(notCreditOrRefundActionLogEventPayload())));
   }
 
   @Test
@@ -499,7 +499,7 @@ public class AccountsRefundAPITests extends ApiTests {
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund);
 
     fetchLogEventPayloads(getOkapi()).forEach(payload ->
-      assertThat(payload, is(notCreditOrRefundActionLogContext())));
+      assertThat(payload, is(notCreditOrRefundActionLogEventPayload())));
   }
 
   private void verifyResponse(Response response, double requestedAmount) {

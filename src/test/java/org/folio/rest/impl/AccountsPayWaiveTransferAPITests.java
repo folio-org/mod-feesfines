@@ -17,7 +17,7 @@ import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.folio.rest.utils.LogEventUtils.createUser;
 import static org.folio.rest.utils.LogEventUtils.stubFor;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
-import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogContext;
+import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -211,7 +211,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .body("paymentStatus.name", is(expectedPaymentStatus));
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
-      is(feeFineActionLogContext(account, request, user, action.getFullResult(), 1.0, 0.0)));
+      is(feeFineActionLogEventPayload(account, request, user, action.getFullResult(), 1.0, 0.0)));
   }
 
   @Test
@@ -251,7 +251,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .body("paymentStatus.name", is(expectedPaymentStatus));
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
-      is(feeFineActionLogContext(account, request, user, action.getPartialResult(), 1.0, 0.24)));
+      is(feeFineActionLogEventPayload(account, request, user, action.getPartialResult(), 1.0, 0.24)));
   }
 
   @Test
@@ -316,7 +316,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
     }
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
-      is(feeFineActionLogContext(account, request, user,
+      is(feeFineActionLogEventPayload(account, request, user,
         terminalAction ? action.getFullResult() : action.getPartialResult(),
         requestedAmount, expectedAccountBalanceAfter)));
   }

@@ -27,7 +27,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.service.AccountUpdateService;
-import org.folio.rest.service.LogContextService;
+import org.folio.rest.service.LogEventService;
 import org.folio.rest.service.LogEventPublisher;
 import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.service.action.context.ActionContext;
@@ -46,7 +46,7 @@ public abstract class ActionService {
   protected final ActionValidationService validationService;
   protected final PatronNoticeService patronNoticeService;
   protected final BulkActionAmountSplitterStrategy amountSplitterStrategy;
-  private final LogContextService logContextService;
+  private final LogEventService logEventService;
   private final LogEventPublisher logEventPublisher;
 
   public ActionService(Action action, ActionValidationService validationService,
@@ -61,7 +61,7 @@ public abstract class ActionService {
     this.patronNoticeService = new PatronNoticeService(context.owner(), headers);
     this.validationService = validationService;
     this.amountSplitterStrategy = new SplitEvenlyRecursively();
-    this.logContextService = new LogContextService(context.owner(), headers);
+    this.logEventService = new LogEventService(context.owner(), headers);
     this.logEventPublisher = new LogEventPublisher(context.owner(), headers);
   }
 
@@ -78,7 +78,7 @@ public abstract class ActionService {
     this.patronNoticeService = new PatronNoticeService(context.owner(), headers);
     this.validationService = validationService;
     this.amountSplitterStrategy = bulkActionAmountSplitterStrategy;
-    this.logContextService = new LogContextService(context.owner(), headers);
+    this.logEventService = new LogEventService(context.owner(), headers);
     this.logEventPublisher = new LogEventPublisher(context.owner(), headers);
   }
 
@@ -183,9 +183,9 @@ public abstract class ActionService {
     return all(actionContext.getFeeFineActions().stream()
       // do not publish log records for CREDIT and REFUND actions
       .filter(ffa -> !CREDIT.isActionForResult(ffa.getTypeAction()) && !REFUND.isActionForResult(ffa.getTypeAction()))
-      .map(ffa -> logContextService.createFeeFineLogContext(ffa, actionContext.getAccounts().get(ffa.getAccountId()))
-        .compose(ctx -> {
-          logEventPublisher.publishLogEvent(ctx, FEE_FINE);
+      .map(ffa -> logEventService.createFeeFineLogEventPayload(ffa, actionContext.getAccounts().get(ffa.getAccountId()))
+        .compose(eventPayload -> {
+          logEventPublisher.publishLogEvent(eventPayload, FEE_FINE);
           return succeededFuture();
         }))
       .collect(toList()))

@@ -36,17 +36,16 @@ import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.Feefineaction;
-import org.folio.rest.jaxrs.model.User;
 import org.joda.time.DateTime;
 
-public class LogContextHelper {
+public class LogEventPayloadHelper {
   private static final String STAFF_INFO_ONLY = "Staff info only";
   private static final String STAFF_INFO_ONLY_ADDED = "Staff information only added";
   private static final String BILLED = "Billed";
 
-  private LogContextHelper() {}
+  private LogEventPayloadHelper() {}
 
-  public static JsonObject buildNoticeLogContext(FeeFineNoticeContext context) {
+  public static JsonObject buildNoticeLogEventPayload(FeeFineNoticeContext context) {
     JsonObject contextJson = new JsonObject();
     JsonObject itemJson = new JsonObject();
 
@@ -79,8 +78,7 @@ public class LogContextHelper {
     return contextJson;
   }
 
-  public static Future<JsonObject> buildFeeFineLogContext(Feefineaction action, Account account, Feefine feefine,
-    User user) {
+  public static Future<JsonObject> buildFeeFineLogEventPayload(Feefineaction action, Account account, Feefine feefine) {
     JsonObject json = new JsonObject();
 
     ofNullable(action).ifPresent(act -> {
@@ -112,8 +110,6 @@ public class LogContextHelper {
       write(json, TYPE.value(), ff.getFeeFineType());
       write(json, AUTOMATED.value(), ff.getAutomatic());
     });
-
-    ofNullable(user).ifPresent(u -> write(json, USER_BARCODE.value(), user.getBarcode()));
 
     return succeededFuture(json);
   }

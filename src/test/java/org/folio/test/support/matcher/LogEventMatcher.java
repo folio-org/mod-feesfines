@@ -14,7 +14,6 @@ import static org.folio.rest.domain.logs.LogEventPayloadField.LOAN_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.PAYMENT_METHOD;
 import static org.folio.rest.domain.logs.LogEventPayloadField.SERVICE_POINT_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.SOURCE;
-import static org.folio.rest.domain.logs.LogEventPayloadField.USER_BARCODE;
 import static org.folio.rest.domain.logs.LogEventPayloadField.USER_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -37,27 +36,26 @@ import java.util.Date;
 public class LogEventMatcher {
   private LogEventMatcher(){}
 
-  public static Matcher<String> feeFineActionLogContext(Account account, DefaultBulkActionRequest request,
+  public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultBulkActionRequest request,
     User user, String action, double amount, double balance) {
-    return feeFineActionLogContext(user.getId(), user.getBarcode(), action, request.getServicePointId(),
+    return feeFineActionLogEventPayload(user.getId(), user.getBarcode(), action, request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       amount, balance, request.getPaymentMethod(), request.getComments());
   }
 
-  public static Matcher<String> feeFineActionLogContext(Account account, DefaultActionRequest request,
+  public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultActionRequest request,
     User user, String action, double amount, double balance) {
-    return feeFineActionLogContext(user.getId(), user.getBarcode(), action, request.getServicePointId(),
+    return feeFineActionLogEventPayload(user.getId(), user.getBarcode(), action, request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       amount, balance, request.getPaymentMethod(), request.getComments());
   }
 
-  public static Matcher<String> feeFineActionLogContext(String userId, String userBarcode,
+  public static Matcher<String> feeFineActionLogEventPayload(String userId, String userBarcode,
     String action, String servicePointId, String source, String feeFineId, String feeFineOwner, String loanId,
     double amount, double balance, String paymentMethod, String comments) {
 
     return allOf(Arrays.asList(
       hasJsonPath(USER_ID.value(), is(userId)),
-      hasJsonPath(USER_BARCODE.value(), is(userBarcode)),
       hasJsonPath(ACTION.value(), is(action)),
       hasJsonPath(DATE.value(), notNullValue(Date.class)),
       hasJsonPath(SERVICE_POINT_ID.value(), is(servicePointId)),
@@ -71,25 +69,24 @@ public class LogEventMatcher {
       hasJsonPath(COMMENTS.value(), is(comments))));
   }
 
-  public static Matcher<String> cancelledActionLogContext(Account account, User user, CancelActionRequest request) {
-    return cancelledActionLogContext(user.getId(), user.getBarcode(), request.getServicePointId(),
+  public static Matcher<String> cancelledActionLogEventPayload(Account account, User user, CancelActionRequest request) {
+    return cancelledActionLogEventPayload(user.getId(), user.getBarcode(), request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       account.getAmount(), request.getComments());
   }
 
-  public static Matcher<String> cancelledActionLogContext(Account account, User user, CancelBulkActionRequest request) {
-    return cancelledActionLogContext(user.getId(), user.getBarcode(), request.getServicePointId(),
+  public static Matcher<String> cancelledActionLogEventPayload(Account account, User user, CancelBulkActionRequest request) {
+    return cancelledActionLogEventPayload(user.getId(), user.getBarcode(), request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       account.getAmount(), request.getComments());
   }
 
-  public static Matcher<String> cancelledActionLogContext(String userId, String userBarcode,
+  public static Matcher<String> cancelledActionLogEventPayload(String userId, String userBarcode,
     String servicePointId, String source, String feeFineId, String feeFineOwner, String loanId,
     double amount, String comments) {
 
     return allOf(Arrays.asList(
       hasJsonPath(USER_ID.value(), is(userId)),
-      hasJsonPath(USER_BARCODE.value(), is(userBarcode)),
       hasJsonPath(ACTION.value(), is(Action.CANCEL.getFullResult())),
       hasJsonPath(DATE.value(), notNullValue(Date.class)),
       hasJsonPath(SERVICE_POINT_ID.value(), is(servicePointId)),
@@ -102,7 +99,7 @@ public class LogEventMatcher {
       hasJsonPath(COMMENTS.value(), is(comments))));
   }
 
-  public static Matcher<? super Object> notCreditOrRefundActionLogContext() {
+  public static Matcher<? super Object> notCreditOrRefundActionLogEventPayload() {
     return hasJsonPath(ACTION.value(), not(anyOf(is(CREDIT.getFullResult()), is(CREDIT.getPartialResult()),
         is(REFUND.getPartialResult()), is(REFUND.getPartialResult()))));
   }

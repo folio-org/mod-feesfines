@@ -184,7 +184,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     JsonObject expectedFeeFineLogContext = new JsonObject()
       .put("userId", user.getId())
-      .put("userBarcode", user.getBarcode())
       .put("itemBarcode", account.getBarcode())
       .put("action", "Billed")
       .put("feeFineId", account.getFeeFineId())
@@ -223,7 +222,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     expectedFeeFineLogContext = new JsonObject()
       .put("userId", user.getId())
-      .put("userBarcode", user.getBarcode())
       .put("itemBarcode", account.getBarcode())
       .put("action", action.getTypeAction())
       .put("feeFineId", account.getFeeFineId())
@@ -283,7 +281,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     JsonObject expectedFeeFineLogContext = new JsonObject()
       .put("userId", user.getId())
-      .put("userBarcode", user.getBarcode())
       .put("action", "Billed")
       .put("feeFineId", feeFineId)
       .put("type", feeFineType)
@@ -339,7 +336,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     JsonObject expectedFeeFineLogContext = new JsonObject()
       .put("userId", user.getId())
-      .put("userBarcode", user.getBarcode())
       .put("action", expectedTypeAction)
       .put("feeFineId", feeFineId)
       .put("type", feeFineType)
