@@ -11,7 +11,7 @@ import static org.folio.rest.utils.LogEventUtils.createUser;
 import static org.folio.rest.utils.LogEventUtils.stubFor;
 import static org.folio.test.support.EntityBuilder.buildAccount;
 import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -182,8 +182,8 @@ public class AccountsCancelActionAPITests extends ApiTests {
       ));
 
     fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
-      is(anyOf(LogEventMatcher.cancelledActionLogContext(accountsToPost.get(0), users.get(0), cancelActionRequest),
-        LogEventMatcher.cancelledActionLogContext(accountsToPost.get(1), users.get(1), cancelActionRequest)))));
+      is(either(LogEventMatcher.cancelledActionLogContext(accountsToPost.get(0), users.get(0), cancelActionRequest))
+          .or(LogEventMatcher.cancelledActionLogContext(accountsToPost.get(1), users.get(1), cancelActionRequest)))));
   }
 
   private CancelActionRequest createCancelActionRequest() {

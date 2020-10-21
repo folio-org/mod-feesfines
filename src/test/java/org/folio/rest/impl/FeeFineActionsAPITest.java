@@ -293,6 +293,62 @@ public class FeeFineActionsAPITest extends ApiTests {
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
   }
 
+  @Test
+  public void postFeeFineActionsChangeStaffInfo() {
+    final String ownerId = randomId();
+    final String feeFineId = randomId();
+    final String accountId = randomId();
+    final String defaultChargeTemplateId = randomId();
+    final User user = createUser();
+    final String feeFineType = "damaged book";
+    final String typeAction = "Staff info only";
+    final String expectedTypeAction = "Staff information only added";
+    final boolean notify = false;
+    final double amountAction = 100;
+    final double balance = 100;
+    final String dateAction = "2019-12-23T14:25:59.550+0000";
+    final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
+      amountAction, balance, accountId, user.getId());
+
+    createStub(USERS_PATH, user, user.getId());
+
+    createEntity("/owners", new JsonObject()
+      .put("id", ownerId)
+      .put("owner", "library")
+      .put("defaultChargeNoticeId", defaultChargeTemplateId));
+
+    createEntity("/accounts", new JsonObject()
+      .put("id", accountId)
+      .put("userId", user.getId())
+      .put("itemId", randomId())
+      .put("materialTypeId", randomId())
+      .put("feeFineId", feeFineId)
+      .put("ownerId", ownerId)
+      .put("remaining", 10.0)
+      .put("amount", 10.0));
+
+    createEntity("/feefines", new JsonObject()
+      .put("id", feeFineId)
+      .put("feeFineType", feeFineType)
+      .put("ownerId", ownerId));
+
+    post(feeFineActionJson)
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .body(equalTo(feeFineActionJson));
+
+    JsonObject expectedFeeFineLogContext = new JsonObject()
+      .put("userId", user.getId())
+      .put("userBarcode", user.getBarcode())
+      .put("action", expectedTypeAction)
+      .put("feeFineId", feeFineId)
+      .put("type", feeFineType)
+      .put("amount", amountAction);
+
+    assertThatPublishedLogRecordsCountIsEqualTo(1);
+    assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
+  }
+
   private String createFeeFineActionJson(String dateAction, String typeAction, boolean notify,
     double amountAction, double balance, String accountId, String userId) {
 
