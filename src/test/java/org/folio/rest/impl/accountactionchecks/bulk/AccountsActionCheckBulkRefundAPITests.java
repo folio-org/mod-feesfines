@@ -5,6 +5,8 @@ import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckRefundClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.rest.utils.LogEventUtils.createUser;
+import static org.folio.rest.utils.LogEventUtils.stubFor;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.impl.accountactionchecks.AccountsActionChecksAPITestsBase;
@@ -22,8 +24,8 @@ public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksA
   public void setUp() {
     firstAccount = createAccount();
     secondAccount = createAccount();
-    stubFor(createUser(firstAccount.getUserId()));
-    stubFor(createUser(secondAccount.getUserId()));
+    stubFor(createUser(firstAccount.getUserId()), getOkapi());
+    stubFor(createUser(secondAccount.getUserId()), getOkapi());
     accountsCheckRefundClient = buildAccountCheckRefundClient(firstAccount.getId());
   }
 

@@ -12,14 +12,19 @@ import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
+import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountsRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.rest.utils.LogEventUtils.createUser;
+import static org.folio.rest.utils.LogEventUtils.stubFor;
+import static org.folio.test.support.matcher.LogEventMatcher.notCreditOrRefundActionLogContext;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
@@ -84,6 +89,7 @@ public class AccountsRefundAPITests extends ApiTests {
   public void beforeEach() {
     removeAllFromTable(FEE_FINE_ACTIONS);
     removeAllFromTable("accounts");
+    stubFor(createUser(USER_ID), getOkapi());
   }
 
   @Test
@@ -418,6 +424,9 @@ public class AccountsRefundAPITests extends ApiTests {
       THIRD_ACCOUNT_ID, expectedRemainingAmount3, OPEN, REFUND.getPartialResult());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount, thirdAccount);
+
+    fetchLogEventPayloads(getOkapi()).forEach(payload ->
+      assertThat(payload, is(notCreditOrRefundActionLogContext())));
   }
 
   @Test
@@ -488,6 +497,9 @@ public class AccountsRefundAPITests extends ApiTests {
       expectedStatus, expectedPaymentStatus);
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund);
+
+    fetchLogEventPayloads(getOkapi()).forEach(payload ->
+      assertThat(payload, is(notCreditOrRefundActionLogContext())));
   }
 
   private void verifyResponse(Response response, double requestedAmount) {

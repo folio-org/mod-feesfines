@@ -22,7 +22,7 @@ import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.client.UsersClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
-import org.folio.rest.domain.logs.NoticeLogContextUtil;
+import org.folio.rest.domain.logs.LogContextHelper;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -174,7 +174,7 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> prepareLogContext(FeeFineNoticeContext context) {
-    noticeLogContext = NoticeLogContextUtil.buildNoticeLogContext(context);
+    noticeLogContext = LogContextHelper.buildNoticeLogContext(context);
     return succeededFuture(context);
   }
 

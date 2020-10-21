@@ -1,14 +1,6 @@
 package org.folio.rest.impl.accountactionchecks;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.matching;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.http.ContentType.JSON;
-import static io.vertx.core.json.JsonObject.mapFrom;
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -16,14 +8,11 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
-import org.folio.rest.jaxrs.model.Personal;
-import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
@@ -41,7 +30,6 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   protected static final double REQUESTED_AMOUNT = 1.23;
   protected static final String ERROR_MESSAGE_MUST_BE_POSITIVE = "Amount must be positive";
   protected static final String ERROR_MESSAGE_INVALID_AMOUNT = "Invalid amount entered";
-  private static final String USERS_PATH = "/users";
 
   private static final String REQUESTED_AMOUNT_STRING = String.valueOf(REQUESTED_AMOUNT);
 
@@ -203,24 +191,5 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
     } else {
       return new CheckActionRequest().withAmount(amount);
     }
-  }
-
-  protected User createUser(String id) {
-    return new User()
-      .withId(id)
-      .withBarcode("54321")
-      .withPersonal(new Personal()
-        .withFirstName("First")
-        .withMiddleName("Middle")
-        .withLastName("Last"));
-  }
-
-  protected void stubFor(User user) {
-    getOkapi().stubFor(WireMock.get(urlPathEqualTo(USERS_PATH + "/" + user.getId()))
-      .withHeader(ACCEPT, matching(APPLICATION_JSON))
-      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
-      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
-      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
-      .willReturn(aResponse().withBody(mapFrom(user).encodePrettily())));
   }
 }

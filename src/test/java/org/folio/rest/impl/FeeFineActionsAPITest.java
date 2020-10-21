@@ -14,6 +14,7 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
+import static org.folio.rest.utils.LogEventUtils.fetchPublishedLogRecords;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 
@@ -22,15 +23,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.core.MediaType;
 
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.vertx.core.json.JsonArray;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
@@ -191,7 +189,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("action", "Billed")
       .put("feeFineId", account.getFeeFineId())
       .put("feeFineOwner", account.getFeeFineOwner())
-      .put("type", charge.getTypeAction())
+      .put("type", account.getFeeFineType())
       .put("amount", charge.getAmountAction());
 
     checkResult(expectedChargeContext);
@@ -230,7 +228,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("action", action.getTypeAction())
       .put("feeFineId", account.getFeeFineId())
       .put("feeFineOwner", account.getFeeFineOwner())
-      .put("type", action.getTypeAction())
+      .put("type", account.getFeeFineType())
       .put("amount", action.getAmountAction());
 
     postAction(action);
@@ -288,7 +286,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("userBarcode", user.getBarcode())
       .put("action", "Billed")
       .put("feeFineId", feeFineId)
-      .put("type", typeAction)
+      .put("type", feeFineType)
       .put("amount", amountAction);
 
     assertThatPublishedLogRecordsCountIsEqualTo(1);
@@ -555,22 +553,11 @@ public class FeeFineActionsAPITest extends ApiTests {
   private void assertThatPublishedLogRecordsCountIsEqualTo(int count) {
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
-      .until(() -> fetchPublishedLogRecords().size() == count);
-  }
-
-  private List<JsonObject> fetchPublishedLogRecords() {
-    return getOkapi()
-      .findRequestsMatching(postRequestedFor(urlPathMatching("/pubsub/publish")).build())
-      .getRequests().stream()
-      .map(LoggedRequest::getBody)
-      .map(String::new)
-      .filter(s -> s.contains("LOG_RECORD"))
-      .map(JsonObject::new)
-      .collect(Collectors.toList());
+      .until(() -> fetchPublishedLogRecords(getOkapi()).size() == count);
   }
 
   private JsonObject extractLastLogRecordPayloadOfType(LogEventPublisher.LogEventPayloadType type) {
-    return fetchPublishedLogRecords().stream()
+    return fetchPublishedLogRecords(getOkapi()).stream()
       .map(json -> json.getString("eventPayload"))
       .filter(s -> s.contains(type.value()))
       .map(JsonObject::new)

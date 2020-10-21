@@ -10,15 +10,21 @@ import static java.util.Collections.singletonList;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
+import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.rest.utils.LogEventUtils.createUser;
+import static org.folio.rest.utils.LogEventUtils.stubFor;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
+import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogContext;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.util.Arrays;
@@ -36,6 +42,7 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
+import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -66,6 +73,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
   private final ResourceClient actionsClient = feeFineActionsClient();
   private final Action action;
   private ResourceClient resourceClient;
+  private User user;
 
   public AccountsBulkPayWaiveTransferAPITests(Action action) {
     this.action = action;
@@ -81,6 +89,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
     removeAllFromTable(FEE_FINE_ACTIONS);
     removeAllFromTable("accounts");
     resourceClient = getClient();
+    user = createUser(USER_ID);
+    stubFor(user, getOkapi());
   }
 
   private ResourceClient getClient() {
@@ -332,6 +342,14 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
     verifyThatEventWasSent(EventType.LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
       .put("loanId", account2.getLoanId())
       .put("feeFineId", account2.getId()));
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS);
+
+    fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
+      is(anyOf(feeFineActionLogContext(account1, request, user, action.getPartialResult(),
+          expectedActionAmount, expectedRemainingAmount1),
+        feeFineActionLogContext(account2, request, user, action.getFullResult(),
+          expectedActionAmount, expectedRemainingAmount2)))));
   }
 
   private Account createAccount(String accountId, double amount) {

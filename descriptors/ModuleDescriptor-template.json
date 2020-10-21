@@ -246,7 +246,8 @@
           ],
           "modulePermissions": [
             "pubsub.publish.post",
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "users.item.get"
           ]
         },
         {
@@ -259,7 +260,8 @@
           ],
           "modulePermissions": [
             "pubsub.publish.post",
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "users.item.get"
           ]
         },
         {
@@ -272,7 +274,8 @@
           ],
           "modulePermissions": [
             "pubsub.publish.post",
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "users.item.get"
           ]
         },
         {
@@ -285,7 +288,8 @@
           ],
           "modulePermissions": [
             "pubsub.publish.post",
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "users.item.get"
           ]
         },
         {
@@ -347,7 +351,8 @@
           ],
           "modulePermissions": [
             "pubsub.publish.post",
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "users.item.get"
           ]
         },
         {
@@ -360,7 +365,8 @@
           ],
           "modulePermissions": [
             "pubsub.publish.post",
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "users.item.get"
           ]
         },
         {
@@ -373,7 +379,8 @@
           ],
           "modulePermissions": [
             "pubsub.publish.post",
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "users.item.get"
           ]
         },
         {
@@ -386,7 +393,8 @@
           ],
           "modulePermissions": [
             "pubsub.publish.post",
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "users.item.get"
           ]
         },
         {

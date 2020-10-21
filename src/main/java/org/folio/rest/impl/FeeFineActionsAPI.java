@@ -1,6 +1,8 @@
 package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
+import static org.folio.rest.domain.Action.CREDIT;
+import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 
 import java.io.IOException;
@@ -147,12 +149,16 @@ public class FeeFineActionsAPI implements Feefineactions {
 
   private Future<Response> publishLogEvent(Feefineaction entity, Map<String, String> okapiHeaders,
     Context vertxContext, Response response) {
-    return new LogContextService(vertxContext.owner(), okapiHeaders).createLogContext(entity)
-      .map(context -> {
-        new LogEventPublisher(vertxContext, okapiHeaders).publishLogEvent(context.asJson(), FEE_FINE);
-        return Future.succeededFuture();
-      })
-      .map(v -> response);
+    // do not publish log records for CREDIT and REFUND actions
+    if (!CREDIT.isActionForResult(entity.getTypeAction()) && !REFUND.isActionForResult(entity.getTypeAction())) {
+      return new LogContextService(vertxContext.owner(), okapiHeaders).createFeeFineLogContext(entity)
+        .compose(context -> {
+          new LogEventPublisher(vertxContext, okapiHeaders).publishLogEvent(context, FEE_FINE);
+          return Future.succeededFuture();
+        })
+        .map(v -> response);
+    }
+    return Future.succeededFuture(response);
   }
 
   @Validate
