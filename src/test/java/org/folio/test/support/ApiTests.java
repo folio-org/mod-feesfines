@@ -1,10 +1,10 @@
 package org.folio.test.support;
 
 import static org.folio.rest.utils.ResourceClients.buildAccountClient;
+import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
 import static org.folio.rest.utils.ResourceClients.tenantClient;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.UUID;
@@ -27,16 +27,13 @@ import org.junit.ClassRule;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class ApiTests {
-  protected static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
   public static final String TENANT_NAME = "test_tenant";
   public static final String OKAPI_URL_HEADER = "x-okapi-url";
   public static final String USER_ID = "69d9169d-06da-4622-9c18-2868bd46b60f";
   public static final String OKAPI_TOKEN = generateOkapiToken();
+  public static final String MODULE_NAME = "mod-feesfines";
   @ClassRule
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
 
@@ -44,6 +41,7 @@ public class ApiTests {
 
   protected final ResourceClient accountsClient = buildAccountClient();
   protected final ResourceClient manualBlocksClient = buildManualBlockClient();
+  protected final ResourceClient feeFinesClient = buildFeeFinesClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
 
   @BeforeClass
@@ -57,12 +55,12 @@ public class ApiTests {
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions(),
       res -> future.complete(null));
 
-    future.get(10, TimeUnit.SECONDS);
+    get(future);
     createTenant();
   }
 
   @AfterClass
-  public static void undeployEnvironment() throws Exception {
+  public static void undeployEnvironment() {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
     vertx.close(notUsed -> {
@@ -70,7 +68,7 @@ public class ApiTests {
       future.complete(null);
     });
 
-    future.get(10, TimeUnit.SECONDS);
+    get(future);
   }
 
   @Before
@@ -87,8 +85,8 @@ public class ApiTests {
       .withKey("loadReference").withValue("true");
 
     return new TenantAttributes()
-      .withModuleFrom("mod-feesfines-14.2.4")
-      .withModuleTo("mod-feesfines-" + PomReader.INSTANCE.getVersion())
+      .withModuleFrom(MODULE_NAME + "-14.2.4")
+      .withModuleTo(MODULE_NAME + "-" + PomReader.INSTANCE.getVersion())
       .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 
@@ -111,11 +109,7 @@ public class ApiTests {
     PostgresClient.getInstance(vertx, TENANT_NAME)
       .delete(tableName, new Criterion(), result -> future.complete(null));
 
-    try {
-      future.get(5, TimeUnit.SECONDS);
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
+    get(future);
   }
 
   private static String generateOkapiToken() {
@@ -130,5 +124,13 @@ public class ApiTests {
 
   protected static String randomId() {
     return UUID.randomUUID().toString();
+  }
+
+  protected static <T> T get(CompletableFuture<T> future) {
+    try {
+      return future.get(10, TimeUnit.SECONDS);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
   }
 }

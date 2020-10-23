@@ -10,6 +10,10 @@ public final class ResourceClients {
     return new ResourceClient("/accounts");
   }
 
+  public static ResourceClient buildFeeFinesClient() {
+    return new ResourceClient("/feefines");
+  }
+
   public static ResourceClient buildManualBlockClient() {
     return new ResourceClient("/manualblocks");
   }
