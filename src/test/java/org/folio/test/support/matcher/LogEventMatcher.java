@@ -27,7 +27,6 @@ import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
-import org.folio.rest.jaxrs.model.User;
 import org.hamcrest.Matcher;
 
 import java.util.Arrays;
@@ -37,22 +36,22 @@ public class LogEventMatcher {
   private LogEventMatcher(){}
 
   public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultBulkActionRequest request,
-    User user, String action, double amount, double balance) {
-    return feeFineActionLogEventPayload(user.getId(), user.getBarcode(), action, request.getServicePointId(),
+    String action, double amount, double balance) {
+    return feeFineActionLogEventPayload(account.getUserId(), action, request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       amount, balance, request.getPaymentMethod(), request.getComments());
   }
 
   public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultActionRequest request,
-    User user, String action, double amount, double balance) {
-    return feeFineActionLogEventPayload(user.getId(), user.getBarcode(), action, request.getServicePointId(),
+    String action, double amount, double balance) {
+    return feeFineActionLogEventPayload(account.getUserId(), action, request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       amount, balance, request.getPaymentMethod(), request.getComments());
   }
 
-  public static Matcher<String> feeFineActionLogEventPayload(String userId, String userBarcode,
-    String action, String servicePointId, String source, String feeFineId, String feeFineOwner, String loanId,
-    double amount, double balance, String paymentMethod, String comments) {
+  public static Matcher<String> feeFineActionLogEventPayload(String userId, String action, String servicePointId,
+    String source, String feeFineId, String feeFineOwner, String loanId, double amount, double balance,
+    String paymentMethod, String comments) {
 
     return allOf(Arrays.asList(
       hasJsonPath(USER_ID.value(), is(userId)),
@@ -69,21 +68,20 @@ public class LogEventMatcher {
       hasJsonPath(COMMENTS.value(), is(comments))));
   }
 
-  public static Matcher<String> cancelledActionLogEventPayload(Account account, User user, CancelActionRequest request) {
-    return cancelledActionLogEventPayload(user.getId(), user.getBarcode(), request.getServicePointId(),
+  public static Matcher<String> cancelledActionLogEventPayload(Account account, CancelActionRequest request) {
+    return cancelledActionLogEventPayload(account.getUserId(), request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       account.getAmount(), request.getComments());
   }
 
-  public static Matcher<String> cancelledActionLogEventPayload(Account account, User user, CancelBulkActionRequest request) {
-    return cancelledActionLogEventPayload(user.getId(), user.getBarcode(), request.getServicePointId(),
+  public static Matcher<String> cancelledActionLogEventPayload(Account account, CancelBulkActionRequest request) {
+    return cancelledActionLogEventPayload(account.getUserId(), request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       account.getAmount(), request.getComments());
   }
 
-  public static Matcher<String> cancelledActionLogEventPayload(String userId, String userBarcode,
-    String servicePointId, String source, String feeFineId, String feeFineOwner, String loanId,
-    double amount, String comments) {
+  public static Matcher<String> cancelledActionLogEventPayload(String userId, String servicePointId, String source,
+    String feeFineId, String feeFineOwner, String loanId, double amount, String comments) {
 
     return allOf(Arrays.asList(
       hasJsonPath(USER_ID.value(), is(userId)),

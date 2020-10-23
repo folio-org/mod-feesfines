@@ -7,8 +7,6 @@ import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCancelClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCancelClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
-import static org.folio.rest.utils.LogEventUtils.createUser;
-import static org.folio.rest.utils.LogEventUtils.stubFor;
 import static org.folio.test.support.EntityBuilder.buildAccount;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.either;
@@ -28,8 +26,6 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BulkActionSuccessResponse;
 import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
-import org.folio.rest.jaxrs.model.User;
-import org.folio.rest.utils.LogEventUtils;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
@@ -57,9 +53,6 @@ public class AccountsCancelActionAPITests extends ApiTests {
   public void cancelActionShouldCancelAccount() {
     Account accountToPost = postAccount();
 
-    User user = createUser(accountToPost.getUserId());
-    stubFor(user, getOkapi());
-
     CancelActionRequest cancelActionRequest = createCancelActionRequest();
     accountCancelClient.attemptCreate(cancelActionRequest)
       .then()
@@ -84,7 +77,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
         hasJsonPath("typeAction", is("Cancelled as error"))
       )));
 
-    assertThat(fetchLogEventPayloads(getOkapi()).get(0), is(LogEventMatcher.cancelledActionLogEventPayload(accountToPost, user, cancelActionRequest)));
+    assertThat(fetchLogEventPayloads(getOkapi()).get(0), is(LogEventMatcher.cancelledActionLogEventPayload(accountToPost, cancelActionRequest)));
   }
 
   @Test
@@ -133,16 +126,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
     List<Account> accountsToPost = accountIds.stream()
       .map(EntityBuilder::buildAccount)
       .collect(Collectors.toList());
-    accountsToPost.forEach(account -> {
-      postAccount(account);
-      stubFor(createUser(account.getUserId()), getOkapi());
-    });
-
-    List<User> users = accountsToPost.stream()
-      .map(Account::getUserId)
-      .map(LogEventUtils::createUser)
-      .collect(Collectors.toList());
-    users.forEach(user -> stubFor(user, getOkapi()));
+    accountsToPost.forEach(account -> postAccount(account));
 
     final var cancelActionRequest = createBulkCancelActionRequest(accountIds);
 
@@ -182,8 +166,8 @@ public class AccountsCancelActionAPITests extends ApiTests {
       ));
 
     fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
-      is(either(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(0), users.get(0), cancelActionRequest))
-          .or(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(1), users.get(1), cancelActionRequest)))));
+      is(either(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(0), cancelActionRequest))
+          .or(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(1), cancelActionRequest)))));
   }
 
   private CancelActionRequest createCancelActionRequest() {

@@ -14,8 +14,6 @@ import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
-import static org.folio.rest.utils.LogEventUtils.createUser;
-import static org.folio.rest.utils.LogEventUtils.stubFor;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -180,9 +178,6 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
     final Account account = createAccount(accountBalanceBeforeAction);
     postAccount(account);
 
-    final User user = createUser(account.getUserId());
-    stubFor(user, getOkapi());
-
     String requestedAmountString = "1.004123456789";
     String expectedPaymentStatus = action.getFullResult();
 
@@ -211,7 +206,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .body("paymentStatus.name", is(expectedPaymentStatus));
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
-      is(feeFineActionLogEventPayload(account, request, user, action.getFullResult(), 1.0, 0.0)));
+      is(feeFineActionLogEventPayload(account, request, action.getFullResult(), 1.0, 0.0)));
   }
 
   @Test
@@ -219,9 +214,6 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
     double accountBalanceBeforeAction = 1.23987654321; // should be rounded to 1.24
     final Account account = createAccount(accountBalanceBeforeAction);
     postAccount(account);
-
-    final User user = createUser(account.getUserId());
-    stubFor(user, getOkapi());
 
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
     String expectedPaymentStatus = action.getPartialResult();
@@ -251,7 +243,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .body("paymentStatus.name", is(expectedPaymentStatus));
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
-      is(feeFineActionLogEventPayload(account, request, user, action.getPartialResult(), 1.0, 0.24)));
+      is(feeFineActionLogEventPayload(account, request, action.getPartialResult(), 1.0, 0.24)));
   }
 
   @Test
@@ -271,9 +263,6 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
 
     final Account account = createAccount(accountBalanceBefore);
     postAccount(account);
-
-    final User user = createUser(account.getUserId());
-    stubFor(user, getOkapi());
 
     String expectedPaymentStatus = terminalAction ? action.getFullResult() : action.getPartialResult();
     String expectedAccountStatus = terminalAction ? "Closed" : "Open";
@@ -316,7 +305,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
     }
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
-      is(feeFineActionLogEventPayload(account, request, user,
+      is(feeFineActionLogEventPayload(account, request,
         terminalAction ? action.getFullResult() : action.getPartialResult(),
         requestedAmount, expectedAccountBalanceAfter)));
   }

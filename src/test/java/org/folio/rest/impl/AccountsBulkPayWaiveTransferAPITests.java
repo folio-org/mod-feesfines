@@ -15,8 +15,6 @@ import static org.folio.rest.utils.ResourceClients.buildAccountBulkPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
-import static org.folio.rest.utils.LogEventUtils.createUser;
-import static org.folio.rest.utils.LogEventUtils.stubFor;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -42,7 +40,6 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
-import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -73,7 +70,6 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
   private final ResourceClient actionsClient = feeFineActionsClient();
   private final Action action;
   private ResourceClient resourceClient;
-  private User user;
 
   public AccountsBulkPayWaiveTransferAPITests(Action action) {
     this.action = action;
@@ -89,8 +85,6 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
     removeAllFromTable(FEE_FINE_ACTIONS);
     removeAllFromTable("accounts");
     resourceClient = getClient();
-    user = createUser(USER_ID);
-    stubFor(user, getOkapi());
   }
 
   private ResourceClient getClient() {
@@ -346,9 +340,9 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
       .atMost(5, TimeUnit.SECONDS);
 
     fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
-      is(either(feeFineActionLogEventPayload(account1, request, user, action.getPartialResult(),
+      is(either(feeFineActionLogEventPayload(account1, request, action.getPartialResult(),
           expectedActionAmount, expectedRemainingAmount1))
-        .or(feeFineActionLogEventPayload(account2, request, user, action.getFullResult(),
+        .or(feeFineActionLogEventPayload(account2, request, action.getFullResult(),
         expectedActionAmount, expectedRemainingAmount2)))));
   }
 

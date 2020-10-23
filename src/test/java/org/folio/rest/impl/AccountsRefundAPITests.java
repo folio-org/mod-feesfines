@@ -19,8 +19,6 @@ import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
-import static org.folio.rest.utils.LogEventUtils.createUser;
-import static org.folio.rest.utils.LogEventUtils.stubFor;
 import static org.folio.test.support.matcher.LogEventMatcher.notCreditOrRefundActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -89,7 +87,6 @@ public class AccountsRefundAPITests extends ApiTests {
   public void beforeEach() {
     removeAllFromTable(FEE_FINE_ACTIONS);
     removeAllFromTable("accounts");
-    stubFor(createUser(USER_ID), getOkapi());
   }
 
   @Test
