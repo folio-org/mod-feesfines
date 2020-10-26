@@ -14,6 +14,7 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
+import static org.folio.rest.utils.LogEventUtils.fetchPublishedLogRecords;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 
@@ -22,15 +23,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.core.MediaType;
 
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.vertx.core.json.JsonArray;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
@@ -186,12 +184,11 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     JsonObject expectedFeeFineLogContext = new JsonObject()
       .put("userId", user.getId())
-      .put("userBarcode", user.getBarcode())
       .put("itemBarcode", account.getBarcode())
       .put("action", "Billed")
       .put("feeFineId", account.getFeeFineId())
       .put("feeFineOwner", account.getFeeFineOwner())
-      .put("type", charge.getTypeAction())
+      .put("type", account.getFeeFineType())
       .put("amount", charge.getAmountAction());
 
     checkResult(expectedChargeContext);
@@ -225,12 +222,11 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     expectedFeeFineLogContext = new JsonObject()
       .put("userId", user.getId())
-      .put("userBarcode", user.getBarcode())
       .put("itemBarcode", account.getBarcode())
       .put("action", action.getTypeAction())
       .put("feeFineId", account.getFeeFineId())
       .put("feeFineOwner", account.getFeeFineOwner())
-      .put("type", action.getTypeAction())
+      .put("type", account.getFeeFineType())
       .put("amount", action.getAmountAction());
 
     postAction(action);
@@ -285,10 +281,64 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     JsonObject expectedFeeFineLogContext = new JsonObject()
       .put("userId", user.getId())
-      .put("userBarcode", user.getBarcode())
       .put("action", "Billed")
       .put("feeFineId", feeFineId)
-      .put("type", typeAction)
+      .put("type", feeFineType)
+      .put("amount", amountAction);
+
+    assertThatPublishedLogRecordsCountIsEqualTo(1);
+    assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
+  }
+
+  @Test
+  public void postFeeFineActionsChangeStaffInfo() {
+    final String ownerId = randomId();
+    final String feeFineId = randomId();
+    final String accountId = randomId();
+    final String defaultChargeTemplateId = randomId();
+    final User user = createUser();
+    final String feeFineType = "damaged book";
+    final String typeAction = "Staff info only";
+    final String expectedTypeAction = "Staff information only added";
+    final boolean notify = false;
+    final double amountAction = 100;
+    final double balance = 100;
+    final String dateAction = "2019-12-23T14:25:59.550+0000";
+    final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
+      amountAction, balance, accountId, user.getId());
+
+    createStub(USERS_PATH, user, user.getId());
+
+    createEntity("/owners", new JsonObject()
+      .put("id", ownerId)
+      .put("owner", "library")
+      .put("defaultChargeNoticeId", defaultChargeTemplateId));
+
+    createEntity("/accounts", new JsonObject()
+      .put("id", accountId)
+      .put("userId", user.getId())
+      .put("itemId", randomId())
+      .put("materialTypeId", randomId())
+      .put("feeFineId", feeFineId)
+      .put("ownerId", ownerId)
+      .put("remaining", 10.0)
+      .put("amount", 10.0));
+
+    createEntity("/feefines", new JsonObject()
+      .put("id", feeFineId)
+      .put("feeFineType", feeFineType)
+      .put("ownerId", ownerId));
+
+    post(feeFineActionJson)
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .body(equalTo(feeFineActionJson));
+
+    JsonObject expectedFeeFineLogContext = new JsonObject()
+      .put("userId", user.getId())
+      .put("action", expectedTypeAction)
+      .put("feeFineId", feeFineId)
+      .put("type", feeFineType)
       .put("amount", amountAction);
 
     assertThatPublishedLogRecordsCountIsEqualTo(1);
@@ -555,22 +605,11 @@ public class FeeFineActionsAPITest extends ApiTests {
   private void assertThatPublishedLogRecordsCountIsEqualTo(int count) {
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
-      .until(() -> fetchPublishedLogRecords().size() == count);
-  }
-
-  private List<JsonObject> fetchPublishedLogRecords() {
-    return getOkapi()
-      .findRequestsMatching(postRequestedFor(urlPathMatching("/pubsub/publish")).build())
-      .getRequests().stream()
-      .map(LoggedRequest::getBody)
-      .map(String::new)
-      .filter(s -> s.contains("LOG_RECORD"))
-      .map(JsonObject::new)
-      .collect(Collectors.toList());
+      .until(() -> fetchPublishedLogRecords(getOkapi()).size() == count);
   }
 
   private JsonObject extractLastLogRecordPayloadOfType(LogEventPublisher.LogEventPayloadType type) {
-    return fetchPublishedLogRecords().stream()
+    return fetchPublishedLogRecords(getOkapi()).stream()
       .map(json -> json.getString("eventPayload"))
       .filter(s -> s.contains(type.value()))
       .map(JsonObject::new)

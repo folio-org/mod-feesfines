@@ -12,14 +12,17 @@ import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
+import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountsRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.test.support.matcher.LogEventMatcher.notCreditOrRefundActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
@@ -418,6 +421,9 @@ public class AccountsRefundAPITests extends ApiTests {
       THIRD_ACCOUNT_ID, expectedRemainingAmount3, OPEN, REFUND.getPartialResult());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount, thirdAccount);
+
+    fetchLogEventPayloads(getOkapi()).forEach(payload ->
+      assertThat(payload, is(notCreditOrRefundActionLogEventPayload())));
   }
 
   @Test
@@ -488,6 +494,9 @@ public class AccountsRefundAPITests extends ApiTests {
       expectedStatus, expectedPaymentStatus);
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund);
+
+    fetchLogEventPayloads(getOkapi()).forEach(payload ->
+      assertThat(payload, is(notCreditOrRefundActionLogEventPayload())));
   }
 
   private void verifyResponse(Response response, double requestedAmount) {
