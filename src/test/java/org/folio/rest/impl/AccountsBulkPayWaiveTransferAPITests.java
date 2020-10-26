@@ -10,15 +10,19 @@ import static java.util.Collections.singletonList;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
+import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
+import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.util.Arrays;
@@ -332,6 +336,14 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
     verifyThatEventWasSent(EventType.LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
       .put("loanId", account2.getLoanId())
       .put("feeFineId", account2.getId()));
+    Awaitility.await()
+      .atMost(5, TimeUnit.SECONDS);
+
+    fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
+      is(either(feeFineActionLogEventPayload(account1, request, action.getPartialResult(),
+          expectedActionAmount, expectedRemainingAmount1))
+        .or(feeFineActionLogEventPayload(account2, request, action.getFullResult(),
+        expectedActionAmount, expectedRemainingAmount2)))));
   }
 
   private Account createAccount(String accountId, double amount) {

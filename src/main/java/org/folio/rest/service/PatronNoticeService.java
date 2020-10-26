@@ -22,7 +22,7 @@ import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.PatronNoticeClient;
 import org.folio.rest.client.UsersClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
-import org.folio.rest.domain.logs.NoticeLogContextUtil;
+import org.folio.rest.domain.logs.LogEventPayloadHelper;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -51,7 +51,7 @@ public class PatronNoticeService {
   private final InventoryClient inventoryClient;
   private final LogEventPublisher logEventPublisher;
 
-  private JsonObject noticeLogContext;
+  private JsonObject logEventPayload;
 
   public PatronNoticeService(Vertx vertx, Map<String, String> okapiHeaders) {
     PostgresClient pgClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
@@ -80,7 +80,7 @@ public class PatronNoticeService {
       .compose(this::fetchHolding)
       .compose(this::fetchInstance)
       .compose(this::fetchLocation)
-      .compose(this::prepareLogContext)
+      .compose(this::prepareLogEventPayload)
       .map(PatronNoticeBuilder::buildNotice)
       .compose(patronNoticeClient::postPatronNotice)
       .compose(v -> publishLogEvent())
@@ -173,8 +173,8 @@ public class PatronNoticeService {
       .map(context::withEffectiveLocation);
   }
 
-  private Future<FeeFineNoticeContext> prepareLogContext(FeeFineNoticeContext context) {
-    noticeLogContext = NoticeLogContextUtil.buildNoticeLogContext(context);
+  private Future<FeeFineNoticeContext> prepareLogEventPayload(FeeFineNoticeContext context) {
+    logEventPayload = LogEventPayloadHelper.buildNoticeLogEventPayload(context);
     return succeededFuture(context);
   }
 
@@ -225,8 +225,8 @@ public class PatronNoticeService {
   }
 
   private Future<Void> publishLogEvent() {
-    noticeLogContext.put(DATE.value(), DateTime.now().toString(ISODateTimeFormat.dateTime()));
-    CompletableFuture.runAsync(() -> logEventPublisher.publishLogEvent(noticeLogContext, NOTICE));
+    logEventPayload.put(DATE.value(), DateTime.now().toString(ISODateTimeFormat.dateTime()));
+    CompletableFuture.runAsync(() -> logEventPublisher.publishLogEvent(logEventPayload, NOTICE));
     return succeededFuture();
   }
 }

@@ -6,8 +6,10 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.folio.rest.domain.Action.CREDIT;
+import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.persist.PostgresClient.getInstance;
+import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.ArrayList;
@@ -25,6 +27,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.service.AccountUpdateService;
+import org.folio.rest.service.LogEventService;
+import org.folio.rest.service.LogEventPublisher;
 import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.service.action.context.ActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
@@ -42,6 +46,8 @@ public abstract class ActionService {
   protected final ActionValidationService validationService;
   protected final PatronNoticeService patronNoticeService;
   protected final BulkActionAmountSplitterStrategy amountSplitterStrategy;
+  private final LogEventService logEventService;
+  private final LogEventPublisher logEventPublisher;
 
   public ActionService(Action action, ActionValidationService validationService,
     Map<String, String> headers, Context context) {
@@ -55,6 +61,8 @@ public abstract class ActionService {
     this.patronNoticeService = new PatronNoticeService(context.owner(), headers);
     this.validationService = validationService;
     this.amountSplitterStrategy = new SplitEvenlyRecursively();
+    this.logEventService = new LogEventService(context.owner(), headers);
+    this.logEventPublisher = new LogEventPublisher(context.owner(), headers);
   }
 
   public ActionService(Action action, ActionValidationService validationService,
@@ -70,6 +78,8 @@ public abstract class ActionService {
     this.patronNoticeService = new PatronNoticeService(context.owner(), headers);
     this.validationService = validationService;
     this.amountSplitterStrategy = bulkActionAmountSplitterStrategy;
+    this.logEventService = new LogEventService(context.owner(), headers);
+    this.logEventPublisher = new LogEventPublisher(context.owner(), headers);
   }
 
   public Future<ActionContext> performAction(ActionRequest request) {
@@ -77,6 +87,7 @@ public abstract class ActionService {
       .compose(this::findAccounts)
       .compose(this::validateAction)
       .compose(this::createFeeFineActions)
+      .compose(this::publishLogEvents)
       .compose(this::updateAccounts)
       .compose(this::sendPatronNotice);
   }
@@ -168,4 +179,16 @@ public abstract class ActionService {
     return succeededFuture(context);
   }
 
+  private Future<ActionContext> publishLogEvents(ActionContext actionContext) {
+    return all(actionContext.getFeeFineActions().stream()
+      // do not publish log records for CREDIT and REFUND actions
+      .filter(ffa -> !CREDIT.isActionForResult(ffa.getTypeAction()) && !REFUND.isActionForResult(ffa.getTypeAction()))
+      .map(ffa -> logEventService.createFeeFineLogEventPayload(ffa, actionContext.getAccounts().get(ffa.getAccountId()))
+        .compose(eventPayload -> {
+          logEventPublisher.publishLogEvent(eventPayload, FEE_FINE);
+          return succeededFuture();
+        }))
+      .collect(toList()))
+      .map(actionContext);
+  }
 }
