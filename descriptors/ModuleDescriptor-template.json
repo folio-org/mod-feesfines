@@ -430,8 +430,7 @@
           ],
           "modulePermissions": [
             "modperms.feesfines.patron-notices.post",
-            "pubsub.publish.post",
-            "users.item.get"
+            "pubsub.publish.post"
           ]
         },
         {
