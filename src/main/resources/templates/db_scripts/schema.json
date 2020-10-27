@@ -1,6 +1,4 @@
 {
-  "scripts":[
-  ],
   "tables":[
     {
       "tableName":"owners",
@@ -9,8 +7,7 @@
     },
     {
       "tableName":"feefines",
-      "fromModuleVersion":"15.10.0",
-      "withMetadata":true,
+      "fromModuleVersion":"15.7.1",
       "customSnippetPath": "populate-feefines.sql",
       "uniqueIndex": [
         {
@@ -100,6 +97,13 @@
           "tOps": "ADD"
         }
       ]
+    }
+  ],
+  "scripts":[
+    {
+      "run": "after",
+      "snippetPath": "add-lost-fee-for-actual-cost.sql",
+      "fromModuleVersion": "15.10.0"
     }
   ]
 }
