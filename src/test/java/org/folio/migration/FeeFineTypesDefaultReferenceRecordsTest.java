@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import io.vertx.core.Vertx;
 
-public class FeeFineTypesMigrationTest extends ApiTests {
+public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
   private static final String LOST_FEE_FOR_ACTUAL_COST_ID = "73785370-d3bd-4d92-942d-ae2268e02ded";
   private static final String MIGRATION_SCRIPT = loadMigrationScript();
 
@@ -41,8 +41,9 @@ public class FeeFineTypesMigrationTest extends ApiTests {
   }
 
   private static String loadMigrationScript() {
-    try (final var resourceAsStream = FeeFineTypesMigrationTest.class
-      .getResourceAsStream("/templates/db_scripts/populate-feefines.sql")) {
+    try (final var resourceAsStream = FeeFineTypesDefaultReferenceRecordsTest.class
+      .getResourceAsStream("/templates/db_scripts/" +
+        "add-lost-fee-for-actual-cost.sql")) {
 
       return new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8)
         .replaceAll("\\$\\{myuniversity}", TENANT_NAME)
