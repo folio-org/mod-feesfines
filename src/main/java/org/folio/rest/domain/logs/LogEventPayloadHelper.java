@@ -3,6 +3,7 @@ package org.folio.rest.domain.logs;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
+import static org.folio.rest.domain.logs.LogEventPayloadField.ACCOUNT_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.ACTION;
 import static org.folio.rest.domain.logs.LogEventPayloadField.AMOUNT;
 import static org.folio.rest.domain.logs.LogEventPayloadField.AUTOMATED;
@@ -61,6 +62,7 @@ public class LogEventPayloadHelper {
     });
 
     ofNullable(context.getAccount()).ifPresent(account -> {
+      write(contextJson, ACCOUNT_ID.value(), account.getId());
       write(contextJson, FEE_FINE_ID.value(), account.getFeeFineId());
       write(itemJson, ITEM_BARCODE.value(), account.getBarcode());
       write(itemJson, LOAN_ID.value(), account.getLoanId());
@@ -100,6 +102,7 @@ public class LogEventPayloadHelper {
 
     ofNullable(account).ifPresent(acc -> {
       write(json, USER_ID.value(), acc.getUserId());
+      write(json, ACCOUNT_ID.value(), acc.getId());
       write(json, FEE_FINE_ID.value(), acc.getFeeFineId());
       write(json, FEE_FINE_OWNER.value(), acc.getFeeFineOwner());
       write(json, ITEM_BARCODE.value(), acc.getBarcode());
