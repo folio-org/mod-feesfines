@@ -1,6 +1,7 @@
 package org.folio.rest.domain.logs;
 
 public enum LogEventPayloadField {
+  ACCOUNT_ID("accountId"),
   USER_ID("userId"),
   USER_BARCODE("userBarcode"),
   ITEM_ID("itemId"),
