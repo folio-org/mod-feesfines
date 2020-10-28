@@ -9,7 +9,7 @@ import static org.folio.rest.domain.Action.WAIVE;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
@@ -31,7 +31,6 @@ import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionResponse;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
@@ -93,6 +92,7 @@ public class AccountsAPI implements Accounts {
 
     List<String> itemIds = accounts.stream()
       .map(Account::getItemId)
+      .filter(Objects::nonNull)
       .collect(Collectors.toList());
 
     return succeededFuture(new AdditionalFieldsContext(null, null))
@@ -103,24 +103,21 @@ public class AccountsAPI implements Accounts {
         .collect(Collectors.toList()))
         .map(ctx::withHoldings))
       .compose(ctx -> {
-        accounts.forEach(account -> {
-          Optional<Item> item = ctx.items.getItems().stream()
-            .filter(i -> account.getItemId().equals(i.getId()))
-            .findAny();
-
-          Optional<HoldingsRecord> holding = Optional.empty();
-          if (item.isPresent() && item.get().getHoldingsRecordId() != null) {
-            holding = ctx.holdings.getHoldingsRecords().stream()
-              .filter(h -> item.get().getHoldingsRecordId().equals(h.getId()))
-              .findAny();
-          }
-
-          String holdingRecordsId = item.map(Item::getHoldingsRecordId).orElse("");
-          String instanceId = holding.map(HoldingsRecord::getInstanceId).orElse("");
-
-          account.setHoldingsRecordId(holdingRecordsId);
-          account.setInstanceId(instanceId);
-        });
+        accounts.stream()
+          .filter(a -> a.getItemId() != null)
+          .forEach(account ->
+            ctx.items.getItems().stream()
+              .filter(item -> item.getHoldingsRecordId() != null)
+              .filter(item -> item.getId().equals(account.getItemId()))
+              .findAny()
+              .flatMap(item -> ctx.holdings.getHoldingsRecords().stream()
+                .filter(holding -> item.getHoldingsRecordId().equals(holding.getId()))
+                .findAny())
+              .ifPresent(holding -> account
+                .withHoldingsRecordId(holding.getId())
+                .withInstanceId(holding.getInstanceId())
+              )
+          );
 
         return succeededFuture(null);
       });
