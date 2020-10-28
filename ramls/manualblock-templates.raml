@@ -1,0 +1,55 @@
+#%RAML 1.0
+title: Templates for Manual Patron Blocks
+version: v1
+baseUri: http://github.com/org/folio/mod-feesfines
+
+documentation:
+  - title: Manual Patron Block Templates API
+    content: This documents the API calls that can be made to query and manage templates for manualblocks of the system
+
+types:
+  manualblocktemplate: !include manualblockTemplate.json
+  manualblocktemplateCollection: !include manualblockTemplateCollection.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  orderable: !include raml-util/traits/orderable.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-only: !include raml-util/rtypes/get-only.raml
+  post-empty-body: !include raml-util/rtypes/post-empty-body.raml
+
+/manualblock-templates:
+  type:
+    collection:
+      exampleCollection: !include examples/manualblockTemplate_collection.sample
+      exampleItem: !include examples/manualblockTemplate.sample
+      schemaCollection: manualblocktemplateCollection
+      schemaItem: manualblocktemplate
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "active=true"},
+      orderable: {fieldsList: "field A, field B"},
+      pageable
+    ]
+    description: Return a list of manualblock templates
+  post:
+    is: [validate]
+    description: Create a manualblock template
+  /{id}:
+    type:
+      collection-item:
+        exampleItem: !include examples/manualblock.sample
+        schema: manualblocktemplate
+    get:
+      description: Get a single manualblock template
+    put:
+      description: Update a single manualblock template
+    delete:
+      description: Delete a single manualblock template

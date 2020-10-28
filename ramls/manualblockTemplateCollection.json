@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of manualblock templates",
+  "type": "object",
+  "properties": {
+    "manualblockTemplates": {
+      "description": "List of manualblock templates",
+      "type": "array",
+      "id": "manualblockTemplate",
+      "items": {
+        "type": "object",
+        "$ref": "manualblockTemplate.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "manualblocktemplates",
+    "totalRecords"
+  ]
+}

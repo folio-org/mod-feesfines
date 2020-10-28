@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Manual patron block template schema",
+  "description": "Allows institution to specify a template for manual patron blocks.",
+  "type": "object",
+  "properties": {
+    "templateInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of the template",
+          "type": "string"
+        },
+        "code": {
+          "description": "Code of the template. Can be a shorthand of the name (e.g. an acronym).",
+          "type": "string"
+        },
+        "desc": {
+          "description": "Description of this template",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "blockInfo": {
+      "type": "object",
+      "properties": {
+        "desc": {
+          "description": "Description of the patron block",
+          "type": "string"
+        },
+        "patronMessage": {
+          "description": "Message to patron (optional)",
+          "type": "string"
+        },
+        "borrowing": {
+          "description": "A flag to determine borrowing block action",
+          "type": "boolean"
+        },
+        "renewals": {
+          "description": "A flag to determine renewal block action",
+          "type": "boolean"
+        },
+        "requests": {
+          "description": "A flag to determine request block action",
+          "type": "boolean"
+        }
+      }
+    },
+    "metadata": {
+      "description": "Metadata about creation to patron block, provided by the server",
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    },
+    "id": {
+      "description": "Template id, UUID",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "templateInfo"
+  ]
+}
