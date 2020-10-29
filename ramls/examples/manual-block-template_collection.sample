@@ -1,18 +1,18 @@
 {
-  "manualblockTemplates": [
+  "manualBlockTemplates": [
    {
      "templateInfo": {
        "name": "Reader card lost",
        "code": "RCL",
        "desc": "Template to use if a patron lost his/her reader card"
      },
-     "blockInfo": {
+     "blockTemplate": {
        "desc": "Reader card lost",
        "patronMessage": "Please contact the library's service desk for a new reader card.",
        "borrowing": true,
        "renewals": true,
-       "requests": true,
-     }
+       "requests": true
+     },
      "metadata": {
        "createdDate": "2018-10-16T23:07:02Z",
        "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce02",

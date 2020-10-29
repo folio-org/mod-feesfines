@@ -1,15 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Collection of manualblock templates",
+  "description": "Collection of manual-block templates",
   "type": "object",
   "properties": {
-    "manualblockTemplates": {
-      "description": "List of manualblock templates",
+    "manualBlockTemplates": {
+      "description": "List of manual-block templates",
       "type": "array",
-      "id": "manualblockTemplate",
+      "id": "manualBlockTemplate",
       "items": {
         "type": "object",
-        "$ref": "manualblockTemplate.json"
+        "$ref": "manual-block-template.json"
       }
     },
     "totalRecords": {
@@ -17,7 +17,7 @@
     }
   },
   "required": [
-    "manualblocktemplates",
+    "manualBlockTemplates",
     "totalRecords"
   ]
 }

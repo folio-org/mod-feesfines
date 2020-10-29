@@ -2,14 +2,13 @@ package org.folio.test.support;
 
 import static org.folio.test.support.ApiTests.randomId;
 
+import java.util.Date;
 import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.BlockInfo;
+import org.folio.rest.jaxrs.model.BlockTemplate;
+import org.folio.rest.jaxrs.model.ManualBlockTemplate;
 import org.folio.rest.jaxrs.model.Manualblock;
-import org.folio.rest.jaxrs.model.ManualblockTemplate;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
-
-import java.util.Date;
 import org.folio.rest.jaxrs.model.TemplateInfo;
 
 public class EntityBuilder {
@@ -56,20 +55,20 @@ public class EntityBuilder {
       .withExpirationDate(new Date());
   }
 
-  public static ManualblockTemplate buildManualBlockTemplate() {
-    TemplateInfo templateInfo = new TemplateInfo()
+  public static ManualBlockTemplate buildManualBlockTemplate() {
+    TemplateInfo info = new TemplateInfo()
       .withName("Reader card lost")
       .withCode("RCL")
       .withDesc("Use if reader card is lost");
-    BlockInfo blockInfo = new BlockInfo()
+    BlockTemplate blockTemplate = new BlockTemplate()
       .withDesc("Reader card lost")
       .withPatronMessage("Please contact library staff.")
       .withBorrowing(true)
       .withRenewals(true)
       .withRequests(true);
-    return new ManualblockTemplate()
+    return new ManualBlockTemplate()
       .withId(randomId())
-      .withTemplateInfo(templateInfo)
-      .withBlockInfo(blockInfo);
+      .withTemplateInfo(info)
+      .withBlockTemplate(blockTemplate);
   }
 }

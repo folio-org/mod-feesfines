@@ -8,8 +8,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage templates for manualblocks of the system
 
 types:
-  manualblocktemplate: !include manualblockTemplate.json
-  manualblocktemplateCollection: !include manualblockTemplateCollection.json
+  manualBlockTemplate: !include manual-block-template.json
+  manualBlockTemplateCollection: !include manual-block-templateCollection.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -25,13 +25,13 @@ resourceTypes:
   get-only: !include raml-util/rtypes/get-only.raml
   post-empty-body: !include raml-util/rtypes/post-empty-body.raml
 
-/manualblock-templates:
+/manual-block-templates:
   type:
     collection:
-      exampleCollection: !include examples/manualblockTemplate_collection.sample
-      exampleItem: !include examples/manualblockTemplate.sample
-      schemaCollection: manualblocktemplateCollection
-      schemaItem: manualblocktemplate
+      exampleCollection: !include examples/manual-block-template_collection.sample
+      exampleItem: !include examples/manual-block-template.sample
+      schemaCollection: manualBlockTemplateCollection
+      schemaItem: manualBlockTemplate
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "active=true"},
@@ -46,7 +46,7 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/manualblock.sample
-        schema: manualblocktemplate
+        schema: manualBlockTemplate
     get:
       description: Get a single manualblock template
     put:

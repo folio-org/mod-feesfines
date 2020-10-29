@@ -75,7 +75,7 @@
       "withMetadata":true
     },
     {
-      "tableName":"manualblock_teamplates",
+      "tableName":"manual_block_templates",
       "fromModuleVersion":"15.10.0",
       "withMetadata":true
     },

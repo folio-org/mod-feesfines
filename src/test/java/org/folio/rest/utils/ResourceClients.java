@@ -15,7 +15,7 @@ public final class ResourceClients {
   }
 
   public static ResourceClient buildManualBlockTemplateClient() {
-    return new ResourceClient("/manualblock-templates");
+    return new ResourceClient("/manual-block-templates");
   }
 
   public static ResourceClient buildAccountCheckPayClient(String accountId) {

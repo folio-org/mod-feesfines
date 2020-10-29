@@ -24,7 +24,7 @@
         "name"
       ]
     },
-    "blockInfo": {
+    "blockTemplate": {
       "type": "object",
       "properties": {
         "desc": {
