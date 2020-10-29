@@ -7,7 +7,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "$ref": "../uuid.json"
+        "$ref": "../raml-util/schemas/uuid.schema"
       },
       "description": "IDs of multiple accounts"
     },
@@ -29,7 +29,7 @@
     },
     "servicePointId": {
       "type": "string",
-      "$ref": "../uuid.json",
+      "$ref": "../raml-util/schemas/uuid.schema",
       "description": "Unique ID of the service point where the payment was made"
     },
     "userName": {

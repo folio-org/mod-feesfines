@@ -6,7 +6,7 @@
     "id": {
       "type": "string",
       "description": "The unique ID of the instance record; a UUID",
-      "$ref": "../uuid.json"
+      "$ref": "../raml-util/schemas/uuid.schema"
     },
     "hrid": {
       "type": "string",
@@ -33,7 +33,7 @@
           "alternativeTitleTypeId": {
             "type": "string",
             "description": "UUID for an alternative title qualifier",
-            "$ref": "../uuid.json"
+            "$ref": "../raml-util/schemas/uuid.schema"
           },
           "alternativeTitle": {
             "type": "string",
@@ -73,7 +73,7 @@
           "identifierTypeId": {
             "type": "string",
             "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
-            "$ref": "../uuid.json"
+            "$ref": "../raml-util/schemas/uuid.schema"
           },
           "identifierTypeObject": {
             "type": "object",
@@ -108,7 +108,7 @@
           "contributorTypeId": {
             "type": "string",
             "description": "UUID for the contributor type term defined in controlled vocabulary",
-            "$ref": "../uuid.json"
+            "$ref": "../raml-util/schemas/uuid.schema"
           },
           "contributorTypeText": {
             "type": "string",
@@ -117,7 +117,7 @@
           "contributorNameTypeId": {
             "type": "string",
             "description": "UUID of contributor name type term defined by the MARC code list for relators",
-            "$ref": "../uuid.json"
+            "$ref": "../raml-util/schemas/uuid.schema"
           },
           "contributorNameType": {
             "type": "object",
@@ -165,7 +165,7 @@
           "classificationTypeId": {
             "type": "string",
             "description": "UUID of classification schema (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)",
-            "$ref": "../uuid.json"
+            "$ref": "../raml-util/schemas/uuid.schema"
           },
           "classificationType": {
             "type": "object",
@@ -253,7 +253,7 @@
           "relationshipId": {
             "type": "string",
             "description": "UUID for the type of relationship between the electronic resource at the location identified and the item described in the record as a whole",
-            "$ref": "../uuid.json"
+            "$ref": "../raml-util/schemas/uuid.schema"
           }
         },
         "additionalProperties": true,
@@ -265,14 +265,14 @@
     "instanceTypeId": {
       "type": "string",
       "description": "UUID of the unique term for the resource type whether it's from the RDA content term list of locally defined",
-      "$ref": "../uuid.json"
+      "$ref": "../raml-util/schemas/uuid.schema"
     },
     "instanceFormatIds": {
       "type": "array",
       "description": "UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined",
       "items": {
         "type": "string",
-        "$ref": "../uuid.json"
+        "$ref": "../raml-util/schemas/uuid.schema"
       }
     },
     "instanceFormats": {
@@ -312,7 +312,7 @@
         "properties": {
           "instanceNoteTypeId": {
             "description": "ID of the type of note",
-            "$ref": "../uuid.json"
+            "$ref": "../raml-util/schemas/uuid.schema"
           },
           "note": {
             "type": "string",
@@ -329,7 +329,7 @@
     "modeOfIssuanceId": {
       "type": "string",
       "description": "UUID of the RDA mode of issuance, a categorization reflecting whether a resource is issued in one or more parts, the way it is updated, and whether its termination is predetermined or not (e.g. monograph,  sequential monograph, serial; integrating Resource, other)",
-      "$ref": "../uuid.json"
+      "$ref": "../raml-util/schemas/uuid.schema"
     },
     "catalogedDate": {
       "type": "string",
@@ -353,7 +353,7 @@
       "description": "List of statistical code IDs",
       "items": {
         "type": "string",
-        "$ref": "../uuid.json"
+        "$ref": "../raml-util/schemas/uuid.schema"
       },
       "uniqueItems": true
     },
@@ -366,7 +366,7 @@
     "statusId": {
       "type": "string",
       "description": "UUID for the Instance status term (e.g. cataloged, uncatalogued, batch loaded, temporary, other, not yet assigned)",
-      "$ref": "../uuid.json"
+      "$ref": "../raml-util/schemas/uuid.schema"
     },
     "statusUpdatedDate": {
       "type": "string",
@@ -404,7 +404,7 @@
       "items": {
         "type": "string",
         "description": "Single UUID for the Instance nature of content",
-        "$ref": "../uuid.json"
+        "$ref": "../raml-util/schemas/uuid.schema"
       }
     }
   },

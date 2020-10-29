@@ -6,7 +6,7 @@
     "accountId": {
       "type": "string",
       "description": "ID of users fine/fee account",
-      "$ref": "../uuid.json"
+      "$ref": "../raml-util/schemas/uuid.schema"
     },
     "amount": {
       "type": "string",
