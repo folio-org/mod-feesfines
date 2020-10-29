@@ -75,7 +75,7 @@ public class ManualBlockTemplatesAPI implements ManualblockTemplates {
   public void putManualblockTemplatesById(String id, @Pattern(regexp = "[a-zA-Z]{2}") String lang,
       Manualblocktemplate entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    PgUtil.post(TEMPLATES_TABLE, entity, okapiHeaders, vertxContext,
+    PgUtil.put(TEMPLATES_TABLE, entity, id, okapiHeaders, vertxContext,
         PutManualblockTemplatesByIdResponse.class, asyncResultHandler);
   }
 

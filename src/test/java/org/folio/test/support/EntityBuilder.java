@@ -3,11 +3,14 @@ package org.folio.test.support;
 import static org.folio.test.support.ApiTests.randomId;
 
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.BlockInfo;
 import org.folio.rest.jaxrs.model.Manualblock;
+import org.folio.rest.jaxrs.model.ManualblockTemplate;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 
 import java.util.Date;
+import org.folio.rest.jaxrs.model.TemplateInfo;
 
 public class EntityBuilder {
 
@@ -51,5 +54,22 @@ public class EntityBuilder {
       .withRenewals(true)
       .withBorrowing(true)
       .withExpirationDate(new Date());
+  }
+
+  public static ManualblockTemplate buildManualBlockTemplate() {
+    TemplateInfo templateInfo = new TemplateInfo()
+      .withName("Reader card lost")
+      .withCode("RCL")
+      .withDesc("Use if reader card is lost");
+    BlockInfo blockInfo = new BlockInfo()
+      .withDesc("Reader card lost")
+      .withPatronMessage("Please contact library staff.")
+      .withBorrowing(true)
+      .withRenewals(true)
+      .withRequests(true);
+    return new ManualblockTemplate()
+      .withId(randomId())
+      .withTemplateInfo(templateInfo)
+      .withBlockInfo(blockInfo);
   }
 }
