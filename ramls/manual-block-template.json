@@ -6,6 +6,7 @@
   "properties": {
     "templateInfo": {
       "type": "object",
+      "description": "General information about the template",
       "properties": {
         "name": {
           "description": "Name of the template",
@@ -26,6 +27,7 @@
     },
     "blockTemplate": {
       "type": "object",
+      "description": "Contains the actual template values",
       "properties": {
         "desc": {
           "description": "Description of the patron block",
