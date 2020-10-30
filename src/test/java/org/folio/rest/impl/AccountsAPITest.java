@@ -7,7 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static io.vertx.core.json.Json.decodeValue;
-import static org.folio.test.support.EntityBuilder.buildAccount;
+import static io.vertx.core.json.JsonObject.mapFrom;
 import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -16,8 +16,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 import java.util.Comparator;
 import java.util.UUID;
@@ -30,6 +28,8 @@ import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
+import org.folio.rest.jaxrs.model.PaymentStatus;
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -46,7 +46,6 @@ import io.vertx.core.json.JsonObject;
 
 public class AccountsAPITest extends ApiTests {
   private static final String ACCOUNTS_TABLE = "accounts";
-  private static final String ITEM_ID = "43ec57e3-3974-4d05-a2c2-95126e087b72";
   private static final String FEEFINE_CLOSED_EVENT_NAME = "LOAN_RELATED_FEE_FINE_CLOSED";
 
   @Before
@@ -104,20 +103,6 @@ public class AccountsAPITest extends ApiTests {
       .withRemaining(0.00);
 
     assertBalanceChangedEventPublished(accountToDelete);
-  }
-
-  @Test
-  public void canPutAccountWithEmptyAdditionalFields() {
-    String accountId = randomId();
-
-    accountsClient.create(createAccountJson(accountId))
-      .then()
-      .contentType(JSON);
-
-    accountsClient.update(accountId,
-      createAccountJsonWithEmptyAdditionalFields(accountId))
-      .then()
-      .statusCode(HttpStatus.SC_NO_CONTENT);
   }
 
   @Test
@@ -279,46 +264,65 @@ public class AccountsAPITest extends ApiTests {
   }
 
   @Test
-  public void shouldNotAddLoanIdIfItIsNotValidInAccount() {
-    Account accountToPost = buildAccount();
-    accountToPost.withLoanId("invalid id");
+  public void canCreateAccountWithoutOptionalReferencedEntityId() {
+    assertAccountCreationSuccess(buildAccount().withLoanId(null));
+    assertAccountCreationSuccess(buildAccount().withItemId(null));
+    assertAccountCreationSuccess(buildAccount().withInstanceId(null));
+    assertAccountCreationSuccess(buildAccount().withHoldingsRecordId(null));
+    assertAccountCreationSuccess(buildAccount().withMaterialTypeId(null));
+  }
 
-    accountsClient.create(accountToPost)
+  @Test
+  public void canNotCreateAccountWithoutRequiredReferencedEntityId() {
+    assertAccountCreationFailure(buildAccount().withId(null));
+    assertAccountCreationFailure(buildAccount().withFeeFineId(null));
+    assertAccountCreationFailure(buildAccount().withUserId(null));
+    assertAccountCreationFailure(buildAccount().withOwnerId(null));
+  }
+
+  @Test
+  public void canNotCreateAccountWithInvalidUuid() {
+    final String invalidId = "0";
+
+    assertAccountCreationFailure(buildAccount().withId(invalidId));
+    assertAccountCreationFailure(buildAccount().withFeeFineId(invalidId));
+    assertAccountCreationFailure(buildAccount().withUserId(invalidId));
+    assertAccountCreationFailure(buildAccount().withOwnerId(invalidId));
+    assertAccountCreationFailure(buildAccount().withLoanId(invalidId));
+    assertAccountCreationFailure(buildAccount().withItemId(invalidId));
+    assertAccountCreationFailure(buildAccount().withInstanceId(invalidId));
+    assertAccountCreationFailure(buildAccount().withHoldingsRecordId(invalidId));
+    assertAccountCreationFailure(buildAccount().withMaterialTypeId(invalidId));
+  }
+
+  private void assertAccountCreationFailure(Account account) {
+    accountsClient.attemptCreate(mapFrom(account))
       .then()
-      .statusCode(HttpStatus.SC_CREATED)
-      .contentType(JSON);
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY);
+  }
 
-    Awaitility.await()
-      .atMost(1, TimeUnit.SECONDS)
-      .until(() -> getLastBalanceChangedEvent() != null);
+  private void assertAccountCreationSuccess(Account account) {
+    accountsClient.attemptCreate(mapFrom(account))
+      .then()
+      .statusCode(HttpStatus.SC_CREATED);
+  }
 
-    final Event event = getLastBalanceChangedEvent();
-    assertNotNull(event);
-
-    final JsonObject eventPayload = new JsonObject(event.getEventPayload());
-    assertFalse(eventPayload.containsKey("loanId"));
+  private static Account buildAccount() {
+    return new Account()
+      .withId(randomId())
+      .withOwnerId(randomId())
+      .withUserId(randomId())
+      .withFeeFineId(randomId())
+      .withFeeFineType("book lost")
+      .withFeeFineOwner("owner")
+      .withAmount(7.77)
+      .withRemaining(3.33)
+      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withStatus(new Status().withName("Open"));
   }
 
   private JsonObject createAccountJsonObject(String accountID) {
-    return new JsonObject()
-      .put("id", accountID)
-      .put("userId", randomId())
-      .put("feeFineId", randomId())
-      .put("materialTypeId", randomId())
-      .put("ownerId", randomId())
-      .put("itemId", ITEM_ID)
-      .put("remaining", 3.33)
-      .put("amount", 7.77);
-  }
-
-  private JsonObject createAccountJson(String accountID) {
-    return createAccountJsonObject(accountID);
-  }
-
-  private JsonObject createAccountJsonWithEmptyAdditionalFields(String accountID) {
-    return createAccountJsonObject(accountID)
-      .put("holdingsRecordId", "")
-      .put("instanceId", "");
+    return mapFrom(buildAccount().withId(accountID));
   }
 
   private JsonObject createNamedObject(String value) {

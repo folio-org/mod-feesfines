@@ -13,7 +13,7 @@
     },
     "servicePointId": {
       "type": "string",
-      "$ref": "../uuid.json",
+      "$ref": "../raml-util/schemas/uuid.schema",
       "description": "Unique ID of the service point where the payment was made"
     },
     "userName": {

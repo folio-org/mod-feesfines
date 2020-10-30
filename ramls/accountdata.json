@@ -106,40 +106,40 @@
     },
     "loanId": {
       "description": "ID of the loan",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "userId": {
       "description": "ID of the user",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "itemId": {
       "description": "ID of the item",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "materialTypeId": {
       "description": "ID of the materialType",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "feeFineId": {
-      "description": "ID of the feefines",
-      "type": "string"
+      "description": "ID of the fee/fine",
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "ownerId": {
       "description": "ID of the owner",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "id": {
       "description": "User fine/fee account id, UUID",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "holdingsRecordId": {
       "description": "Item field: item.holdingsRecordId",
-      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema",
       "readonly": true
     },
     "instanceId": {
       "description": "Holdings record field: holdingsRecord.instanceId",
-      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema",
       "readonly": true
     }
   },
@@ -148,8 +148,6 @@
     "amount",
     "remaining",
     "userId",
-    "itemId",
-    "materialTypeId",
     "feeFineId",
     "ownerId",
     "id"

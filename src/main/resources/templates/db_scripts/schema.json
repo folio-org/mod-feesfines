@@ -1,6 +1,4 @@
 {
-  "scripts":[
-  ],
   "tables":[
     {
       "tableName":"owners",
@@ -105,6 +103,13 @@
           "tOps": "ADD"
         }
       ]
+    }
+  ],
+  "scripts":[
+    {
+      "run": "after",
+      "snippetPath": "add-lost-fee-for-actual-cost.sql",
+      "fromModuleVersion": "15.10.0"
     }
   ]
 }
