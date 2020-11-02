@@ -1,9 +1,7 @@
 {
-  "templateInfo": {
-    "name": "Reader card lost",
-    "code": "RCL",
-    "desc": "Template to use if a patron lost his/her reader card"
-  },
+  "name": "Reader card lost",
+  "code": "RCL",
+  "desc": "Template to use if a patron lost his/her reader card",
   "blockTemplate": {
     "desc": "Reader card lost",
     "patronMessage": "Please contact the library's service desk for a new reader card.",

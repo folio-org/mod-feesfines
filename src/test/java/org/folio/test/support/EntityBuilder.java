@@ -9,7 +9,6 @@ import org.folio.rest.jaxrs.model.ManualBlockTemplate;
 import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
-import org.folio.rest.jaxrs.model.TemplateInfo;
 
 public class EntityBuilder {
 
@@ -56,10 +55,6 @@ public class EntityBuilder {
   }
 
   public static ManualBlockTemplate buildManualBlockTemplate() {
-    TemplateInfo info = new TemplateInfo()
-      .withName("Reader card lost")
-      .withCode("RCL")
-      .withDesc("Use if reader card is lost");
     BlockTemplate blockTemplate = new BlockTemplate()
       .withDesc("Reader card lost")
       .withPatronMessage("Please contact library staff.")
@@ -67,8 +62,10 @@ public class EntityBuilder {
       .withRenewals(true)
       .withRequests(true);
     return new ManualBlockTemplate()
+      .withName("Reader card lost")
+      .withCode("RCL")
+      .withDesc("Use if reader card is lost")
       .withId(randomId())
-      .withTemplateInfo(info)
       .withBlockTemplate(blockTemplate);
   }
 }

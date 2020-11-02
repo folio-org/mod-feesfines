@@ -4,26 +4,17 @@
   "description": "Allows institution to specify a template for manual patron blocks.",
   "type": "object",
   "properties": {
-    "templateInfo": {
-      "type": "object",
-      "description": "General information about the template",
-      "properties": {
-        "name": {
-          "description": "Name of the template",
-          "type": "string"
-        },
-        "code": {
-          "description": "Code of the template. Can be a shorthand of the name (e.g. an acronym).",
-          "type": "string"
-        },
-        "desc": {
-          "description": "Description of this template",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name"
-      ]
+    "name": {
+      "description": "Name of the template",
+      "type": "string"
+    },
+    "code": {
+      "description": "Code of the template. Can be a shorthand of the name (e.g. an acronym).",
+      "type": "string"
+    },
+    "desc": {
+      "description": "Description of this template",
+      "type": "string"
     },
     "blockTemplate": {
       "type": "object",
@@ -63,6 +54,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "templateInfo"
+    "name"
   ]
 }

@@ -8,7 +8,6 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.ManualBlockTemplate;
 import org.folio.rest.jaxrs.model.ManualBlockTemplateCollection;
-import org.folio.rest.jaxrs.model.TemplateInfo;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
 import org.junit.Test;
@@ -41,7 +40,7 @@ public class ManualBlockTemplatesAPITest extends ApiTests {
 
     // update template
     ManualBlockTemplate initalTemplateChanged = initialTemplate
-      .withTemplateInfo(new TemplateInfo().withDesc("CHANGED").withName("CHANGED"));
+      .withName("CHANGED").withDesc("CHANGED");
     manualBlockTemplatesClient
       .update(initialTemplate.getId(), initalTemplateChanged)
       .then()
