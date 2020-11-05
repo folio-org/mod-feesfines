@@ -223,6 +223,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     expectedFeeFineLogContext = new JsonObject()
       .put("userId", user.getId())
       .put("itemBarcode", account.getBarcode())
+      .put("itemId", account.getItemId())
       .put("action", action.getTypeAction())
       .put("feeFineId", account.getFeeFineId())
       .put("feeFineOwner", account.getFeeFineOwner())
