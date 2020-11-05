@@ -351,6 +351,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
       .withId(accountId)
       .withOwnerId(randomId())
       .withUserId(USER_ID)
+      .withBarcode("barcode")
       .withItemId(randomId())
       .withLoanId(randomId())
       .withMaterialTypeId(randomId())

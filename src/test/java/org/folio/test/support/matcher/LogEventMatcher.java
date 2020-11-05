@@ -10,6 +10,8 @@ import static org.folio.rest.domain.logs.LogEventPayloadField.COMMENTS;
 import static org.folio.rest.domain.logs.LogEventPayloadField.DATE;
 import static org.folio.rest.domain.logs.LogEventPayloadField.FEE_FINE_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.FEE_FINE_OWNER;
+import static org.folio.rest.domain.logs.LogEventPayloadField.ITEM_BARCODE;
+import static org.folio.rest.domain.logs.LogEventPayloadField.ITEM_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.LOAN_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.PAYMENT_METHOD;
 import static org.folio.rest.domain.logs.LogEventPayloadField.SERVICE_POINT_ID;
@@ -37,24 +39,26 @@ public class LogEventMatcher {
 
   public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultBulkActionRequest request,
     String action, double amount, double balance) {
-    return feeFineActionLogEventPayload(account.getUserId(), action, request.getServicePointId(),
-      request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
-      amount, balance, request.getPaymentMethod(), request.getComments());
+    return feeFineActionLogEventPayload(account.getUserId(), account.getBarcode(), account.getItemId(),
+      action, request.getServicePointId(), request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(),
+      account.getLoanId(), amount, balance, request.getPaymentMethod(), request.getComments());
   }
 
   public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultActionRequest request,
     String action, double amount, double balance) {
-    return feeFineActionLogEventPayload(account.getUserId(), action, request.getServicePointId(),
-      request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
-      amount, balance, request.getPaymentMethod(), request.getComments());
+    return feeFineActionLogEventPayload(account.getUserId(), account.getBarcode(), account.getItemId(),
+      action, request.getServicePointId(), request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(),
+      account.getLoanId(), amount, balance, request.getPaymentMethod(), request.getComments());
   }
 
-  public static Matcher<String> feeFineActionLogEventPayload(String userId, String action, String servicePointId,
-    String source, String feeFineId, String feeFineOwner, String loanId, double amount, double balance,
-    String paymentMethod, String comments) {
+  public static Matcher<String> feeFineActionLogEventPayload(String userId, String itemBarcode, String itemId,
+    String action, String servicePointId, String source, String feeFineId,
+    String feeFineOwner, String loanId, double amount, double balance, String paymentMethod, String comments) {
 
     return allOf(Arrays.asList(
       hasJsonPath(USER_ID.value(), is(userId)),
+      hasJsonPath(ITEM_BARCODE.value(), is(itemBarcode)),
+      hasJsonPath(ITEM_ID.value(), is(itemId)),
       hasJsonPath(ACTION.value(), is(action)),
       hasJsonPath(DATE.value(), notNullValue(Date.class)),
       hasJsonPath(SERVICE_POINT_ID.value(), is(servicePointId)),
@@ -69,22 +73,23 @@ public class LogEventMatcher {
   }
 
   public static Matcher<String> cancelledActionLogEventPayload(Account account, CancelActionRequest request) {
-    return cancelledActionLogEventPayload(account.getUserId(), request.getServicePointId(),
+    return cancelledActionLogEventPayload(account.getUserId(), account.getItemId(), request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       account.getAmount(), request.getComments());
   }
 
   public static Matcher<String> cancelledActionLogEventPayload(Account account, CancelBulkActionRequest request) {
-    return cancelledActionLogEventPayload(account.getUserId(), request.getServicePointId(),
+    return cancelledActionLogEventPayload(account.getUserId(), account.getItemId(), request.getServicePointId(),
       request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(), account.getLoanId(),
       account.getAmount(), request.getComments());
   }
 
-  public static Matcher<String> cancelledActionLogEventPayload(String userId, String servicePointId, String source,
+  public static Matcher<String> cancelledActionLogEventPayload(String userId, String itemId, String servicePointId, String source,
     String feeFineId, String feeFineOwner, String loanId, double amount, String comments) {
 
     return allOf(Arrays.asList(
       hasJsonPath(USER_ID.value(), is(userId)),
+      hasJsonPath(ITEM_ID.value(), is(itemId)),
       hasJsonPath(ACTION.value(), is(Action.CANCEL.getFullResult())),
       hasJsonPath(DATE.value(), notNullValue(Date.class)),
       hasJsonPath(SERVICE_POINT_ID.value(), is(servicePointId)),
