@@ -37,7 +37,6 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
-import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -315,6 +314,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .withId(ACCOUNT_ID)
       .withOwnerId(randomId())
       .withUserId(randomId())
+      .withBarcode("barcode")
       .withItemId(randomId())
       .withLoanId(randomId())
       .withMaterialTypeId(randomId())
