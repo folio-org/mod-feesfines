@@ -64,16 +64,16 @@ public class SplitEvenlyRecursivelyTest {
 
   @Test
   public void shouldCoverAllAccountsPartiallyWithOnePieceLargerThanTheRest() {
-    MonetaryValue requestedAmount = new MonetaryValue(3.01);
-    List<Account> accounts = buildAccounts(2, 2, 2);
+    MonetaryValue requestedAmount = new MonetaryValue(15.01);
+    List<Account> accounts = buildAccounts(5, 6, 7, 8);
     Map<String, MonetaryValue> actionableAmounts = buildActionableAmountsEqualToRemaining(accounts);
 
     Map<String, MonetaryValue> splitAmount = new SplitEvenlyRecursively()
       .split(requestedAmount, accounts, actionableAmounts);
 
-    assertEquals(3, splitAmount.size());
-    assertEquals(2, numberOfValueOccurrences(splitAmount, 1.0));
-    assertEquals(1, numberOfValueOccurrences(splitAmount, 1.01));
+    assertEquals(4, splitAmount.size());
+    assertEquals(3, numberOfValueOccurrences(splitAmount, 3.75));
+    assertEquals(1, numberOfValueOccurrences(splitAmount, 3.76));
   }
 
   @Test
