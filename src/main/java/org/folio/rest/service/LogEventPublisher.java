@@ -22,15 +22,15 @@ public class LogEventPublisher {
     eventPublisher = new EventPublisher(vertx, headers);
   }
 
-  public void publishLogEvent(Object object, LogEventPayloadType logEventPayloadType) {
-    final JsonObject payload = createLogRecordPayload(object, logEventPayloadType);
+  public void publishLogEvent(JsonObject json, LogEventPayloadType logEventPayloadType) {
+    final JsonObject payload = createLogRecordPayload(json, logEventPayloadType);
     eventPublisher.publishEventAsynchronously(LOG_RECORD, payload.encode());
   }
 
-  private JsonObject createLogRecordPayload(Object object, LogEventPayloadType logEventPayloadType) {
+  private JsonObject createLogRecordPayload(JsonObject payload, LogEventPayloadType logEventPayloadType) {
     JsonObject logEventPayload = new JsonObject();
     write(logEventPayload, LOG_EVENT_TYPE, logEventPayloadType.value());
-    write(logEventPayload, PAYLOAD, (object instanceof JsonObject) ? (JsonObject) object : JsonObject.mapFrom(object));
+    write(logEventPayload, PAYLOAD, payload);
     return logEventPayload;
   }
 
