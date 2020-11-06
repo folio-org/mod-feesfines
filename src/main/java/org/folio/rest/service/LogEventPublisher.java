@@ -5,7 +5,6 @@ import static org.folio.rest.utils.JsonHelper.write;
 
 import java.util.Map;
 
-import org.folio.rest.jaxrs.model.Manualblock;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -23,27 +22,15 @@ public class LogEventPublisher {
     eventPublisher = new EventPublisher(vertx, headers);
   }
 
-  public void publishLogEvent(JsonObject jsonObject, LogEventPayloadType logEventPayloadType) {
-    final JsonObject payload = createLogRecordPayload(jsonObject, logEventPayloadType);
+  public void publishLogEvent(Object object, LogEventPayloadType logEventPayloadType) {
+    final JsonObject payload = createLogRecordPayload(object, logEventPayloadType);
     eventPublisher.publishEventAsynchronously(LOG_RECORD, payload.encode());
   }
 
-  private JsonObject createLogRecordPayload(JsonObject jsonObject, LogEventPayloadType logEventPayloadType) {
+  private JsonObject createLogRecordPayload(Object object, LogEventPayloadType logEventPayloadType) {
     JsonObject logEventPayload = new JsonObject();
     write(logEventPayload, LOG_EVENT_TYPE, logEventPayloadType.value());
-    write(logEventPayload, PAYLOAD, jsonObject.encode());
-    return logEventPayload;
-  }
-
-  public void publishLogEvent(Manualblock manualBlock, LogEventPayloadType logEventPayloadType) {
-    final JsonObject payload = createLogRecordPayload(manualBlock, logEventPayloadType);
-    eventPublisher.publishEventAsynchronously(LOG_RECORD, payload.encode());
-  }
-
-  private JsonObject createLogRecordPayload(Manualblock manualBlock, LogEventPayloadType logEventPayloadType) {
-    JsonObject logEventPayload = new JsonObject();
-    write(logEventPayload, LOG_EVENT_TYPE, logEventPayloadType.value());
-    write(logEventPayload, PAYLOAD, JsonObject.mapFrom(manualBlock));
+    write(logEventPayload, PAYLOAD, (object instanceof JsonObject) ? (JsonObject) object : JsonObject.mapFrom(object));
     return logEventPayload;
   }
 
