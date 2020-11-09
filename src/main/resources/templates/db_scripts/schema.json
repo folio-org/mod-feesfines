@@ -37,12 +37,24 @@
     {
       "tableName":"accounts",
       "fromModuleVersion":"15.0",
-      "withMetadata":true
+      "withMetadata":true,
+      "index" : [
+        {
+          "fieldName" : "loanId",
+          "tOps" : "ADD"
+        }
+      ]
     },
     {
       "tableName":"feefineactions",
       "fromModuleVersion":"15.0",
-      "withMetadata":true
+      "withMetadata":true,
+      "index" : [
+        {
+          "fieldName" : "accountId",
+          "tOps" : "ADD"
+        }
+      ]
     },
     {
       "tableName":"payments",
