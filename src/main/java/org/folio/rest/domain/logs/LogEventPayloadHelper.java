@@ -106,6 +106,7 @@ public class LogEventPayloadHelper {
       write(json, FEE_FINE_ID.value(), acc.getFeeFineId());
       write(json, FEE_FINE_OWNER.value(), acc.getFeeFineOwner());
       write(json, ITEM_BARCODE.value(), acc.getBarcode());
+      write(json, ITEM_ID.value(), acc.getItemId());
       write(json, LOAN_ID.value(), acc.getLoanId());
     });
 
