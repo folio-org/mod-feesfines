@@ -62,6 +62,10 @@ public class MonetaryValue {
     return amount.compareTo(other.getAmount()) > 0;
   }
 
+  public boolean isGreaterThanOrEquals(MonetaryValue other) {
+    return amount.compareTo(other.getAmount()) >= 0;
+  }
+
   public MonetaryValue subtract(MonetaryValue other) {
     return new MonetaryValue(amount.subtract(other.getAmount()));
   }
