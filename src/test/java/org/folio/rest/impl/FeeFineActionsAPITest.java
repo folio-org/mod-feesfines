@@ -249,7 +249,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     final boolean notify = false;
     final double amountAction = 100;
     final double balance = 100;
-    final String dateAction = "2019-12-23T14:25:59.550+0000";
+    final String dateAction = "2019-12-23T14:25:59.550+00:00";
     final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
       amountAction, balance, accountId, user.getId());
 
@@ -304,7 +304,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     final boolean notify = false;
     final double amountAction = 100;
     final double balance = 100;
-    final String dateAction = "2019-12-23T14:25:59.550+0000";
+    final String dateAction = "2019-12-23T14:25:59.550+00:00";
     final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
       amountAction, balance, accountId, user.getId());
 
