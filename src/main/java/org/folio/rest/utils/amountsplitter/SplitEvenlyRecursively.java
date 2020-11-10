@@ -1,5 +1,8 @@
 package org.folio.rest.utils.amountsplitter;
 
+import static java.math.BigDecimal.ONE;
+import static java.math.BigDecimal.ZERO;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collection;
@@ -7,9 +10,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.folio.rest.domain.MonetaryValue;
+import org.folio.rest.exception.ActionException;
 import org.folio.rest.jaxrs.model.Account;
 
 public class SplitEvenlyRecursively implements BulkActionAmountSplitterStrategy {
@@ -51,10 +56,52 @@ public class SplitEvenlyRecursively implements BulkActionAmountSplitterStrategy 
       }
     }
 
+    distributeRemainder(actionableAmounts, result, amountToDistribute);
+    validateResult(totalRequestedAmount, result);
+
     return result;
   }
 
+  private void distributeRemainder(Map<String, MonetaryValue> actionableAmounts,
+    Map<String, MonetaryValue> calculatedAmounts, BigDecimal amountToDistribute) {
+
+    MonetaryValue undistributedRemainder = new MonetaryValue(amountToDistribute);
+    if (!undistributedRemainder.isPositive()) {
+      return;
+    }
+
+    final MonetaryValue remainderDistributionIncrement = new MonetaryValue(
+      ONE.movePointLeft(amountToDistribute.scale()));
+    Set<String> accountIds = calculatedAmounts.keySet();
+
+    for (String accountId : accountIds) {
+      MonetaryValue actionableAmount = actionableAmounts.get(accountId);
+      MonetaryValue calculatedAmountPlusRemainder = calculatedAmounts.get(accountId)
+        .add(remainderDistributionIncrement);
+
+      if (actionableAmount.isGreaterThanOrEquals(calculatedAmountPlusRemainder)) {
+        calculatedAmounts.replace(accountId, calculatedAmountPlusRemainder);
+        undistributedRemainder = undistributedRemainder.subtract(remainderDistributionIncrement);
+      }
+
+      if (!undistributedRemainder.isPositive()) {
+        break;
+      }
+    }
+  }
+
+  private void validateResult(MonetaryValue requestedAmount,
+    Map<String, MonetaryValue> calculatedAmounts) {
+
+    MonetaryValue totalCalculatedAmount = calculatedAmounts.values().stream()
+      .reduce(new MonetaryValue(ZERO), MonetaryValue::add);
+
+    if (requestedAmount.getAmount().compareTo(totalCalculatedAmount.getAmount()) != 0) {
+      throw new ActionException("Failed to split requested amount correctly");
+    }
+  }
+
   private BigDecimal splitEvenly(BigDecimal amount, int numberOfPieces) {
-    return amount.divide(new BigDecimal(numberOfPieces), RoundingMode.HALF_EVEN);
+    return amount.divide(new BigDecimal(numberOfPieces), RoundingMode.FLOOR);
   }
 }
