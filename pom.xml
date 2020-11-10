@@ -30,6 +30,16 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-sql-client</artifactId>
+        <version>${vertx.version}-FOLIO</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-pg-client</artifactId>
+        <version>${vertx.version}-FOLIO</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -475,8 +485,8 @@
     <powermock.version>2.0.7</powermock.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <raml-module-builder.version>31.0.2</raml-module-builder.version>
-    <vertx.version>3.9.0</vertx.version>
+    <raml-module-builder.version>31.1.5</raml-module-builder.version>
+    <vertx.version>3.9.4</vertx.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
     <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->
