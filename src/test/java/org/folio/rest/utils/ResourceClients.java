@@ -18,6 +18,10 @@ public final class ResourceClients {
     return new ResourceClient("/manualblocks");
   }
 
+  public static ResourceClient buildManualBlockTemplateClient() {
+    return new ResourceClient("/manual-block-templates");
+  }
+
   public static ResourceClient buildAccountCheckPayClient(String accountId) {
     return buildAccountActionClient(accountId, "check-pay");
   }

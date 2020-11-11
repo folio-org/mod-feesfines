@@ -73,6 +73,11 @@
       "withMetadata":true
     },
     {
+      "tableName":"manual_block_templates",
+      "fromModuleVersion":"15.10.0",
+      "withMetadata":true
+    },
+    {
       "tableName":"transfer_criteria",
       "fromModuleVersion":"15.0",
       "withMetadata":true

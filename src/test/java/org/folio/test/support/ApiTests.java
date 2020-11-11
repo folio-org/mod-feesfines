@@ -3,6 +3,7 @@ package org.folio.test.support;
 import static org.folio.rest.utils.ResourceClients.buildAccountClient;
 import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
+import static org.folio.rest.utils.ResourceClients.buildManualBlockTemplateClient;
 import static org.folio.rest.utils.ResourceClients.tenantClient;
 
 import java.util.Base64;
@@ -42,6 +43,7 @@ public class ApiTests {
   protected final ResourceClient accountsClient = buildAccountClient();
   protected final ResourceClient manualBlocksClient = buildManualBlockClient();
   protected final ResourceClient feeFinesClient = buildFeeFinesClient();
+  protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
 
   @BeforeClass

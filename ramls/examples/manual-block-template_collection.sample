@@ -1,0 +1,26 @@
+{
+  "manualBlockTemplates": [
+   {
+     "name": "Reader card lost",
+     "code": "RCL",
+     "desc": "Template to use if a patron lost his/her reader card",
+     "blockTemplate": {
+       "desc": "Reader card lost",
+       "patronMessage": "Please contact the library's service desk for a new reader card.",
+       "borrowing": true,
+       "renewals": true,
+       "requests": true
+     },
+     "metadata": {
+       "createdDate": "2018-10-16T23:07:02Z",
+       "createdByUserId": "1ad737b0-d847-11e6-bf26-cec0c932ce02",
+       "createdByUsername": "Doe",
+       "updatedDate": "2018-10-16T23:07:02Z",
+       "updatedByUserId": "695540df-cf63-4c67-91c1-d8746920d1dd",
+       "updatedByUsername": "robertjones"
+     },
+     "id": "a6905826-d84e-4900-a1f8-de1e3829d18d"
+   }
+  ],
+  "totalRecords": 1
+}

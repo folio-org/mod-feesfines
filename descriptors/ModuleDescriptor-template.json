@@ -864,6 +864,51 @@
           "permissionsRequired":[
             "lost-item-fees-policies.item.delete"
           ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/manual-block-templates",
+          "permissionsRequired":[
+            "manual-block-templates.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/manual-block-templates/{id}",
+          "permissionsRequired":[
+            "manual-block-templates.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/manual-block-templates",
+          "permissionsRequired":[
+            "manual-block-templates.item.post"
+          ]
+        },
+        {
+          "methods":[
+            "PUT"
+          ],
+          "pathPattern":"/manual-block-templates/{id}",
+          "permissionsRequired":[
+            "manual-block-templates.item.put"
+          ]
+        },
+        {
+          "methods":[
+            "DELETE"
+          ],
+          "pathPattern":"/manual-block-templates/{id}",
+          "permissionsRequired":[
+            "manual-block-templates.item.delete"
+          ]
         }
       ]
     },
@@ -1262,6 +1307,31 @@
       "permissionName":"lost-item-fees-policies.item.delete",
       "displayName":"Lost-item-fees-policies item delete",
       "description":"Delete an lost-item-fees-policies record"
+    },
+    {
+      "permissionName":"manual-block-templates.collection.get",
+      "displayName":"manual-block-template collection get",
+      "description":"Get a list of manual-block templates"
+    },
+    {
+      "permissionName":"manual-block-templates.item.get",
+      "displayName":"manual-block-template item get",
+      "description":"Get a single manual-block template"
+    },
+    {
+      "permissionName":"manual-block-templates.item.post",
+      "displayName":"manual-block-template item post",
+      "description":"Create a new manual-block template"
+    },
+    {
+      "permissionName":"manual-block-templates.item.put",
+      "displayName":"manual-block-template item put",
+      "description":"Edit an manual-block template"
+    },
+    {
+      "permissionName":"manual-block-templates.item.delete",
+      "displayName":"manual-block-template item delete",
+      "description":"Delete an manual-block template"
     },
     {
       "permissionName": "modperms.feesfines.patron-notices.post",
