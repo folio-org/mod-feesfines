@@ -36,7 +36,8 @@ public class CancelActionService extends ActionService {
     ActionRequest request) {
 
     final MonetaryValue remainingAmountAfterAction = new MonetaryValue(0.0);
-    String actionType = action.getFullResult();
+    final String reasonForAction = request.getReasonForAction() != null
+      ? request.getReasonForAction() : action.getFullResult();
 
     final Feefineaction feeFineAction = new Feefineaction()
       .withAmountAction(account.getAmount())
@@ -46,11 +47,11 @@ public class CancelActionService extends ActionService {
       .withAccountId(account.getId())
       .withUserId(account.getUserId())
       .withBalance(remainingAmountAfterAction.toDouble())
-      .withTypeAction(actionType)
+      .withTypeAction(reasonForAction)
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date());
 
-    account.getPaymentStatus().setName(actionType);
+    account.getPaymentStatus().setName(reasonForAction);
     account.getStatus().setName(CLOSED.getValue());
     account.setRemaining(0.0);
 

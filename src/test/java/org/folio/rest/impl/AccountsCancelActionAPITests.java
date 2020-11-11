@@ -81,6 +81,37 @@ public class AccountsCancelActionAPITests extends ApiTests {
   }
 
   @Test
+  public void shouldUseCancellationReason() {
+    final String cancellationReason = "Cancelled item returned";
+    final Account accountToPost = postAccount();
+    final CancelActionRequest cancelActionRequest = createCancelActionRequest()
+      .withCancellationReason(cancellationReason);
+
+    accountCancelClient.attemptCreate(cancelActionRequest)
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .body("accountId", is(ACCOUNT_ID));
+
+    accountsClient.getById(ACCOUNT_ID)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .contentType(JSON)
+      .body("status.name", is("Closed"))
+      .body("paymentStatus.name", is(cancellationReason))
+      .body("remaining", is(0.0f));
+
+    actionsClient.getAll()
+      .then()
+      .log().body()
+      .body(FEE_FINE_ACTIONS, hasSize(1))
+      .body(FEE_FINE_ACTIONS, hasItem(allOf(
+        hasJsonPath("amountAction", is((float) accountToPost.getAmount().doubleValue())),
+        hasJsonPath("balance", is(0.0f)),
+        hasJsonPath("typeAction", is(cancellationReason))
+      )));
+  }
+
+  @Test
   public void shouldReturn404WhenAccountDoesNotExist() {
     accountCancelClient.attemptCreate(createCancelActionRequest())
       .then()

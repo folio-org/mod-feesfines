@@ -17,10 +17,11 @@ public class ActionRequest {
   private final String userName;
   private final String paymentMethod;
   private final boolean notifyPatron;
+  private final String reasonForAction;
 
   public ActionRequest(List<String> accountIds, String amount, String comments,
     String transactionInfo, String servicePointId, String userName, String paymentMethod,
-    boolean notifyPatron) {
+    boolean notifyPatron, String reasonForAction) {
 
     this.accountIds = accountIds;
     this.amount = amount;
@@ -30,6 +31,7 @@ public class ActionRequest {
     this.userName = userName;
     this.paymentMethod = paymentMethod;
     this.notifyPatron = notifyPatron;
+    this.reasonForAction = reasonForAction;
   }
 
   public List<String> getAccountIds() {
@@ -64,6 +66,10 @@ public class ActionRequest {
     return notifyPatron;
   }
 
+  public String getReasonForAction() {
+    return reasonForAction;
+  }
+
   public static ActionRequest from(DefaultActionRequest request, String accountId) {
     return new ActionRequest(
       Collections.singletonList(accountId),
@@ -73,7 +79,8 @@ public class ActionRequest {
       request.getServicePointId(),
       request.getUserName(),
       request.getPaymentMethod(),
-      request.getNotifyPatron());
+      request.getNotifyPatron(),
+      null);
   }
 
   public static ActionRequest from(DefaultBulkActionRequest request) {
@@ -85,7 +92,8 @@ public class ActionRequest {
       request.getServicePointId(),
       request.getUserName(),
       request.getPaymentMethod(),
-      request.getNotifyPatron());
+      request.getNotifyPatron(),
+      null);
   }
 
   public static ActionRequest from(CancelActionRequest request, String accountId) {
@@ -97,7 +105,8 @@ public class ActionRequest {
       request.getServicePointId(),
       request.getUserName(),
       null,
-      request.getNotifyPatron());
+      request.getNotifyPatron(),
+      request.getCancellationReason());
   }
 
   public static ActionRequest from(CancelBulkActionRequest request) {
@@ -109,6 +118,7 @@ public class ActionRequest {
       request.getServicePointId(),
       request.getUserName(),
       null,
-      request.getNotifyPatron());
+      request.getNotifyPatron(),
+      null);
   }
 }

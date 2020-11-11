@@ -19,6 +19,11 @@
     "userName": {
       "type": "string",
       "description": "Name of the user that was logged in when the action was performed"
+    },
+    "cancellationReason": {
+      "type": "string",
+      "description": "Reason for cancellation",
+      "default": "Cancelled as error"
     }
   },
   "additionalProperties": false,
