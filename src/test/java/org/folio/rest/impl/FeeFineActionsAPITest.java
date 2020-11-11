@@ -614,7 +614,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .map(json -> json.getString("eventPayload"))
       .filter(s -> s.contains(type.value()))
       .map(JsonObject::new)
-      .map(json -> json.getString("payload"))
+      .map(json -> json.getJsonObject("payload").encode())
       .map(JsonObject::new)
       .max(Comparator.comparing(json -> json.getString("date")))
       .orElse(new JsonObject());

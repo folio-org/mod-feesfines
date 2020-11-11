@@ -28,7 +28,7 @@ public class LogEventUtils {
     return fetchPublishedLogRecords(okapiDeployment).stream()
       .map(json -> json.getString("eventPayload"))
       .map(JsonObject::new)
-      .map(json -> json.getString("payload"))
+      .map(json -> json.getJsonObject("payload").encode())
       .collect(Collectors.toList());
   }
 }
