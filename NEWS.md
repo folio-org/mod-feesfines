@@ -1,3 +1,10 @@
+## 15.9.2 2020-11-12
+* Fix fee/fine actions not appearing in circulation log (MODFEE-131)
+* Fix amount division logic for bulk paying/waiving/transferring (MODFEE-136)
+* Fix missing item details in fee/fine records in circulation log (MODFEE-139)
+* Upgrade to RMB 31.1.5 and Vert.x 3.9.4 (MODFEE-140)
+* Add indexes for tables `accounts` and `feefineactions` (MODFEE-141)
+
 ## 15.9.1 2020-10-14
 * Fixes PubSub permissions (MODFEE-124)
 
