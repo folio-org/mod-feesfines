@@ -3,16 +3,14 @@ package org.folio.rest.utils;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.folio.rest.utils.AccountHelper.PATRON_COMMENTS_KEY;
 import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
@@ -34,7 +32,6 @@ import org.joda.time.DateTimeZone;
 import io.vertx.core.json.JsonObject;
 
 public class PatronNoticeBuilder {
-  private static final String PATRON_COMMENTS_KEY = "PATRON";
   private static final String LIST_VALUES_SEPARATOR = "; ";
   private static final String BARCODE = "barcode";
   public static final String TITLE = "title";
@@ -208,15 +205,8 @@ public class PatronNoticeBuilder {
 
   private static String getCommentsFromFeeFineAction(Feefineaction feefineaction){
     String comments = Optional.ofNullable(feefineaction.getComments()).orElse(StringUtils.EMPTY);
-    return parseFeeFineComments(comments).getOrDefault(PATRON_COMMENTS_KEY, StringUtils.EMPTY);
-  }
-
-  static Map<String, String> parseFeeFineComments(String comments) {
-    return Arrays.stream(comments.split(" \n "))
-      .map(s -> s.split(" : "))
-      .filter(arr -> arr.length == 2)
-      .map(strings -> Pair.of(strings[0], strings[1]))
-      .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (s, s2) -> s));
+    return AccountHelper.parseFeeFineComments(comments)
+      .getOrDefault(PATRON_COMMENTS_KEY, StringUtils.EMPTY);
   }
 
   private static String getPrimaryContributor(Instance instance) {

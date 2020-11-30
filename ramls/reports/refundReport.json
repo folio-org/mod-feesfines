@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Refund report",
+  "description": "Outputs data required for a refund report",
+  "type": "object",
+  "properties": {
+    "reportData": {
+      "description": "List of report entries",
+      "type": "array",
+      "id": "refundReportData",
+      "items": {
+        "type": "object",
+        "$ref": "refundReportEntry.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "reportData"
+  ]
+}

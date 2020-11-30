@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Refund report entry",
+  "description": "Represents a single row of a refund report",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.RefundReportEntry",
+  "properties": {
+    "patronName": {
+      "type": "string",
+      "description": "Patron name"
+    },
+    "patronBarcode": {
+      "type": "string",
+      "description": "Patron barcode"
+    },
+    "patronId": {
+      "type": "string",
+      "description": "A globally unique (UUID) identifier for the user",
+      "$ref": "../raml-util/schemas/uuid.schema"
+    },
+    "patronGroup": {
+      "type": "string",
+      "description": "Patron group"
+    },
+    "feeFineType": {
+      "type": "string",
+      "description": "Fee/fine type"
+    },
+    "billedAmount": {
+      "type": "string",
+      "description": "Fee/fine amount"
+    },
+    "dateBilled": {
+      "type": "string",
+      "description": "Date and time when the fee/fine was charged"
+    },
+    "paidAmount": {
+      "type": "string",
+      "description": "Paid amount (at the moment of refund)"
+    },
+    "paymentMethod": {
+      "type": "string",
+      "description": "Payment method or 'Multiple' for multiple payments with different methods"
+    },
+    "transactionInfo": {
+      "type": "string",
+      "description": "Transaction info or 'See Fee/fine detail page' for multiple payments"
+    },
+    "transferredAmount": {
+      "type": "string",
+      "description": "Transferred amount (at the moment of refund)"
+    },
+    "transferAccount": {
+      "type": "string",
+      "description": "Account"
+    },
+    "feeFineId": {
+      "type": "string",
+      "description": "Fee/fine ID",
+      "$ref": "../raml-util/schemas/uuid.schema"
+    },
+    "refundDate": {
+      "type": "string",
+      "description": "Date and time of a refund action"
+    },
+    "refundAmount": {
+      "type": "string",
+      "description": "Refund amount"
+    },
+    "refundAction": {
+      "type": "string",
+      "description": "Refund action - 'Refunded fully' or 'Refunded partially'"
+    },
+    "refundReason": {
+      "type": "string",
+      "description": "Refund reason"
+    },
+    "staffInfo": {
+      "type": "string",
+      "description": "Additional information for staff from refund 'action'"
+    },
+    "patronInfo": {
+      "type": "string",
+      "description": "Additional information for patron from refund 'action'"
+    },
+    "itemBarcode": {
+      "type": "string",
+      "description": "Item barcode"
+    },
+    "instance": {
+      "type": "string",
+      "description": "Instance title"
+    },
+    "actionCompletionDate": {
+      "type": "string",
+      "description": "Action completion date"
+    },
+    "staffMemberName": {
+      "type": "string",
+      "description": "Staff member name"
+    },
+    "actionTaken": {
+      "type": "string",
+      "description": "Action taken"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "patronName",
+    "patronBarcode",
+    "patronId",
+    "patronGroup",
+    "feeFineType",
+    "billedAmount",
+    "dateBilled",
+    "paidAmount",
+    "paymentMethod",
+    "transactionInfo",
+    "transferredAmount",
+    "transferAccount",
+    "feeFineId",
+    "refundDate",
+    "refundAmount",
+    "staffInfo",
+    "patronInfo",
+    "itemBarcode",
+    "instance",
+    "actionCompletionDate",
+    "staffMemberName",
+    "actionTaken"
+  ]
+}

@@ -1,7 +1,7 @@
 package org.folio.rest.utils;
 
+import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
 import static org.folio.rest.utils.PatronNoticeBuilder.buildNotice;
-import static org.folio.rest.utils.PatronNoticeBuilder.parseFeeFineComments;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "User Group Schema",
+  "description": "A user group",
+  "type": "object",
+  "properties": {
+    "group": {
+      "description": "The unique name of this group",
+      "type": "string"
+    },
+    "desc": {
+      "description": "An explanation of this group",
+      "type": "string"
+    },
+    "id": {
+      "description": "A UUID identifying this group",
+      "type": "string"
+    },
+    "expirationOffsetInDays": {
+      "description": "The default period in days after which a newly created user that belongs to this group will expire",
+      "type": "integer"
+    },
+    "metadata": {
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "required": [
+    "group"
+  ]
+}
