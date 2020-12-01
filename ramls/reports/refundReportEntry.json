@@ -103,30 +103,5 @@
       "type": "string",
       "description": "Action taken"
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "patronName",
-    "patronBarcode",
-    "patronId",
-    "patronGroup",
-    "feeFineType",
-    "billedAmount",
-    "dateBilled",
-    "paidAmount",
-    "paymentMethod",
-    "transactionInfo",
-    "transferredAmount",
-    "transferAccount",
-    "feeFineId",
-    "refundDate",
-    "refundAmount",
-    "staffInfo",
-    "patronInfo",
-    "itemBarcode",
-    "instance",
-    "actionCompletionDate",
-    "staffMemberName",
-    "actionTaken"
-  ]
+  }
 }

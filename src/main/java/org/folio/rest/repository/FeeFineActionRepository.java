@@ -17,6 +17,7 @@ import org.folio.rest.domain.Action;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.GroupedCriterias;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Order;
 import org.folio.rest.persist.PostgresClient;
@@ -110,17 +111,9 @@ public class FeeFineActionRepository {
 
     Criterion criterion = new Criterion(getDateCriteria(DATE_FIELD, ">=", startDate))
       .addCriterion(getDateCriteria(DATE_FIELD, "<", endDate))
-      .addCriterion(getTypeCriteria(typeAction))
-      .setOrder(new Order(format("%s, id", DATE_FIELD), ASC))
+      .addGroupOfCriterias(getTypeCriteria(typeAction))
+      .setOrder(new Order(format("jsonb->>'%s', jsonb->>'id'", DATE_FIELD), ASC))
       .setLimit(new Limit(limit));
-
-//    if (lastId != null) {
-//      criterion.addCriterion(new Criteria()
-//        .addField("'id'")
-//        .setOperation(">")
-//        .setVal(lastId)
-//        .setJSONB(true));
-//    }
 
     return this.get(criterion);
   }
@@ -134,17 +127,23 @@ public class FeeFineActionRepository {
 
   private Criteria getDateCriteria(String fieldName, String operation, String date) {
     return new Criteria()
-      .addField(format("%s", fieldName))
+      .addField(format("'%s'", fieldName))
       .setOperation(operation)
       .setVal(date)
       .setJSONB(true);
   }
 
-  private Criteria getTypeCriteria(Action action) {
-    return new Criteria()
-      .addField(format("%s", TYPE_FIELD))
-      .setOperation("IN")
-      .setVal(format("('%s', '%s')", action.getFullResult(), action.getPartialResult()))
-      .setJSONB(true);
+  private GroupedCriterias getTypeCriteria(Action action) {
+    return new GroupedCriterias()
+      .addCriteria(new Criteria()
+        .addField(format("'%s'", TYPE_FIELD))
+        .setOperation("=")
+        .setVal(action.getFullResult())
+        .setJSONB(true))
+      .addCriteria(new Criteria()
+        .addField(format("'%s'", TYPE_FIELD))
+        .setOperation("=")
+        .setVal(action.getPartialResult())
+        .setJSONB(true), "OR");
   }
 }

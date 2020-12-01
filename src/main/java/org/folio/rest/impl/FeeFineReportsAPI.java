@@ -22,10 +22,7 @@ import io.vertx.core.logging.LoggerFactory;
 public class FeeFineReportsAPI implements FeefineReports {
   private static final Logger log = LoggerFactory.getLogger(FeeFineReportsAPI.class);
 
-  private static final int REPORT_ROWS_LIMIT = 1000000;
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
-
-  private final Messages messages = Messages.getInstance();
 
   @Override
   public void getFeefineReportsRefund(String startDate, String endDate,
@@ -38,55 +35,6 @@ public class FeeFineReportsAPI implements FeefineReports {
     new RefundReportService(okapiHeaders, vertxContext)
       .buildReport(startDate, endDate)
       .onComplete(result -> handleRefundReportResult(result, asyncResultHandler));
-
-//    try {
-//      vertxContext.runOnContext(v -> {
-//        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-//
-//        try {
-//          DateTime startDateTime = parseDateTime(startDate);
-//          DateTime endDateTime = parseDateTime(endDate);
-//
-//          if (startDateTime == null || endDateTime == null) {
-//            FeefineReports.GetFeefineReportsRefundResponse.respond400WithTextPlain(
-//              INVALID_START_DATE_OR_END_DATE_MESSAGE);
-//            return;
-//          }
-//
-//          Criterion criterion =
-//            new Criterion(getDateCriteria(DB_FIELD_FEEFINEACTIONS_DATEACTION, ">=", startDateTime))
-//            .addCriterion(getDateCriteria(DB_FIELD_FEEFINEACTIONS_DATEACTION, "<=", endDateTime));
-//
-//          PostgresClient.getInstance(vertxContext.owner(), tenantId).get(DB_TABLE_FEEFINEACTIONS,
-//            Feefineaction.class, criterion, true, false, result -> {
-//              if (result.failed()) {
-//                logger.error(result.result());
-//
-//                asyncResultHandler.handle(succeededFuture(
-//                  FeefineReports.GetFeefineReportsRefundResponse.respond500WithTextPlain(
-//                    messages.getMessage(lang, MessageConsts.InternalServerError))));
-//              } else {
-//                List<Feefineaction> refundFeeFineActionList = result.result().getResults();
-//
-//
-//                asyncResultHandler.handle(
-//                    succeededFuture(
-//                      Accounts.GetAccountsByAccountIdResponse.respond200WithApplicationJson(
-//                        accountList.get(0)))));
-//              }
-//            });
-//        } catch (Exception e) {
-//          logger.error(e.getMessage());
-//          asyncResultHandler.handle(succeededFuture(
-//            Accounts.GetAccountsResponse.respond500WithTextPlain(messages.getMessage(
-//              lang, MessageConsts.InternalServerError))));
-//        }
-//      });
-//    } catch (Exception e) {
-//      asyncResultHandler.handle(succeededFuture(
-//        Accounts.GetAccountsResponse.respond500WithTextPlain(messages.getMessage(
-//          lang, MessageConsts.InternalServerError))));
-//    }
   }
 
   private void handleRefundReportResult(AsyncResult<RefundReport> asyncResult,

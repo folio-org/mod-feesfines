@@ -2,12 +2,17 @@ package org.folio.rest.service.report;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
+import static java.math.BigDecimal.ZERO;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.AccountHelper.PATRON_COMMENTS_KEY;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,6 +30,7 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.RefundReport;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
 import org.folio.rest.jaxrs.model.User;
@@ -45,6 +51,7 @@ import io.vertx.core.Future;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.With;
 
 public class RefundReportService {
@@ -56,7 +63,7 @@ public class RefundReportService {
   private static final String SEE_FEE_FINE_DETAILS_PAGE_MESSAGE =
     "See Fee/fine details page";
   private static final DateTimeFormatter dateTimeFormatter =
-    DateTimeFormat.forPattern("M/d/yyyy K:m a");
+    DateTimeFormat.forPattern("M/d/yyyy K:mm a");
 
   private final ConfigurationClient configurationClient;
   private final InventoryClient inventoryClient;
@@ -80,46 +87,54 @@ public class RefundReportService {
   }
 
   private Future<RefundReport> buildReport(String startDate, String endDate,
-    DateTimeZone dateTimeZone) {
+    DateTimeZone timeZone) {
 
     DateTime startDateTime = parseDate(startDate);
     DateTime endDateTime = parseDate(endDate);
 
-    if (startDateTime == null || endDateTime == null || dateTimeZone == null) {
+    if (startDateTime == null || endDateTime == null || timeZone == null) {
       log.error(format("Invalid parameters: startDate=%s, endDate=%s, tz=%s", startDate, endDate,
-        dateTimeZone));
+        timeZone));
 
       throw new FailedValidationException(INVALID_START_DATE_OR_END_DATE_MESSAGE);
     }
 
     String startDtFormatted = startDateTime
       .withTimeAtStartOfDay()
-      .withZoneRetainFields(dateTimeZone)
+      .withZoneRetainFields(timeZone)
       .withZone(DateTimeZone.UTC)
       .toString(ISODateTimeFormat.dateTime());
 
     String endDtFormatted = endDateTime
       .withTimeAtStartOfDay()
       .plusDays(1)
-      .withZoneRetainFields(dateTimeZone)
+      .withZoneRetainFields(timeZone)
       .withZone(DateTimeZone.UTC)
       .toString(ISODateTimeFormat.dateTime());
 
     log.info(format("Building refund report with parameters: startDate=%s, endDate=%s, tz=%s",
-      startDateTime, endDateTime, dateTimeZone));
+      startDateTime, endDateTime, timeZone));
+
+    RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
 
     return feeFineActionRepository
       .findActionsByTypeForPeriod(REFUND, startDtFormatted, endDtFormatted, REPORT_ROWS_LIMIT)
       .map(this::toRefundDataMap)
-      .map(refundActions -> new RefundReportContext().withRefunds(refundActions))
+      .map(ctx::withRefunds)
       .compose(this::processAllRefundActions)
-      .map(null);
+      .map(this::buildReportFromContext);
+  }
+
+  private RefundReport buildReportFromContext(RefundReportContext ctx) {
+    return new RefundReport().withReportData(ctx.refunds.values().stream()
+      .map(refundData -> refundData.reportEntry)
+      .collect(Collectors.toList()));
   }
 
   private Future<RefundReportContext> processAllRefundActions(RefundReportContext ctx) {
-    return ctx.refunds.values().stream()
-      .map(refundData -> processSingleRefundAction(ctx, refundData.refundAction))
-      .reduce(succeededFuture(), (left, right) -> left.compose(result -> right));
+    return ctx.refunds.values().stream().reduce(succeededFuture(ctx),
+        (f, r) -> f.compose(result -> processSingleRefundAction(ctx, r.refundAction)),
+        (a, b) -> succeededFuture(ctx));
   }
 
   private Future<RefundReportContext> processSingleRefundAction(RefundReportContext ctx,
@@ -128,7 +143,7 @@ public class RefundReportService {
     String accountId = refundAction.getAccountId();
 
     if (ctx.accounts.containsKey(accountId) && ctx.accounts.get(accountId).processed) {
-      return succeededFuture();
+      return succeededFuture(ctx);
     }
 
     return lookupAccount(ctx, refundAction)
@@ -143,9 +158,10 @@ public class RefundReportService {
   private RefundReportContext processAccount(RefundReportContext ctx,
     String accountId, List<Feefineaction> accountFeeFineActions) {
 
-    log.info(format("Processing account ID %s", accountId));
+    log.info(format("Processing fee/fine actions of account %s", accountId));
 
     accountFeeFineActions.forEach(action -> processAccountAction(ctx, accountId, action));
+    ctx.accounts.put(accountId, ctx.accounts.get(accountId).withProcessed(true));
 
     return ctx;
   }
@@ -153,7 +169,7 @@ public class RefundReportService {
   private void processAccountAction(RefundReportContext ctx,
     String accountId, Feefineaction feeFineAction) {
 
-    log.info(format("Processing fee/fine action ID %s, account ID %s", feeFineAction.getId(),
+    log.info(format("Processing fee/fine action %s, account %s", feeFineAction.getId(),
       accountId));
 
     AccountContextData accountData = ctx.accounts.get(accountId);
@@ -161,27 +177,29 @@ public class RefundReportService {
 
     if (actionIsOfType(feeFineAction, PAY)) {
       if (feeFineAction.getAmountAction() != null) {
-        accountCtx.paidAmount.add(new MonetaryValue(feeFineAction.getAmountAction()));
+        accountCtx.setPaidAmount(accountCtx.paidAmount.add(
+          new MonetaryValue(feeFineAction.getAmountAction())));
         accountCtx.paymentMethods.add(feeFineAction.getPaymentMethod());
         accountCtx.paymentTransactionInfo.add(feeFineAction.getTransactionInformation());
       } else {
-        log.error(format("Amount is null - fee/fine action ID %s, account ID %s",
+        log.error(format("Amount is null - fee/fine action %s, account %s",
           feeFineAction.getId(), accountId));
       }
     }
 
     if (actionIsOfType(feeFineAction, TRANSFER)) {
-      accountCtx.transferredAmount.add(new MonetaryValue(feeFineAction.getAmountAction()));
+      accountCtx.setTransferredAmount(accountCtx.transferredAmount.add(
+        new MonetaryValue(feeFineAction.getAmountAction())));
       accountCtx.transferAccounts.add(feeFineAction.getPaymentMethod());
     }
 
     if (actionIsOfType(feeFineAction, REFUND)) {
-      log.error(format("Processing refund action - fee/fine action ID %s, account ID %s",
+      log.error(format("Processing refund action - fee/fine action %s, account %s",
         feeFineAction.getId(), accountId));
 
       RefundData refundData = ctx.refunds.get(feeFineAction.getId());
 
-      log.error(format("Processing refund report entry - fee/fine action ID %s, account ID %s",
+      log.error(format("Processing refund report entry - fee/fine action %s, account %s",
         feeFineAction.getId(), accountId));
 
       RefundReportEntry reportEntry = refundData.reportEntry;
@@ -195,20 +213,20 @@ public class RefundReportService {
       logCtxLookupStep("Looking for user group in ctx", feeFineAction);
       UserGroup userGroup = ctx.userGroups.get(user.getPatronGroup());
 
-      reportEntry.setPatronName(user.getUsername());
-      reportEntry.setPatronName(user.getBarcode());
-      reportEntry.setPatronName(user.getId());
-      reportEntry.setPatronName(userGroup.getGroup());
+      reportEntry.setPatronName(formatName(user));
+      reportEntry.setPatronBarcode(user.getBarcode());
+      reportEntry.setPatronId(user.getId());
+      reportEntry.setPatronGroup(userGroup.getGroup());
       reportEntry.setFeeFineType(account.getFeeFineType());
       reportEntry.setBilledAmount(formatMonetaryValue(account.getAmount()));
-      reportEntry.setDateBilled(formatDate(account.getDateCreated()));
+      reportEntry.setDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone));
       reportEntry.setPaidAmount(accountCtx.paidAmount.toString());
       reportEntry.setPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods));
       reportEntry.setTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo));
       reportEntry.setTransferredAmount(accountCtx.transferredAmount.toString());
-      reportEntry.setTransactionInfo(singleOrDefaultMessage(accountCtx.transferAccounts));
+      reportEntry.setTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts));
       reportEntry.setFeeFineId(accountId);
-      reportEntry.setRefundDate(formatDate(feeFineAction.getDateAction()));
+      reportEntry.setRefundDate(formatDate(feeFineAction.getDateAction(), ctx.timeZone));
       reportEntry.setRefundAmount(formatMonetaryValue(feeFineAction.getAmountAction()));
       reportEntry.setRefundAction(feeFineAction.getTypeAction());
       reportEntry.setRefundReason(feeFineAction.getPaymentMethod());
@@ -223,7 +241,7 @@ public class RefundReportService {
   }
 
   private void logCtxLookupStep(String message, Feefineaction feeFineAction) {
-    log.error(format(message + " - fee/fine action ID %s, account ID %s",
+    log.error(format(message + " - fee/fine action %s, account %s",
       feeFineAction.getId(), feeFineAction.getAccountId()));
   }
 
@@ -240,7 +258,6 @@ public class RefundReportService {
 
     return accountRepository.getAccountById(accountId)
       .map(account -> addAccountContextData(ctx, account))
-      .map(acd -> acd.account)
       .map(ctx);
   }
 
@@ -258,8 +275,9 @@ public class RefundReportService {
     }
 
     AccountContextData accountContextData = new AccountContextData().withAccount(account);
+    ctx.accounts.put(account.getId(), accountContextData);
 
-    return ctx.accounts.put(account.getId(), accountContextData);
+    return accountContextData;
   }
 
   private Future<List<Feefineaction>> lookupFeeFineActionsForAccount(RefundReportContext ctx,
@@ -280,7 +298,7 @@ public class RefundReportService {
     String itemId = ctx.getAccountById(accountId).getItemId();
 
     if (itemId == null) {
-      log.info(format("Item ID is null - account ID %s", accountId));
+      log.info(format("Item ID is null - account %s", accountId));
       return succeededFuture(ctx);
     }
     else {
@@ -328,7 +346,7 @@ public class RefundReportService {
     String userId = ctx.getAccountById(accountId).getUserId();
 
     if (userId == null) {
-      String message = format("User ID is null - account ID %s", accountId);
+      String message = format("User ID is null - account %s", accountId);
       log.error(message);
       throw new InternalServerErrorException(message);
     }
@@ -354,7 +372,7 @@ public class RefundReportService {
     String userGroupId = user.getPatronGroup();
 
     if (userGroupId == null) {
-      log.error(format("User group ID is null - user ID %s", user.getId()));
+      log.error(format("User group ID is null - user %s", user.getId()));
     }
 
     if (ctx.userGroups.containsKey(userGroupId)) {
@@ -371,7 +389,7 @@ public class RefundReportService {
     String accountId, String userId) {
 
     if (user == null) {
-      String message = format("User not found - account ID %s, user ID %s", accountId, userId);
+      String message = format("User not found - account %s, user %s", accountId, userId);
       log.error(message);
       throw new InternalServerErrorException(message);
     } else {
@@ -385,7 +403,7 @@ public class RefundReportService {
     String accountId, String itemId) {
 
     if (item == null) {
-      log.info(format("Item not found - account ID %s, item ID %s", accountId, itemId));
+      log.info(format("Item not found - account %s, item %s", accountId, itemId));
     } else {
       ctx.items.put(itemId, item);
     }
@@ -400,33 +418,28 @@ public class RefundReportService {
 
   private Map<String, RefundData> toRefundDataMap(List<Feefineaction> refundActions) {
     return refundActions.stream()
-      .collect(Collectors.toMap(Feefineaction::getId, RefundData::new));
+      .collect(Collectors.toMap(Feefineaction::getId, RefundData::new, (a, b) -> b,
+        LinkedHashMap::new));
   }
 
   private DateTime parseDate(String date) {
     try {
-      return DateTime.parse(date, ISODateTimeFormat.basicDate());
+      return DateTime.parse(date, ISODateTimeFormat.date());
     }
     catch (IllegalArgumentException e) {
       return null;
     }
   }
 
-  private String formatMonetaryValue(Double value) {
-    return new MonetaryValue(value).toString();
-  }
-
-  private String formatDate(Date date) {
-    return new DateTime(date).toString(dateTimeFormatter);
-  }
-
   private String singleOrDefaultMessage(List<String> values) {
-    if (values.size() == 0) {
+    List<String> uniqueValues = new ArrayList<>(new HashSet<>(values));
+
+    if (uniqueValues.size() == 0) {
       return "";
     }
 
-    if (values.size() == 1) {
-      return values.get(0);
+    if (uniqueValues.size() == 1) {
+      return uniqueValues.get(0);
     }
 
     return SEE_FEE_FINE_DETAILS_PAGE_MESSAGE;
@@ -450,18 +463,59 @@ public class RefundReportService {
     return item.getBarcode();
   }
 
+  private String formatMonetaryValue(Double value) {
+    return new MonetaryValue(value).toString();
+  }
+
+  private String formatDate(Date date, DateTimeZone timeZone) {
+    return new DateTime(date).withZone(timeZone).toString(dateTimeFormatter);
+  }
+
+  private String formatName(User user) {
+    StringBuilder builder = new StringBuilder();
+    Personal personal = user.getPersonal();
+
+    if (personal == null) {
+      log.info(format("Personal info not found - user %s", user.getId()));
+    }
+    else {
+      builder.append(personal.getLastName());
+
+      String firstName = personal.getFirstName();
+      if (firstName != null && !firstName.isBlank()) {
+        builder.append(format(", %s", firstName));
+      }
+
+      String lastName = personal.getLastName();
+      if (lastName != null && !lastName.isBlank()) {
+        builder.append(format(" %s", lastName));
+      }
+    }
+
+    return builder.toString();
+  }
+
   @With
   @AllArgsConstructor
-  @NoArgsConstructor(force = true)
   private static class RefundReportContext {
+    final DateTimeZone timeZone;
     final Map<String, RefundData> refunds;
     final Map<String, AccountContextData> accounts;
     final Map<String, User> users;
     final Map<String, UserGroup> userGroups;
     final Map<String, Item> items;
 
+    public RefundReportContext() {
+      timeZone = DateTimeZone.UTC;
+      refunds = new HashMap<>();
+      accounts = new HashMap<>();
+      users = new HashMap<>();
+      userGroups = new HashMap<>();
+      items = new HashMap<>();
+    }
+
     Account getAccountById(String accountId) {
-      if (accounts != null && accounts.containsKey(accountId)) {
+      if (accounts.containsKey(accountId)) {
         return accounts.get(accountId).account;
       }
 
@@ -473,7 +527,7 @@ public class RefundReportService {
     Item getItemByAccountId(String accountId) {
       String itemId = getAccountById(accountId).getItemId();
 
-      if (itemId != null && items != null && items.containsKey(itemId)) {
+      if (itemId != null && items.containsKey(itemId)) {
         return items.get(itemId);
       }
 
@@ -483,7 +537,6 @@ public class RefundReportService {
 
   @With
   @AllArgsConstructor
-  @NoArgsConstructor(force = true)
   @Getter
   private static class AccountContextData {
     final Account account;
@@ -491,6 +544,14 @@ public class RefundReportService {
     final boolean processed;
     final AccountProcessingContext processingContext;
     final String instance;
+
+    public AccountContextData() {
+      account = null;
+      actions = new ArrayList<>();
+      processed = false;
+      processingContext = new AccountProcessingContext();
+      instance = "";
+    }
   }
 
   @With
@@ -507,14 +568,21 @@ public class RefundReportService {
     }
   }
 
-  @With
+  @Setter
   @AllArgsConstructor
-  @NoArgsConstructor(force = true)
   private static class AccountProcessingContext {
-    final MonetaryValue paidAmount;
-    final List<String> paymentMethods;
-    final List<String> paymentTransactionInfo;
-    final MonetaryValue transferredAmount;
-    final List<String> transferAccounts;
+    MonetaryValue paidAmount;
+    List<String> paymentMethods;
+    List<String> paymentTransactionInfo;
+    MonetaryValue transferredAmount;
+    List<String> transferAccounts;
+
+    public AccountProcessingContext() {
+      paidAmount = new MonetaryValue(ZERO);
+      paymentMethods = new ArrayList<>();
+      paymentTransactionInfo = new ArrayList<>();
+      transferredAmount = new MonetaryValue(ZERO);
+      transferAccounts = new ArrayList<>();
+    }
   }
 }
