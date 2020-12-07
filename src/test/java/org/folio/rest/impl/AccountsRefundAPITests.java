@@ -486,7 +486,7 @@ public class AccountsRefundAPITests extends ApiTests {
     int totalExpectedActionsCount = actionsCountBeforeRefund + expectedFeeFineActions.size();
 
     Response response = refundClient.post(createRequest(requestedAmount));
-    verifyResponse(response, requestedAmount);
+    verifyResponse(response, requestedAmount, expectedFeeFineActions.size());
 
     verifyActions(totalExpectedActionsCount, expectedFeeFineActions);
 
@@ -499,11 +499,12 @@ public class AccountsRefundAPITests extends ApiTests {
       assertThat(payload, is(notCreditOrRefundActionLogEventPayload())));
   }
 
-  private void verifyResponse(Response response, double requestedAmount) {
+  private void verifyResponse(Response response, double requestedAmount, int expectedActionsCount) {
     response.then()
       .statusCode(SC_CREATED)
       .body("accountId", is(FIRST_ACCOUNT_ID))
-      .body("amount", is(new MonetaryValue(requestedAmount).toString()));
+      .body("amount", is(new MonetaryValue(requestedAmount).toString()))
+      .body("feeFineActionIds", hasSize(expectedActionsCount));
   }
 
   private void verifyBulkResponse(Response response, double requestedAmount,

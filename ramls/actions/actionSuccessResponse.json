@@ -11,6 +11,14 @@
     "amount": {
       "type": "string",
       "description": "Action amount"
+    },
+    "feeFineActionIds": {
+      "type": "array",
+      "description": "IDs of fee/fine action records created as a result of the action call",
+      "items": {
+        "type": "string",
+        "$ref": "../raml-util/schemas/uuid.schema"
+      }
     }
   },
   "additionalProperties": false,
