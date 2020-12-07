@@ -259,15 +259,15 @@ public class RefundReportService {
     }
 
     return accountRepository.getAccountById(accountId)
-      .map(account -> addAccountContextData(ctx, account))
+      .map(account -> addAccountContextData(ctx, account, accountId))
       .map(ctx);
   }
 
   private AccountContextData addAccountContextData(RefundReportContext ctx,
-    Account account) {
+    Account account, String accountId) {
 
     if (account == null) {
-      String message = format("Account %s not found", account.getId());
+      String message = format("Account %s not found", accountId);
       log.error(message);
       throw new AccountNotFoundValidationException(message);
     }
@@ -426,6 +426,10 @@ public class RefundReportService {
   }
 
   private DateTime parseDate(String date) {
+    if (date == null) {
+      return null;
+    }
+
     try {
       return DateTime.parse(date, ISODateTimeFormat.date());
     }

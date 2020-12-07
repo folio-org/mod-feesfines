@@ -2,7 +2,6 @@ package org.folio.rest.client;
 
 import java.util.Map;
 
-import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
 
 import io.vertx.core.Future;

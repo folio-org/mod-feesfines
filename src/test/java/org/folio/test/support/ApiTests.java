@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
+import static java.lang.String.format;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
@@ -146,7 +147,7 @@ public class ApiTests {
       .put("tenant", TENANT_NAME)
       .put("sub", "admin")
       .toString();
-    return String.format("1.%s.3", Base64.getEncoder()
+    return format("1.%s.3", Base64.getEncoder()
       .encodeToString(payload.getBytes()));
   }
 
@@ -178,6 +179,15 @@ public class ApiTests {
     catch (JsonProcessingException e) {
       e.printStackTrace();
     }
+  }
+
+  protected <T> void deleteEntity(String path, String id) {
+    RestAssured.given()
+      .spec(getRequestSpecification())
+      .when()
+      .delete(format("%s/%s", path, id))
+      .then()
+      .statusCode(HttpStatus.SC_NO_CONTENT);
   }
 
   protected RequestSpecification getRequestSpecification() {

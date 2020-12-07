@@ -61,9 +61,18 @@ public class ResourceClient {
   }
 
   public Response getByDateInterval(String startDate, String endDate) {
-    return okapiClient.get(format("%s?startDate=%s&endDate=%s", baseUri, startDate, endDate))
+    return getByDateInterval(startDate, endDate, HttpStatus.HTTP_OK);
+  }
+
+  public Response getByDateInterval(String startDate, String endDate, HttpStatus expectedStatus) {
+    return getByParameters(format("startDate=%s&endDate=%s", startDate, endDate),
+      expectedStatus);
+  }
+
+  public Response getByParameters(String parameters, HttpStatus expectedStatus) {
+    return okapiClient.get(format("%s?%s", baseUri, parameters))
       .then()
-      .statusCode(HttpStatus.HTTP_OK.toInt())
+      .statusCode(expectedStatus.toInt())
       .extract()
       .response();
   }

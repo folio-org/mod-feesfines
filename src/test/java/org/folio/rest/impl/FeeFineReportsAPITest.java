@@ -1,6 +1,8 @@
 package org.folio.rest.impl;
 
 import static java.lang.String.format;
+import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
+import static org.folio.HttpStatus.HTTP_INTERNAL_SERVER_ERROR;
 import static org.folio.rest.utils.ResourceClients.buildRefundReportClient;
 import static org.folio.test.support.EntityBuilder.createCampus;
 import static org.folio.test.support.EntityBuilder.createHoldingsRecord;
@@ -14,10 +16,12 @@ import static org.folio.test.support.matcher.RefundReportEntryMatcher.refundRepo
 import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.FEEFINES_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.FEE_FINE_ACTIONS_TABLE;
+import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_GROUPS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 
 import java.util.Date;
@@ -152,6 +156,35 @@ public class FeeFineReportsAPITest extends ApiTests {
       REFUND_TX_INFO);
 
     requestAndCheck(List.of());
+  }
+
+  @Test
+  public void internalServerErrorWhenAccountIsDeleted() {
+    Account account = charge(10.0, "ff-type", item.getId());
+
+    createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    createAction(1, account, "2020-01-02 12:00:00",
+      REFUNDED_PARTIALLY, REFUND_REASON, 2.0, 7.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUND_TX_INFO);
+
+    deleteEntity(ACCOUNTS_PATH, account.getId());
+
+    refundReportsClient.getByDateInterval(START_DATE, END_DATE, HTTP_INTERNAL_SERVER_ERROR)
+      .then()
+      .body(is("Internal server error"));
+  }
+
+  @Test
+  public void badRequestWhenParameterIsMissingOrMalformed() {
+    refundReportsClient.getByParameters("startDate=2020-01-01", HTTP_BAD_REQUEST);
+    refundReportsClient.getByParameters("endDate=2020-01-01", HTTP_BAD_REQUEST);
+    refundReportsClient.getByParameters("startDate=not-a-date", HTTP_BAD_REQUEST);
+    refundReportsClient.getByParameters("endDate=not-a-date", HTTP_BAD_REQUEST);
+    refundReportsClient.getByParameters("startDate=2020-01-01&endDate=not-a-date", HTTP_BAD_REQUEST);
+    refundReportsClient.getByParameters("startDate=not-a-date&endDate=2020-01-01", HTTP_BAD_REQUEST);
+    refundReportsClient.getByParameters("startDate=not-a-date&endDate=not-a-date", HTTP_BAD_REQUEST);
   }
 
   @Test
@@ -339,7 +372,7 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   private Account charge(Double amount, String feeFineType, String itemId) {
     final var account = EntityBuilder.buildAccount(USER_ID, itemId, feeFineType, amount);
-    createEntity(ServicePath.ACCOUNTS_PATH, account);
+    createEntity(ACCOUNTS_PATH, account);
     return accountsClient.getById(account.getId()).as(Account.class);
   }
 
