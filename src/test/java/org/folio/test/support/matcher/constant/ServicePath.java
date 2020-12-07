@@ -14,6 +14,7 @@ public class ServicePath {
   public static final String LIBRARIES_PATH = "/location-units/libraries";
   public static final String USERS_PATH = "/users";
   public static final String USERS_GROUPS_PATH = "/groups";
+  public static final String CONFIGURATION_ENTRIES = "/configurations/entries";
 
   private ServicePath() {
     throw new UnsupportedOperationException("Do not instantiate");

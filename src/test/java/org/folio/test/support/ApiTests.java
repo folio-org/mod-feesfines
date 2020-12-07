@@ -3,6 +3,7 @@ package org.folio.test.support;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -41,6 +42,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -186,16 +189,33 @@ public class ApiTests {
       .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
   }
 
-  public <T> void createStub(String url, T returnObject) {
-    createStub(url, aResponse().withBody(mapFrom(returnObject).encodePrettily()));
+  public <T> StubMapping createStub(String url, T returnObject) {
+    return createStub(url, aResponse().withBody(mapFrom(returnObject).encodePrettily()));
   }
 
-  public <T> void createStub(String url, T returnObject, String id) {
-    createStub(url + "/" + id, returnObject);
+  public <T> StubMapping createStub(String url, T returnObject, String id) {
+    return createStub(url + "/" + id, returnObject);
   }
 
-  private void createStub(String url, ResponseDefinitionBuilder responseBuilder) {
-    getOkapi().stubFor(WireMock.get(urlPathEqualTo(url))
+  public <T> StubMapping createStubForPath(String url, T returnObject, String pathRegex) {
+    return createStubForPathMatching(url + pathRegex,
+      aResponse().withBody(mapFrom(returnObject).encodePrettily()));
+  }
+
+  private StubMapping createStub(String url, ResponseDefinitionBuilder responseBuilder) {
+    return createStub(urlPathEqualTo(url), responseBuilder);
+  }
+
+  private StubMapping createStubForPathMatching(String regex,
+    ResponseDefinitionBuilder responseBuilder) {
+
+    return createStub(urlPathMatching(regex), responseBuilder);
+  }
+
+  private StubMapping createStub(UrlPathPattern urlPathPattern,
+    ResponseDefinitionBuilder responseBuilder) {
+
+    return getOkapi().stubFor(WireMock.get(urlPathPattern)
       .withHeader(ACCEPT, matching(APPLICATION_JSON))
       .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
       .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))

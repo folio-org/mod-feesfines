@@ -7,10 +7,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BlockTemplate;
 import org.folio.rest.jaxrs.model.Campus;
+import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.Contributor;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -18,7 +20,7 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.KvConfiguration;
+import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.ManualBlockTemplate;
@@ -206,12 +208,16 @@ public class EntityBuilder {
       .withAdditionalProperty(KEY_NAME, "Institution");
   }
 
-  public static KvConfiguration createLocaleSettingsConfiguration() {
-    return new KvConfiguration()
-      .withId(randomId())
-      .withModule("ORG")
-      .withConfigName("localeSettings")
-      .withEnabled(true)
-      .withValue("{\"locale\":\"en-US\",\"timezone\":\"America/New_York\",\"currency\":\"USD\"}");
+  public static KvConfigurations createLocaleSettingsConfigurations() {
+
+    return new KvConfigurations()
+      .withConfigs(List.of(new Config()
+        .withId(randomId())
+        .withModule("ORG")
+        .withConfigName("localeSettings")
+        .withEnabled(true)
+        .withValue(
+          "{\"locale\":\"en-US\",\"timezone\":\"America/New_York\",\"currency\":\"USD\"}")))
+      .withTotalRecords(1);
   }
 }

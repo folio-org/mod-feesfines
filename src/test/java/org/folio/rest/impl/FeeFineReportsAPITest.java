@@ -8,7 +8,7 @@ import static org.folio.test.support.EntityBuilder.createInstance;
 import static org.folio.test.support.EntityBuilder.createInstitution;
 import static org.folio.test.support.EntityBuilder.createItem;
 import static org.folio.test.support.EntityBuilder.createLibrary;
-import static org.folio.test.support.EntityBuilder.createLocaleSettingsConfiguration;
+import static org.folio.test.support.EntityBuilder.createLocaleSettingsConfigurations;
 import static org.folio.test.support.EntityBuilder.createLocation;
 import static org.folio.test.support.matcher.RefundReportEntryMatcher.refundReportEntryMatcher;
 import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
@@ -18,7 +18,6 @@ import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_GROUPS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 
 import java.util.Date;
@@ -34,7 +33,7 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.KvConfiguration;
+import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
@@ -88,12 +87,13 @@ public class FeeFineReportsAPITest extends ApiTests {
     DateTimeFormat.forPattern("M/d/yyyy K:mm a");
 
   private ResourceClient refundReportsClient;
-  private StubMapping localeSettingsStubMapping;
 
   private UserGroup userGroup;
   private User user;
   private Item item;
   private Instance instance;
+
+  private StubMapping localeSettingsStubMapping;
 
   @Before
   public void setUp() {
@@ -103,11 +103,9 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     refundReportsClient = buildRefundReportClient();
 
-//    localeSettingsStubMapping = getOkapi()
-//      .stubFor(WireMock.get(WireMock.urlPathMatching("/configurations/entries.*"))
-//        .willReturn(aResponse().withBodyFile("localeSettings.json")));
-    final KvConfiguration localeSettingsConfiguration = createLocaleSettingsConfiguration();
-    createStub(ServicePath.ITEMS_PATH, item, item.getId());
+    final KvConfigurations localeSettingsConfigurations = createLocaleSettingsConfigurations();
+    localeSettingsStubMapping = createStubForPath(ServicePath.CONFIGURATION_ENTRIES,
+      localeSettingsConfigurations, ".*");
 
     final Library library = createLibrary();
     final Campus campus = createCampus();
@@ -134,20 +132,26 @@ public class FeeFineReportsAPITest extends ApiTests {
   public void emptyRefundReportNoTimezone() {
     getOkapi().removeStub(localeSettingsStubMapping);
 
-    final var response = requestRefundReport(START_DATE, END_DATE);
-
-    response.then()
-      .statusCode(HttpStatus.SC_OK)
-      .body("reportData", is(List.of()));
+    requestAndCheck(List.of());
   }
 
   @Test
   public void emptyRefundReportTenantTimezone() {
-    final var response = requestRefundReport(START_DATE, END_DATE);
+    requestAndCheck(List.of());
+  }
 
-    response.then()
-      .statusCode(HttpStatus.SC_OK)
-      .body("reportData", is(List.of()));
+  @Test
+  public void emptyReportWhenRefundedAfterEndDate() {
+    Account account = charge(10.0, "ff-type", null);
+
+    createAction(1, account, "2020-01-02 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    createAction(1, account, "2020-02-01 12:00:00", REFUNDED_PARTIALLY, REFUND_REASON,
+      2.0, 7.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUND_TX_INFO);
+
+    requestAndCheck(List.of());
   }
 
   @Test

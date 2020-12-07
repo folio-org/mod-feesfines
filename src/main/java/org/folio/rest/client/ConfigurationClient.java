@@ -14,7 +14,6 @@ import org.folio.rest.exception.EntityNotFoundException;
 import org.folio.rest.exception.FailedToMakeRequestException;
 import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.KvConfigurations;
-import org.folio.rest.service.report.RefundReportService;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
