@@ -7,6 +7,7 @@ import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.AccountHelper.PATRON_COMMENTS_KEY;
+import static org.joda.time.DateTimeZone.UTC;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -83,7 +84,8 @@ public class RefundReportService {
 
   public Future<RefundReport> buildReport(String startDate, String endDate) {
     return configurationClient.findTimeZone()
-      .compose(tz -> buildReport(startDate, endDate, tz));
+      .compose(tz -> buildReport(startDate, endDate, tz))
+      .recover(throwable -> buildReport(startDate, endDate, UTC));
   }
 
   private Future<RefundReport> buildReport(String startDate, String endDate,
@@ -102,14 +104,14 @@ public class RefundReportService {
     String startDtFormatted = startDateTime
       .withTimeAtStartOfDay()
       .withZoneRetainFields(timeZone)
-      .withZone(DateTimeZone.UTC)
+      .withZone(UTC)
       .toString(ISODateTimeFormat.dateTime());
 
     String endDtFormatted = endDateTime
       .withTimeAtStartOfDay()
       .plusDays(1)
       .withZoneRetainFields(timeZone)
-      .withZone(DateTimeZone.UTC)
+      .withZone(UTC)
       .toString(ISODateTimeFormat.dateTime());
 
     log.info(format("Building refund report with parameters: startDate=%s, endDate=%s, tz=%s",
@@ -216,7 +218,7 @@ public class RefundReportService {
       reportEntry.setPatronName(formatName(user));
       reportEntry.setPatronBarcode(user.getBarcode());
       reportEntry.setPatronId(user.getId());
-      reportEntry.setPatronGroup(userGroup.getGroup());
+      reportEntry.setPatronGroup(userGroup == null ? "" : userGroup.getGroup());
       reportEntry.setFeeFineType(account.getFeeFineType());
       reportEntry.setBilledAmount(formatMonetaryValue(account.getAmount()));
       reportEntry.setDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone));
@@ -373,6 +375,7 @@ public class RefundReportService {
 
     if (userGroupId == null) {
       log.error(format("User group ID is null - user %s", user.getId()));
+      return succeededFuture(ctx);
     }
 
     if (ctx.userGroups.containsKey(userGroupId)) {
@@ -486,9 +489,9 @@ public class RefundReportService {
         builder.append(format(", %s", firstName));
       }
 
-      String lastName = personal.getLastName();
-      if (lastName != null && !lastName.isBlank()) {
-        builder.append(format(" %s", lastName));
+      String middleName = personal.getMiddleName();
+      if (middleName != null && !middleName.isBlank()) {
+        builder.append(format(" %s", middleName));
       }
     }
 
@@ -506,7 +509,7 @@ public class RefundReportService {
     final Map<String, Item> items;
 
     public RefundReportContext() {
-      timeZone = DateTimeZone.UTC;
+      timeZone = UTC;
       refunds = new HashMap<>();
       accounts = new HashMap<>();
       users = new HashMap<>();

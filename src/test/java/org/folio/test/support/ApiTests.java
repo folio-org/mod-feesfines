@@ -1,17 +1,29 @@
 package org.folio.test.support;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static io.vertx.core.json.JsonObject.mapFrom;
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.rest.utils.ResourceClients.buildAccountClient;
 import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockTemplateClient;
 import static org.folio.rest.utils.ResourceClients.tenantClient;
 
+import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.core.MediaType;
+
+import org.apache.http.HttpStatus;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -25,16 +37,27 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
+
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.http.Header;
+import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 public class ApiTests {
+  public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   public static final String TENANT_NAME = "test_tenant";
   public static final String OKAPI_URL_HEADER = "x-okapi-url";
   public static final String USER_ID = "69d9169d-06da-4622-9c18-2868bd46b60f";
   public static final String OKAPI_TOKEN = generateOkapiToken();
   public static final String MODULE_NAME = "mod-feesfines";
+
   @ClassRule
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
 
@@ -134,5 +157,49 @@ public class ApiTests {
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
+  }
+
+  protected <T> void createEntity(String path, T entity) {
+    ObjectMapper mapper = new ObjectMapper().setDateFormat(new SimpleDateFormat(DATE_TIME_FORMAT));
+
+    try {
+      RestAssured.given()
+        .spec(getRequestSpecification())
+        .body(mapper.writeValueAsString(entity))
+        .when()
+        .post(path)
+        .then()
+        .statusCode(HttpStatus.SC_CREATED)
+        .contentType(ContentType.JSON);
+    }
+    catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+  }
+
+  protected RequestSpecification getRequestSpecification() {
+    return RestAssured.given()
+      .baseUri(getOkapiUrl())
+      .contentType(MediaType.APPLICATION_JSON)
+      .header(new Header(OKAPI_HEADER_TENANT, TENANT_NAME))
+      .header(new Header(OKAPI_URL_HEADER, getOkapiUrl()))
+      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
+  }
+
+  public <T> void createStub(String url, T returnObject) {
+    createStub(url, aResponse().withBody(mapFrom(returnObject).encodePrettily()));
+  }
+
+  public <T> void createStub(String url, T returnObject, String id) {
+    createStub(url + "/" + id, returnObject);
+  }
+
+  private void createStub(String url, ResponseDefinitionBuilder responseBuilder) {
+    getOkapi().stubFor(WireMock.get(urlPathEqualTo(url))
+      .withHeader(ACCEPT, matching(APPLICATION_JSON))
+      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
+      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
+      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
+      .willReturn(responseBuilder));
   }
 }

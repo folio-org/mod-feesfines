@@ -11,7 +11,6 @@ import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.RefundReport;
 import org.folio.rest.jaxrs.resource.FeefineReports;
 import org.folio.rest.service.report.RefundReportService;
-import org.folio.rest.tools.messages.Messages;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;

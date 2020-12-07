@@ -2,76 +2,74 @@ package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.vertx.core.json.JsonObject.mapFrom;
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
 import static org.folio.rest.utils.LogEventUtils.fetchPublishedLogRecords;
+import static org.folio.test.support.EntityBuilder.createCampus;
+import static org.folio.test.support.EntityBuilder.createHoldingsRecord;
+import static org.folio.test.support.EntityBuilder.createInstance;
+import static org.folio.test.support.EntityBuilder.createInstitution;
+import static org.folio.test.support.EntityBuilder.createItem;
+import static org.folio.test.support.EntityBuilder.createLibrary;
+import static org.folio.test.support.EntityBuilder.createLocation;
+import static org.folio.test.support.EntityBuilder.createUser;
+import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
+import static org.folio.test.support.matcher.constant.DbTable.FEEFINES_TABLE;
+import static org.folio.test.support.matcher.constant.DbTable.FEE_FINE_ACTIONS_TABLE;
+import static org.folio.test.support.matcher.constant.DbTable.OWNERS_TABLE;
+import static org.folio.test.support.matcher.constant.ServicePath.CAMPUSES_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.INSTITUTIONS_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.LIBRARIES_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.LOCATIONS_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.core.MediaType;
-
-import io.vertx.core.json.JsonArray;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
-import org.folio.rest.jaxrs.model.*;
+import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.Campus;
+import org.folio.rest.jaxrs.model.Feefine;
+import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Institution;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Library;
+import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.Owner;
+import org.folio.rest.jaxrs.model.PaymentStatus;
+import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.service.LogEventPublisher;
 import org.folio.test.support.ApiTests;
+import org.folio.test.support.matcher.constant.ServicePath;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.restassured.http.Header;
 import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class FeeFineActionsAPITest extends ApiTests {
-  private static final String ACTIONS_PATH = "/feefineactions";
-  private static final String OWNERS_PATH = "/owners";
-  private static final String ACCOUNTS_PATH = "/accounts";
-  private static final String FEEFINES_PATH = "/feefines";
-  private static final String ITEMS_PATH = "/item-storage/items";
-  private static final String HOLDINGS_PATH = "/holdings-storage/holdings";
-  private static final String INSTANCES_PATH = "/instance-storage/instances";
-  private static final String LOCATIONS_PATH = "/locations";
-  private static final String INSTITUTIONS_PATH = "/location-units/institutions";
-  private static final String CAMPUSES_PATH = "/location-units/campuses";
-  private static final String LIBRARIES_PATH = "/location-units/libraries";
-  private static final String USERS_PATH = "/users";
-
-  private static final String ACCOUNTS_TABLE = "accounts";
-  private static final String FEEFINES_TABLE = "feefines";
-  private static final String OWNERS_TABLE = "owners";
-  private static final String FEE_FINE_ACTIONS_TABLE = "feefineactions";
-
-  private static final String KEY_NAME = "name";
-  private static final String KEY_ID = "id";
-
   private static final String PRIMARY_CONTRIBUTOR_NAME = "Primary contributor";
   private static final String NON_PRIMARY_CONTRIBUTOR_NAME = "Non-primary contributor";
 
@@ -109,12 +107,12 @@ public class FeeFineActionsAPITest extends ApiTests {
     final Feefineaction charge = createCharge(user, account, true);
     final Feefineaction action = createAction(user, account, true);
 
-    createEntity(OWNERS_PATH, owner);
-    createEntity(FEEFINES_PATH, feefine);
-    createEntity(ACCOUNTS_PATH, account);
+    createEntity(ServicePath.OWNERS_PATH, owner);
+    createEntity(ServicePath.FEEFINES_PATH, feefine);
+    createEntity(ServicePath.ACCOUNTS_PATH, account);
 
     createStub(USERS_PATH, user, user.getId());
-    createStub(ITEMS_PATH, item, item.getId());
+    createStub(ServicePath.ITEMS_PATH, item, item.getId());
     createStub(LOCATIONS_PATH, location, location.getId());
     createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
     createStub(INSTANCES_PATH, instance, instance.getId());
@@ -376,22 +374,11 @@ public class FeeFineActionsAPITest extends ApiTests {
       .contentType(ContentType.JSON);
   }
 
-  private <T> void createEntity(String path, T entity) {
-    RestAssured.given()
-      .spec(getRequestSpecification())
-      .body(mapFrom(entity).encodePrettily())
-      .when()
-      .post(path)
-      .then()
-      .statusCode(HttpStatus.SC_CREATED)
-      .contentType(ContentType.JSON);
-  }
-
   private Response post(String body) {
     return getRequestSpecification()
       .body(body)
       .when()
-      .post(ACTIONS_PATH);
+      .post(ServicePath.ACTIONS_PATH);
   }
 
   private Response get(String path, String id) {
@@ -402,32 +389,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private Response postAction(Feefineaction action) {
     return post(mapFrom(action).encodePrettily());
-  }
-
-  private RequestSpecification getRequestSpecification() {
-    return RestAssured.given()
-      .baseUri(getOkapiUrl())
-      .contentType(MediaType.APPLICATION_JSON)
-      .header(new Header(OKAPI_HEADER_TENANT, TENANT_NAME))
-      .header(new Header(OKAPI_URL_HEADER, getOkapiUrl()))
-      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
-  }
-
-  private <T> void createStub(String url, T returnObject) {
-    createStub(url, aResponse().withBody(mapFrom(returnObject).encodePrettily()));
-  }
-
-  private <T> void createStub(String url, T returnObject, String id) {
-    createStub(url + "/" + id, returnObject);
-  }
-
-  private void createStub(String url, ResponseDefinitionBuilder responseBuilder) {
-    getOkapi().stubFor(WireMock.get(urlPathEqualTo(url))
-      .withHeader(ACCEPT, matching(APPLICATION_JSON))
-      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
-      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
-      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
-      .willReturn(responseBuilder));
   }
 
   private static Feefineaction createAction(User user, Account account, boolean notify) {
@@ -466,15 +427,6 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withChargeNoticeId(UUID.randomUUID().toString());
   }
 
-  private static Instance createInstance() {
-    return new Instance()
-      .withId(randomId())
-      .withTitle("Instance title")
-      .withContributors(Arrays.asList(
-        new Contributor().withName(PRIMARY_CONTRIBUTOR_NAME).withPrimary(true),
-        new Contributor().withName(NON_PRIMARY_CONTRIBUTOR_NAME).withPrimary(false)));
-  }
-
   private static Account createAccount(User user, Item item, Feefine feefine, Owner owner,
     Instance instance, HoldingsRecord holdingsRecord) {
 
@@ -499,71 +451,6 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withRemaining(Double.valueOf(ACCOUNT_REMAINING));
   }
 
-  private static HoldingsRecord createHoldingsRecord(Instance instance) {
-    return new HoldingsRecord()
-      .withId(randomId())
-      .withInstanceId(instance.getId())
-      .withCopyNumber("cp.2");
-  }
-
-  private static Location createLocation(Library library, Campus campus, Institution institution) {
-    return new Location()
-      .withId(randomId())
-      .withName("Specific")
-      .withCampusId(String.valueOf(campus.getAdditionalProperties().get(KEY_ID)))
-      .withLibraryId(String.valueOf(library.getAdditionalProperties().get(KEY_ID)))
-      .withInstitutionId(String.valueOf(institution.getAdditionalProperties().get(KEY_ID)));
-  }
-
-  private static Library createLibrary() {
-    return new Library()
-      .withAdditionalProperty(KEY_ID, randomId())
-      .withAdditionalProperty(KEY_NAME, "Library");
-  }
-
-  private static Campus createCampus() {
-    return new Campus()
-      .withAdditionalProperty(KEY_ID, randomId())
-      .withAdditionalProperty(KEY_NAME, "Campus");
-  }
-
-  private static Institution createInstitution() {
-    return new Institution()
-      .withAdditionalProperty(KEY_ID, randomId())
-      .withAdditionalProperty(KEY_NAME, "Institution");
-  }
-
-  private static Item createItem(HoldingsRecord holdingsRecord,
-    Location location) {
-    return new Item()
-      .withId(randomId())
-      .withHoldingsRecordId(holdingsRecord.getId())
-      .withBarcode("12345")
-      .withEnumeration("enum")
-      .withVolume("vol.1")
-      .withChronology("chronology")
-      .withYearCaption(new HashSet<>(Collections.singletonList("2000")))
-      .withCopyNumber("cp.1")
-      .withNumberOfPieces("1")
-      .withDescriptionOfPieces("little pieces")
-      .withEffectiveLocationId(location.getId())
-      .withEffectiveCallNumberComponents(
-        new EffectiveCallNumberComponents()
-          .withCallNumber("ABC.123.DEF")
-          .withPrefix("PREFIX")
-          .withSuffix("SUFFIX"));
-  }
-
-  private static User createUser() {
-    return new User()
-      .withId(randomId())
-      .withBarcode("54321")
-      .withPersonal(new Personal()
-        .withFirstName("First")
-        .withMiddleName("Middle")
-        .withLastName("Last"));
-  }
-
   private static Owner createOwner() {
     return new Owner()
       .withId(randomId())
@@ -585,7 +472,7 @@ public class FeeFineActionsAPITest extends ApiTests {
   }
 
   private String getAccountCreationDate(Account account) {
-    String getAccountResponse = get(ACCOUNTS_PATH, account.getId())
+    String getAccountResponse = get(ServicePath.ACCOUNTS_PATH, account.getId())
       .getBody().prettyPrint();
 
     final String creationDateFromMetadata = new JsonObject(getAccountResponse)
