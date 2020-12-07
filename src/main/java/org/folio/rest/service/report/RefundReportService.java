@@ -337,7 +337,12 @@ public class RefundReportService {
       .compose(inventoryClient::getInstanceById)
       .map(instance -> ctx.accounts.put(accountId, ctx.accounts.get(accountId)
         .withInstance(instance.getTitle())))
-      .map(ctx);
+      .map(ctx)
+      .recover(throwable -> {
+        log.error(format("Failed to find instance for account %s, holdingsRecord is %s",
+          accountId, holdingsRecordId));
+        return succeededFuture(ctx);
+      });
   }
 
   private Future<RefundReportContext> lookupUserForAccount(RefundReportContext ctx,

@@ -58,6 +58,9 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.With;
 
 public class FeeFineReportsAPITest extends ApiTests {
   private static final String USER_ID = randomId();
@@ -86,6 +89,7 @@ public class FeeFineReportsAPITest extends ApiTests {
   private static final String TRANSFER_TX_INFO = "Transfer transaction information";
 
   private static final String SEE_FEE_FINE_PAGE = "See Fee/fine details page";
+  private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
 
   private static final DateTimeFormatter dateTimeFormatter =
     DateTimeFormat.forPattern("M/d/yyyy K:mm a");
@@ -97,7 +101,11 @@ public class FeeFineReportsAPITest extends ApiTests {
   private Item item;
   private Instance instance;
 
+  private StubMapping userStubMapping;
+  private StubMapping userGroupStubMapping;
   private StubMapping localeSettingsStubMapping;
+  private StubMapping holdingsStubMapping;
+  private StubMapping instanceStubMapping;
 
   @Before
   public void setUp() {
@@ -120,27 +128,27 @@ public class FeeFineReportsAPITest extends ApiTests {
     item = createItem(holdingsRecord, location);
 
     createStub(ServicePath.ITEMS_PATH, item, item.getId());
-    createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
-    createStub(INSTANCES_PATH, instance, instance.getId());
+    holdingsStubMapping = createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
+    instanceStubMapping = createStub(INSTANCES_PATH, instance, instance.getId());
 
     userGroup = EntityBuilder.createUserGroup();
-    createStub(USERS_GROUPS_PATH, userGroup, userGroup.getId());
+    userGroupStubMapping = createStub(USERS_GROUPS_PATH, userGroup, userGroup.getId());
 
     user = EntityBuilder.createUser()
       .withId(USER_ID)
       .withPatronGroup(userGroup.getId());
-    createStub(USERS_PATH, user, USER_ID);
+    userStubMapping = createStub(USERS_PATH, user, USER_ID);
   }
 
   @Test
-  public void emptyRefundReportNoTimezone() {
-    getOkapi().removeStub(localeSettingsStubMapping);
+  public void okResponseWhenLocaleConfigDoesNotExist() {
+    removeStub(localeSettingsStubMapping);
 
     requestAndCheck(List.of());
   }
 
   @Test
-  public void emptyRefundReportTenantTimezone() {
+  public void okResponseWhenLocaleConfigExists() {
     requestAndCheck(List.of());
   }
 
@@ -159,21 +167,15 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   @Test
-  public void internalServerErrorWhenAccountIsDeleted() {
-    Account account = charge(10.0, "ff-type", item.getId());
+  public void serverErrorWhenAccountIsDeleted() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
-    createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
-      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
-
-    createAction(1, account, "2020-01-02 12:00:00",
-      REFUNDED_PARTIALLY, REFUND_REASON, 2.0, 7.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
-      REFUND_TX_INFO);
-
-    deleteEntity(ACCOUNTS_PATH, account.getId());
+    assert sourceObjects.account != null;
+    deleteEntity(ACCOUNTS_PATH, sourceObjects.account.getId());
 
     refundReportsClient.getByDateInterval(START_DATE, END_DATE, HTTP_INTERNAL_SERVER_ERROR)
       .then()
-      .body(is("Internal server error"));
+      .body(is(INTERNAL_SERVER_ERROR_MESSAGE));
   }
 
   @Test
@@ -185,6 +187,44 @@ public class FeeFineReportsAPITest extends ApiTests {
     refundReportsClient.getByParameters("startDate=2020-01-01&endDate=not-a-date", HTTP_BAD_REQUEST);
     refundReportsClient.getByParameters("startDate=not-a-date&endDate=2020-01-01", HTTP_BAD_REQUEST);
     refundReportsClient.getByParameters("startDate=not-a-date&endDate=not-a-date", HTTP_BAD_REQUEST);
+  }
+
+  @Test
+  public void serverErrorWhenUserDoesNotExist() {
+    createMinimumViableReportData();
+
+    removeStub(userStubMapping);
+
+    refundReportsClient.getByDateInterval(START_DATE, END_DATE, HTTP_INTERNAL_SERVER_ERROR)
+      .then()
+      .body(is(INTERNAL_SERVER_ERROR_MESSAGE));
+  }
+
+  @Test
+  public void serverErrorWhenUserGroupDoesNotExist() {
+    createMinimumViableReportData();
+
+    removeStub(userGroupStubMapping);
+
+    refundReportsClient.getByDateInterval(START_DATE, END_DATE, HTTP_INTERNAL_SERVER_ERROR)
+      .then()
+      .body(is(INTERNAL_SERVER_ERROR_MESSAGE));
+  }
+
+  @Test
+  public void validReportWhenHoldingsRecordDoesNotExist() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
+
+    removeStub(holdingsStubMapping);
+
+    assert sourceObjects.account != null;
+    assert sourceObjects.refundAction != null;
+
+    requestAndCheck(List.of(
+      buildRefundReportEntry(sourceObjects.account, sourceObjects.refundAction,
+        "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1), item.getBarcode(), "")
+    ));
   }
 
   @Test
@@ -207,18 +247,15 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   @Test
   public void partiallyRefundedWithItem() {
-    Account account = charge(10.0, "ff-type", item.getId());
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
-    createAction(1, account, "2020-01-02 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
-      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
-
-    Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
-      REFUNDED_PARTIALLY, REFUND_REASON, 2.0, 7.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
-      REFUND_TX_INFO);
+    assert sourceObjects.account != null;
+    assert sourceObjects.refundAction != null;
 
     requestAndCheck(List.of(
-      buildRefundReportEntry(account, refundAction, "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO,
-        "0.00", "", addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+      buildRefundReportEntry(sourceObjects.account, sourceObjects.refundAction, "3.00",
+        PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
         item.getBarcode(), instance.getTitle())
     ));
   }
@@ -376,6 +413,23 @@ public class FeeFineReportsAPITest extends ApiTests {
     return accountsClient.getById(account.getId()).as(Account.class);
   }
 
+  private ReportSourceObjects createMinimumViableReportData() {
+    Account account = charge(10.0, "ff-type", item.getId());
+
+    Feefineaction payment = createAction(1, account, "2020-01-02 12:00:00",
+      PAID_PARTIALLY, PAYMENT_METHOD, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO);
+
+    Feefineaction refund = createAction(1, account, "2020-01-01 12:00:00",
+      REFUNDED_PARTIALLY, REFUND_REASON, 2.0, 7.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUND_TX_INFO);
+
+    return new ReportSourceObjects()
+      .withAccount(account)
+      .withPaymentAction(payment)
+      .withRefundAction(refund);
+  }
+
   private Feefineaction createAction(int actionCounter, Account account, String dateTime,
     String type, String method, Double amount, Double balance, String staffInfo,
     String patronInfo, String txInfo) {
@@ -441,5 +495,14 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   private Date parseDateTime(String date) {
     return DateTime.parse(date, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")).toDate();
+  }
+
+  @With
+  @AllArgsConstructor
+  @NoArgsConstructor(force = true)
+  private static class ReportSourceObjects {
+    final Account account;
+    final Feefineaction paymentAction;
+    final Feefineaction refundAction;
   }
 }

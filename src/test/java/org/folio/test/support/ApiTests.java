@@ -232,4 +232,8 @@ public class ApiTests {
       .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
       .willReturn(responseBuilder));
   }
+
+  public void removeStub(StubMapping stubMapping) {
+    getOkapi().removeStub(stubMapping);
+  }
 }
