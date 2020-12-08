@@ -504,7 +504,7 @@ public class AccountsRefundAPITests extends ApiTests {
       .statusCode(SC_CREATED)
       .body("accountId", is(FIRST_ACCOUNT_ID))
       .body("amount", is(new MonetaryValue(requestedAmount).toString()))
-      .body("feeFineActionIds", hasSize(expectedActionsCount));
+      .body(FEE_FINE_ACTIONS, hasSize(expectedActionsCount));
   }
 
   private void verifyBulkResponse(Response response, double requestedAmount,

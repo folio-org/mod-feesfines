@@ -31,7 +31,6 @@ import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionResponse;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
-import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
@@ -490,13 +489,8 @@ public class AccountsAPI implements Accounts {
 
     if (asyncResult.succeeded()) {
       final ActionContext actionContext = asyncResult.result();
-      final List<String> feeFineActionIds = actionContext.getFeeFineActions()
-        .stream()
-        .map(Feefineaction::getId)
-        .collect(Collectors.toList());
-
       ActionSuccessResponse response = new ActionSuccessResponse()
-        .withFeeFineActionIds(feeFineActionIds)
+        .withFeefineactions(actionContext.getFeeFineActions())
         .withAccountId(accountId);
       if (actionContext.getRequestedAmount() != null) {
         response.withAmount(actionContext.getRequestedAmount().toString());

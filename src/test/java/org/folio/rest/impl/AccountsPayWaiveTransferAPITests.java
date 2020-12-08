@@ -47,8 +47,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import io.restassured.http.ContentType;
-import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
 import io.vertx.core.json.JsonObject;
 
 @RunWith(value = Parameterized.class)
@@ -271,29 +269,21 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
 
     final DefaultActionRequest request = createRequest(requestedAmountString);
 
-    final ValidatableResponse actionResponse = resourceClient.post(toJson(request))
+    resourceClient.post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
       .body("amount", is(requestedAmountString))
-      .body("accountId", is(ACCOUNT_ID));
+      .body("accountId", is(ACCOUNT_ID))
+      .body(FEE_FINE_ACTIONS, hasSize(1));
 
-    final Response allFeeFineActionsResponse = actionsClient.getAll();
-    allFeeFineActionsResponse
+    actionsClient.getAll()
       .then()
       .body(FEE_FINE_ACTIONS, hasSize(1))
       .body(FEE_FINE_ACTIONS, hasItem(
         feeFineAction(ACCOUNT_ID, account.getUserId(), expectedAccountBalanceAfter, requestedAmount,
-          expectedPaymentStatus, request.getTransactionInfo(), request))
+        expectedPaymentStatus, request.getTransactionInfo(), request))
       );
-
-    String expectedFeeFineActionId = new JsonObject(allFeeFineActionsResponse.getBody().asString())
-      .getJsonArray("feefineactions")
-      .getJsonObject(0)
-      .getString("id");
-
-    actionResponse.body("feeFineActionIds", hasSize(1));
-    actionResponse.body("feeFineActionIds", hasItem(expectedFeeFineActionId));
 
     accountsClient.getById(ACCOUNT_ID)
       .then()
