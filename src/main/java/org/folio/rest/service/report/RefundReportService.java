@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.folio.rest.client.ConfigurationClient;
@@ -144,8 +145,7 @@ public class RefundReportService {
 
     String accountId = refundAction.getAccountId();
 
-    if (ctx.accounts.containsKey(accountId) && ctx.accounts.get(accountId).processed) {
-      ctx.accounts.remove(accountId);
+    if (ctx.processedAccounts.contains(accountId)) {
       return succeededFuture(ctx);
     }
 
@@ -526,6 +526,7 @@ public class RefundReportService {
     final DateTimeZone timeZone;
     final Map<String, RefundData> refunds;
     final Map<String, AccountContextData> accounts;
+    final Set<String> processedAccounts;
     final Map<String, User> users;
     final Map<String, UserGroup> userGroups;
     final Map<String, Item> items;
@@ -534,6 +535,7 @@ public class RefundReportService {
       timeZone = UTC;
       refunds = new HashMap<>();
       accounts = new HashMap<>();
+      processedAccounts = new HashSet<>();
       users = new HashMap<>();
       userGroups = new HashMap<>();
       items = new HashMap<>();
@@ -588,10 +590,8 @@ public class RefundReportService {
     }
 
     void markAccountProcessed(String accountId) {
-      AccountContextData accountContextData = getAccountContextById(accountId);
-      if (accountContextData != null) {
-        accounts.put(accountId, accountContextData.withProcessed(true));
-      }
+      processedAccounts.add(accountId);
+      accounts.remove(accountId);
     }
   }
 
@@ -601,14 +601,12 @@ public class RefundReportService {
   private static class AccountContextData {
     final Account account;
     final List<Feefineaction> actions;
-    final boolean processed;
     final AccountProcessingContext processingContext;
     final String instance;
 
     public AccountContextData() {
       account = null;
       actions = new ArrayList<>();
-      processed = false;
       processingContext = new AccountProcessingContext();
       instance = "";
     }

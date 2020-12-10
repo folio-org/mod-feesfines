@@ -11,9 +11,9 @@ import lombok.Getter;
 public class LocaleSettings {
   private static final DateTimeZone DEFAULT_DATE_TIME_ZONE = DateTimeZone.UTC;
 
-  final private String locale;
-  final private String timezone;
-  final private String currency;
+  private final String locale;
+  private final String timezone;
+  private final String currency;
 
   public DateTimeZone getDateTimeZone() {
     return StringUtils.isBlank(timezone)
