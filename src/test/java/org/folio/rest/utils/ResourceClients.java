@@ -106,8 +106,8 @@ public final class ResourceClients {
     return new ResourceClient("/feefineactions");
   }
 
-  public static ResourceClient buildRefundReportClient() {
-    return new ResourceClient("/feefine-reports/refund");
+  public static ReportResourceClient buildRefundReportClient() {
+    return new ReportResourceClient("/feefine-reports/refund");
   }
 
   public static ResourceClient tenantClient() {

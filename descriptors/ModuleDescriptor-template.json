@@ -945,7 +945,10 @@
           ],
           "modulePermissions": [
             "configuration.entries.collection.get",
-            "usergroups.item.get"
+            "users.item.get",
+            "usergroups.item.get",
+            "inventory-storage.holdings.item.get",
+            "inventory-storage.instances.item.get"
           ]
         }
       ]

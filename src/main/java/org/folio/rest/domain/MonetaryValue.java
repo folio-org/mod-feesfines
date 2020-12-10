@@ -26,6 +26,10 @@ public class MonetaryValue {
     this(from(amount), USD);
   }
 
+  public MonetaryValue(Double amount, Currency currency) {
+    this(from(amount), currency);
+  }
+
   public MonetaryValue(BigDecimal amount, Currency currency) {
     this(amount, currency, DEFAULT_ROUNDING);
   }

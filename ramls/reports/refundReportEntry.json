@@ -44,7 +44,7 @@
     },
     "transactionInfo": {
       "type": "string",
-      "description": "Transaction info or 'See Fee/fine detail page' for multiple payments"
+      "description": "Transaction info or 'See Fee/fine details page' for multiple payments"
     },
     "transferredAmount": {
       "type": "string",

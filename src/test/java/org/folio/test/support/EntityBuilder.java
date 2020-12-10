@@ -106,6 +106,7 @@ public class EntityBuilder {
     String commentForStaff, String commentForPatron) {
 
     return new Feefineaction()
+      .withId(randomId())
       .withUserId(userId)
       .withTypeAction(type)
       .withPaymentMethod(paymentMethod)
@@ -209,7 +210,6 @@ public class EntityBuilder {
   }
 
   public static KvConfigurations createLocaleSettingsConfigurations() {
-
     return new KvConfigurations()
       .withConfigs(List.of(new Config()
         .withId(randomId())

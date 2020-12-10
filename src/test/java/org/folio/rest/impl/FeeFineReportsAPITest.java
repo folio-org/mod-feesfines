@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import static java.lang.String.format;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
-import static org.folio.HttpStatus.HTTP_INTERNAL_SERVER_ERROR;
 import static org.folio.rest.utils.ResourceClients.buildRefundReportClient;
 import static org.folio.test.support.EntityBuilder.createCampus;
 import static org.folio.test.support.EntityBuilder.createHoldingsRecord;
@@ -43,7 +42,7 @@ import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
-import org.folio.rest.utils.ResourceClient;
+import org.folio.rest.utils.ReportResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.constant.ServicePath;
@@ -88,13 +87,14 @@ public class FeeFineReportsAPITest extends ApiTests {
   private static final String REFUND_TX_INFO = "Refund transaction information";
   private static final String TRANSFER_TX_INFO = "Transfer transaction information";
 
+  private static final String MULTIPLE = "Multiple";
   private static final String SEE_FEE_FINE_PAGE = "See Fee/fine details page";
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
 
   private static final DateTimeFormatter dateTimeFormatter =
-    DateTimeFormat.forPattern("M/d/yyyy K:mm a");
+    DateTimeFormat.forPattern("M/d/yy, K:mm a");
 
-  private ResourceClient refundReportsClient;
+  private ReportResourceClient refundReportsClient;
 
   private UserGroup userGroup;
   private User user;
@@ -104,6 +104,7 @@ public class FeeFineReportsAPITest extends ApiTests {
   private StubMapping userStubMapping;
   private StubMapping userGroupStubMapping;
   private StubMapping localeSettingsStubMapping;
+  private StubMapping itemStubMapping;
   private StubMapping holdingsStubMapping;
   private StubMapping instanceStubMapping;
 
@@ -127,7 +128,7 @@ public class FeeFineReportsAPITest extends ApiTests {
     final HoldingsRecord holdingsRecord = createHoldingsRecord(instance);
     item = createItem(holdingsRecord, location);
 
-    createStub(ServicePath.ITEMS_PATH, item, item.getId());
+    itemStubMapping = createStub(ServicePath.ITEMS_PATH, item, item.getId());
     holdingsStubMapping = createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
     instanceStubMapping = createStub(INSTANCES_PATH, instance, instance.getId());
 
@@ -167,18 +168,6 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   @Test
-  public void serverErrorWhenAccountIsDeleted() {
-    ReportSourceObjects sourceObjects = createMinimumViableReportData();
-
-    assert sourceObjects.account != null;
-    deleteEntity(ACCOUNTS_PATH, sourceObjects.account.getId());
-
-    refundReportsClient.getByDateInterval(START_DATE, END_DATE, HTTP_INTERNAL_SERVER_ERROR)
-      .then()
-      .body(is(INTERNAL_SERVER_ERROR_MESSAGE));
-  }
-
-  @Test
   public void badRequestWhenParameterIsMissingOrMalformed() {
     refundReportsClient.getByParameters("startDate=2020-01-01", HTTP_BAD_REQUEST);
     refundReportsClient.getByParameters("endDate=2020-01-01", HTTP_BAD_REQUEST);
@@ -190,25 +179,54 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   @Test
-  public void serverErrorWhenUserDoesNotExist() {
-    createMinimumViableReportData();
+  public void returnsResultWhenAccountIsDeleted() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
-    removeStub(userStubMapping);
+    assert sourceObjects.account != null;
+    deleteEntity(ACCOUNTS_PATH, sourceObjects.account.getId());
 
-    refundReportsClient.getByDateInterval(START_DATE, END_DATE, HTTP_INTERNAL_SERVER_ERROR)
-      .then()
-      .body(is(INTERNAL_SERVER_ERROR_MESSAGE));
+    assert sourceObjects.refundAction != null;
+    requestRefundReport(START_DATE, END_DATE).then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("reportData", iterableWithSize(1))
+      .body("reportData[0].feeFineId", is(sourceObjects.account.getId()));
   }
 
   @Test
-  public void serverErrorWhenUserGroupDoesNotExist() {
-    createMinimumViableReportData();
+  public void returnsResultWhenUserDoesNotExist() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
+
+    removeStub(userStubMapping);
+
+    assert sourceObjects.refundAction != null;
+    requestRefundReport(START_DATE, END_DATE).then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("reportData", iterableWithSize(1))
+      .body("reportData[0].feeFineId", is(sourceObjects.account.getId()));
+  }
+
+  @Test
+  public void returnsResultWhenUserGroupDoesNotExist() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
     removeStub(userGroupStubMapping);
 
-    refundReportsClient.getByDateInterval(START_DATE, END_DATE, HTTP_INTERNAL_SERVER_ERROR)
-      .then()
-      .body(is(INTERNAL_SERVER_ERROR_MESSAGE));
+    assert sourceObjects.refundAction != null;
+    requestRefundReport(START_DATE, END_DATE).then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("reportData", iterableWithSize(1))
+      .body("reportData[0].feeFineId", is(sourceObjects.account.getId()));
+  }
+
+  @Test
+  public void validReportWhenItemDoesNotExist() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
+
+    removeStub(itemStubMapping);
+
+    requestAndCheck(List.of(createResponseForMinimumViableData(sourceObjects)
+      .withItemBarcode("")
+      .withInstance("")));
   }
 
   @Test
@@ -220,11 +238,21 @@ public class FeeFineReportsAPITest extends ApiTests {
     assert sourceObjects.account != null;
     assert sourceObjects.refundAction != null;
 
-    requestAndCheck(List.of(
-      buildRefundReportEntry(sourceObjects.account, sourceObjects.refundAction,
-        "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
-        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1), item.getBarcode(), "")
-    ));
+    requestAndCheck(List.of(createResponseForMinimumViableData(sourceObjects)
+      .withInstance("")));
+  }
+
+  @Test
+  public void validReportWhenInstanceDoesNotExist() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
+
+    removeStub(instanceStubMapping);
+
+    assert sourceObjects.account != null;
+    assert sourceObjects.refundAction != null;
+
+    requestAndCheck(List.of(createResponseForMinimumViableData(sourceObjects)
+      .withInstance("")));
   }
 
   @Test
@@ -318,7 +346,7 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     requestAndCheck(List.of(
       buildRefundReportEntry(account, refundAction,
-        "5.20", SEE_FEE_FINE_PAGE, PAYMENT_TX_INFO, "0.00", "",
+        "5.20", MULTIPLE, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
         item.getBarcode(), instance.getTitle())
     ));
@@ -387,7 +415,7 @@ public class FeeFineReportsAPITest extends ApiTests {
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
         item.getBarcode(), instance.getTitle()),
       buildRefundReportEntry(account1, refundAction2,
-        "12.00", SEE_FEE_FINE_PAGE, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
+        "12.00", MULTIPLE, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 2), addSuffix(REFUND_PATRON_INFO, 2),
         item.getBarcode(), instance.getTitle()),
       buildRefundReportEntry(account2, refundAction3,
@@ -430,6 +458,13 @@ public class FeeFineReportsAPITest extends ApiTests {
       .withRefundAction(refund);
   }
 
+  private RefundReportEntry createResponseForMinimumViableData(ReportSourceObjects sourceObjects) {
+    return buildRefundReportEntry(sourceObjects.account, sourceObjects.refundAction,
+      "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+      addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1), item.getBarcode(),
+      instance.getTitle());
+  }
+
   private Feefineaction createAction(int actionCounter, Account account, String dateTime,
     String type, String method, Double amount, Double balance, String staffInfo,
     String patronInfo, String txInfo) {
@@ -448,6 +483,10 @@ public class FeeFineReportsAPITest extends ApiTests {
     Feefineaction refundAction, String paidAmount, String paymentMethod, String transactionInfo,
     String transferredAmount, String transferAccount, String staffInfo, String patronInfo,
     String itemBarcode, String instance) {
+
+    if (account == null || refundAction == null) {
+      return null;
+    }
 
     return new RefundReportEntry()
       .withPatronName(format("%s, %s %s", user.getPersonal().getLastName(),

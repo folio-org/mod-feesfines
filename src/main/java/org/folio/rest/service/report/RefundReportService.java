@@ -7,14 +7,18 @@ import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.AccountHelper.PATRON_COMMENTS_KEY;
+import static org.folio.rest.utils.AccountHelper.STAFF_COMMENTS_KEY;
+import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
 import static org.joda.time.DateTimeZone.UTC;
 
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -23,10 +27,8 @@ import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.UserGroupsClient;
 import org.folio.rest.client.UsersClient;
 import org.folio.rest.domain.Action;
+import org.folio.rest.domain.LocaleSettings;
 import org.folio.rest.domain.MonetaryValue;
-import org.folio.rest.exception.AccountNotFoundValidationException;
-import org.folio.rest.exception.FailedValidationException;
-import org.folio.rest.exception.InternalServerErrorException;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -38,17 +40,17 @@ import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
-import org.folio.rest.utils.AccountHelper;
+import org.folio.util.UuidUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -58,13 +60,14 @@ import lombok.With;
 public class RefundReportService {
   private static final Logger log = LoggerFactory.getLogger(RefundReportService.class);
 
-  private static final int REPORT_ROWS_LIMIT = 1000000;
-  private static final String INVALID_START_DATE_OR_END_DATE_MESSAGE =
-    "Invalid startDate or endDate parameter";
+  private static final int REPORT_ROWS_LIMIT = 1_000_000;
+  private static final String MULTIPLE_MESSAGE =
+    "Multiple";
   private static final String SEE_FEE_FINE_DETAILS_PAGE_MESSAGE =
     "See Fee/fine details page";
-  private static final DateTimeFormatter dateTimeFormatter =
-    DateTimeFormat.forPattern("M/d/yyyy K:mm a");
+  private static final  LocaleSettings fallbackLocaleSettings =
+    new LocaleSettings(Locale.US.toLanguageTag(), UTC.getID(),
+      Currency.getInstance(Locale.US).getCurrencyCode());
 
   private final ConfigurationClient configurationClient;
   private final InventoryClient inventoryClient;
@@ -72,6 +75,10 @@ public class RefundReportService {
   private final UserGroupsClient userGroupsClient;
   private final FeeFineActionRepository feeFineActionRepository;
   private final AccountRepository accountRepository;
+
+  private DateTimeZone timeZone;
+  private DateTimeFormatter dateTimeFormatter;
+  private Currency currency;
 
   public RefundReportService(Map<String, String> headers, Context context) {
     configurationClient = new ConfigurationClient(context.owner(), headers);
@@ -82,46 +89,39 @@ public class RefundReportService {
     accountRepository = new AccountRepository(context, headers);
   }
 
-  public Future<RefundReport> buildReport(String startDate, String endDate) {
-    return configurationClient.findTimeZone()
-      .compose(tz -> buildReport(startDate, endDate, tz))
-      .recover(throwable -> buildReport(startDate, endDate, UTC));
+  public Future<RefundReport> buildReport(DateTime startDate, DateTime endDate) {
+    return configurationClient.getLocaleSettings()
+      .recover(throwable -> succeededFuture(fallbackLocaleSettings))
+      .compose(localeSettings -> buildReportWithLocale(startDate, endDate, localeSettings));
   }
 
-  private Future<RefundReport> buildReport(String startDate, String endDate,
-    DateTimeZone timeZone) {
+  private Future<RefundReport> buildReportWithLocale(DateTime startDate, DateTime endDate,
+    LocaleSettings localeSettings) {
 
-    DateTime startDateTime = parseDate(startDate);
-    DateTime endDateTime = parseDate(endDate);
+    setUpLocale(localeSettings);
 
-    if (startDateTime == null || endDateTime == null || timeZone == null) {
-      log.error(format("Invalid parameters: startDate=%s, endDate=%s, tz=%s", startDate, endDate,
-        timeZone));
-
-      throw new FailedValidationException(INVALID_START_DATE_OR_END_DATE_MESSAGE);
-    }
-
-    String startDtFormatted = startDateTime
+    String startDateTimeFormatted = startDate
       .withTimeAtStartOfDay()
       .withZoneRetainFields(timeZone)
       .withZone(UTC)
       .toString(ISODateTimeFormat.dateTime());
 
-    String endDtFormatted = endDateTime
+    String endDateTimeFormatted = endDate
       .withTimeAtStartOfDay()
       .plusDays(1)
       .withZoneRetainFields(timeZone)
       .withZone(UTC)
       .toString(ISODateTimeFormat.dateTime());
 
-    log.info(format("Building refund report with parameters: startDate=%s, endDate=%s, tz=%s",
-      startDateTime, endDateTime, timeZone));
+    log.info("Building refund report with parameters: startDate={}, endDate={}, tz={}",
+      startDate.toDateTimeISO(), endDate.toDateTimeISO(), timeZone);
 
     RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
 
     return feeFineActionRepository
-      .findActionsByTypeForPeriod(REFUND, startDtFormatted, endDtFormatted, REPORT_ROWS_LIMIT)
-      .map(this::toRefundDataMap)
+      .findActionsByTypeForPeriod(REFUND, startDateTimeFormatted, endDateTimeFormatted,
+        REPORT_ROWS_LIMIT)
+      .map(RefundReportService::toRefundDataMap)
       .map(ctx::withRefunds)
       .compose(this::processAllRefundActions)
       .map(this::buildReportFromContext);
@@ -145,6 +145,7 @@ public class RefundReportService {
     String accountId = refundAction.getAccountId();
 
     if (ctx.accounts.containsKey(accountId) && ctx.accounts.get(accountId).processed) {
+      ctx.accounts.remove(accountId);
       return succeededFuture(ctx);
     }
 
@@ -160,10 +161,8 @@ public class RefundReportService {
   private RefundReportContext processAccount(RefundReportContext ctx,
     String accountId, List<Feefineaction> accountFeeFineActions) {
 
-    log.info(format("Processing fee/fine actions of account %s", accountId));
-
     accountFeeFineActions.forEach(action -> processAccountAction(ctx, accountId, action));
-    ctx.accounts.put(accountId, ctx.accounts.get(accountId).withProcessed(true));
+    ctx.markAccountProcessed(accountId);
 
     return ctx;
   }
@@ -171,8 +170,7 @@ public class RefundReportService {
   private void processAccountAction(RefundReportContext ctx,
     String accountId, Feefineaction feeFineAction) {
 
-    log.info(format("Processing fee/fine action %s, account %s", feeFineAction.getId(),
-      accountId));
+    log.info("Processing fee/fine action {}, account {}", feeFineAction.getId(), accountId);
 
     AccountContextData accountData = ctx.accounts.get(accountId);
     AccountProcessingContext accountCtx = accountData.processingContext;
@@ -184,67 +182,88 @@ public class RefundReportService {
         accountCtx.paymentMethods.add(feeFineAction.getPaymentMethod());
         accountCtx.paymentTransactionInfo.add(feeFineAction.getTransactionInformation());
       } else {
-        log.error(format("Amount is null - fee/fine action %s, account %s",
-          feeFineAction.getId(), accountId));
+        log.error("Payment amount is null - fee/fine action {}, account {}", feeFineAction.getId(),
+          accountId);
       }
     }
-
-    if (actionIsOfType(feeFineAction, TRANSFER)) {
-      accountCtx.setTransferredAmount(accountCtx.transferredAmount.add(
-        new MonetaryValue(feeFineAction.getAmountAction())));
-      accountCtx.transferAccounts.add(feeFineAction.getPaymentMethod());
+    else if (actionIsOfType(feeFineAction, TRANSFER)) {
+      if (feeFineAction.getAmountAction() != null) {
+        accountCtx.setTransferredAmount(accountCtx.transferredAmount.add(
+          new MonetaryValue(feeFineAction.getAmountAction())));
+        accountCtx.transferAccounts.add(feeFineAction.getPaymentMethod());
+      } else {
+        log.error("Transfer amount is null - fee/fine action {}, account {}", feeFineAction.getId(),
+          accountId);
+      }
     }
-
-    if (actionIsOfType(feeFineAction, REFUND)) {
-      log.error(format("Processing refund action - fee/fine action %s, account %s",
-        feeFineAction.getId(), accountId));
-
+    else if (actionIsOfType(feeFineAction, REFUND)) {
       RefundData refundData = ctx.refunds.get(feeFineAction.getId());
-
-      log.error(format("Processing refund report entry - fee/fine action %s, account %s",
-        feeFineAction.getId(), accountId));
-
       RefundReportEntry reportEntry = refundData.reportEntry;
 
-      logCtxLookupStep("Looking for account in ctx", feeFineAction);
-      Account account = accountData.account;
+      Account account = ctx.getAccountById(accountId);
+      User user = ctx.getUserByAccountId(accountId);
+      UserGroup userGroup = ctx.getUserGroupByAccountId(accountId);
+      Item item = ctx.getItemByAccountId(accountId);
 
-      logCtxLookupStep("Looking for user in ctx", feeFineAction);
-      User user = ctx.users.get(account.getUserId());
+      reportEntry = reportEntry
+        .withFeeFineId(accountId)
+        .withRefundDate(formatDate(feeFineAction.getDateAction(), ctx.timeZone))
+        .withRefundAmount(formatMonetaryValue(feeFineAction.getAmountAction()))
+        .withRefundAction(feeFineAction.getTypeAction())
+        .withRefundReason(feeFineAction.getPaymentMethod())
+        .withStaffInfo(getStaffInfo(feeFineAction.getComments()))
+        .withPatronInfo(getPatronInfo(feeFineAction.getComments()))
+        .withActionCompletionDate("")
+        .withStaffMemberName("")
+        .withActionTaken("");
 
-      logCtxLookupStep("Looking for user group in ctx", feeFineAction);
-      UserGroup userGroup = ctx.userGroups.get(user.getPatronGroup());
+      if (user != null) {
+        reportEntry = reportEntry
+          .withPatronName(formatName(user))
+          .withPatronBarcode(user.getBarcode())
+          .withPatronId(user.getId());
+      } else {
+        log.error("Refund report - user is null, refund action {}", feeFineAction.getId());
+      }
 
-      reportEntry.setPatronName(formatName(user));
-      reportEntry.setPatronBarcode(user.getBarcode());
-      reportEntry.setPatronId(user.getId());
-      reportEntry.setPatronGroup(userGroup == null ? "" : userGroup.getGroup());
-      reportEntry.setFeeFineType(account.getFeeFineType());
-      reportEntry.setBilledAmount(formatMonetaryValue(account.getAmount()));
-      reportEntry.setDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone));
-      reportEntry.setPaidAmount(accountCtx.paidAmount.toString());
-      reportEntry.setPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods));
-      reportEntry.setTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo));
-      reportEntry.setTransferredAmount(accountCtx.transferredAmount.toString());
-      reportEntry.setTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts));
-      reportEntry.setFeeFineId(accountId);
-      reportEntry.setRefundDate(formatDate(feeFineAction.getDateAction(), ctx.timeZone));
-      reportEntry.setRefundAmount(formatMonetaryValue(feeFineAction.getAmountAction()));
-      reportEntry.setRefundAction(feeFineAction.getTypeAction());
-      reportEntry.setRefundReason(feeFineAction.getPaymentMethod());
-      reportEntry.setStaffInfo(getStaffInfo(feeFineAction.getComments()));
-      reportEntry.setPatronInfo(getPatronInfo(feeFineAction.getComments()));
-      reportEntry.setItemBarcode(getItemBarcode(ctx, accountId));
-      reportEntry.setInstance(ctx.accounts.get(accountId).instance);
-      reportEntry.setActionCompletionDate("");
-      reportEntry.setStaffMemberName("");
-      reportEntry.setActionTaken("");
+      if (userGroup != null) {
+        reportEntry = reportEntry.withPatronGroup(userGroup.getGroup());
+      } else {
+        log.error("Refund report - user group is null, refund action {}", feeFineAction.getId());
+      }
+
+      if (account != null) {
+        reportEntry = reportEntry
+          .withFeeFineType(account.getFeeFineType())
+          .withBilledAmount(formatMonetaryValue(account.getAmount()))
+          .withDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone));
+      } else {
+        log.error("Refund report - account is null, refund action {}", feeFineAction.getId());
+      }
+
+      if (accountCtx != null) {
+        reportEntry = reportEntry
+          .withPaidAmount(accountCtx.paidAmount.toString())
+          .withPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods, MULTIPLE_MESSAGE))
+          .withTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo,
+            SEE_FEE_FINE_DETAILS_PAGE_MESSAGE))
+          .withTransferredAmount(accountCtx.transferredAmount.toString())
+          .withTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts,
+            MULTIPLE_MESSAGE));
+      } else {
+        log.error("Refund report - account ctx is null, refund action {}", feeFineAction.getId());
+      }
+
+      if (item != null) {
+        reportEntry = reportEntry
+          .withItemBarcode(getItemBarcode(ctx, accountId))
+          .withInstance(accountData.instance);
+      } else {
+        log.info("Refund report - item is null, refund action {}", feeFineAction.getId());
+      }
+
+      ctx.refunds.put(feeFineAction.getId(), refundData.withReportEntry(reportEntry));
     }
-  }
-
-  private void logCtxLookupStep(String message, Feefineaction feeFineAction) {
-    log.error(format(message + " - fee/fine action %s, account %s",
-      feeFineAction.getId(), feeFineAction.getAccountId()));
   }
 
   private Future<RefundReportContext> lookupAccount(RefundReportContext ctx,
@@ -252,15 +271,17 @@ public class RefundReportService {
 
     String accountId = refundAction.getAccountId();
 
-    if (accountId == null) {
-      String message = format("Account ID is null in fee/ine action %s", refundAction.getId());
+    if (!UuidUtil.isUuid(accountId)) {
+      String message = format("Account ID is not a valid UUID in fee/fine action %s",
+        refundAction.getId());
       log.error(message);
-      throw new InternalServerErrorException(message);
+      return succeededFuture(ctx);
     }
 
     return accountRepository.getAccountById(accountId)
       .map(account -> addAccountContextData(ctx, account, accountId))
-      .map(ctx);
+      .map(ctx)
+      .recover(throwable -> succeededFuture(ctx));
   }
 
   private AccountContextData addAccountContextData(RefundReportContext ctx,
@@ -269,38 +290,24 @@ public class RefundReportService {
     if (account == null) {
       String message = format("Account %s not found", accountId);
       log.error(message);
-      throw new AccountNotFoundValidationException(message);
+      return null;
     }
 
-    if (ctx.accounts.containsKey(account.getId())) {
-      return ctx.accounts.get(account.getId());
-    }
-
-    AccountContextData accountContextData = new AccountContextData().withAccount(account);
-    ctx.accounts.put(account.getId(), accountContextData);
-
-    return accountContextData;
-  }
-
-  private Future<List<Feefineaction>> lookupFeeFineActionsForAccount(RefundReportContext ctx,
-    String accountId) {
-
-    log.info(format("Fetching action for account %s", accountId));
-
-    return feeFineActionRepository.findActionsForAccount(accountId)
-      .map(ctx.accounts.get(accountId)::withActions)
-      .map(AccountContextData::getActions);
+    return ctx.accounts.computeIfAbsent(accountId,
+      key -> new AccountContextData().withAccount(account));
   }
 
   private Future<RefundReportContext> lookupItemForAccount(RefundReportContext ctx,
     String accountId) {
 
-    log.info(format("Fetching item for account %s", accountId));
+    Account account = ctx.getAccountById(accountId);
+    if (account == null) {
+      return succeededFuture(ctx);
+    }
 
-    String itemId = ctx.getAccountById(accountId).getItemId();
-
-    if (itemId == null) {
-      log.info(format("Item ID is null - account %s", accountId));
+    String itemId = account.getItemId();
+    if (!UuidUtil.isUuid(itemId)) {
+      log.info("Item ID is not a valid UUID - account {}", accountId);
       return succeededFuture(ctx);
     }
     else {
@@ -309,26 +316,43 @@ public class RefundReportService {
       }
       else {
         return inventoryClient.getItemById(itemId)
+          .recover(throwable -> succeededFuture())
           .map(item -> addItemToContext(ctx, item, accountId, itemId))
-          .map(ctx);
+          .map(ctx)
+          .recover(throwable -> succeededFuture(ctx));
       }
     }
+  }
+
+  private RefundReportContext addItemToContext(RefundReportContext ctx, Item item,
+    String accountId, String itemId) {
+
+    if (item == null) {
+      log.info("Item not found - account {}, item {}", accountId, itemId);
+    } else {
+      ctx.items.put(itemId, item);
+    }
+
+    return ctx;
   }
 
   private Future<RefundReportContext> lookupInstanceForAccount(RefundReportContext ctx,
     String accountId) {
 
-    log.info(format("Fetching instance for account %s", accountId));
+    Account account = ctx.getAccountById(accountId);
+    if (account == null) {
+      return succeededFuture(ctx);
+    }
 
     Item item = ctx.getItemByAccountId(accountId);
-
     if (item == null) {
       return succeededFuture(ctx);
     }
 
     String holdingsRecordId = item.getHoldingsRecordId();
-
-    if (holdingsRecordId == null) {
+    if (!UuidUtil.isUuid(holdingsRecordId)) {
+      log.info("Holdings record ID {} is not a valid UUID - account {}", holdingsRecordId,
+        accountId);
       return succeededFuture(ctx);
     }
 
@@ -339,8 +363,8 @@ public class RefundReportService {
         .withInstance(instance.getTitle())))
       .map(ctx)
       .recover(throwable -> {
-        log.error(format("Failed to find instance for account %s, holdingsRecord is %s",
-          accountId, holdingsRecordId));
+        log.error("Failed to find instance for account {}, holdingsRecord is {}", accountId,
+          holdingsRecordId);
         return succeededFuture(ctx);
       });
   }
@@ -348,14 +372,15 @@ public class RefundReportService {
   private Future<RefundReportContext> lookupUserForAccount(RefundReportContext ctx,
     String accountId) {
 
-    log.info(format("Fetching user for account %s", accountId));
+    Account account = ctx.getAccountById(accountId);
+    if (account == null) {
+      return succeededFuture(ctx);
+    }
 
-    String userId = ctx.getAccountById(accountId).getUserId();
-
-    if (userId == null) {
-      String message = format("User ID is null - account %s", accountId);
-      log.error(message);
-      throw new InternalServerErrorException(message);
+    String userId = account.getUserId();
+    if (!UuidUtil.isUuid(userId)) {
+      log.error("User ID {} is not a valid UUID - account {}", userId, accountId);
+      return succeededFuture(ctx);
     }
 
     if (ctx.users.containsKey(userId)) {
@@ -363,87 +388,75 @@ public class RefundReportService {
     }
     else {
       return usersClient.fetchUserById(userId)
-        .map(user -> addUserToContext(ctx, user, accountId, userId))
-        .map(ctx);
+        .compose(user -> addUserToContext(ctx, user, accountId, userId))
+        .recover(throwable -> succeededFuture(ctx));
     }
+  }
+
+  private Future<RefundReportContext> addUserToContext(RefundReportContext ctx, User user,
+    String accountId, String userId) {
+
+    if (user == null) {
+      log.error("User not found - account {}, user {}", accountId, userId);
+      return succeededFuture(ctx);
+    } else {
+      ctx.users.put(userId, user);
+    }
+
+    return succeededFuture(ctx);
   }
 
   private Future<RefundReportContext> lookupUserGroupForUser(RefundReportContext ctx,
     String accountId) {
 
-    log.info(format("Fetching user group for account %s", accountId));
+    User user = ctx.getUserByAccountId(accountId);
 
-    Account account = ctx.accounts.get(accountId).account;
-    String userId = account.getUserId();
-    User user = ctx.users.get(userId);
-    String userGroupId = user.getPatronGroup();
+    if (user == null || !UuidUtil.isUuid(user.getPatronGroup()) ||
+      ctx.getUserGroupByAccountId(accountId) != null) {
 
-    if (userGroupId == null) {
-      log.error(format("User group ID is null - user %s", user.getId()));
-      return succeededFuture(ctx);
-    }
-
-    if (ctx.userGroups.containsKey(userGroupId)) {
       return succeededFuture(ctx);
     }
     else {
-      return userGroupsClient.fetchUserGroupById(userGroupId)
+      return userGroupsClient.fetchUserGroupById(user.getPatronGroup())
         .map(userGroup -> ctx.userGroups.put(userGroup.getId(), userGroup))
-        .map(ctx);
+        .map(ctx)
+        .recover(throwable -> succeededFuture(ctx));
     }
   }
 
-  private RefundReportContext addUserToContext(RefundReportContext ctx, User user,
-    String accountId, String userId) {
+  private Future<List<Feefineaction>> lookupFeeFineActionsForAccount(RefundReportContext ctx,
+    String accountId) {
 
-    if (user == null) {
-      String message = format("User not found - account %s, user %s", accountId, userId);
-      log.error(message);
-      throw new InternalServerErrorException(message);
-    } else {
-      ctx.users.put(userId, user);
+    AccountContextData accountContextData = ctx.getAccountContextById(accountId);
+    if (accountContextData == null) {
+      return succeededFuture(new ArrayList<>());
     }
 
-    return ctx;
+    return feeFineActionRepository.findActionsOfTypesForAccount(accountId,
+      List.of(REFUND, PAY, TRANSFER))
+      .map(ctx.accounts.get(accountId)::withActions)
+      .map(AccountContextData::getActions);
   }
 
-  private RefundReportContext addItemToContext(RefundReportContext ctx, Item item,
-    String accountId, String itemId) {
-
-    if (item == null) {
-      log.info(format("Item not found - account %s, item %s", accountId, itemId));
-    } else {
-      ctx.items.put(itemId, item);
-    }
-
-    return ctx;
+  private void setUpLocale(LocaleSettings localeSettings) {
+    timeZone = localeSettings.getDateTimeZone();
+    dateTimeFormatter = DateTimeFormat.forPattern(DateTimeFormat.patternForStyle("SS",
+      Locale.forLanguageTag(localeSettings.getLocale())));
+    currency = Currency.getInstance(localeSettings.getCurrency());
   }
 
-  private boolean actionIsOfType(Feefineaction feeFineAction, Action action) {
+  private static boolean actionIsOfType(Feefineaction feeFineAction, Action action) {
     return List.of(action.getFullResult(), action.getPartialResult())
       .contains(feeFineAction.getTypeAction());
   }
 
-  private Map<String, RefundData> toRefundDataMap(List<Feefineaction> refundActions) {
+  private static Map<String, RefundData> toRefundDataMap(List<Feefineaction> refundActions) {
     return refundActions.stream()
       .collect(Collectors.toMap(Feefineaction::getId, RefundData::new, (a, b) -> b,
         LinkedHashMap::new));
   }
 
-  private DateTime parseDate(String date) {
-    if (date == null) {
-      return null;
-    }
-
-    try {
-      return DateTime.parse(date, ISODateTimeFormat.date());
-    }
-    catch (IllegalArgumentException e) {
-      return null;
-    }
-  }
-
-  private String singleOrDefaultMessage(List<String> values) {
+  private static String singleOrDefaultMessage(List<String> values, String message) {
     List<String> uniqueValues = new ArrayList<>(new HashSet<>(values));
 
     if (uniqueValues.size() == 0) {
@@ -454,18 +467,18 @@ public class RefundReportService {
       return uniqueValues.get(0);
     }
 
-    return SEE_FEE_FINE_DETAILS_PAGE_MESSAGE;
+    return message;
   }
 
-  private String getStaffInfo(String comments) {
-    return AccountHelper.parseFeeFineComments(comments).get(AccountHelper.STAFF_COMMENTS_KEY);
+  private static String getStaffInfo(String comments) {
+    return parseFeeFineComments(comments).get(STAFF_COMMENTS_KEY);
   }
 
-  private String getPatronInfo(String comments) {
-    return AccountHelper.parseFeeFineComments(comments).get(PATRON_COMMENTS_KEY);
+  private static String getPatronInfo(String comments) {
+    return parseFeeFineComments(comments).get(PATRON_COMMENTS_KEY);
   }
 
-  private String getItemBarcode(RefundReportContext ctx, String accountId) {
+  private static String getItemBarcode(RefundReportContext ctx, String accountId) {
     Item item = ctx.getItemByAccountId(accountId);
 
     if (item == null) {
@@ -476,19 +489,19 @@ public class RefundReportService {
   }
 
   private String formatMonetaryValue(Double value) {
-    return new MonetaryValue(value).toString();
+    return new MonetaryValue(value, currency).toString();
   }
 
   private String formatDate(Date date, DateTimeZone timeZone) {
     return new DateTime(date).withZone(timeZone).toString(dateTimeFormatter);
   }
 
-  private String formatName(User user) {
+  private static String formatName(User user) {
     StringBuilder builder = new StringBuilder();
     Personal personal = user.getPersonal();
 
     if (personal == null) {
-      log.info(format("Personal info not found - user %s", user.getId()));
+      log.info("Personal info not found - user {}", user.getId());
     }
     else {
       builder.append(personal.getLastName());
@@ -526,24 +539,59 @@ public class RefundReportService {
       items = new HashMap<>();
     }
 
-    Account getAccountById(String accountId) {
-      if (accounts.containsKey(accountId)) {
-        return accounts.get(accountId).account;
-      }
+    AccountContextData getAccountContextById(String accountId) {
+      return accounts.computeIfAbsent(accountId, key -> null);
+    }
 
-      String message = format("Account %s not found in context", accountId);
-      log.error(message);
-      throw new AccountNotFoundValidationException(message);
+    Account getAccountById(String accountId) {
+      AccountContextData accountContextData = getAccountContextById(accountId);
+      return accountContextData == null ? null : accountContextData.account;
     }
 
     Item getItemByAccountId(String accountId) {
-      String itemId = getAccountById(accountId).getItemId();
+      Account account = getAccountById(accountId);
 
-      if (itemId != null && items.containsKey(itemId)) {
-        return items.get(itemId);
+      if (account != null) {
+        String itemId = account.getItemId();
+        if (itemId != null && items.containsKey(itemId)) {
+          return items.get(itemId);
+        }
       }
 
       return null;
+    }
+
+    User getUserByAccountId(String accountId) {
+      Account account = getAccountById(accountId);
+
+      if (account != null) {
+        String userId = account.getUserId();
+        if (UuidUtil.isUuid(userId)) {
+          return users.computeIfAbsent(userId, key -> null);
+        }
+      }
+
+      return null;
+    }
+
+    UserGroup getUserGroupByAccountId(String accountId) {
+      User user = getUserByAccountId(accountId);
+
+      if (user != null) {
+        String userGroupId = user.getPatronGroup();
+        if (UuidUtil.isUuid(userGroupId)) {
+          return userGroups.computeIfAbsent(userGroupId, key -> null);
+        }
+      }
+
+      return null;
+    }
+
+    void markAccountProcessed(String accountId) {
+      AccountContextData accountContextData = getAccountContextById(accountId);
+      if (accountContextData != null) {
+        accounts.put(accountId, accountContextData.withProcessed(true));
+      }
     }
   }
 
@@ -576,7 +624,31 @@ public class RefundReportService {
     public RefundData(Feefineaction refundAction) {
       this.refundAction = refundAction;
 
-      reportEntry = new RefundReportEntry();
+      reportEntry = new RefundReportEntry()
+        .withPatronName("")
+        .withPatronBarcode("")
+        .withPatronId(refundAction.getUserId())
+        .withPatronGroup("")
+        .withFeeFineType("")
+        .withBilledAmount("")
+        .withDateBilled("")
+        .withPaidAmount("")
+        .withPaymentMethod("")
+        .withTransactionInfo("")
+        .withTransferredAmount("")
+        .withTransferAccount("")
+        .withFeeFineId(refundAction.getAccountId())
+        .withRefundDate("")
+        .withRefundAmount("")
+        .withRefundAction("")
+        .withRefundReason("")
+        .withStaffInfo("")
+        .withPatronInfo("")
+        .withItemBarcode("")
+        .withInstance("")
+        .withActionCompletionDate("")
+        .withStaffMemberName("")
+        .withActionTaken("");
     }
   }
 

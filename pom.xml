@@ -13,13 +13,18 @@
     </license>
   </licenses>
 
-  <repositories>
-    <repository>
-      <id>folio-nexus</id>
-      <name>FOLIO Maven repository</name>
-      <url>https://repository.folio.org/repository/maven-folio</url>
-    </repository>
-  </repositories>
+  <properties>
+    <powermock.version>2.0.7</powermock.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <raml-module-builder.version>31.1.5</raml-module-builder.version>
+    <vertx.version>3.9.4</vertx.version>
+    <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
+    <postgresrunner.port>5434</postgresrunner.port>
+    <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->
+    <postgres.port>5433</postgres.port>
+    <sonar.exclusions>**/impl/**</sonar.exclusions>
+  </properties>
 
   <dependencyManagement>
     <dependencies>
@@ -395,6 +400,16 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <version>2.3</version>
+        <configuration>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>**/Log4j2Plugins.dat</exclude>
+              </excludes>
+            </filter>
+          </filters>
+        </configuration>
         <executions>
           <execution>
             <phase>package</phase>
@@ -407,6 +422,7 @@
                   <manifestEntries>
                     <Main-Class>org.folio.rest.RestLauncher</Main-Class>
                     <Main-Verticle>org.folio.rest.RestVerticle</Main-Verticle>
+                    <Multi-Release>true</Multi-Release>
                   </manifestEntries>
                 </transformer>
               </transformers>
@@ -463,6 +479,21 @@
     </plugins>
   </build>
 
+  <scm>
+    <url>https://github.com/folio-org/mod-feesfines</url>
+    <connection>scm:git:git://github.com:folio-org/mod-feesfines.git</connection>
+    <developerConnection>scm:git:git@github.com:folio-org/mod-feesfines.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  <repositories>
+    <repository>
+      <id>folio-nexus</id>
+      <name>FOLIO Maven repository</name>
+      <url>https://repository.folio.org/repository/maven-folio</url>
+    </repository>
+  </repositories>
+
   <distributionManagement>
     <repository>
       <id>folio-nexus</id>
@@ -480,23 +511,4 @@
     </snapshotRepository>
   </distributionManagement>
 
-  <scm>
-    <url>https://github.com/folio-org/mod-feesfines</url>
-    <connection>scm:git:git://github.com:folio-org/mod-feesfines.git</connection>
-    <developerConnection>scm:git:git@github.com:folio-org/mod-feesfines.git</developerConnection>
-    <tag>HEAD</tag>
-  </scm>
-
-  <properties>
-    <powermock.version>2.0.7</powermock.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <raml-module-builder.version>31.1.5</raml-module-builder.version>
-    <vertx.version>3.9.4</vertx.version>
-    <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <postgresrunner.port>5434</postgresrunner.port>
-    <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->
-    <postgres.port>5433</postgres.port>
-    <sonar.exclusions>**/impl/**</sonar.exclusions>
-  </properties>
 </project>

@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.utils.AccountHelper.PATRON_COMMENTS_KEY;
+import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
 import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
 
 import java.util.Date;
@@ -205,7 +206,7 @@ public class PatronNoticeBuilder {
 
   private static String getCommentsFromFeeFineAction(Feefineaction feefineaction){
     String comments = Optional.ofNullable(feefineaction.getComments()).orElse(StringUtils.EMPTY);
-    return AccountHelper.parseFeeFineComments(comments)
+    return parseFeeFineComments(comments)
       .getOrDefault(PATRON_COMMENTS_KEY, StringUtils.EMPTY);
   }
 

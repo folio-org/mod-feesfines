@@ -1,6 +1,5 @@
 package org.folio.rest.utils;
 
-import static java.lang.String.format;
 import static org.folio.test.support.ApiTests.getOkapiUrl;
 
 import org.folio.HttpStatus;
@@ -8,8 +7,8 @@ import org.folio.HttpStatus;
 import io.restassured.response.Response;
 
 public class ResourceClient {
-  private final String baseUri;
-  private final OkapiClient okapiClient;
+  final String baseUri;
+  final OkapiClient okapiClient;
 
   public ResourceClient(String baseUri) {
     this.okapiClient = new OkapiClient(getOkapiUrl());
@@ -56,23 +55,6 @@ public class ResourceClient {
     return okapiClient.get(baseUri + "?limit=1000")
       .then()
       .statusCode(HttpStatus.HTTP_OK.toInt())
-      .extract()
-      .response();
-  }
-
-  public Response getByDateInterval(String startDate, String endDate) {
-    return getByDateInterval(startDate, endDate, HttpStatus.HTTP_OK);
-  }
-
-  public Response getByDateInterval(String startDate, String endDate, HttpStatus expectedStatus) {
-    return getByParameters(format("startDate=%s&endDate=%s", startDate, endDate),
-      expectedStatus);
-  }
-
-  public Response getByParameters(String parameters, HttpStatus expectedStatus) {
-    return okapiClient.get(format("%s?%s", baseUri, parameters))
-      .then()
-      .statusCode(expectedStatus.toInt())
       .extract()
       .response();
   }

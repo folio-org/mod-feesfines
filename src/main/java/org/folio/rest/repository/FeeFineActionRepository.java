@@ -4,12 +4,12 @@ import static io.vertx.core.Future.failedFuture;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
 import static org.apache.commons.lang3.StringUtils.SPACE;
-import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.persist.Criteria.Order.ORDER.ASC;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
@@ -63,6 +63,32 @@ public class FeeFineActionRepository {
       .addField("'accountId'")
       .setOperation("=")
       .setVal(accountId));
+
+    Promise<Results<Feefineaction>> promise = Promise.promise();
+    pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, false, promise);
+
+    return promise.future()
+      .map(Results::getResults);
+  }
+
+  public Future<List<Feefineaction>> findActionsOfTypesForAccount(String accountId,
+    List<Action> types) {
+
+    if (accountId == null) {
+      return failedFuture(new IllegalArgumentException("Account ID is null"));
+    }
+
+    if (types == null || types.isEmpty()) {
+      return failedFuture(new IllegalArgumentException("Types list is empty"));
+    }
+
+    GroupedCriterias typeCriterias = groupCriterias(getTypeCriterias(types), "OR");
+
+    Criterion criterion = new Criterion(new Criteria()
+      .addField("'accountId'")
+      .setOperation("=")
+      .setVal(accountId))
+      .addGroupOfCriterias(typeCriterias);
 
     Promise<Results<Feefineaction>> promise = Promise.promise();
     pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, false, promise);
@@ -134,16 +160,29 @@ public class FeeFineActionRepository {
   }
 
   private GroupedCriterias getTypeCriteria(Action action) {
-    return new GroupedCriterias()
-      .addCriteria(new Criteria()
-        .addField(format("'%s'", TYPE_FIELD))
-        .setOperation("=")
-        .setVal(action.getFullResult())
-        .setJSONB(true))
-      .addCriteria(new Criteria()
-        .addField(format("'%s'", TYPE_FIELD))
-        .setOperation("=")
-        .setVal(action.getPartialResult())
-        .setJSONB(true), "OR");
+    return groupCriterias(getTypeCriterias(List.of(action)), "OR");
+  }
+
+  private List<Criteria> getTypeCriterias(List<Action> actions) {
+    return actions.stream()
+      .map(action -> List.of(
+        new Criteria()
+          .addField(format("'%s'", TYPE_FIELD))
+          .setOperation("=")
+          .setVal(action.getFullResult())
+          .setJSONB(true),
+        new Criteria()
+          .addField(format("'%s'", TYPE_FIELD))
+          .setOperation("=")
+          .setVal(action.getPartialResult())
+          .setJSONB(true)))
+      .flatMap(Collection::stream)
+      .collect(Collectors.toList());
+  }
+
+  private GroupedCriterias groupCriterias(List<Criteria> criterias, String op) {
+    GroupedCriterias groupedCriterias = new GroupedCriterias();
+    criterias.forEach(criteria -> groupedCriterias.addCriteria(criteria, op));
+    return groupedCriterias;
   }
 }

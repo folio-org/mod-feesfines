@@ -3,11 +3,13 @@ package org.folio.test.support.matcher;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.isEmptyString;
 
 import java.util.List;
 
 import org.folio.rest.jaxrs.model.RefundReportEntry;
 import org.hamcrest.Matcher;
+import org.hamcrest.text.IsEmptyString;
 
 import io.restassured.response.Response;
 
@@ -37,9 +39,9 @@ public class RefundReportEntryMatcher {
       hasJsonPath("patronInfo", is(refundReportEntry.getPatronInfo())),
       hasJsonPath("itemBarcode", is(refundReportEntry.getItemBarcode())),
       hasJsonPath("instance", is(refundReportEntry.getInstance())),
-      hasJsonPath("actionCompletionDate", is("")),
-      hasJsonPath("staffMemberName", is("")),
-      hasJsonPath("actionTaken", is(""))
+      hasJsonPath("actionCompletionDate", isEmptyString()),
+      hasJsonPath("staffMemberName", isEmptyString()),
+      hasJsonPath("actionTaken", isEmptyString())
     ));
   }
 }
