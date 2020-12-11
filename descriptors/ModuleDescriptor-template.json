@@ -930,6 +930,28 @@
           "pathPattern": "/_/tenant"
         }
       ]
+    },
+    {
+      "id" : "feefine-reports",
+      "version" : "1.0",
+      "handlers": [
+        {
+          "methods":[
+            "GET"
+          ],
+          "pathPattern":"/feefine-reports/refund",
+          "permissionsRequired":[
+            "feefine-reports.refund.get"
+          ],
+          "modulePermissions": [
+            "configuration.entries.collection.get",
+            "users.item.get",
+            "usergroups.item.get",
+            "inventory-storage.holdings.item.get",
+            "inventory-storage.instances.item.get"
+          ]
+        }
+      ]
     }
   ],
   "permissionSets":[
@@ -1357,6 +1379,11 @@
         "users.collection.get"
       ],
       "visible": false
+    },
+    {
+      "permissionName":"feefine-reports.refund.get",
+      "displayName":"module permissions for loading refund report",
+      "description":"Load a refund report"
     }
   ],
   "launchDescriptor": {
