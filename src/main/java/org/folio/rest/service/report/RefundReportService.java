@@ -9,6 +9,7 @@ import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.AccountHelper.PATRON_COMMENTS_KEY;
 import static org.folio.rest.utils.AccountHelper.STAFF_COMMENTS_KEY;
 import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
+import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
 
 import java.util.ArrayList;
@@ -41,7 +42,6 @@ import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
-import org.folio.util.UuidUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -62,11 +62,9 @@ public class RefundReportService {
   private static final Logger log = LoggerFactory.getLogger(RefundReportService.class);
 
   private static final int REPORT_ROWS_LIMIT = 1_000_000;
-  private static final String MULTIPLE_MESSAGE =
-    "Multiple";
-  private static final String SEE_FEE_FINE_DETAILS_PAGE_MESSAGE =
-    "See Fee/fine details page";
-  private static final  LocaleSettings fallbackLocaleSettings =
+  private static final String MULTIPLE_MESSAGE = "Multiple";
+  private static final String SEE_FEE_FINE_DETAILS_PAGE_MESSAGE = "See Fee/fine details page";
+  private static final  LocaleSettings FALLBACK_LOCALE_SETTINGS =
     new LocaleSettings(Locale.US.toLanguageTag(), UTC.getID(),
       Currency.getInstance(Locale.US).getCurrencyCode());
 
@@ -92,7 +90,7 @@ public class RefundReportService {
 
   public Future<RefundReport> buildReport(DateTime startDate, DateTime endDate) {
     return configurationClient.getLocaleSettings()
-      .recover(throwable -> succeededFuture(fallbackLocaleSettings))
+      .recover(throwable -> succeededFuture(FALLBACK_LOCALE_SETTINGS))
       .compose(localeSettings -> buildReportWithLocale(startDate, endDate, localeSettings));
   }
 
@@ -205,20 +203,17 @@ public class RefundReportService {
       UserGroup userGroup = ctx.getUserGroupByAccountId(accountId);
       Item item = ctx.getItemByAccountId(accountId);
 
-      reportEntry = reportEntry
+      reportEntry
         .withFeeFineId(accountId)
         .withRefundDate(formatDate(feeFineAction.getDateAction(), ctx.timeZone))
         .withRefundAmount(formatMonetaryValue(feeFineAction.getAmountAction()))
         .withRefundAction(feeFineAction.getTypeAction())
         .withRefundReason(feeFineAction.getPaymentMethod())
         .withStaffInfo(getStaffInfo(feeFineAction.getComments()))
-        .withPatronInfo(getPatronInfo(feeFineAction.getComments()))
-        .withActionCompletionDate("")
-        .withStaffMemberName("")
-        .withActionTaken("");
+        .withPatronInfo(getPatronInfo(feeFineAction.getComments()));
 
       if (user != null) {
-        reportEntry = reportEntry
+        reportEntry
           .withPatronName(formatName(user))
           .withPatronBarcode(user.getBarcode())
           .withPatronId(user.getId());
@@ -227,13 +222,13 @@ public class RefundReportService {
       }
 
       if (userGroup != null) {
-        reportEntry = reportEntry.withPatronGroup(userGroup.getGroup());
+        reportEntry.withPatronGroup(userGroup.getGroup());
       } else {
         log.error("Refund report - user group is null, refund action {}", feeFineAction.getId());
       }
 
       if (account != null) {
-        reportEntry = reportEntry
+        reportEntry
           .withFeeFineType(account.getFeeFineType())
           .withBilledAmount(formatMonetaryValue(account.getAmount()))
           .withDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone));
@@ -242,7 +237,7 @@ public class RefundReportService {
       }
 
       if (accountCtx != null) {
-        reportEntry = reportEntry
+        reportEntry
           .withPaidAmount(accountCtx.paidAmount.toString())
           .withPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods, MULTIPLE_MESSAGE))
           .withTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo,
@@ -255,7 +250,7 @@ public class RefundReportService {
       }
 
       if (item != null) {
-        reportEntry = reportEntry
+        reportEntry
           .withItemBarcode(getItemBarcode(ctx, accountId))
           .withInstance(accountData.instance);
       } else {
@@ -271,7 +266,7 @@ public class RefundReportService {
 
     String accountId = refundAction.getAccountId();
 
-    if (!UuidUtil.isUuid(accountId)) {
+    if (!isUuid(accountId)) {
       String message = format("Account ID is not a valid UUID in fee/fine action %s",
         refundAction.getId());
       log.error(message);
@@ -281,7 +276,7 @@ public class RefundReportService {
     return accountRepository.getAccountById(accountId)
       .map(account -> addAccountContextData(ctx, account, accountId))
       .map(ctx)
-      .recover(throwable -> succeededFuture(ctx));
+      .otherwise(ctx);
   }
 
   private AccountContextData addAccountContextData(RefundReportContext ctx,
@@ -306,7 +301,7 @@ public class RefundReportService {
     }
 
     String itemId = account.getItemId();
-    if (!UuidUtil.isUuid(itemId)) {
+    if (!isUuid(itemId)) {
       log.info("Item ID is not a valid UUID - account {}", accountId);
       return succeededFuture(ctx);
     }
@@ -316,10 +311,9 @@ public class RefundReportService {
       }
       else {
         return inventoryClient.getItemById(itemId)
-          .recover(throwable -> succeededFuture())
           .map(item -> addItemToContext(ctx, item, accountId, itemId))
           .map(ctx)
-          .recover(throwable -> succeededFuture(ctx));
+          .otherwise(ctx);
       }
     }
   }
@@ -350,7 +344,7 @@ public class RefundReportService {
     }
 
     String holdingsRecordId = item.getHoldingsRecordId();
-    if (!UuidUtil.isUuid(holdingsRecordId)) {
+    if (!isUuid(holdingsRecordId)) {
       log.info("Holdings record ID {} is not a valid UUID - account {}", holdingsRecordId,
         accountId);
       return succeededFuture(ctx);
@@ -362,10 +356,10 @@ public class RefundReportService {
       .map(instance -> ctx.accounts.put(accountId, ctx.accounts.get(accountId)
         .withInstance(instance.getTitle())))
       .map(ctx)
-      .recover(throwable -> {
+      .otherwise(throwable -> {
         log.error("Failed to find instance for account {}, holdingsRecord is {}", accountId,
           holdingsRecordId);
-        return succeededFuture(ctx);
+        return ctx;
       });
   }
 
@@ -378,7 +372,7 @@ public class RefundReportService {
     }
 
     String userId = account.getUserId();
-    if (!UuidUtil.isUuid(userId)) {
+    if (!isUuid(userId)) {
       log.error("User ID {} is not a valid UUID - account {}", userId, accountId);
       return succeededFuture(ctx);
     }
@@ -389,7 +383,7 @@ public class RefundReportService {
     else {
       return usersClient.fetchUserById(userId)
         .compose(user -> addUserToContext(ctx, user, accountId, userId))
-        .recover(throwable -> succeededFuture(ctx));
+        .otherwise(ctx);
     }
   }
 
@@ -411,17 +405,14 @@ public class RefundReportService {
 
     User user = ctx.getUserByAccountId(accountId);
 
-    if (user == null || !UuidUtil.isUuid(user.getPatronGroup()) ||
-      ctx.getUserGroupByAccountId(accountId) != null) {
-
+    if (user == null || ctx.getUserGroupByAccountId(accountId) != null) {
       return succeededFuture(ctx);
     }
-    else {
-      return userGroupsClient.fetchUserGroupById(user.getPatronGroup())
-        .map(userGroup -> ctx.userGroups.put(userGroup.getId(), userGroup))
-        .map(ctx)
-        .recover(throwable -> succeededFuture(ctx));
-    }
+
+    return userGroupsClient.fetchUserGroupById(user.getPatronGroup())
+      .map(userGroup -> ctx.userGroups.put(userGroup.getId(), userGroup))
+      .map(ctx)
+      .otherwise(ctx);
   }
 
   private Future<List<Feefineaction>> lookupFeeFineActionsForAccount(RefundReportContext ctx,
@@ -566,11 +557,8 @@ public class RefundReportService {
     User getUserByAccountId(String accountId) {
       Account account = getAccountById(accountId);
 
-      if (account != null) {
-        String userId = account.getUserId();
-        if (UuidUtil.isUuid(userId)) {
-          return users.computeIfAbsent(userId, key -> null);
-        }
+      if (account != null && isUuid(account.getUserId())) {
+        return users.get(account.getUserId());
       }
 
       return null;
@@ -579,11 +567,8 @@ public class RefundReportService {
     UserGroup getUserGroupByAccountId(String accountId) {
       User user = getUserByAccountId(accountId);
 
-      if (user != null) {
-        String userGroupId = user.getPatronGroup();
-        if (UuidUtil.isUuid(userGroupId)) {
-          return userGroups.computeIfAbsent(userGroupId, key -> null);
-        }
+      if (user != null && isUuid(user.getPatronGroup())) {
+        return userGroups.get(user.getPatronGroup());
       }
 
       return null;
@@ -623,30 +608,8 @@ public class RefundReportService {
       this.refundAction = refundAction;
 
       reportEntry = new RefundReportEntry()
-        .withPatronName("")
-        .withPatronBarcode("")
         .withPatronId(refundAction.getUserId())
-        .withPatronGroup("")
-        .withFeeFineType("")
-        .withBilledAmount("")
-        .withDateBilled("")
-        .withPaidAmount("")
-        .withPaymentMethod("")
-        .withTransactionInfo("")
-        .withTransferredAmount("")
-        .withTransferAccount("")
-        .withFeeFineId(refundAction.getAccountId())
-        .withRefundDate("")
-        .withRefundAmount("")
-        .withRefundAction("")
-        .withRefundReason("")
-        .withStaffInfo("")
-        .withPatronInfo("")
-        .withItemBarcode("")
-        .withInstance("")
-        .withActionCompletionDate("")
-        .withStaffMemberName("")
-        .withActionTaken("");
+        .withFeeFineId(refundAction.getAccountId());
     }
   }
 

@@ -39,6 +39,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
@@ -62,7 +63,8 @@ import lombok.NoArgsConstructor;
 import lombok.With;
 
 public class FeeFineReportsAPITest extends ApiTests {
-  private static final String USER_ID = randomId();
+  private static final String USER_ID_1 = randomId();
+  private static final String USER_ID_2 = randomId();
   private static final String START_DATE = "2020-01-01";
   private static final String END_DATE = "2020-01-15";
   private static final DateTimeZone TENANT_TZ = DateTimeZone.forID("America/New_York");
@@ -89,19 +91,21 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   private static final String MULTIPLE = "Multiple";
   private static final String SEE_FEE_FINE_PAGE = "See Fee/fine details page";
-  private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
 
   private static final DateTimeFormatter dateTimeFormatter =
     DateTimeFormat.forPattern("M/d/yy, K:mm a");
 
-  private ReportResourceClient refundReportsClient;
+  private final ReportResourceClient refundReportsClient =
+    buildRefundReportClient();
 
   private UserGroup userGroup;
-  private User user;
-  private Item item;
+  private User user1;
+  private User user2;
+  private Item item1;
+  private Item item2;
   private Instance instance;
 
-  private StubMapping userStubMapping;
+  private StubMapping user1StubMapping;
   private StubMapping userGroupStubMapping;
   private StubMapping localeSettingsStubMapping;
   private StubMapping itemStubMapping;
@@ -114,8 +118,6 @@ public class FeeFineReportsAPITest extends ApiTests {
     removeAllFromTable(ACCOUNTS_TABLE);
     removeAllFromTable(FEE_FINE_ACTIONS_TABLE);
 
-    refundReportsClient = buildRefundReportClient();
-
     final KvConfigurations localeSettingsConfigurations = createLocaleSettingsConfigurations();
     localeSettingsStubMapping = createStubForPath(ServicePath.CONFIGURATION_ENTRIES,
       localeSettingsConfigurations, ".*");
@@ -126,19 +128,33 @@ public class FeeFineReportsAPITest extends ApiTests {
     final Location location = createLocation(library, campus, institution);
     instance = createInstance();
     final HoldingsRecord holdingsRecord = createHoldingsRecord(instance);
-    item = createItem(holdingsRecord, location);
+    item1 = createItem(holdingsRecord, location);
 
-    itemStubMapping = createStub(ServicePath.ITEMS_PATH, item, item.getId());
+    item2 = createItem(holdingsRecord, location)
+    .withBarcode("item2-barcode");
+
+    itemStubMapping = createStub(ServicePath.ITEMS_PATH, item1, item1.getId());
+    createStub(ServicePath.ITEMS_PATH, item2, item2.getId());
     holdingsStubMapping = createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
     instanceStubMapping = createStub(INSTANCES_PATH, instance, instance.getId());
 
     userGroup = EntityBuilder.createUserGroup();
     userGroupStubMapping = createStub(USERS_GROUPS_PATH, userGroup, userGroup.getId());
 
-    user = EntityBuilder.createUser()
-      .withId(USER_ID)
+    user1 = EntityBuilder.createUser()
+      .withId(USER_ID_1)
       .withPatronGroup(userGroup.getId());
-    userStubMapping = createStub(USERS_PATH, user, USER_ID);
+    user1StubMapping = createStub(USERS_PATH, user1, USER_ID_1);
+
+    user2 = EntityBuilder.createUser()
+      .withId(USER_ID_2)
+      .withPersonal(new Personal()
+        .withFirstName("First2")
+        .withLastName("Last2")
+        .withMiddleName("Middle2"))
+      .withBarcode("77777")
+      .withPatronGroup(userGroup.getId());
+    createStub(USERS_PATH, user2, USER_ID_2);
   }
 
   @Test
@@ -169,6 +185,7 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   @Test
   public void badRequestWhenParameterIsMissingOrMalformed() {
+    refundReportsClient.getByParameters("nonExistingParam=1", HTTP_BAD_REQUEST);
     refundReportsClient.getByParameters("startDate=2020-01-01", HTTP_BAD_REQUEST);
     refundReportsClient.getByParameters("endDate=2020-01-01", HTTP_BAD_REQUEST);
     refundReportsClient.getByParameters("startDate=not-a-date", HTTP_BAD_REQUEST);
@@ -196,9 +213,9 @@ public class FeeFineReportsAPITest extends ApiTests {
   public void returnsResultWhenUserDoesNotExist() {
     ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
-    removeStub(userStubMapping);
+    removeStub(user1StubMapping);
 
-    assert sourceObjects.refundAction != null;
+    assert sourceObjects.account != null;
     requestRefundReport(START_DATE, END_DATE).then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(1))
@@ -211,7 +228,7 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     removeStub(userGroupStubMapping);
 
-    assert sourceObjects.refundAction != null;
+    assert sourceObjects.account != null;
     requestRefundReport(START_DATE, END_DATE).then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(1))
@@ -248,9 +265,6 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     removeStub(instanceStubMapping);
 
-    assert sourceObjects.account != null;
-    assert sourceObjects.refundAction != null;
-
     requestAndCheck(List.of(createResponseForMinimumViableData(sourceObjects)
       .withInstance("")));
   }
@@ -277,25 +291,17 @@ public class FeeFineReportsAPITest extends ApiTests {
   public void partiallyRefundedWithItem() {
     ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
-    assert sourceObjects.account != null;
-    assert sourceObjects.refundAction != null;
-
-    requestAndCheck(List.of(
-      buildRefundReportEntry(sourceObjects.account, sourceObjects.refundAction, "3.00",
-        PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
-        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item.getBarcode(), instance.getTitle())
-    ));
+    requestAndCheck(List.of(createResponseForMinimumViableData(sourceObjects)));
   }
 
   @Test
   public void fullyRefundedTimeZoneTest() {
-    Account account = charge(10.0, "ff-type", item.getId());
+    Account account = charge(10.0, "ff-type", item1.getId());
 
     createAction(1, account, "2020-01-01 01:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
 
-    Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
+    Feefineaction refundAction = createAction(1, account, "2020-01-16 01:00:00",
       REFUNDED_FULLY, REFUND_REASON, 3.0, 7.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 
@@ -303,13 +309,13 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account, refundAction,
         "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item.getBarcode(), instance.getTitle())
+        item1.getBarcode(), instance.getTitle())
     ));
   }
 
   @Test
   public void multiplePaymentsSameMethodFullyRefunded() {
-    Account account = charge(10.0, "ff-type", item.getId());
+    Account account = charge(10.0, "ff-type", item1.getId());
 
     createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       3.1, 6.9, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
@@ -325,13 +331,13 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account, refundAction,
         "5.20", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item.getBarcode(), instance.getTitle())
+        item1.getBarcode(), instance.getTitle())
     ));
   }
 
   @Test
   public void multiplePaymentMethodsFullyRefunded() {
-    Account account = charge(10.0, "ff-type", item.getId());
+    Account account = charge(10.0, "ff-type", item1.getId());
 
     createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       3.1, 6.9, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
@@ -348,13 +354,13 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account, refundAction,
         "5.20", MULTIPLE, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item.getBarcode(), instance.getTitle())
+        item1.getBarcode(), instance.getTitle())
     ));
   }
 
   @Test
   public void partiallyTransferredFullyRefunded() {
-    Account account = charge(10.0, "ff-type", item.getId());
+    Account account = charge(10.0, "ff-type", item1.getId());
 
     createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
@@ -370,13 +376,13 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account, refundAction,
         "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "1.50", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item.getBarcode(), instance.getTitle())
+        item1.getBarcode(), instance.getTitle())
     ));
   }
 
   @Test
   public void multipleAccountMultipleRefunds() {
-    Account account1 = charge(10.0, "ff-type-1", item.getId());
+    Account account1 = charge(10.0, "ff-type-1", item1.getId());
 
     createAction(1, account1, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       3.1, 6.9, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
@@ -409,19 +415,32 @@ public class FeeFineReportsAPITest extends ApiTests {
       REFUNDED_FULLY, REFUND_REASON, 17.0, 3.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 
+    Account account3 = charge(USER_ID_2, 20.0, "ff-type-3", item2.getId());
+
+    createAction(USER_ID_2, 1, account3, "2020-01-08 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      17.0, 3.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    Feefineaction refundAction4 = createAction(USER_ID_2, 1, account3, "2020-01-09 12:00:00",
+      REFUNDED_FULLY, REFUND_REASON, 17.0, 3.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUND_TX_INFO);
+
     requestAndCheck(List.of(
       buildRefundReportEntry(account1, refundAction1,
         "6.30", PAYMENT_METHOD, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item.getBarcode(), instance.getTitle()),
+        item1.getBarcode(), instance.getTitle()),
       buildRefundReportEntry(account1, refundAction2,
         "12.00", MULTIPLE, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 2), addSuffix(REFUND_PATRON_INFO, 2),
-        item.getBarcode(), instance.getTitle()),
+        item1.getBarcode(), instance.getTitle()),
       buildRefundReportEntry(account2, refundAction3,
         "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        "", "")
+        "", ""),
+      buildRefundReportEntry(user2, account3, refundAction4,
+        "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+        item2.getBarcode(), instance.getTitle())
     ));
   }
 
@@ -436,13 +455,17 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   private Account charge(Double amount, String feeFineType, String itemId) {
-    final var account = EntityBuilder.buildAccount(USER_ID, itemId, feeFineType, amount);
+    return charge(USER_ID_1, amount, feeFineType, itemId);
+  }
+
+  private Account charge(String userID, Double amount, String feeFineType, String itemId) {
+    final var account = EntityBuilder.buildAccount(userID, itemId, feeFineType, amount);
     createEntity(ACCOUNTS_PATH, account);
     return accountsClient.getById(account.getId()).as(Account.class);
   }
 
   private ReportSourceObjects createMinimumViableReportData() {
-    Account account = charge(10.0, "ff-type", item.getId());
+    Account account = charge(10.0, "ff-type", item1.getId());
 
     Feefineaction payment = createAction(1, account, "2020-01-02 12:00:00",
       PAID_PARTIALLY, PAYMENT_METHOD, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
@@ -461,7 +484,7 @@ public class FeeFineReportsAPITest extends ApiTests {
   private RefundReportEntry createResponseForMinimumViableData(ReportSourceObjects sourceObjects) {
     return buildRefundReportEntry(sourceObjects.account, sourceObjects.refundAction,
       "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
-      addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1), item.getBarcode(),
+      addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1), item1.getBarcode(),
       instance.getTitle());
   }
 
@@ -469,7 +492,15 @@ public class FeeFineReportsAPITest extends ApiTests {
     String type, String method, Double amount, Double balance, String staffInfo,
     String patronInfo, String txInfo) {
 
-    Feefineaction action = EntityBuilder.buildFeeFineAction(USER_ID, account.getId(),
+    return createAction(USER_ID_1, actionCounter, account, dateTime, type, method, amount, balance,
+      staffInfo, patronInfo, txInfo);
+  }
+
+  private Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
+    String type, String method, Double amount, Double balance, String staffInfo,
+    String patronInfo, String txInfo) {
+
+    Feefineaction action = EntityBuilder.buildFeeFineAction(userId, account.getId(),
       type, method, amount, balance, parseDateTime(dateTime),
       addSuffix(staffInfo, actionCounter), addSuffix(patronInfo, actionCounter))
       .withTransactionInformation(txInfo);
@@ -480,6 +511,15 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   private RefundReportEntry buildRefundReportEntry(Account account,
+    Feefineaction refundAction, String paidAmount, String paymentMethod, String transactionInfo,
+    String transferredAmount, String transferAccount, String staffInfo, String patronInfo,
+    String itemBarcode, String instance) {
+    return buildRefundReportEntry(user1, account, refundAction, paidAmount, paymentMethod,
+      transactionInfo, transferredAmount, transferAccount, staffInfo, patronInfo, itemBarcode,
+      instance);
+  }
+
+  private RefundReportEntry buildRefundReportEntry(User user, Account account,
     Feefineaction refundAction, String paidAmount, String paymentMethod, String transactionInfo,
     String transferredAmount, String transferAccount, String staffInfo, String patronInfo,
     String itemBarcode, String instance) {
