@@ -11,6 +11,14 @@
     "amount": {
       "type": "string",
       "description": "Action amount"
+    },
+    "feefineactions": {
+      "type": "array",
+      "description": "Fee/fine action records created as a result of an action",
+      "items": {
+        "type": "object",
+        "$ref": "../feefineactiondata.json"
+      }
     }
   },
   "additionalProperties": false,

@@ -490,6 +490,7 @@ public class AccountsAPI implements Accounts {
     if (asyncResult.succeeded()) {
       final ActionContext actionContext = asyncResult.result();
       ActionSuccessResponse response = new ActionSuccessResponse()
+        .withFeefineactions(actionContext.getFeeFineActions())
         .withAccountId(accountId);
       if (actionContext.getRequestedAmount() != null) {
         response.withAmount(actionContext.getRequestedAmount().toString());
