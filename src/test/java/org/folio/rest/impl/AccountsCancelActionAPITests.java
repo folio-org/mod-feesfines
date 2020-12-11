@@ -57,7 +57,8 @@ public class AccountsCancelActionAPITests extends ApiTests {
     accountCancelClient.attemptCreate(cancelActionRequest)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
-      .body("accountId", is(ACCOUNT_ID));
+      .body("accountId", is(ACCOUNT_ID))
+      .body(FEE_FINE_ACTIONS, hasSize(1));
 
     accountsClient.getById(ACCOUNT_ID)
       .then()
