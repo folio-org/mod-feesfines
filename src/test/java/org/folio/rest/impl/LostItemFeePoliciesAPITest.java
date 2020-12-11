@@ -4,6 +4,8 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.hamcrest.core.StringStartsWith.startsWith;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Collections;
 
@@ -146,7 +148,10 @@ public class LostItemFeePoliciesAPITest extends ApiTests {
       .put("description", "This is description for undergrad standard")
       .put("itemAgedLostOverdue", new JsonObject().put("duration", 12).put("intervalId", "Months"))
       .put("patronBilledAfterAgedLost",
-        new JsonObject().put("duration", 12).put("intervalId", "Months"))
+        new JsonObject().put("duration", 5).put("intervalId", "Months"))
+      .put("recalledItemAgedLostOverdue", new JsonObject().put("duration", 12).put("intervalId", "Months"))
+      .put("patronBilledAfterRecalledItemAgedLost",
+        new JsonObject().put("duration", 6).put("intervalId", "Months"))
       .put("chargeAmountItem",
         new JsonObject().put("chargeType", "Actual cost").put("amount", 5.00))
       .put("lostItemProcessingFee", 5.00)
