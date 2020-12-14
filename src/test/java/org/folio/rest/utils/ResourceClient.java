@@ -7,8 +7,8 @@ import org.folio.HttpStatus;
 import io.restassured.response.Response;
 
 public class ResourceClient {
-  private final String baseUri;
-  private final OkapiClient okapiClient;
+  final String baseUri;
+  final OkapiClient okapiClient;
 
   public ResourceClient(String baseUri) {
     this.okapiClient = new OkapiClient(getOkapiUrl());

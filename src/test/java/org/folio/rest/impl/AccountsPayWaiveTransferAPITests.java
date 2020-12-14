@@ -274,7 +274,8 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
       .body("amount", is(requestedAmountString))
-      .body("accountId", is(ACCOUNT_ID));
+      .body("accountId", is(ACCOUNT_ID))
+      .body(FEE_FINE_ACTIONS, hasSize(1));
 
     actionsClient.getAll()
       .then()

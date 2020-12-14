@@ -1,0 +1,55 @@
+#%RAML 1.0
+title: Fee/fine reports
+version: v1.0
+baseUri: http://github.com/org/folio/mod-feesfines
+
+documentation:
+  - title: Fee/fine reports API
+    content: This documents the API calls for loading fee/fine reports
+
+types:
+  user: !include user.json
+  userGroup: !include usergroup.json
+  refundReport: !include reports/refundReport.json
+  kvConfigurations: !include kv-configurations.json
+  kvConfiguration: !include kv-configuration.json
+  errors: !include raml-util/schemas/errors.schema
+  error.schema: !include raml-util/schemas/error.schema
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+  language: !include raml-util/traits/language.raml
+
+/feefine-reports:
+  /refund:
+    get:
+      description: "Return data for a refund report"
+      queryParameters:
+        startDate:
+          displayName: "Start date"
+          type: string
+          description: "Start date for a refund report"
+          example: "2020-01-01"
+          required: true
+        endDate:
+          displayName: "End date"
+          type: string
+          description: "End date for a refund report"
+          example: "2020-12-31"
+          required: true
+      responses:
+        200:
+          body:
+            application/json:
+              schema: refundReport
+              example: !include examples/refundReport.sample
+        400:
+          description: "Invalid query parameters"
+          body:
+            text/plain:
+              example: "Invalid startDate or endDate parameter"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error"

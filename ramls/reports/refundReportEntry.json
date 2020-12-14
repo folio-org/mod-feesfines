@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Refund report entry",
+  "description": "Represents a single row of a refund report",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.RefundReportEntry",
+  "properties": {
+    "patronName": {
+      "type": "string",
+      "description": "Patron name",
+      "default": ""
+    },
+    "patronBarcode": {
+      "type": "string",
+      "description": "Patron barcode",
+      "default": ""
+    },
+    "patronId": {
+      "type": "string",
+      "description": "A globally unique (UUID) identifier for the user",
+      "$ref": "../raml-util/schemas/uuid.schema",
+      "default": ""
+    },
+    "patronGroup": {
+      "type": "string",
+      "description": "Patron group",
+      "default": ""
+    },
+    "feeFineType": {
+      "type": "string",
+      "description": "Fee/fine type",
+      "default": ""
+    },
+    "billedAmount": {
+      "type": "string",
+      "description": "Fee/fine amount",
+      "default": ""
+    },
+    "dateBilled": {
+      "type": "string",
+      "description": "Date and time when the fee/fine was charged",
+      "default": ""
+    },
+    "paidAmount": {
+      "type": "string",
+      "description": "Paid amount (at the moment of refund)",
+      "default": ""
+    },
+    "paymentMethod": {
+      "type": "string",
+      "description": "Payment method or 'Multiple' for multiple payments with different methods",
+      "default": ""
+    },
+    "transactionInfo": {
+      "type": "string",
+      "description": "Transaction info or 'See Fee/fine details page' for multiple payments",
+      "default": ""
+    },
+    "transferredAmount": {
+      "type": "string",
+      "description": "Transferred amount (at the moment of refund)",
+      "default": ""
+    },
+    "transferAccount": {
+      "type": "string",
+      "description": "Account",
+      "default": ""
+    },
+    "feeFineId": {
+      "type": "string",
+      "description": "Fee/fine ID",
+      "$ref": "../raml-util/schemas/uuid.schema",
+      "default": ""
+    },
+    "refundDate": {
+      "type": "string",
+      "description": "Date and time of a refund action",
+      "default": ""
+    },
+    "refundAmount": {
+      "type": "string",
+      "description": "Refund amount",
+      "default": ""
+    },
+    "refundAction": {
+      "type": "string",
+      "description": "Refund action - 'Refunded fully' or 'Refunded partially'",
+      "default": ""
+    },
+    "refundReason": {
+      "type": "string",
+      "description": "Refund reason",
+      "default": ""
+    },
+    "staffInfo": {
+      "type": "string",
+      "description": "Additional information for staff from refund 'action'",
+      "default": ""
+    },
+    "patronInfo": {
+      "type": "string",
+      "description": "Additional information for patron from refund 'action'",
+      "default": ""
+    },
+    "itemBarcode": {
+      "type": "string",
+      "description": "Item barcode",
+      "default": ""
+    },
+    "instance": {
+      "type": "string",
+      "description": "Instance title",
+      "default": ""
+    },
+    "actionCompletionDate": {
+      "type": "string",
+      "description": "Action completion date",
+      "default": ""
+    },
+    "staffMemberName": {
+      "type": "string",
+      "description": "Staff member name",
+      "default": ""
+    },
+    "actionTaken": {
+      "type": "string",
+      "description": "Action taken",
+      "default": ""
+    }
+  }
+}

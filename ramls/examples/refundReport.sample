@@ -1,0 +1,29 @@
+{
+  "reportData": [
+    {
+      "patronName": "Last, First Middle",
+      "patronBarcode": "236964750970123",
+      "patronId": "2a424823-588a-45ee-9441-a6384b6614b2",
+      "patronGroup": "undergrad",
+      "feeFineType": "test-ff-type",
+      "billedAmount": "100.00",
+      "dateBilled": "12/7/2020 0:13 PM",
+      "paidAmount": "70.00",
+      "paymentMethod": "test-payment-method",
+      "transactionInfo": "test-transaction-info",
+      "transferredAmount": "0.00",
+      "transferAccount": "",
+      "feeFineId": "4f7a5802-fc0d-4122-a3b8-4d9d6f91c922",
+      "refundDate": "12/7/2020 0:14 PM",
+      "refundAmount": "30.00",
+      "refundAction": "Refunded partially",
+      "refundReason": "test-refund-reason",
+      "staffInfo": "Partial refund - info for staff",
+      "itemBarcode": "90000",
+      "instance": "A semantic web primer",
+      "actionCompletionDate": "",
+      "staffMemberName": "",
+      "actionTaken": ""
+    }
+  ]
+}
