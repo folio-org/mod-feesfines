@@ -22,6 +22,16 @@
       "type": "object",
       "$ref": "period.json"
     },
+    "recalledItemAgedLostOverdue": {
+      "description": "Recalled items aged to lost after overdue entered, must be 0 or > 0 and, if > 0 must have interval selected",
+      "type": "object",
+      "$ref": "period.json"
+    },
+    "patronBilledAfterRecalledItemAgedLost": {
+      "description": "Patron billed after a recalled item aged to lost entered, must be 0 or > 0 and, if > 0 must have interval selected",
+      "type": "object",
+      "$ref": "period.json"
+    },
     "chargeAmountItem": {
       "description": "Option to charge amount for item",
       "type": "object",
