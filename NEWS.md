@@ -1,6 +1,6 @@
 ## 15.10.0 (In Progress)
 
-* Store new aged to lost settings for recalled items (https://issues.folio.org/browse/MODFEE-146)
+* Store new aged to lost settings for recalled items (MODFEE-146)
 
 ## 15.9.0 2020-10-14
 * Add loanId to the FEE_FINE_BALANCE_CHANGED event payload (MODFEE-71)
