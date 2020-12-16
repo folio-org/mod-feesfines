@@ -93,7 +93,7 @@ public class FeeFineReportsAPITest extends ApiTests {
   private static final String SEE_FEE_FINE_PAGE = "See Fee/fine details page";
 
   private static final DateTimeFormatter dateTimeFormatter =
-    DateTimeFormat.forPattern("M/d/yy, K:mm a");
+    DateTimeFormat.forPattern("M/d/yy, h:mm a");
 
   private final ReportResourceClient refundReportsClient =
     buildRefundReportClient();
@@ -301,7 +301,7 @@ public class FeeFineReportsAPITest extends ApiTests {
     createAction(1, account, "2020-01-01 01:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
 
-    Feefineaction refundAction = createAction(1, account, "2020-01-16 01:00:00",
+    Feefineaction refundAction = createAction(1, account, "2020-01-15 01:00:00",
       REFUNDED_FULLY, REFUND_REASON, 3.0, 7.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 
