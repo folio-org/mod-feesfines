@@ -195,8 +195,10 @@
             "DELETE"
           ],
           "pathPattern":"/accounts/{id}",
-          "permissionsRequired":[
-            "accounts.item.delete",
+          "permissionsRequired": [
+            "accounts.item.delete"
+          ],
+          "modulePermissions": [
             "pubsub.publish.post"
           ]
         },
