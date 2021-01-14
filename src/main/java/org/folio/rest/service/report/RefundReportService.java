@@ -173,7 +173,7 @@ public class RefundReportService {
     log.info("Processing fee/fine action {}, account {}", feeFineAction.getId(), accountId);
 
     AccountContextData accountData = ctx.accounts.get(accountId);
-    AccountProcessingContext accountCtx = accountData.processingContext;//accoundData - account - owner
+    AccountProcessingContext accountCtx = accountData.processingContext;
 
     if (actionIsOfType(feeFineAction, PAY)) {
       if (feeFineAction.getAmountAction() != null) {
