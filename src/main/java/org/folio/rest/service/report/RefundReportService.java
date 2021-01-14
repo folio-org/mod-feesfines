@@ -171,7 +171,7 @@ public class RefundReportService {
     log.info("Processing fee/fine action {}, account {}", feeFineAction.getId(), accountId);
 
     AccountContextData accountData = ctx.accounts.get(accountId);
-    AccountProcessingContext accountCtx = accountData.processingContext;
+    AccountProcessingContext accountCtx = accountData.processingContext;//accoundData - account - owner
 
     if (actionIsOfType(feeFineAction, PAY)) {
       if (feeFineAction.getAmountAction() != null) {
@@ -231,7 +231,8 @@ public class RefundReportService {
         reportEntry
           .withFeeFineType(account.getFeeFineType())
           .withBilledAmount(formatMonetaryValue(account.getAmount()))
-          .withDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone));
+          .withDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone))
+          .withFeeFineOwner(account.getFeeFineOwner());
       } else {
         log.error("Refund report - account is null, refund action {}", feeFineAction.getId());
       }
