@@ -250,7 +250,7 @@ public class RefundReportService {
           reportEntry.withPaidAmount(accountCtx.paidAmount.toString())
             .withTransferredAmount(accountCtx.transferredAmount.toString())
             .withTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts,
-              MULTIPLE_MESSAGE));;
+              MULTIPLE_MESSAGE));
         }
         reportEntry
           .withPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods, MULTIPLE_MESSAGE))
