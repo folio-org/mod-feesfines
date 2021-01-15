@@ -242,7 +242,7 @@ public class RefundReportService {
       if (accountCtx != null) {
         if(isRefundedToPatron(feeFineAction)){
           reportEntry.withPaidAmount(accountCtx.paidAmount.toString());
-        }else if(isRefundedToBursar(feeFineAction)){
+        } else if (isRefundedToBursar(feeFineAction)){
           reportEntry.withTransferredAmount(accountCtx.transferredAmount.toString())
             .withTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts,
             MULTIPLE_MESSAGE));
