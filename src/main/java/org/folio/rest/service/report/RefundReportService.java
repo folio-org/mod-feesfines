@@ -246,7 +246,7 @@ public class RefundReportService {
           reportEntry.withTransferredAmount(accountCtx.transferredAmount.toString())
             .withTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts,
             MULTIPLE_MESSAGE));
-        }else {
+        } else {
           reportEntry.withPaidAmount(accountCtx.paidAmount.toString())
             .withTransferredAmount(accountCtx.transferredAmount.toString())
             .withTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts,
