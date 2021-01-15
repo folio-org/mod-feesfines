@@ -37,6 +37,12 @@ traits:
           description: "End date for a refund report"
           example: "2020-12-31"
           required: true
+        ownerId:
+          displayName: "Owner's ID"
+          type: string
+          description: "Fee/Fine owner's ID"
+          example: "c7fd2b2b-8848-432d-aa2a-0da0ee4fceca"
+          required: false
       responses:
         200:
           body:

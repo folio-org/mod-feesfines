@@ -9,6 +9,7 @@ import static org.folio.rest.persist.Criteria.Order.ORDER.ASC;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
@@ -133,10 +134,11 @@ public class FeeFineActionRepository {
   }
 
   public Future<List<Feefineaction>> findActionsByTypeForPeriod(Action typeAction,
-    String startDate, String endDate, int limit) {
+    String startDate, String endDate, Set<String> servicePointIds, int limit) {
 
     Criterion criterion = new Criterion(getDateCriteria(DATE_FIELD, ">=", startDate))
       .addCriterion(getDateCriteria(DATE_FIELD, "<", endDate))
+      .addGroupOfCriterias(groupCriterias(getServicePointIdCriterias(servicePointIds), "OR"))
       .addGroupOfCriterias(getTypeCriteria(typeAction))
       .setOrder(new Order(format("jsonb->>'%s', jsonb->>'id'", DATE_FIELD), ASC))
       .setLimit(new Limit(limit));
@@ -177,6 +179,17 @@ public class FeeFineActionRepository {
           .setVal(action.getPartialResult())
           .setJSONB(true)))
       .flatMap(Collection::stream)
+      .collect(Collectors.toList());
+  }
+
+  private List<Criteria> getServicePointIdCriterias(Set<String> servicePointIds) {
+
+    return servicePointIds.stream()
+      .map(servicePointId -> new Criteria()
+        .addField("'createdAt'")
+        .setOperation("=")
+        .setVal(servicePointId)
+        .setJSONB(true))
       .collect(Collectors.toList());
   }
 

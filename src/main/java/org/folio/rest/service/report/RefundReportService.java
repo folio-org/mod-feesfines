@@ -35,13 +35,18 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.RefundReport;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
+import org.folio.rest.jaxrs.model.ServicePointOwner;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
+import org.folio.rest.repository.OwnerRepository;
+import org.folio.rest.tools.utils.TenantTool;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -74,6 +79,7 @@ public class RefundReportService {
   private final UserGroupsClient userGroupsClient;
   private final FeeFineActionRepository feeFineActionRepository;
   private final AccountRepository accountRepository;
+  private final OwnerRepository ownerRepository;
 
   private DateTimeZone timeZone;
   private DateTimeFormatter dateTimeFormatter;
@@ -86,16 +92,19 @@ public class RefundReportService {
     userGroupsClient = new UserGroupsClient(context.owner(), headers);
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
     accountRepository = new AccountRepository(context, headers);
+    ownerRepository = new OwnerRepository(PostgresClient.getInstance(context.owner(),
+      TenantTool.tenantId(headers)));
   }
 
-  public Future<RefundReport> buildReport(DateTime startDate, DateTime endDate) {
+  public Future<RefundReport> buildReport(DateTime startDate, DateTime endDate, String ownerId) {
     return configurationClient.getLocaleSettings()
       .recover(throwable -> succeededFuture(FALLBACK_LOCALE_SETTINGS))
-      .compose(localeSettings -> buildReportWithLocale(startDate, endDate, localeSettings));
+      .compose(localeSettings -> buildReportWithLocale(startDate, endDate, ownerId,
+        localeSettings));
   }
 
   private Future<RefundReport> buildReportWithLocale(DateTime startDate, DateTime endDate,
-    LocaleSettings localeSettings) {
+    String ownerId, LocaleSettings localeSettings) {
 
     setUpLocale(localeSettings);
 
@@ -112,18 +121,35 @@ public class RefundReportService {
       .withZone(UTC)
       .toString(ISODateTimeFormat.dateTime());
 
-    log.info("Building refund report with parameters: startDate={}, endDate={}, tz={}",
-      startDate.toDateTimeISO(), endDate.toDateTimeISO(), timeZone);
+    log.info("Building refund report with parameters: startDate={}, endDate={}, ownerId={}, tz={}",
+      startDate.toDateTimeISO(), endDate.toDateTimeISO(), ownerId, timeZone);
 
     RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
-
+    if (ownerId != null) {
+      return ownerRepository.getById(ownerId) //TODO we should probably use accountRepository, getAccountsByOwnerId()
+        .map(this::mapToServicePointIds) //TODO take list of accountIds and filter actions by accountIds
+        .compose(servicePointIds -> feeFineActionRepository.findActionsByTypeForPeriod(REFUND, startDateTimeFormatted,
+          endDateTimeFormatted, servicePointIds, REPORT_ROWS_LIMIT))
+        .map(RefundReportService::toRefundDataMap)
+        .map(ctx::withRefunds)
+        .compose(this::processAllRefundActions)
+        .map(this::buildReportFromContext);
+    }
     return feeFineActionRepository
       .findActionsByTypeForPeriod(REFUND, startDateTimeFormatted, endDateTimeFormatted,
-        REPORT_ROWS_LIMIT)
+        new HashSet<>(), REPORT_ROWS_LIMIT)
       .map(RefundReportService::toRefundDataMap)
       .map(ctx::withRefunds)
       .compose(this::processAllRefundActions)
       .map(this::buildReportFromContext);
+
+
+  }
+
+  private Set<String> mapToServicePointIds(Owner owner) {
+    return owner.getServicePointOwner().stream()
+      .map(ServicePointOwner::getValue)
+      .collect(Collectors.toSet());
   }
 
   private RefundReport buildReportFromContext(RefundReportContext ctx) {
