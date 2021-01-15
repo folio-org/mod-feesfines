@@ -88,6 +88,8 @@ public class FeeFineReportsAPITest extends ApiTests {
   private static final String PAYMENT_TX_INFO = "Payment transaction information";
   private static final String REFUND_TX_INFO = "Refund transaction information";
   private static final String TRANSFER_TX_INFO = "Transfer transaction information";
+  private static final String REFUNDED_TO_PATRON_TX_INFO = "Refunded to patron";
+  private static final String REFUNDED_TO_BURSAR_TX_INFO = "Refunded to Bursar";
 
   private static final String MULTIPLE = "Multiple";
   private static final String SEE_FEE_FINE_PAGE = "See Fee/fine details page";
@@ -377,6 +379,50 @@ public class FeeFineReportsAPITest extends ApiTests {
     requestAndCheck(List.of(
       buildRefundReportEntry(account, refundAction,
         "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "1.50", TRANSFER_ACCOUNT,
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
+    ));
+  }
+
+  @Test
+  public void partiallyTransferredFullyRefundedToPatron() {
+    Account account = charge(10.0, "ff-type", item1.getId());
+
+    createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    createAction(1, account, "2020-01-02 12:00:00",
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.5, 8.5, "", "", TRANSFER_TX_INFO);
+
+    Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
+      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 8.5, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUNDED_TO_PATRON_TX_INFO);
+
+    requestAndCheck(List.of(
+      buildRefundReportEntry(account, refundAction,
+        "3.00", PAYMENT_METHOD, REFUNDED_TO_PATRON_TX_INFO, "", "",
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
+    ));
+  }
+
+  @Test
+  public void partiallyTransferredFullyRefundedToBursar() {
+    Account account = charge(10.0, "ff-type", item1.getId());
+
+    createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    createAction(1, account, "2020-01-02 12:00:00",
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.5, 8.5, "", "", TRANSFER_TX_INFO);
+
+    Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
+      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 8.5, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUNDED_TO_BURSAR_TX_INFO);
+
+    requestAndCheck(List.of(
+      buildRefundReportEntry(account, refundAction,
+        "", PAYMENT_METHOD, REFUNDED_TO_BURSAR_TX_INFO, "1.50", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
         item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
