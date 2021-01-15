@@ -66,7 +66,7 @@ public class RefundReportService {
   private static final String SEE_FEE_FINE_DETAILS_PAGE_MESSAGE = "See Fee/fine details page";
   private static final String REFUNDED_TO_PATRON = "Refunded to patron";
   private static final String REFUNDED_TO_BURSAR = "Refunded to Bursar";
-  private static final  LocaleSettings FALLBACK_LOCALE_SETTINGS =
+  private static final LocaleSettings FALLBACK_LOCALE_SETTINGS =
     new LocaleSettings(Locale.US.toLanguageTag(), UTC.getID(),
       Currency.getInstance(Locale.US).getCurrencyCode());
 
