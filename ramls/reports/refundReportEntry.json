@@ -126,6 +126,11 @@
       "type": "string",
       "description": "Action taken",
       "default": ""
+    },
+    "feeFineOwner": {
+      "type": "string",
+      "description": "Fee/fine owner",
+      "default": ""
     }
   }
 }
