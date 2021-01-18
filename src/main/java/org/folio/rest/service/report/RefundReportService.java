@@ -241,16 +241,12 @@ public class RefundReportService {
 
       if (accountCtx != null) {
         if (isRefundedToPatron(feeFineAction)){
-          reportEntryForPatron(reportEntry, accountCtx);
+          withPaymentInfo(reportEntry, accountCtx);
         } else if (isRefundedToBursar(feeFineAction)) {
-          reportEntryForBursar(reportEntry, accountCtx);
+          withTransferInfo(reportEntry, accountCtx);
         } else {
-          reportEntryForAll(reportEntry, accountCtx);
+          withPaymentAndTransferInfo(reportEntry, accountCtx);
         }
-        reportEntry
-          .withPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods, MULTIPLE_MESSAGE))
-          .withTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo,
-            SEE_FEE_FINE_DETAILS_PAGE_MESSAGE));
       } else {
         log.error("Refund report - account ctx is null, refund action {}", feeFineAction.getId());
       }
@@ -501,19 +497,21 @@ public class RefundReportService {
     return REFUNDED_TO_BURSAR.equals(feeFineAction.getTransactionInformation());
   }
 
-  private void reportEntryForPatron(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
-    reportEntry.withPaidAmount(accountCtx.paidAmount.toString());
+  private void withPaymentInfo(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
+    reportEntry.withPaidAmount(accountCtx.paidAmount.toString())
+      .withPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods, MULTIPLE_MESSAGE))
+      .withTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo,
+        SEE_FEE_FINE_DETAILS_PAGE_MESSAGE));;
   }
 
-  private void reportEntryForBursar(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
+  private void withTransferInfo(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
     reportEntry.withTransferredAmount(accountCtx.transferredAmount.toString())
-      .withTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts,
-        MULTIPLE_MESSAGE));
+      .withTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts, MULTIPLE_MESSAGE));
   }
 
-  private void reportEntryForAll(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
-    reportEntryForPatron(reportEntry, accountCtx);
-    reportEntryForBursar(reportEntry, accountCtx);
+  private void withPaymentAndTransferInfo(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
+    withPaymentInfo(reportEntry, accountCtx);
+    withTransferInfo(reportEntry, accountCtx);
   }
 
   private static String formatName(User user) {

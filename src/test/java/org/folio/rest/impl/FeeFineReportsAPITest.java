@@ -400,7 +400,7 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     requestAndCheck(List.of(
       buildRefundReportEntry(account, refundAction,
-        "3.00", PAYMENT_METHOD, REFUNDED_TO_PATRON_TX_INFO, "", "",
+        "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
         item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
@@ -422,7 +422,7 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     requestAndCheck(List.of(
       buildRefundReportEntry(account, refundAction,
-        "", PAYMENT_METHOD, REFUNDED_TO_BURSAR_TX_INFO, "1.50", TRANSFER_ACCOUNT,
+        "", "", "", "1.50", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
         item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
