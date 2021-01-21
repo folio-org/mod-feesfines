@@ -354,7 +354,7 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     requestAndCheck(List.of(
       buildRefundReportEntry(account, refundAction,
-        "10.0", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+        "10.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
         item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
