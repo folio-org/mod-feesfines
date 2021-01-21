@@ -2,6 +2,7 @@ package org.folio.rest.utils;
 
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
+import static org.apache.commons.lang.StringUtils.defaultString;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -40,7 +41,7 @@ public class AccountHelper {
   }
 
   public static Map<String, String> parseFeeFineComments(String comments) {
-    return Arrays.stream(comments.split(" \n "))
+    return Arrays.stream(defaultString(comments).split(" \n "))
       .map(s -> s.split(" : "))
       .filter(arr -> arr.length == 2)
       .map(strings -> Pair.of(strings[0], strings[1]))

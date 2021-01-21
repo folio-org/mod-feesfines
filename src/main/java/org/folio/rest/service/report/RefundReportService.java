@@ -11,6 +11,7 @@ import static org.folio.rest.utils.AccountHelper.STAFF_COMMENTS_KEY;
 import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
+import static org.apache.commons.lang.StringUtils.defaultString;
 
 import java.util.ArrayList;
 import java.util.Currency;
@@ -24,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
 import org.folio.rest.client.ConfigurationClient;
 import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.UserGroupsClient;
@@ -465,11 +465,11 @@ public class RefundReportService {
   }
 
   private static String getStaffInfo(String comments) {
-    return StringUtils.defaultString(parseFeeFineComments(StringUtils.defaultString(comments)).get(STAFF_COMMENTS_KEY));
+    return defaultString(parseFeeFineComments(comments).get(STAFF_COMMENTS_KEY));
   }
 
   private static String getPatronInfo(String comments) {
-    return StringUtils.defaultString(parseFeeFineComments(StringUtils.defaultString(comments)).get(PATRON_COMMENTS_KEY));
+    return defaultString(parseFeeFineComments(comments).get(PATRON_COMMENTS_KEY));
   }
 
   private static String getItemBarcode(RefundReportContext ctx, String accountId) {
