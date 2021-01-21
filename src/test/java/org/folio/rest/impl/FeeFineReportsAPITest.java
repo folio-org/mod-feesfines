@@ -346,7 +346,7 @@ public class FeeFineReportsAPITest extends ApiTests {
     createAction(1, account, "2020-01-01 12:00:00", PAID_FULLY, PAYMENT_METHOD,
       10.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
 
-    Feefineaction refundAction = createActionWithoutComments(account, "2020-01-03 12:00:00",
+    Feefineaction refundAction = createActionWithNullComments(account, "2020-01-03 12:00:00",
       REFUNDED_FULLY, REFUND_REASON, 5.2, 4.8, REFUND_TX_INFO);
 
     requestAndCheck(List.of(
@@ -561,10 +561,10 @@ public class FeeFineReportsAPITest extends ApiTests {
       staffInfo, patronInfo, txInfo);
   }
 
-  private Feefineaction createActionWithoutComments(Account account, String dateTime,
-                                     String type, String method, Double amount, Double balance, String txInfo) {
+  private Feefineaction createActionWithNullComments(Account account, String dateTime,
+    String type, String method, Double amount, Double balance, String txInfo) {
 
-    return createActionWithoutComments(USER_ID_1, account, dateTime, type, method, amount, balance, txInfo);
+    return createActionWithNullComments(USER_ID_1, account, dateTime, type, method, amount, balance, txInfo);
   }
 
   private Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
@@ -581,8 +581,8 @@ public class FeeFineReportsAPITest extends ApiTests {
     return action;
   }
 
-  private Feefineaction createActionWithoutComments(String userId, Account account, String dateTime,
-                                     String type, String method, Double amount, Double balance, String txInfo) {
+  private Feefineaction createActionWithNullComments(String userId, Account account, String dateTime,
+    String type, String method, Double amount, Double balance, String txInfo) {
 
     Feefineaction action = EntityBuilder.buildFeeFineActionWithoutComments(userId, account.getId(),
       type, method, amount, balance, parseDateTime(dateTime))

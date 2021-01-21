@@ -118,7 +118,7 @@ public class EntityBuilder {
   }
 
   public static Feefineaction buildFeeFineActionWithoutComments(String userId, String accountId, String type,
-                                                                String paymentMethod, Double amount, Double balance, Date date) {
+    String paymentMethod, Double amount, Double balance, Date date) {
 
     return new Feefineaction()
       .withId(randomId())
