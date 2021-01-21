@@ -49,7 +49,7 @@ public abstract class ActionService {
   private final LogEventService logEventService;
   private final LogEventPublisher logEventPublisher;
 
-  public ActionService(Action action, ActionValidationService validationService,
+  protected ActionService(Action action, ActionValidationService validationService,
     Map<String, String> headers, Context context) {
 
     PostgresClient postgresClient = getInstance(context.owner(), tenantId(headers));
@@ -65,7 +65,7 @@ public abstract class ActionService {
     this.logEventPublisher = new LogEventPublisher(context.owner(), headers);
   }
 
-  public ActionService(Action action, ActionValidationService validationService,
+  protected ActionService(Action action, ActionValidationService validationService,
     BulkActionAmountSplitterStrategy bulkActionAmountSplitterStrategy,
     Map<String, String> headers, Context context) {
 
@@ -148,6 +148,9 @@ public abstract class ActionService {
       .withDateAction(new Date());
 
     account.getPaymentStatus().setName(actionType);
+    account.setDateUpdated(new Date());
+    account.getMetadata().setUpdatedDate(new Date());
+    account.getMetadata().setUpdatedByUsername(request.getUserName());
 
     if (isFullAction) {
       account.getStatus().setName(CLOSED.getValue());

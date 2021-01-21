@@ -15,6 +15,7 @@ import static org.folio.rest.utils.ResourceClients.buildAccountBulkPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.test.support.matcher.AccountMatchers.verifyAccountAndGet;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -25,10 +26,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
+import io.restassured.http.ContentType;
+import io.vertx.core.json.JsonObject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.Action;
@@ -49,9 +51,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import io.restassured.http.ContentType;
-import io.vertx.core.json.JsonObject;
 
 @RunWith(value = Parameterized.class)
 public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
@@ -221,11 +220,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    accountsClient.getById(FIRST_ACCOUNT_ID)
-      .then()
-      .body("remaining", is(0.0f))
-      .body("status.name", is("Closed"))
-      .body("paymentStatus.name", is(expectedPaymentStatus));
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, 0.0f, "Closed");
   }
 
   @Test
@@ -255,11 +250,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    accountsClient.getById(FIRST_ACCOUNT_ID)
-      .then()
-      .body("remaining", is(0.24f))
-      .body("status.name", is("Open"))
-      .body("paymentStatus.name", is(expectedPaymentStatus));
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, 0.24f, "Open");
   }
 
   @Test
@@ -307,17 +298,19 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
       .body(FEE_FINE_ACTIONS, hasSize(2))
       .body(FEE_FINE_ACTIONS, feeFineActionsMatcher);
 
-    accountsClient.getById(FIRST_ACCOUNT_ID)
-      .then()
-      .body("remaining", is((float) expectedRemainingAmount1))
-      .body("status.name", is(expectedAccountStatus1))
-      .body("paymentStatus.name", is(expectedPaymentStatus1));
+    verifyAccountAndGet(
+      accountsClient,
+      FIRST_ACCOUNT_ID,
+      expectedPaymentStatus1,
+      (float) expectedRemainingAmount1,
+      expectedAccountStatus1);
 
-    accountsClient.getById(SECOND_ACCOUNT_ID)
-      .then()
-      .body("remaining", is((float) expectedRemainingAmount2))
-      .body("status.name", is(expectedAccountStatus2))
-      .body("paymentStatus.name", is(expectedPaymentStatus2));
+    verifyAccountAndGet(
+      accountsClient,
+      SECOND_ACCOUNT_ID,
+      expectedPaymentStatus2,
+      (float) expectedRemainingAmount2,
+      expectedAccountStatus2);
 
     verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
       .put("userId", account1.getUserId())

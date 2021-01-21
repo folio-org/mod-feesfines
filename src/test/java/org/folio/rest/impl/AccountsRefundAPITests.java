@@ -6,7 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
 import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.Action.REFUND;
@@ -14,11 +13,12 @@ import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkRefundClient;
-import static org.folio.rest.utils.ResourceClients.buildAccountsRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
+import static org.folio.rest.utils.ResourceClients.buildAccountsRefundClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.test.support.matcher.AccountMatchers.verifyAccountAndGet;
 import static org.folio.test.support.matcher.LogEventMatcher.notCreditOrRefundActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -28,6 +28,10 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isOneOf;
 
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
+import io.restassured.response.ValidatableResponse;
+import io.vertx.core.json.JsonObject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -50,11 +54,6 @@ import org.folio.util.pubsub.PubSubClientUtils;
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
-
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
-import io.vertx.core.json.JsonObject;
 
 public class AccountsRefundAPITests extends ApiTests {
   private static final String FIRST_ACCOUNT_ID = randomId();
@@ -412,13 +411,13 @@ public class AccountsRefundAPITests extends ApiTests {
     verifyActions(18, expectedFeeFineActions); // 6 payments/transfer actions + 12 refund actions
 
     Account firstAccount = verifyAccountAndGet(
-      FIRST_ACCOUNT_ID, expectedRemainingAmount1, CLOSED, REFUND.getPartialResult());
+      accountsClient, FIRST_ACCOUNT_ID, REFUND.getPartialResult(), (float) expectedRemainingAmount1, CLOSED.getValue());
 
     Account secondAccount = verifyAccountAndGet(
-      SECOND_ACCOUNT_ID, expectedRemainingAmount2, OPEN, REFUND.getFullResult());
+      accountsClient, SECOND_ACCOUNT_ID, REFUND.getFullResult(), (float) expectedRemainingAmount2, OPEN.getValue());
 
     Account thirdAccount = verifyAccountAndGet(
-      THIRD_ACCOUNT_ID, expectedRemainingAmount3, OPEN, REFUND.getPartialResult());
+      accountsClient, THIRD_ACCOUNT_ID, REFUND.getPartialResult(), (float) expectedRemainingAmount3, OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount, thirdAccount);
 
@@ -490,8 +489,8 @@ public class AccountsRefundAPITests extends ApiTests {
 
     verifyActions(totalExpectedActionsCount, expectedFeeFineActions);
 
-    Account accountAfterRefund = verifyAccountAndGet(FIRST_ACCOUNT_ID, expectedRemainingAmount,
-      expectedStatus, expectedPaymentStatus);
+    Account accountAfterRefund = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
+      expectedPaymentStatus, (float) expectedRemainingAmount, expectedStatus.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund);
 
@@ -665,21 +664,6 @@ public class AccountsRefundAPITests extends ApiTests {
     return EntityBuilder.buildAccount(amount, remainingAmount)
       .withId(accountId)
       .withUserId(USER_ID);
-  }
-
-  private Account verifyAccountAndGet(String accountId, double expectedRemainingAmount,
-    FeeFineStatus expectedStatus, String expectedPaymentStatus) {
-
-    final Response getAccountByIdResponse = accountsClient.getById(accountId);
-
-    getAccountByIdResponse
-      .then()
-      .statusCode(SC_OK)
-      .body("remaining", is((float) expectedRemainingAmount))
-      .body("status.name", is(expectedStatus.getValue()))
-      .body("paymentStatus.name", is(expectedPaymentStatus));
-
-    return getAccountByIdResponse.as(Account.class);
   }
 
   private ValidatableResponse performAction(ResourceClient resourceClient, double amount) {

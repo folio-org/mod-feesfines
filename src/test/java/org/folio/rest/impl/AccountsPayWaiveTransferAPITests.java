@@ -14,6 +14,7 @@ import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.test.support.matcher.AccountMatchers.verifyAccountAndGet;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -23,8 +24,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
+import io.restassured.http.ContentType;
+import io.vertx.core.json.JsonObject;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.Action;
@@ -46,8 +48,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import io.restassured.http.ContentType;
-import io.vertx.core.json.JsonObject;
 
 @RunWith(value = Parameterized.class)
 public class AccountsPayWaiveTransferAPITests extends ApiTests {
@@ -198,11 +198,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    accountsClient.getById(ACCOUNT_ID)
-      .then()
-      .body("remaining", is(0.0f))
-      .body("status.name", is("Closed"))
-      .body("paymentStatus.name", is(expectedPaymentStatus));
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, 0.0f, "Closed");
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request, action.getFullResult(), 1.0, 0.0)));
@@ -235,11 +231,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    accountsClient.getById(ACCOUNT_ID)
-      .then()
-      .body("remaining", is(0.24f))
-      .body("status.name", is("Open"))
-      .body("paymentStatus.name", is(expectedPaymentStatus));
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, 0.24f, "Open");
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request, action.getPartialResult(), 1.0, 0.24)));
@@ -285,11 +277,7 @@ public class AccountsPayWaiveTransferAPITests extends ApiTests {
         expectedPaymentStatus, request.getTransactionInfo(), request))
       );
 
-    accountsClient.getById(ACCOUNT_ID)
-      .then()
-      .body("remaining", is((float) expectedAccountBalanceAfter))
-      .body("status.name", is(expectedAccountStatus))
-      .body("paymentStatus.name", is(expectedPaymentStatus));
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, (float) expectedAccountBalanceAfter, expectedAccountStatus);
 
     verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
       .put("userId", account.getUserId())
