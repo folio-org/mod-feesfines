@@ -117,6 +117,20 @@ public class EntityBuilder {
       .withComments(format("STAFF : %s \n PATRON : %s", commentForStaff, commentForPatron));
   }
 
+  public static Feefineaction buildFeeFineActionWithoutComments(String userId, String accountId, String type,
+                                                                String paymentMethod, Double amount, Double balance, Date date) {
+
+    return new Feefineaction()
+      .withId(randomId())
+      .withUserId(userId)
+      .withTypeAction(type)
+      .withPaymentMethod(paymentMethod)
+      .withAccountId(accountId)
+      .withAmountAction(amount)
+      .withBalance(balance)
+      .withDateAction(date);
+  }
+
   public static Manualblock buildManualBlock() {
     return new Manualblock()
       .withId(randomId())
