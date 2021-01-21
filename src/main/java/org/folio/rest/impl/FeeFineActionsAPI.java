@@ -44,6 +44,7 @@ import io.vertx.core.logging.LoggerFactory;
 public class FeeFineActionsAPI implements Feefineactions {
 
   private static final String FEEFINEACTIONS_TABLE = "feefineactions";
+  private static final String FEEFINEACTIONS_ID_FIELD = "'id'";
 
   private final Messages messages = Messages.getInstance();
   private static final String FEEFINEACTION_ID_FIELD = "'id'";
@@ -247,10 +248,11 @@ public class FeeFineActionsAPI implements Feefineactions {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
-        Criteria idCrit = new Criteria();
-        idCrit.setOperation("=");
-        idCrit.setVal(feefineactionId);
-        Criterion criterion = new Criterion(idCrit);
+        Criteria idCriteria = new Criteria();
+        idCriteria.addField(FEEFINEACTIONS_ID_FIELD);
+        idCriteria.setOperation("=");
+        idCriteria.setVal(feefineactionId);
+        Criterion criterion = new Criterion(idCriteria);
 
         try {
           PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
