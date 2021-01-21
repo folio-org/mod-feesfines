@@ -464,10 +464,16 @@ public class RefundReportService {
   }
 
   private static String getStaffInfo(String comments) {
+    if(comments == null){
+      return "";
+    }
     return parseFeeFineComments(comments).get(STAFF_COMMENTS_KEY);
   }
 
   private static String getPatronInfo(String comments) {
+    if(comments == null){
+      return "";
+    }
     return parseFeeFineComments(comments).get(PATRON_COMMENTS_KEY);
   }
 

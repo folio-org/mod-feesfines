@@ -340,6 +340,27 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   @Test
+  public void refundActionWithNullComment() {
+    Account account = charge(10.0, "ff-type", item1.getId());
+
+    createAction(1, account, "2020-01-01 12:00:00", PAID_FULLY, PAYMENT_METHOD,
+      10.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
+      REFUNDED_FULLY, REFUND_REASON, 5.2, 4.8, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUND_TX_INFO);
+
+    refundAction.setComments(null);
+
+    requestAndCheck(List.of(
+      buildRefundReportEntry(account, refundAction,
+        "5.20", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+        addSuffix("", 1), addSuffix("", 1),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
+    ));
+  }
+
+  @Test
   public void multiplePaymentMethodsFullyRefunded() {
     Account account = charge(10.0, "ff-type", item1.getId());
 
