@@ -561,12 +561,6 @@ public class FeeFineReportsAPITest extends ApiTests {
       staffInfo, patronInfo, txInfo);
   }
 
-  private Feefineaction createActionWithNullComments(Account account, String dateTime,
-    String type, String method, Double amount, Double balance, String txInfo) {
-
-    return createActionWithNullComments(USER_ID_1, account, dateTime, type, method, amount, balance, txInfo);
-  }
-
   private Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
     String type, String method, Double amount, Double balance, String staffInfo,
     String patronInfo, String txInfo) {
@@ -581,10 +575,10 @@ public class FeeFineReportsAPITest extends ApiTests {
     return action;
   }
 
-  private Feefineaction createActionWithNullComments(String userId, Account account, String dateTime,
+  private Feefineaction createActionWithNullComments(Account account, String dateTime,
     String type, String method, Double amount, Double balance, String txInfo) {
 
-    Feefineaction action = EntityBuilder.buildFeeFineActionWithoutComments(userId, account.getId(),
+    Feefineaction action = EntityBuilder.buildFeeFineActionWithoutComments(USER_ID_1, account.getId(),
       type, method, amount, balance, parseDateTime(dateTime))
       .withTransactionInformation(txInfo);
 
