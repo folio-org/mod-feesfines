@@ -134,11 +134,11 @@ public class FeeFineActionRepository {
   }
 
   public Future<List<Feefineaction>> findActionsByTypeForPeriod(Action typeAction,
-    String startDate, String endDate, Set<String> servicePointIds, int limit) {
+    String startDate, String endDate, Set<String> accountIds, int limit) {
 
     Criterion criterion = new Criterion(getDateCriteria(DATE_FIELD, ">=", startDate))
       .addCriterion(getDateCriteria(DATE_FIELD, "<", endDate))
-      .addGroupOfCriterias(groupCriterias(getServicePointIdCriterias(servicePointIds), "OR"))
+      .addGroupOfCriterias(groupCriterias(getAccountIdCriterias(accountIds), "OR"))
       .addGroupOfCriterias(getTypeCriteria(typeAction))
       .setOrder(new Order(format("jsonb->>'%s', jsonb->>'id'", DATE_FIELD), ASC))
       .setLimit(new Limit(limit));
@@ -189,6 +189,16 @@ public class FeeFineActionRepository {
         .addField("'createdAt'")
         .setOperation("=")
         .setVal(servicePointId)
+        .setJSONB(true))
+      .collect(Collectors.toList());
+  }
+
+  private List<Criteria> getAccountIdCriterias(Set<String> accountIds) {
+    return accountIds.stream()
+      .map(accountId -> new Criteria()
+        .addField("'accountId'")
+        .setOperation("=")
+        .setVal(accountId)
         .setJSONB(true))
       .collect(Collectors.toList());
   }

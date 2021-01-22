@@ -56,11 +56,11 @@ public class EntityBuilder {
   }
 
   public static Account buildAccount(String userId, String itemId, String feeFineType,
-    Double amount) {
+    Double amount, String ownerId) {
 
     return new Account()
       .withId(randomId())
-      .withOwnerId(randomId())
+      .withOwnerId(ownerId)
       .withUserId(userId)
       .withItemId(itemId)
       .withLoanId(randomId())

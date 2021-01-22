@@ -4,11 +4,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.GroupedCriterias;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.interfaces.Results;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
@@ -68,4 +73,28 @@ public class AccountRepository {
     return promise.future().map(account);
   }
 
+  public Future<List<Account>> getAccountsByOwnerIds(List<String> ownerIds) {
+
+    List<Criteria> ownerIdCriterias = ownerIds.stream()
+      .map(ownerId -> new Criteria()
+          .addField("'ownerId'")
+          .setOperation("=")
+          .setVal(ownerId)
+          .setJSONB(true))
+      .collect(Collectors.toList());
+    Criterion criterion = new Criterion()
+      .addGroupOfCriterias(groupCriterias(ownerIdCriterias, "OR"));
+
+    Promise<Results<Account>> promise = Promise.promise();
+    pgClient.get(ACCOUNTS_TABLE, Account.class, criterion, false, promise);
+
+    return promise.future().map(Results::getResults);
+  }
+
+  private GroupedCriterias groupCriterias(List<Criteria> criterias, String operation) {
+    GroupedCriterias groupedCriterias = new GroupedCriterias();
+    criterias.forEach(criteria -> groupedCriterias.addCriteria(criteria, operation));
+
+    return groupedCriterias;
+  }
 }
