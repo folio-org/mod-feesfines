@@ -11,6 +11,7 @@ import static org.folio.rest.utils.AccountHelper.STAFF_COMMENTS_KEY;
 import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
+import static org.apache.commons.lang.StringUtils.defaultString;
 
 import java.util.ArrayList;
 import java.util.Currency;
@@ -64,7 +65,9 @@ public class RefundReportService {
   private static final int REPORT_ROWS_LIMIT = 1_000_000;
   private static final String MULTIPLE_MESSAGE = "Multiple";
   private static final String SEE_FEE_FINE_DETAILS_PAGE_MESSAGE = "See Fee/fine details page";
-  private static final  LocaleSettings FALLBACK_LOCALE_SETTINGS =
+  private static final String REFUNDED_TO_PATRON = "Refunded to patron";
+  private static final String REFUNDED_TO_BURSAR = "Refunded to Bursar";
+  private static final LocaleSettings FALLBACK_LOCALE_SETTINGS =
     new LocaleSettings(Locale.US.toLanguageTag(), UTC.getID(),
       Currency.getInstance(Locale.US).getCurrencyCode());
 
@@ -245,20 +248,20 @@ public class RefundReportService {
         reportEntry
           .withFeeFineType(account.getFeeFineType())
           .withBilledAmount(formatMonetaryValue(account.getAmount()))
-          .withDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone));
+          .withDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone))
+          .withFeeFineOwner(account.getFeeFineOwner());
       } else {
         log.error("Refund report - account is null, refund action {}", feeFineAction.getId());
       }
 
       if (accountCtx != null) {
-        reportEntry
-          .withPaidAmount(accountCtx.paidAmount.toString())
-          .withPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods, MULTIPLE_MESSAGE))
-          .withTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo,
-            SEE_FEE_FINE_DETAILS_PAGE_MESSAGE))
-          .withTransferredAmount(accountCtx.transferredAmount.toString())
-          .withTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts,
-            MULTIPLE_MESSAGE));
+        if (isRefundedToPatron(feeFineAction)){
+          withPaymentInfo(reportEntry, accountCtx);
+        } else if (isRefundedToBursar(feeFineAction)) {
+          withTransferInfo(reportEntry, accountCtx);
+        } else {
+          withPaymentAndTransferInfo(reportEntry, accountCtx);
+        }
       } else {
         log.error("Refund report - account ctx is null, refund action {}", feeFineAction.getId());
       }
@@ -476,11 +479,11 @@ public class RefundReportService {
   }
 
   private static String getStaffInfo(String comments) {
-    return parseFeeFineComments(comments).get(STAFF_COMMENTS_KEY);
+    return defaultString(parseFeeFineComments(comments).get(STAFF_COMMENTS_KEY));
   }
 
   private static String getPatronInfo(String comments) {
-    return parseFeeFineComments(comments).get(PATRON_COMMENTS_KEY);
+    return defaultString(parseFeeFineComments(comments).get(PATRON_COMMENTS_KEY));
   }
 
   private static String getItemBarcode(RefundReportContext ctx, String accountId) {
@@ -499,6 +502,31 @@ public class RefundReportService {
 
   private String formatDate(Date date, DateTimeZone timeZone) {
     return new DateTime(date).withZone(timeZone).toString(dateTimeFormatter);
+  }
+
+  private boolean isRefundedToPatron(Feefineaction feeFineAction) {
+    return REFUNDED_TO_PATRON.equals(feeFineAction.getTransactionInformation());
+  }
+
+  private boolean isRefundedToBursar(Feefineaction feeFineAction) {
+    return REFUNDED_TO_BURSAR.equals(feeFineAction.getTransactionInformation());
+  }
+
+  private void withPaymentInfo(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
+    reportEntry.withPaidAmount(accountCtx.paidAmount.toString())
+      .withPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods, MULTIPLE_MESSAGE))
+      .withTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo,
+        SEE_FEE_FINE_DETAILS_PAGE_MESSAGE));;
+  }
+
+  private void withTransferInfo(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
+    reportEntry.withTransferredAmount(accountCtx.transferredAmount.toString())
+      .withTransferAccount(singleOrDefaultMessage(accountCtx.transferAccounts, MULTIPLE_MESSAGE));
+  }
+
+  private void withPaymentAndTransferInfo(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
+    withPaymentInfo(reportEntry, accountCtx);
+    withTransferInfo(reportEntry, accountCtx);
   }
 
   private static String formatName(User user) {
