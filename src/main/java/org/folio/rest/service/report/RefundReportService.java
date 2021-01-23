@@ -123,6 +123,7 @@ public class RefundReportService {
 
     RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
     if (ownerIds != null && !ownerIds.isEmpty()) {
+
       return accountRepository.getAccountsByOwnerIds(ownerIds)
         .map(accounts -> accounts.stream()
           .map(Account::getId)
@@ -134,6 +135,7 @@ public class RefundReportService {
         .compose(this::processAllRefundActions)
         .map(this::buildReportFromContext);
     }
+
     return feeFineActionRepository
       .findActionsByTypeForPeriod(REFUND, startDateTimeFormatted, endDateTimeFormatted,
         new HashSet<>(), REPORT_ROWS_LIMIT)

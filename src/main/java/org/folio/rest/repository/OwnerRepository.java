@@ -33,10 +33,4 @@ public class OwnerRepository {
     pgClient.getById(OWNERS_TABLE, optionalOwnerId.get(), Owner.class, promise);
     return promise.future().map(context::withOwner);
   }
-
-  public Future<Owner> getById(String id) {
-    Promise<Owner> promise = Promise.promise();
-    pgClient.getById(OWNERS_TABLE, id, Owner.class, promise);
-    return promise.future();
-  }
 }

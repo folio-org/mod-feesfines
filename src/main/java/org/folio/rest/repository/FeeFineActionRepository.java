@@ -182,17 +182,6 @@ public class FeeFineActionRepository {
       .collect(Collectors.toList());
   }
 
-  private List<Criteria> getServicePointIdCriterias(Set<String> servicePointIds) {
-
-    return servicePointIds.stream()
-      .map(servicePointId -> new Criteria()
-        .addField("'createdAt'")
-        .setOperation("=")
-        .setVal(servicePointId)
-        .setJSONB(true))
-      .collect(Collectors.toList());
-  }
-
   private List<Criteria> getAccountIdCriterias(Set<String> accountIds) {
     return accountIds.stream()
       .map(accountId -> new Criteria()

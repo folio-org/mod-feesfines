@@ -547,20 +547,20 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account1, refundAction1,
         "6.30", PAYMENT_METHOD, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item1.getBarcode(), instance.getTitle()),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER),
       buildRefundReportEntry(account1, refundAction2,
         "12.00", MULTIPLE, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 2), addSuffix(REFUND_PATRON_INFO, 2),
-        item1.getBarcode(), instance.getTitle()),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER),
       buildRefundReportEntry(user2, account3, refundAction4,
         "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item2.getBarcode(), instance.getTitle()));
+        item2.getBarcode(), instance.getTitle(), FEE_FINE_OWNER));
 
     List<RefundReportEntry> refundReportEntriesForSecondOwner = List.of(buildRefundReportEntry(account2, refundAction3,
       "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
       addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-      item2.getBarcode(), instance.getTitle()));
+      item2.getBarcode(), instance.getTitle(), FEE_FINE_OWNER));
 
     requestAndCheck(refundReportEntriesForFirstOwner, List.of(OWNER_ID_1));
     requestAndCheck(refundReportEntriesForSecondOwner, List.of(OWNER_ID_2));

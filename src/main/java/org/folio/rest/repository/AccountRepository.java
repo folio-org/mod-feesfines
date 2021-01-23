@@ -74,7 +74,6 @@ public class AccountRepository {
   }
 
   public Future<List<Account>> getAccountsByOwnerIds(List<String> ownerIds) {
-
     List<Criteria> ownerIdCriterias = ownerIds.stream()
       .map(ownerId -> new Criteria()
           .addField("'ownerId'")
