@@ -247,10 +247,11 @@ public class FeeFineActionsAPI implements Feefineactions {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
-        Criteria idCrit = new Criteria();
-        idCrit.setOperation("=");
-        idCrit.setVal(feefineactionId);
-        Criterion criterion = new Criterion(idCrit);
+        Criteria idCriteria = new Criteria();
+        idCriteria.addField(FEEFINEACTION_ID_FIELD);
+        idCriteria.setOperation("=");
+        idCriteria.setVal(feefineactionId);
+        Criterion criterion = new Criterion(idCriteria);
 
         try {
           PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(

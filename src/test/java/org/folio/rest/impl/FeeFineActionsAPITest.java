@@ -30,6 +30,8 @@ import static org.folio.test.support.matcher.constant.ServicePath.LIBRARIES_PATH
 import static org.folio.test.support.matcher.constant.ServicePath.LOCATIONS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 import java.util.Comparator;
@@ -55,6 +57,7 @@ import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.service.LogEventPublisher;
 import org.folio.test.support.ApiTests;
+import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.test.support.matcher.constant.ServicePath;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -344,6 +347,39 @@ public class FeeFineActionsAPITest extends ApiTests {
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
   }
 
+  @Test
+  public void deleteFeeFineActionByIdOnlyDeletesOneAction() {
+    final Library library = createLibrary();
+    final Campus campus = createCampus();
+    final Institution institution = createInstitution();
+    final Location location = createLocation(library, campus, institution);
+    final Instance instance = createInstance();
+    final HoldingsRecord holdingsRecord = createHoldingsRecord(instance);
+    final Item item = createItem(holdingsRecord, location);
+    final User user = createUser();
+    final Owner owner = createOwner();
+    final Feefine feefine = createFeeFine(owner);
+    final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
+    final Feefineaction charge = createCharge(user, account, true);
+    final Feefineaction firstAction = createAction(user, account, true);
+    final Feefineaction secondAction = createAction(user, account, true);
+
+    postAction(charge);
+    postAction(firstAction);
+    postAction(secondAction);
+
+    getAll(ServicePath.ACTIONS_PATH).then()
+      .body("feefineactions", hasSize(3));
+
+    Response deleteResponse = deleteAction(secondAction);
+    assertThat(deleteResponse.getStatusCode(), equalTo(HttpStatus.SC_NO_CONTENT));
+
+    getAll(ServicePath.ACTIONS_PATH).then()
+      .body("feefineactions", hasSize(2))
+      .body("feefineactions", hasItem(FeeFineActionMatchers.feeFineAction(charge)))
+      .body("feefineactions", hasItem(FeeFineActionMatchers.feeFineAction(firstAction)));
+  }
+
   private String createFeeFineActionJson(String dateAction, String typeAction, boolean notify,
     double amountAction, double balance, String accountId, String userId) {
 
@@ -381,14 +417,30 @@ public class FeeFineActionsAPITest extends ApiTests {
       .post(ServicePath.ACTIONS_PATH);
   }
 
-  private Response get(String path, String id) {
+  private Response getAll(String path) {
+    return getRequestSpecification()
+      .when()
+      .get(path);
+  }
+
+  private Response getById(String path, String id) {
     return getRequestSpecification()
       .when()
       .get(path + "/" + id);
   }
 
+  private Response delete(String path, String id) {
+    return getRequestSpecification()
+      .when()
+      .delete(path + "/" + id);
+  }
+
   private Response postAction(Feefineaction action) {
     return post(mapFrom(action).encodePrettily());
+  }
+
+  private Response deleteAction(Feefineaction action) {
+    return delete(ServicePath.ACTIONS_PATH, action.getId());
   }
 
   private static Feefineaction createAction(User user, Account account, boolean notify) {
@@ -472,7 +524,7 @@ public class FeeFineActionsAPITest extends ApiTests {
   }
 
   private String getAccountCreationDate(Account account) {
-    String getAccountResponse = get(ServicePath.ACCOUNTS_PATH, account.getId())
+    String getAccountResponse = getById(ServicePath.ACCOUNTS_PATH, account.getId())
       .getBody().prettyPrint();
 
     final String creationDateFromMetadata = new JsonObject(getAccountResponse)

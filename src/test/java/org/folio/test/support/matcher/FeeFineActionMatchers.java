@@ -9,6 +9,7 @@ import java.util.Arrays;
 
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
+import org.folio.rest.jaxrs.model.Feefineaction;
 import org.hamcrest.Matcher;
 
 import io.vertx.core.json.JsonObject;
@@ -50,6 +51,19 @@ public class FeeFineActionMatchers {
       hasJsonPath("notify", is(notifyPatron)),
       hasJsonPath("createdAt", is(createdAt)),
       hasJsonPath("paymentMethod", is(paymentMethod))
+    ));
+  }
+
+  public static Matcher<JsonObject> feeFineAction(Feefineaction feefineaction) {
+    return allOf(Arrays.asList(
+      hasJsonPath("typeAction", is(feefineaction.getTypeAction())),
+      hasJsonPath("amountAction", is(feefineaction.getAmountAction().floatValue())),
+      hasJsonPath("balance", is(feefineaction.getBalance().floatValue())),
+      hasJsonPath("accountId", is(feefineaction.getAccountId())),
+      hasJsonPath("userId", is(feefineaction.getUserId())),
+      hasJsonPath("id", notNullValue(String.class)),
+      hasJsonPath("dateAction", notNullValue(String.class)),
+      hasJsonPath("comments", is(feefineaction.getComments()))
     ));
   }
 }
