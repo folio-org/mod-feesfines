@@ -26,7 +26,6 @@ public class FeeFineReportsAPI implements FeefineReports {
 
   private static final String INVALID_START_DATE_OR_END_DATE_MESSAGE =
     "Invalid startDate or endDate parameter";
-  private static final String INVALID_OWNER_ID_MESSAGE = "Invalid ownerId parameter";
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
 
   @Override
@@ -34,10 +33,11 @@ public class FeeFineReportsAPI implements FeefineReports {
     String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    log.info("Refund report requested, parameters: startDate={}, endDate={}",
+      entity.getStartDate(), entity.getEndDate());
+
     DateTime startDate = parseDate(entity.getStartDate());
     DateTime endDate = parseDate(entity.getEndDate());
-    log.info("Refund report requested, parameters: startDate={}, endDate={}", startDate, endDate);
-
     if (startDate == null || endDate == null) {
       log.error("Invalid parameters: startDate={}, endDate={}", startDate, endDate);
 
