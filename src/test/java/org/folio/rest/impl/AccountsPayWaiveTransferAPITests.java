@@ -14,7 +14,6 @@ import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
-import static org.folio.test.support.matcher.AccountMatchers.verifyAccountAndGet;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -40,7 +39,7 @@ import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
-import org.folio.test.support.ApiTests;
+import org.folio.test.support.AccountsActionAPITests;
 import org.folio.util.pubsub.PubSubClientUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +49,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 
 @RunWith(value = Parameterized.class)
-public class AccountsPayWaiveTransferAPITests extends ApiTests {
+public class AccountsPayWaiveTransferAPITests extends AccountsActionAPITests {
   private static final String ACCOUNT_ID = randomId();
   private static final String FEE_FINE_ACTIONS = "feefineactions";
 

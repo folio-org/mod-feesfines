@@ -18,7 +18,6 @@ import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountsRefundClient;
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
-import static org.folio.test.support.matcher.AccountMatchers.verifyAccountAndGet;
 import static org.folio.test.support.matcher.LogEventMatcher.notCreditOrRefundActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -35,7 +34,6 @@ import io.vertx.core.json.JsonObject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
@@ -47,7 +45,7 @@ import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.utils.ResourceClient;
-import org.folio.test.support.ApiTests;
+import org.folio.test.support.AccountsActionAPITests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -55,7 +53,7 @@ import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AccountsRefundAPITests extends ApiTests {
+public class AccountsRefundAPITests extends AccountsActionAPITests {
   private static final String FIRST_ACCOUNT_ID = randomId();
   private static final String SECOND_ACCOUNT_ID = randomId();
   private static final String THIRD_ACCOUNT_ID = randomId();
