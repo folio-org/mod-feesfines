@@ -88,9 +88,13 @@ public class FeeFineReportsAPITest extends ApiTests {
   private static final String PAYMENT_TX_INFO = "Payment transaction information";
   private static final String REFUND_TX_INFO = "Refund transaction information";
   private static final String TRANSFER_TX_INFO = "Transfer transaction information";
+  private static final String REFUNDED_TO_PATRON_TX_INFO = "Refunded to patron";
+  private static final String REFUNDED_TO_BURSAR_TX_INFO = "Refunded to Bursar";
 
   private static final String MULTIPLE = "Multiple";
   private static final String SEE_FEE_FINE_PAGE = "See Fee/fine details page";
+
+  private static final String FEE_FINE_OWNER = "owner";
 
   private static final DateTimeFormatter dateTimeFormatter =
     DateTimeFormat.forPattern("M/d/yy, h:mm a");
@@ -283,7 +287,7 @@ public class FeeFineReportsAPITest extends ApiTests {
     requestAndCheck(List.of(
       buildRefundReportEntry(account, refundAction,
         "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
-        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1), "", "")
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1), "", "", FEE_FINE_OWNER)
     ));
   }
 
@@ -309,7 +313,7 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account, refundAction,
         "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item1.getBarcode(), instance.getTitle())
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
   }
 
@@ -331,7 +335,24 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account, refundAction,
         "5.20", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item1.getBarcode(), instance.getTitle())
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
+    ));
+  }
+
+  @Test
+  public void refundActionWithoutComments() {
+    Account account = charge(10.0, "ff-type", item1.getId());
+
+    createAction(1, account, "2020-01-01 12:00:00", PAID_FULLY, PAYMENT_METHOD,
+      10.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    Feefineaction refundAction = createActionWithNullComments(account, "2020-01-03 12:00:00",
+      REFUNDED_FULLY, REFUND_REASON, 5.2, 4.8, REFUND_TX_INFO);
+
+    requestAndCheck(List.of(
+      buildRefundReportEntry(account, refundAction,
+        "10.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+        "", "", item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
   }
 
@@ -354,7 +375,7 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account, refundAction,
         "5.20", MULTIPLE, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item1.getBarcode(), instance.getTitle())
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
   }
 
@@ -376,7 +397,51 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account, refundAction,
         "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "1.50", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item1.getBarcode(), instance.getTitle())
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
+    ));
+  }
+
+  @Test
+  public void partiallyTransferredFullyRefundedToPatron() {
+    Account account = charge(10.0, "ff-type", item1.getId());
+
+    createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    createAction(1, account, "2020-01-02 12:00:00",
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.5, 8.5, "", "", TRANSFER_TX_INFO);
+
+    Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
+      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 8.5, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUNDED_TO_PATRON_TX_INFO);
+
+    requestAndCheck(List.of(
+      buildRefundReportEntry(account, refundAction,
+        "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "", "",
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
+    ));
+  }
+
+  @Test
+  public void partiallyTransferredFullyRefundedToBursar() {
+    Account account = charge(10.0, "ff-type", item1.getId());
+
+    createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    createAction(1, account, "2020-01-02 12:00:00",
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.5, 8.5, "", "", TRANSFER_TX_INFO);
+
+    Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
+      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 8.5, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUNDED_TO_BURSAR_TX_INFO);
+
+    requestAndCheck(List.of(
+      buildRefundReportEntry(account, refundAction,
+        "", "", "", "1.50", TRANSFER_ACCOUNT,
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
   }
 
@@ -428,19 +493,19 @@ public class FeeFineReportsAPITest extends ApiTests {
       buildRefundReportEntry(account1, refundAction1,
         "6.30", PAYMENT_METHOD, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item1.getBarcode(), instance.getTitle()),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER),
       buildRefundReportEntry(account1, refundAction2,
         "12.00", MULTIPLE, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 2), addSuffix(REFUND_PATRON_INFO, 2),
-        item1.getBarcode(), instance.getTitle()),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER),
       buildRefundReportEntry(account2, refundAction3,
         "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        "", ""),
+        "", "", FEE_FINE_OWNER),
       buildRefundReportEntry(user2, account3, refundAction4,
         "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-        item2.getBarcode(), instance.getTitle())
+        item2.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
   }
 
@@ -485,7 +550,7 @@ public class FeeFineReportsAPITest extends ApiTests {
     return buildRefundReportEntry(sourceObjects.account, sourceObjects.refundAction,
       "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
       addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1), item1.getBarcode(),
-      instance.getTitle());
+      instance.getTitle(), FEE_FINE_OWNER);
   }
 
   private Feefineaction createAction(int actionCounter, Account account, String dateTime,
@@ -510,19 +575,31 @@ public class FeeFineReportsAPITest extends ApiTests {
     return action;
   }
 
+  private Feefineaction createActionWithNullComments(Account account, String dateTime,
+    String type, String method, Double amount, Double balance, String txInfo) {
+
+    Feefineaction action = EntityBuilder.buildFeeFineActionWithoutComments(USER_ID_1, account.getId(),
+      type, method, amount, balance, parseDateTime(dateTime))
+      .withTransactionInformation(txInfo);
+
+    createEntity(ServicePath.ACTIONS_PATH, action);
+
+    return action;
+  }
+
   private RefundReportEntry buildRefundReportEntry(Account account,
     Feefineaction refundAction, String paidAmount, String paymentMethod, String transactionInfo,
     String transferredAmount, String transferAccount, String staffInfo, String patronInfo,
-    String itemBarcode, String instance) {
+    String itemBarcode, String instance, String feeFineOwner) {
     return buildRefundReportEntry(user1, account, refundAction, paidAmount, paymentMethod,
       transactionInfo, transferredAmount, transferAccount, staffInfo, patronInfo, itemBarcode,
-      instance);
+      instance, feeFineOwner);
   }
 
   private RefundReportEntry buildRefundReportEntry(User user, Account account,
     Feefineaction refundAction, String paidAmount, String paymentMethod, String transactionInfo,
     String transferredAmount, String transferAccount, String staffInfo, String patronInfo,
-    String itemBarcode, String instance) {
+    String itemBarcode, String instance, String feeFineOwner) {
 
     if (account == null || refundAction == null) {
       return null;
@@ -553,7 +630,8 @@ public class FeeFineReportsAPITest extends ApiTests {
       .withInstance(instance)
       .withActionCompletionDate("")
       .withStaffMemberName("")
-      .withActionTaken("");
+      .withActionTaken("")
+      .withFeeFineOwner(feeFineOwner);
   }
 
   private String addSuffix(String info, int counter) {

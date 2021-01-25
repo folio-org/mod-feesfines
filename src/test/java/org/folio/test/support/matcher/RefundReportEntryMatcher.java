@@ -39,6 +39,7 @@ public class RefundReportEntryMatcher {
       hasJsonPath("patronInfo", is(refundReportEntry.getPatronInfo())),
       hasJsonPath("itemBarcode", is(refundReportEntry.getItemBarcode())),
       hasJsonPath("instance", is(refundReportEntry.getInstance())),
+      hasJsonPath("feeFineOwner", is(refundReportEntry.getFeeFineOwner())),
       hasJsonPath("actionCompletionDate", isEmptyString()),
       hasJsonPath("staffMemberName", isEmptyString()),
       hasJsonPath("actionTaken", isEmptyString())
