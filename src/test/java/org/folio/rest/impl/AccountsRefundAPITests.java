@@ -45,7 +45,7 @@ import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.utils.ResourceClient;
-import org.folio.test.support.AccountsActionAPITests;
+import org.folio.test.support.ActionsAPITests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -53,7 +53,7 @@ import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AccountsRefundAPITests extends AccountsActionAPITests {
+public class AccountsRefundAPITests extends ActionsAPITests {
   private static final String FIRST_ACCOUNT_ID = randomId();
   private static final String SECOND_ACCOUNT_ID = randomId();
   private static final String THIRD_ACCOUNT_ID = randomId();
@@ -409,13 +409,13 @@ public class AccountsRefundAPITests extends AccountsActionAPITests {
     verifyActions(18, expectedFeeFineActions); // 6 payments/transfer actions + 12 refund actions
 
     Account firstAccount = verifyAccountAndGet(
-      accountsClient, FIRST_ACCOUNT_ID, REFUND.getPartialResult(), (float) expectedRemainingAmount1, CLOSED.getValue());
+      accountsClient, FIRST_ACCOUNT_ID, REFUND.getPartialResult(), expectedRemainingAmount1, CLOSED.getValue());
 
     Account secondAccount = verifyAccountAndGet(
-      accountsClient, SECOND_ACCOUNT_ID, REFUND.getFullResult(), (float) expectedRemainingAmount2, OPEN.getValue());
+      accountsClient, SECOND_ACCOUNT_ID, REFUND.getFullResult(), expectedRemainingAmount2, OPEN.getValue());
 
     Account thirdAccount = verifyAccountAndGet(
-      accountsClient, THIRD_ACCOUNT_ID, REFUND.getPartialResult(), (float) expectedRemainingAmount3, OPEN.getValue());
+      accountsClient, THIRD_ACCOUNT_ID, REFUND.getPartialResult(), expectedRemainingAmount3, OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount, thirdAccount);
 
@@ -488,7 +488,7 @@ public class AccountsRefundAPITests extends AccountsActionAPITests {
     verifyActions(totalExpectedActionsCount, expectedFeeFineActions);
 
     Account accountAfterRefund = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      expectedPaymentStatus, (float) expectedRemainingAmount, expectedStatus.getValue());
+      expectedPaymentStatus, expectedRemainingAmount, expectedStatus.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund);
 

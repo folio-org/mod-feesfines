@@ -42,7 +42,7 @@ import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
-import org.folio.test.support.AccountsActionAPITests;
+import org.folio.test.support.ActionsAPITests;
 import org.folio.util.pubsub.PubSubClientUtils;
 import org.hamcrest.Matcher;
 import org.junit.Before;
@@ -52,7 +52,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(value = Parameterized.class)
-public class AccountsBulkPayWaiveTransferAPITests extends AccountsActionAPITests {
+public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
   private static final String FEE_FINE_ACTIONS = "feefineactions";
 
   private static final String AMOUNT_KEY = "amount";
@@ -301,14 +301,14 @@ public class AccountsBulkPayWaiveTransferAPITests extends AccountsActionAPITests
       accountsClient,
       FIRST_ACCOUNT_ID,
       expectedPaymentStatus1,
-      (float) expectedRemainingAmount1,
+      expectedRemainingAmount1,
       expectedAccountStatus1);
 
     verifyAccountAndGet(
       accountsClient,
       SECOND_ACCOUNT_ID,
       expectedPaymentStatus2,
-      (float) expectedRemainingAmount2,
+      expectedRemainingAmount2,
       expectedAccountStatus2);
 
     verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()

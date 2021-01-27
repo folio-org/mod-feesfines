@@ -11,19 +11,19 @@ import java.util.Date;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.utils.ResourceClient;
 
-public abstract class AccountsActionAPITests extends ApiTests {
+public abstract class ActionsAPITests extends ApiTests {
 
   public static Account verifyAccountAndGet(
     ResourceClient accountsClient,
     String accountId,
     String expectedPaymentStatus,
-    float amount,
+    double amount,
     String statusName) {
 
     final Response getAccountByIdResponse = accountsClient.getById(accountId);
     getAccountByIdResponse
       .then()
-      .body("remaining", is(amount))
+      .body("remaining", is((float) amount))
       .body("status.name", is(statusName))
       .body("paymentStatus.name", is(expectedPaymentStatus))
       .body("dateUpdated", notNullValue())
