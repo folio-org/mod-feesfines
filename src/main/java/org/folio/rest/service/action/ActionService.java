@@ -56,7 +56,7 @@ public abstract class ActionService {
 
     this.action = action;
     this.accountRepository = new AccountRepository(postgresClient);
-    this.feeFineActionRepository = new FeeFineActionRepository(postgresClient);
+    this.feeFineActionRepository = new FeeFineActionRepository(headers, context);
     this.accountUpdateService = new AccountUpdateService(headers, context);
     this.patronNoticeService = new PatronNoticeService(context.owner(), headers);
     this.validationService = validationService;
@@ -73,7 +73,7 @@ public abstract class ActionService {
 
     this.action = action;
     this.accountRepository = new AccountRepository(postgresClient);
-    this.feeFineActionRepository = new FeeFineActionRepository(postgresClient);
+    this.feeFineActionRepository = new FeeFineActionRepository(headers, context);
     this.accountUpdateService = new AccountUpdateService(headers, context);
     this.patronNoticeService = new PatronNoticeService(context.owner(), headers);
     this.validationService = validationService;

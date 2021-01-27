@@ -40,6 +40,10 @@
         {
           "fieldName" : "loanId",
           "tOps" : "ADD"
+        },
+        {
+          "fieldName" : "ownerId",
+          "tOps" : "ADD"
         }
       ]
     },

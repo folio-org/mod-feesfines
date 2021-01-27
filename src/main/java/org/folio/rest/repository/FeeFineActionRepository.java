@@ -2,14 +2,14 @@ package org.folio.rest.repository;
 
 import static io.vertx.core.Future.failedFuture;
 import static java.lang.String.format;
-import static java.util.Collections.singleton;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
-import static org.folio.rest.persist.Criteria.Order.ORDER.ASC;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
@@ -19,8 +19,6 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.GroupedCriterias;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Order;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.interfaces.Results;
@@ -30,9 +28,15 @@ import org.folio.rest.utils.FeeFineActionHelper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowIterator;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 
 public class FeeFineActionRepository {
   private static final String ACTIONS_TABLE = "feefineactions";
+  private static final String ACCOUNTS_TABLE = "accounts";
   private static final String DATE_FIELD = "dateAction";
   private static final String TYPE_FIELD = "typeAction";
   private static final int ACTIONS_LIMIT = 1000;
@@ -40,13 +44,11 @@ public class FeeFineActionRepository {
     "typeAction any \"Paid Transferred\" AND accountId any \"%s\"";
 
   private final PostgresClient pgClient;
-
-  public FeeFineActionRepository(PostgresClient pgClient) {
-    this.pgClient = pgClient;
-  }
+  private final String tenantId;
 
   public FeeFineActionRepository(Map<String, String> headers, Context context) {
     pgClient = PostgresClient.getInstance(context.owner(), TenantTool.tenantId(headers));
+    tenantId = TenantTool.tenantId(headers);
   }
 
   public Future<List<Feefineaction>> get(Criterion criterion) {
@@ -98,10 +100,6 @@ public class FeeFineActionRepository {
       .map(Results::getResults);
   }
 
-  public Future<List<Feefineaction>> findRefundableActionsForAccount(String accountId) {
-    return findRefundableActionsForAccounts(singleton(accountId));
-  }
-
   public Future<List<Feefineaction>> findRefundableActionsForAccounts(Collection<String> accountIds) {
     if (accountIds == null || accountIds.isEmpty()) {
       return failedFuture(new IllegalArgumentException("List of account IDs is empty or null"));
@@ -133,17 +131,39 @@ public class FeeFineActionRepository {
       );
   }
 
-  public Future<List<Feefineaction>> findActionsByTypeForPeriod(Action typeAction,
-    String startDate, String endDate, Set<String> accountIds, int limit) {
+  public Future<List<Feefineaction>> findActionsByTypeForPeriodAndOwners(Action typeAction,
+    String startDate, String endDate, List<String> ownerIds, int limit) {
 
-    Criterion criterion = new Criterion(getDateCriteria(DATE_FIELD, ">=", startDate))
-      .addCriterion(getDateCriteria(DATE_FIELD, "<", endDate))
-      .addGroupOfCriterias(groupCriterias(getAccountIdCriterias(accountIds), "OR"))
-      .addGroupOfCriterias(getTypeCriteria(typeAction))
-      .setOrder(new Order(format("jsonb->>'%s', jsonb->>'id'", DATE_FIELD), ASC))
-      .setLimit(new Limit(limit));
+    String ownerIdsFilter = ownerIds != null && !ownerIds.isEmpty()
+      ? String.format("AND accounts.jsonb->>'ownerId' IN (%s)",
+      ownerIds.stream()
+        .map(id -> format("'%s'", id))
+        .collect(Collectors.joining(",")))
+      : EMPTY;
+    String typeActions = List.of(
+      typeAction.getFullResult(), typeAction.getPartialResult()).stream()
+      .map(result -> format("'%s'", result))
+      .collect(Collectors.joining(","));
 
-    return this.get(criterion);
+    String query = format(
+      "SELECT actions.jsonb FROM %1$s.%2$s actions " +
+      "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->> 'accountId' = accounts.jsonb->>'id' " +
+      "WHERE actions.jsonb->>'dateAction' >= $1 " +
+      "AND actions.jsonb->>'dateAction' < $2 " +
+      "AND actions.jsonb->>'typeAction' IN (%4$s) " +
+        ownerIdsFilter +
+      "ORDER BY actions.jsonb->>'dateAction' ASC " +
+      "LIMIT $3",
+      PostgresClient.convertToPsqlStandard(tenantId),
+      ACTIONS_TABLE,
+      ACCOUNTS_TABLE,
+      typeActions);
+
+    Tuple params = Tuple.of(startDate, endDate, limit);
+    Promise<RowSet<Row>> promise = Promise.promise();
+    pgClient.select(query, params, promise);
+
+    return promise.future().map(this::mapToFeeFineActions);
   }
 
   public Future<Feefineaction> save(Feefineaction feefineaction) {
@@ -151,18 +171,6 @@ public class FeeFineActionRepository {
     pgClient.save(ACTIONS_TABLE, feefineaction.getId(), feefineaction, promise);
 
     return promise.future().map(feefineaction);
-  }
-
-  private Criteria getDateCriteria(String fieldName, String operation, String date) {
-    return new Criteria()
-      .addField(format("'%s'", fieldName))
-      .setOperation(operation)
-      .setVal(date)
-      .setJSONB(true);
-  }
-
-  private GroupedCriterias getTypeCriteria(Action action) {
-    return groupCriterias(getTypeCriterias(List.of(action)), "OR");
   }
 
   private List<Criteria> getTypeCriterias(List<Action> actions) {
@@ -179,17 +187,16 @@ public class FeeFineActionRepository {
           .setVal(action.getPartialResult())
           .setJSONB(true)))
       .flatMap(Collection::stream)
-      .collect(Collectors.toList());
+      .collect(toList());
   }
 
-  private List<Criteria> getAccountIdCriterias(Set<String> accountIds) {
-    return accountIds.stream()
-      .map(accountId -> new Criteria()
-        .addField("'accountId'")
-        .setOperation("=")
-        .setVal(accountId)
-        .setJSONB(true))
-      .collect(Collectors.toList());
+  private List<Feefineaction> mapToFeeFineActions(RowSet<Row> rowSet) {
+    RowIterator<Row> iterator = rowSet.iterator();
+    List<Feefineaction> feeFineActions = new ArrayList<>();
+    iterator.forEachRemaining(row -> feeFineActions.add(
+      row.get(JsonObject.class, 0).mapTo(Feefineaction.class)));
+
+    return feeFineActions;
   }
 
   private GroupedCriterias groupCriterias(List<Criteria> criterias, String op) {

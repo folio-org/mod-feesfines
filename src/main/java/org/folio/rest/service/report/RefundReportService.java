@@ -118,27 +118,14 @@ public class RefundReportService {
       .withZone(UTC)
       .toString(ISODateTimeFormat.dateTime());
 
-    log.info("Building refund report with parameters: startDate={}, endDate={}, ownerId={}, tz={}",
+    log.info("Building refund report with parameters: startDate={}, endDate={}, ownerIds={}, tz={}",
       startDate.toDateTimeISO(), endDate.toDateTimeISO(), ownerIds, timeZone);
 
     RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
-    if (ownerIds != null && !ownerIds.isEmpty()) {
-
-      return accountRepository.getAccountsByOwnerIds(ownerIds)
-        .map(accounts -> accounts.stream()
-          .map(Account::getId)
-          .collect(Collectors.toSet()))
-        .compose(accountIds -> feeFineActionRepository.findActionsByTypeForPeriod(REFUND, startDateTimeFormatted,
-          endDateTimeFormatted, accountIds, REPORT_ROWS_LIMIT))
-        .map(RefundReportService::toRefundDataMap)
-        .map(ctx::withRefunds)
-        .compose(this::processAllRefundActions)
-        .map(this::buildReportFromContext);
-    }
 
     return feeFineActionRepository
-      .findActionsByTypeForPeriod(REFUND, startDateTimeFormatted, endDateTimeFormatted,
-        new HashSet<>(), REPORT_ROWS_LIMIT)
+      .findActionsByTypeForPeriodAndOwners(REFUND, startDateTimeFormatted, endDateTimeFormatted,
+        ownerIds, REPORT_ROWS_LIMIT)
       .map(RefundReportService::toRefundDataMap)
       .map(ctx::withRefunds)
       .compose(this::processAllRefundActions)
