@@ -72,28 +72,4 @@ public class AccountRepository {
     pgClient.update(ACCOUNTS_TABLE, account, account.getId(), promise);
     return promise.future().map(account);
   }
-
-  public Future<List<Account>> getAccountsByOwnerIds(List<String> ownerIds) {
-    List<Criteria> ownerIdCriterias = ownerIds.stream()
-      .map(ownerId -> new Criteria()
-          .addField("'ownerId'")
-          .setOperation("=")
-          .setVal(ownerId)
-          .setJSONB(true))
-      .collect(Collectors.toList());
-    Criterion criterion = new Criterion()
-      .addGroupOfCriterias(groupCriterias(ownerIdCriterias, "OR"));
-
-    Promise<Results<Account>> promise = Promise.promise();
-    pgClient.get(ACCOUNTS_TABLE, Account.class, criterion, false, promise);
-
-    return promise.future().map(Results::getResults);
-  }
-
-  private GroupedCriterias groupCriterias(List<Criteria> criterias, String operation) {
-    GroupedCriterias groupedCriterias = new GroupedCriterias();
-    criterias.forEach(criteria -> groupedCriterias.addCriteria(criteria, operation));
-
-    return groupedCriterias;
-  }
 }
