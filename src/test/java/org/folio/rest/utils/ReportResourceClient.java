@@ -35,19 +35,15 @@ public class ReportResourceClient extends ResourceClient {
   public Response getFeeFineRefundReports(String startDate, String endDate,
     HttpStatus expectedStatus) {
 
-    return okapiClient.post(baseUri, createRefundReportRequest(startDate, endDate, null))
-      .then()
-      .statusCode(expectedStatus.toInt())
-      .extract()
-      .response();
+    return getFeeFineRefundReports(startDate, endDate, null, expectedStatus);
   }
 
   private String createRefundReportRequest(String startDate, String endDate,
     List<String> ownerIds) {
 
-    JsonArray feeFineOwners = new JsonArray();
+    JsonArray feeFineOwners = null;
     if (ownerIds != null) {
-      ownerIds.forEach(feeFineOwners::add);
+      feeFineOwners = new JsonArray(ownerIds);
     }
 
     return new JsonObject()

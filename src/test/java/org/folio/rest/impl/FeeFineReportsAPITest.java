@@ -573,13 +573,7 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   private void requestAndCheck(List<RefundReportEntry> reportEntries) {
-    ValidatableResponse response = requestRefundReport(START_DATE, END_DATE).then()
-      .statusCode(HttpStatus.SC_OK)
-      .body("reportData", iterableWithSize(reportEntries.size()));
-
-    IntStream.range(0, reportEntries.size())
-      .forEach(index -> response.body(format("reportData[%d]", index),
-        refundReportEntryMatcher(reportEntries.get(index))));
+    requestAndCheck(reportEntries, null);
   }
 
   private void requestAndCheck(List<RefundReportEntry> reportEntries,
@@ -718,7 +712,7 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   private Response requestRefundReport(String startDate, String endDate) {
-    return refundReportsClient.getFeeFineRefundReports(startDate, endDate);
+    return requestRefundReport(startDate, endDate, null);
   }
 
   private Response requestRefundReport(String startDate, String endDate, List<String> ownerIds) {
