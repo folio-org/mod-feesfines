@@ -134,36 +134,39 @@ public class FeeFineActionRepository {
   public Future<List<Feefineaction>> findActionsByTypeForPeriodAndOwners(Action typeAction,
     String startDate, String endDate, List<String> ownerIds, int limit) {
 
-    String ownerIdsFilter = ownerIds != null && !ownerIds.isEmpty()
-      ? String.format("AND accounts.jsonb->>'ownerId' IN (%s)",
-      ownerIds.stream()
-        .map(id -> format("'%s'", id))
-        .collect(Collectors.joining(",")))
-      : EMPTY;
-    String typeActions = List.of(
-      typeAction.getFullResult(), typeAction.getPartialResult()).stream()
-      .map(result -> format("'%s'", result))
-      .collect(Collectors.joining(","));
+    String ownerIdsFilter = buildOwnerIdsFilter(ownerIds);
 
     String query = format(
       "SELECT actions.jsonb FROM %1$s.%2$s actions " +
-      "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->> 'accountId' = accounts.jsonb->>'id' " +
-      "WHERE actions.jsonb->>'dateAction' >= $1 " +
-      "AND actions.jsonb->>'dateAction' < $2 " +
-      "AND actions.jsonb->>'typeAction' IN (%4$s) " +
-        ownerIdsFilter +
-      "ORDER BY actions.jsonb->>'dateAction' ASC " +
-      "LIMIT $3",
+        "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->> 'accountId' = accounts.jsonb->>'id' " +
+        "WHERE actions.jsonb->>'dateAction' >= $1 " +
+        "AND actions.jsonb->>'dateAction' < $2 " +
+        "AND actions.jsonb->>'typeAction' IN ($3,$4) " +
+        "%4$s" +
+        "ORDER BY actions.jsonb->>'dateAction' ASC " +
+        "LIMIT $5",
       PostgresClient.convertToPsqlStandard(tenantId),
       ACTIONS_TABLE,
       ACCOUNTS_TABLE,
-      typeActions);
+      ownerIdsFilter);
 
-    Tuple params = Tuple.of(startDate, endDate, limit);
+    Tuple params = Tuple.of(startDate, endDate, typeAction.getFullResult(),
+      typeAction.getPartialResult(), limit);
     Promise<RowSet<Row>> promise = Promise.promise();
     pgClient.select(query, params, promise);
 
     return promise.future().map(this::mapToFeeFineActions);
+  }
+
+  private String buildOwnerIdsFilter(List<String> ownerIds) {
+    if (ownerIds == null || ownerIds.isEmpty()) {
+      return EMPTY;
+    }
+
+    return format("AND accounts.jsonb->>'ownerId' IN (%s)",
+      ownerIds.stream()
+        .map(id -> format("'%s'", id))
+        .collect(Collectors.joining(",")));
   }
 
   public Future<Feefineaction> save(Feefineaction feefineaction) {

@@ -4,16 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.GroupedCriterias;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.interfaces.Results;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
