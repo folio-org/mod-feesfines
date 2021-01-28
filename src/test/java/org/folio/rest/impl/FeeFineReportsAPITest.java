@@ -191,12 +191,11 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   @Test
-  public void badRequestWhenParameterIsMissingOrMalformed() {
-    refundReportsClient.getFeeFineRefundReports("nonExistingParam=1", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
+  public void shouldReturn422WhenRequestIsNotValid() {
     refundReportsClient.getFeeFineRefundReports("2020-01-01", null, HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports(null, "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReports("2020-01-01", "endDate=not-a-date", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports(null, null, HTTP_UNPROCESSABLE_ENTITY);
   }
 

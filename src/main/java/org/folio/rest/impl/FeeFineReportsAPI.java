@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.RefundReport;
 import org.folio.rest.jaxrs.model.RefundReportRequest;
@@ -28,6 +29,7 @@ public class FeeFineReportsAPI implements FeefineReports {
     "Invalid startDate or endDate parameter";
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
 
+  @Validate
   @Override
   public void postFeefineReportsRefund(RefundReportRequest entity, Map<String,
     String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
