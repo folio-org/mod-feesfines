@@ -91,14 +91,17 @@ public class RefundReportService {
     accountRepository = new AccountRepository(context, headers);
   }
 
-  public Future<RefundReport> buildReport(DateTime startDate, DateTime endDate) {
+  public Future<RefundReport> buildReport(DateTime startDate, DateTime endDate,
+    List<String> ownerIds) {
+
     return configurationClient.getLocaleSettings()
       .recover(throwable -> succeededFuture(FALLBACK_LOCALE_SETTINGS))
-      .compose(localeSettings -> buildReportWithLocale(startDate, endDate, localeSettings));
+      .compose(localeSettings -> buildReportWithLocale(startDate, endDate, ownerIds,
+        localeSettings));
   }
 
   private Future<RefundReport> buildReportWithLocale(DateTime startDate, DateTime endDate,
-    LocaleSettings localeSettings) {
+    List<String> ownerIds, LocaleSettings localeSettings) {
 
     setUpLocale(localeSettings);
 
@@ -115,14 +118,14 @@ public class RefundReportService {
       .withZone(UTC)
       .toString(ISODateTimeFormat.dateTime());
 
-    log.info("Building refund report with parameters: startDate={}, endDate={}, tz={}",
-      startDate.toDateTimeISO(), endDate.toDateTimeISO(), timeZone);
+    log.info("Building refund report with parameters: startDate={}, endDate={}, ownerIds={}, tz={}",
+      startDate.toDateTimeISO(), endDate.toDateTimeISO(), ownerIds, timeZone);
 
     RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
 
     return feeFineActionRepository
-      .findActionsByTypeForPeriod(REFUND, startDateTimeFormatted, endDateTimeFormatted,
-        REPORT_ROWS_LIMIT)
+      .findActionsByTypeForPeriodAndOwners(REFUND, startDateTimeFormatted, endDateTimeFormatted,
+        ownerIds, REPORT_ROWS_LIMIT)
       .map(RefundReportService::toRefundDataMap)
       .map(ctx::withRefunds)
       .compose(this::processAllRefundActions)

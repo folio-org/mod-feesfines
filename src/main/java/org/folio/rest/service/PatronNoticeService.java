@@ -59,7 +59,7 @@ public class PatronNoticeService {
     feeFineRepository = new FeeFineRepository(pgClient);
     ownerRepository = new OwnerRepository(pgClient);
     accountRepository = new AccountRepository(pgClient);
-    feeFineActionRepository = new FeeFineActionRepository(pgClient);
+    feeFineActionRepository = new FeeFineActionRepository(okapiHeaders, vertx.getOrCreateContext());
 
     patronNoticeClient = new PatronNoticeClient(vertx, okapiHeaders);
     usersClient = new UsersClient(vertx, okapiHeaders);

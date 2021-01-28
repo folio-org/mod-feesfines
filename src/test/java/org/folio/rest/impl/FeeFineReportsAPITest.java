@@ -1,7 +1,7 @@
 package org.folio.rest.impl;
 
 import static java.lang.String.format;
-import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.utils.ResourceClients.buildRefundReportClient;
 import static org.folio.test.support.EntityBuilder.createCampus;
 import static org.folio.test.support.EntityBuilder.createHoldingsRecord;
@@ -23,6 +23,7 @@ import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -65,6 +66,8 @@ import lombok.With;
 public class FeeFineReportsAPITest extends ApiTests {
   private static final String USER_ID_1 = randomId();
   private static final String USER_ID_2 = randomId();
+  private static final String OWNER_ID_1 = randomId();
+  private static final String OWNER_ID_2 = randomId();
   private static final String START_DATE = "2020-01-01";
   private static final String END_DATE = "2020-01-15";
   private static final DateTimeZone TENANT_TZ = DateTimeZone.forID("America/New_York");
@@ -188,15 +191,12 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   @Test
-  public void badRequestWhenParameterIsMissingOrMalformed() {
-    refundReportsClient.getByParameters("nonExistingParam=1", HTTP_BAD_REQUEST);
-    refundReportsClient.getByParameters("startDate=2020-01-01", HTTP_BAD_REQUEST);
-    refundReportsClient.getByParameters("endDate=2020-01-01", HTTP_BAD_REQUEST);
-    refundReportsClient.getByParameters("startDate=not-a-date", HTTP_BAD_REQUEST);
-    refundReportsClient.getByParameters("endDate=not-a-date", HTTP_BAD_REQUEST);
-    refundReportsClient.getByParameters("startDate=2020-01-01&endDate=not-a-date", HTTP_BAD_REQUEST);
-    refundReportsClient.getByParameters("startDate=not-a-date&endDate=2020-01-01", HTTP_BAD_REQUEST);
-    refundReportsClient.getByParameters("startDate=not-a-date&endDate=not-a-date", HTTP_BAD_REQUEST);
+  public void shouldReturn422WhenRequestIsNotValid() {
+    refundReportsClient.getFeeFineRefundReports("2020-01-01", null, HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports(null, "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports(null, null, HTTP_UNPROCESSABLE_ENTITY);
   }
 
   @Test
@@ -480,7 +480,7 @@ public class FeeFineReportsAPITest extends ApiTests {
       REFUNDED_FULLY, REFUND_REASON, 17.0, 3.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 
-    Account account3 = charge(USER_ID_2, 20.0, "ff-type-3", item2.getId());
+    Account account3 = charge(USER_ID_2, 20.0, "ff-type-3", item2.getId(), OWNER_ID_1);
 
     createAction(USER_ID_2, 1, account3, "2020-01-08 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       17.0, 3.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
@@ -509,8 +509,77 @@ public class FeeFineReportsAPITest extends ApiTests {
     ));
   }
 
+  @Test
+  public void shouldFormReportOnlyForSpecificOwner() {
+    Account account1 = charge(USER_ID_1, 10.0, "ff-type-1", item1.getId(), OWNER_ID_1);
+    createAction(1, account1, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      3.1, 6.9, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+    createAction(2, account1, "2020-01-02 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      3.2, 3.7, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO + "-different-info");
+    createAction(1, account1, "2020-01-03 12:00:00",
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 2.0, 5.7, "", "", TRANSFER_TX_INFO);
+    Feefineaction refundAction1 = createAction(1, account1, "2020-01-04 12:00:00",
+      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 5.7, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUND_TX_INFO);
+    createAction(2, account1, "2020-01-05 12:00:00",
+      PAID_FULLY, PAYMENT_METHOD + "-different-method",
+      5.7, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, REFUND_TX_INFO);
+    Feefineaction refundAction2 = createAction(2, account1, "2020-01-06 12:00:00",
+      REFUNDED_FULLY, REFUND_REASON, 9.0, 0.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUND_TX_INFO);
+
+    Account account2 = charge(USER_ID_1, 20.0, "ff-type-2", item2.getId(), OWNER_ID_2);
+    createAction(1, account2, "2020-01-07 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      17.0, 3.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+    Feefineaction refundAction3 = createAction(1, account2, "2020-01-08 12:00:00",
+      REFUNDED_FULLY, REFUND_REASON, 17.0, 3.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUND_TX_INFO);
+
+    Account account3 = charge(USER_ID_2, 20.0, "ff-type-3", item2.getId(), OWNER_ID_1);
+    createAction(USER_ID_2, 1, account3, "2020-01-08 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      17.0, 3.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+    Feefineaction refundAction4 = createAction(USER_ID_2, 1, account3, "2020-01-09 12:00:00",
+      REFUNDED_FULLY, REFUND_REASON, 17.0, 3.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUND_TX_INFO);
+
+    List<RefundReportEntry> refundReportEntriesForFirstOwner = List.of(
+      buildRefundReportEntry(account1, refundAction1,
+        "6.30", PAYMENT_METHOD, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER),
+      buildRefundReportEntry(account1, refundAction2,
+        "12.00", MULTIPLE, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
+        addSuffix(REFUND_STAFF_INFO, 2), addSuffix(REFUND_PATRON_INFO, 2),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER),
+      buildRefundReportEntry(user2, account3, refundAction4,
+        "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+        item2.getBarcode(), instance.getTitle(), FEE_FINE_OWNER));
+
+    List<RefundReportEntry> refundReportEntriesForSecondOwner = List.of(buildRefundReportEntry(account2, refundAction3,
+      "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+      addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+      item2.getBarcode(), instance.getTitle(), FEE_FINE_OWNER));
+
+    requestAndCheck(refundReportEntriesForFirstOwner, List.of(OWNER_ID_1));
+    requestAndCheck(refundReportEntriesForSecondOwner, List.of(OWNER_ID_2));
+
+    List<RefundReportEntry> summaryRefundReportEntries = new ArrayList<>();
+    summaryRefundReportEntries.addAll(refundReportEntriesForFirstOwner);
+    summaryRefundReportEntries.addAll(2, refundReportEntriesForSecondOwner);
+
+    requestAndCheck(summaryRefundReportEntries, List.of(OWNER_ID_1, OWNER_ID_2));
+  }
+
   private void requestAndCheck(List<RefundReportEntry> reportEntries) {
-    ValidatableResponse response = requestRefundReport(START_DATE, END_DATE).then()
+    requestAndCheck(reportEntries, null);
+  }
+
+  private void requestAndCheck(List<RefundReportEntry> reportEntries,
+    List<String> ownerIds) {
+
+    ValidatableResponse response = requestRefundReport(START_DATE, END_DATE, ownerIds)
+      .then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(reportEntries.size()));
 
@@ -520,12 +589,15 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   private Account charge(Double amount, String feeFineType, String itemId) {
-    return charge(USER_ID_1, amount, feeFineType, itemId);
+    return charge(USER_ID_1, amount, feeFineType, itemId, randomId());
   }
 
-  private Account charge(String userID, Double amount, String feeFineType, String itemId) {
-    final var account = EntityBuilder.buildAccount(userID, itemId, feeFineType, amount);
+  private Account charge(String userID, Double amount, String feeFineType,
+    String itemId, String ownerId) {
+
+    final var account = EntityBuilder.buildAccount(userID, itemId, feeFineType, amount, ownerId);
     createEntity(ACCOUNTS_PATH, account);
+
     return accountsClient.getById(account.getId()).as(Account.class);
   }
 
@@ -639,7 +711,11 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   private Response requestRefundReport(String startDate, String endDate) {
-    return refundReportsClient.getByDateInterval(startDate, endDate);
+    return requestRefundReport(startDate, endDate, null);
+  }
+
+  private Response requestRefundReport(String startDate, String endDate, List<String> ownerIds) {
+    return refundReportsClient.getFeeFineRefundReports(startDate, endDate, ownerIds);
   }
 
   private String formatMonetaryValue(Double value) {

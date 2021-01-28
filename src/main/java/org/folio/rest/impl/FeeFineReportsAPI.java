@@ -7,8 +7,10 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.RefundReport;
+import org.folio.rest.jaxrs.model.RefundReportRequest;
 import org.folio.rest.jaxrs.resource.FeefineReports;
 import org.folio.rest.service.report.RefundReportService;
 import org.joda.time.DateTime;
@@ -27,17 +29,18 @@ public class FeeFineReportsAPI implements FeefineReports {
     "Invalid startDate or endDate parameter";
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
 
+  @Validate
   @Override
-  public void getFeefineReportsRefund(String startDate, String endDate,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+  public void postFeefineReportsRefund(RefundReportRequest entity, Map<String,
+    String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    log.info("Refund report requested, parameters: startDate={}, endDate={}", startDate, endDate);
+    log.info("Refund report requested, parameters: startDate={}, endDate={}",
+      entity.getStartDate(), entity.getEndDate());
 
-    DateTime startDateTime = parseDate(startDate);
-    DateTime endDateTime = parseDate(endDate);
-
-    if (startDateTime == null || endDateTime == null) {
+    DateTime startDate = parseDate(entity.getStartDate());
+    DateTime endDate = parseDate(entity.getEndDate());
+    if (startDate == null || endDate == null) {
       log.error("Invalid parameters: startDate={}, endDate={}", startDate, endDate);
 
       handleRefundReportResult(
@@ -45,7 +48,7 @@ public class FeeFineReportsAPI implements FeefineReports {
         asyncResultHandler);
     } else {
       new RefundReportService(okapiHeaders, vertxContext)
-        .buildReport(startDateTime, endDateTime)
+        .buildReport(startDate, endDate, entity.getFeeFineOwners())
         .onComplete(result -> handleRefundReportResult(result, asyncResultHandler));
     }
   }
@@ -53,18 +56,18 @@ public class FeeFineReportsAPI implements FeefineReports {
   private void handleRefundReportResult(AsyncResult<RefundReport> asyncResult,
     Handler<AsyncResult<Response>> asyncResultHandler) {
     if (asyncResult.succeeded()) {
-      asyncResultHandler.handle(succeededFuture(FeefineReports.GetFeefineReportsRefundResponse
+      asyncResultHandler.handle(succeededFuture(FeefineReports.PostFeefineReportsRefundResponse
         .respond200WithApplicationJson(asyncResult.result())));
     }
     else if (asyncResult.failed()) {
       final Throwable cause = asyncResult.cause();
       if (cause instanceof FailedValidationException) {
         log.error("Report parameters validation failed: " + cause.getLocalizedMessage());
-        asyncResultHandler.handle(succeededFuture(FeefineReports.GetFeefineReportsRefundResponse
-          .respond400WithTextPlain(cause.getLocalizedMessage())));
+        asyncResultHandler.handle(succeededFuture(FeefineReports.PostFeefineReportsRefundResponse
+          .respond422WithTextPlain(cause.getLocalizedMessage())));
       } else {
         log.error("Failed to build report: " + cause.getLocalizedMessage());
-        asyncResultHandler.handle(succeededFuture(FeefineReports.GetFeefineReportsRefundResponse
+        asyncResultHandler.handle(succeededFuture(FeefineReports.PostFeefineReportsRefundResponse
           .respond500WithTextPlain(INTERNAL_SERVER_ERROR_MESSAGE)));
       }
     }
