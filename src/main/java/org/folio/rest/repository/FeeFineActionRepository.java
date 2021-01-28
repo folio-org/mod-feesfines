@@ -138,10 +138,10 @@ public class FeeFineActionRepository {
 
     String query = format(
       "SELECT actions.jsonb FROM %1$s.%2$s actions " +
-        "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->> 'accountId' = accounts.jsonb->>'id' " +
+        "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->>'accountId' = accounts.jsonb->>'id' " +
         "WHERE actions.jsonb->>'dateAction' >= $1 " +
         "AND actions.jsonb->>'dateAction' < $2 " +
-        "AND actions.jsonb->>'typeAction' IN ($3,$4) " +
+        "AND actions.jsonb->>'typeAction' IN ($3, $4) " +
         "%4$s" +
         "ORDER BY actions.jsonb->>'dateAction' ASC " +
         "LIMIT $5",
@@ -163,10 +163,10 @@ public class FeeFineActionRepository {
       return EMPTY;
     }
 
-    return format("AND accounts.jsonb->>'ownerId' IN (%s)",
+    return format("AND accounts.jsonb->>'ownerId' IN (%s) ",
       ownerIds.stream()
         .map(id -> format("'%s'", id))
-        .collect(Collectors.joining(",")));
+        .collect(Collectors.joining(", ")));
   }
 
   public Future<Feefineaction> save(Feefineaction feefineaction) {
