@@ -26,14 +26,12 @@ public abstract class ActionsAPITests extends ApiTests {
       .body("remaining", is((float) amount))
       .body("status.name", is(statusName))
       .body("paymentStatus.name", is(expectedPaymentStatus))
-      .body("dateUpdated", notNullValue())
       .body("metadata.updatedDate", notNullValue());
 
     final Account updatedAccount = getAccountByIdResponse.as(Account.class);
     final Date dateCreated = updatedAccount.getMetadata().getCreatedDate();
     final Date dateUpdated = updatedAccount.getMetadata().getUpdatedDate();
 
-    assertThat(dateUpdated, equalTo(updatedAccount.getDateUpdated()));
     assertThat(dateCreated, not(equalTo(dateUpdated)));
 
     return updatedAccount;

@@ -148,7 +148,6 @@ public abstract class ActionService {
       .withDateAction(new Date());
 
     account.getPaymentStatus().setName(actionType);
-    account.setDateUpdated(new Date());
     account.getMetadata().setUpdatedDate(new Date());
     account.getMetadata().setUpdatedByUsername(request.getUserName());
 
