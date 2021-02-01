@@ -12,12 +12,14 @@ import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
+import lombok.extern.slf4j.Slf4j;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
@@ -27,17 +29,16 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.service.AccountUpdateService;
-import org.folio.rest.service.LogEventService;
 import org.folio.rest.service.LogEventPublisher;
+import org.folio.rest.service.LogEventService;
 import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.service.action.context.ActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
+import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.rest.utils.amountsplitter.BulkActionAmountSplitterStrategy;
 import org.folio.rest.utils.amountsplitter.SplitEvenlyRecursively;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-
+@Slf4j
 public abstract class ActionService {
   protected final Action action;
   protected final AccountRepository accountRepository;
@@ -48,6 +49,7 @@ public abstract class ActionService {
   protected final BulkActionAmountSplitterStrategy amountSplitterStrategy;
   private final LogEventService logEventService;
   private final LogEventPublisher logEventPublisher;
+  private final Map<String, String> headers;
 
   protected ActionService(Action action, ActionValidationService validationService,
     Map<String, String> headers, Context context) {
@@ -63,6 +65,7 @@ public abstract class ActionService {
     this.amountSplitterStrategy = new SplitEvenlyRecursively();
     this.logEventService = new LogEventService(context.owner(), headers);
     this.logEventPublisher = new LogEventPublisher(context.owner(), headers);
+    this.headers = headers;
   }
 
   protected ActionService(Action action, ActionValidationService validationService,
@@ -80,6 +83,7 @@ public abstract class ActionService {
     this.amountSplitterStrategy = bulkActionAmountSplitterStrategy;
     this.logEventService = new LogEventService(context.owner(), headers);
     this.logEventPublisher = new LogEventPublisher(context.owner(), headers);
+    this.headers = headers;
   }
 
   public Future<ActionContext> performAction(ActionRequest request) {
@@ -148,8 +152,7 @@ public abstract class ActionService {
       .withDateAction(new Date());
 
     account.getPaymentStatus().setName(actionType);
-    account.getMetadata().setUpdatedDate(new Date());
-    account.getMetadata().setUpdatedByUsername(request.getUserName());
+    populateMetadata(account);
 
     if (isFullAction) {
       account.getStatus().setName(CLOSED.getValue());
@@ -159,6 +162,15 @@ public abstract class ActionService {
     }
 
     return feeFineAction;
+  }
+
+  private void populateMetadata(Account account) {
+    try {
+      MetadataUtil.populateMetadata(account, headers);
+    } catch (ReflectiveOperationException e) {
+      log.error("Can not populate Metadata, cause {}", e.getMessage());
+      account.getMetadata().setUpdatedDate(new Date());
+    }
   }
 
   private Future<ActionContext> updateAccounts(ActionContext context) {
