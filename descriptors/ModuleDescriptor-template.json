@@ -1383,7 +1383,7 @@
       "visible": false
     },
     {
-      "permissionName":"feefine-reports.refund.get",
+      "permissionName":"feefine-reports.refund.post",
       "displayName":"module permissions for loading refund report",
       "description":"Load a refund report"
     }
