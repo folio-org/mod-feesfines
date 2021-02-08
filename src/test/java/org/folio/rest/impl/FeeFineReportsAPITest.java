@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static java.lang.String.format;
+import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.utils.ResourceClients.buildRefundReportClient;
 import static org.folio.test.support.EntityBuilder.createCampus;
@@ -192,11 +193,15 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   @Test
   public void shouldReturn422WhenRequestIsNotValid() {
-    refundReportsClient.getFeeFineRefundReports("2020-01-01", null, HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports(null, "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports(null, null, HTTP_UNPROCESSABLE_ENTITY);
+  }
+
+  @Test
+  public void shouldReturn200WhenEndDateIsNotValid() {
+    refundReportsClient.getFeeFineRefundReports("2020-01-01", null, HTTP_OK);
+    refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_OK);
   }
 
   @Test
@@ -271,6 +276,16 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     requestAndCheck(List.of(createResponseForMinimumViableData(sourceObjects)
       .withInstance("")));
+  }
+
+  @Test
+  public void validReportWhenEndDateIsNull() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
+
+    removeStub(instanceStubMapping);
+
+    requestAndCheckWithoutEndDate(List.of(createResponseForMinimumViableData(sourceObjects)
+      .withInstance("")),null);
   }
 
   @Test
@@ -579,6 +594,19 @@ public class FeeFineReportsAPITest extends ApiTests {
     List<String> ownerIds) {
 
     ValidatableResponse response = requestRefundReport(START_DATE, END_DATE, ownerIds)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("reportData", iterableWithSize(reportEntries.size()));
+
+    IntStream.range(0, reportEntries.size())
+      .forEach(index -> response.body(format("reportData[%d]", index),
+        refundReportEntryMatcher(reportEntries.get(index))));
+  }
+
+  private void requestAndCheckWithoutEndDate(List<RefundReportEntry> reportEntries,
+                               List<String> ownerIds) {
+
+    ValidatableResponse response = requestRefundReport(START_DATE, null, ownerIds)
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(reportEntries.size()));

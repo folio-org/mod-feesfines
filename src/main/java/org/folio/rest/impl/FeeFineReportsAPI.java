@@ -25,8 +25,8 @@ import io.vertx.core.logging.LoggerFactory;
 public class FeeFineReportsAPI implements FeefineReports {
   private static final Logger log = LoggerFactory.getLogger(FeeFineReportsAPI.class);
 
-  private static final String INVALID_START_DATE_OR_END_DATE_MESSAGE =
-    "Invalid startDate or endDate parameter";
+  private static final String INVALID_START_DATE_MESSAGE =
+    "Invalid startDate parameter";
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
 
   @Validate
@@ -40,13 +40,18 @@ public class FeeFineReportsAPI implements FeefineReports {
 
     DateTime startDate = parseDate(entity.getStartDate());
     DateTime endDate = parseDate(entity.getEndDate());
-    if (startDate == null || endDate == null) {
-      log.error("Invalid parameters: startDate={}, endDate={}", startDate, endDate);
+    if (startDate == null) {
+      log.error("Invalid parameter: startDate=null");
 
       handleRefundReportResult(
-        failedFuture(new FailedValidationException(INVALID_START_DATE_OR_END_DATE_MESSAGE)),
+        failedFuture(new FailedValidationException(INVALID_START_DATE_MESSAGE)),
         asyncResultHandler);
     } else {
+
+      if(endDate == null){
+        endDate = DateTime.now();
+      }
+
       new RefundReportService(okapiHeaders, vertxContext)
         .buildReport(startDate, endDate, entity.getFeeFineOwners())
         .onComplete(result -> handleRefundReportResult(result, asyncResultHandler));
