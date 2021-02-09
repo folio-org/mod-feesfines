@@ -588,17 +588,22 @@ public class FeeFineReportsAPITest extends ApiTests {
     createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
 
+    // Create transfer action with the same date to check it is sorted correctly
+    createAction(1, account, "2020-01-01 12:00:00",
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.0, 4.5, "", "", TRANSFER_TX_INFO);
+
     // Create transfer action with null date to check that it is sorted correctly
     createAction(1, account, null,
-      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.5, 8.5, "", "", TRANSFER_TX_INFO);
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 0.5, 4.0, "", "", TRANSFER_TX_INFO);
 
     // Ensure that actions are returned in the wrong order
     feeFineActionsClient.getAll()
       .then()
-      .body(FEE_FINE_ACTIONS, hasSize(3))
+      .body(FEE_FINE_ACTIONS, hasSize(4))
       .body(FEE_FINE_ACTIONS + "[0]." + TYPE_ACTION, equalTo("Refunded partially"))
       .body(FEE_FINE_ACTIONS + "[1]." + TYPE_ACTION, equalTo("Paid partially"))
-      .body(FEE_FINE_ACTIONS + "[2]." + TYPE_ACTION, equalTo("Transferred partially"));
+      .body(FEE_FINE_ACTIONS + "[2]." + TYPE_ACTION, equalTo("Transferred partially"))
+      .body(FEE_FINE_ACTIONS + "[3]." + TYPE_ACTION, equalTo("Transferred partially"));
 
     requestAndCheck(List.of(
       buildRefundReportEntry(account, refundAction,

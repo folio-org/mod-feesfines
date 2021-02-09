@@ -439,8 +439,8 @@ public class RefundReportService {
 
   private Comparator<Feefineaction> actionDateComparator() {
     return (left, right) -> {
-      if (left == null || right == null || left.getDateAction() == null
-        || right.getDateAction() == null || left.getDateAction().equals(right.getDateAction())) {
+      if (left.getDateAction() == null || right.getDateAction() == null
+        || left.getDateAction().equals(right.getDateAction())) {
         return 0;
       } else {
         return new DateTime(left.getDateAction())
