@@ -11,6 +11,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.rest.utils.ResourceClients.buildAccountClient;
+import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockTemplateClient;
@@ -68,6 +69,7 @@ public class ApiTests {
   protected static Vertx vertx;
 
   protected final ResourceClient accountsClient = buildAccountClient();
+  protected final ResourceClient feeFineActionsClient = buildFeeFineActionsClient();
   protected final ResourceClient manualBlocksClient = buildManualBlockClient();
   protected final ResourceClient feeFinesClient = buildFeeFinesClient();
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();

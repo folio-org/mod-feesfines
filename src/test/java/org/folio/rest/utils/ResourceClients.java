@@ -102,7 +102,7 @@ public final class ResourceClients {
     return new ResourceClient(format("/accounts-bulk/%s", action));
   }
 
-  public static ResourceClient feeFineActionsClient() {
+  public static ResourceClient buildFeeFineActionsClient() {
     return new ResourceClient("/feefineactions");
   }
 

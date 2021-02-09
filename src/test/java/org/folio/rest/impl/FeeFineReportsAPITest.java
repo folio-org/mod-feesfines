@@ -20,7 +20,9 @@ import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_GROUPS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 
 import java.util.ArrayList;
@@ -64,6 +66,9 @@ import lombok.NoArgsConstructor;
 import lombok.With;
 
 public class FeeFineReportsAPITest extends ApiTests {
+  private static final String FEE_FINE_ACTIONS = "feefineactions";
+  private static final String TYPE_ACTION = "typeAction";
+
   private static final String USER_ID_1 = randomId();
   private static final String USER_ID_2 = randomId();
   private static final String OWNER_ID_1 = randomId();
@@ -571,6 +576,37 @@ public class FeeFineReportsAPITest extends ApiTests {
     requestAndCheck(summaryRefundReportEntries, List.of(OWNER_ID_1, OWNER_ID_2));
   }
 
+  @Test
+  public void paymentInformationShouldBeIncludedWhenOrderOfActionsIsIncorrect() {
+    Account account = charge(10.0, "ff-type", item1.getId());
+
+    // Create the refund action first, before payment and transfer
+    Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
+      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 8.5, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUNDED_TO_PATRON_TX_INFO);
+
+    createAction(1, account, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
+      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+
+    createAction(1, account, "2020-01-02 12:00:00",
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.5, 8.5, "", "", TRANSFER_TX_INFO);
+
+    // Ensure that actions are returned in the wrong order
+    feeFineActionsClient.getAll()
+      .then()
+      .body(FEE_FINE_ACTIONS, hasSize(3))
+      .body(FEE_FINE_ACTIONS + "[0]." + TYPE_ACTION, equalTo("Refunded partially"))
+      .body(FEE_FINE_ACTIONS + "[1]." + TYPE_ACTION, equalTo("Paid partially"))
+      .body(FEE_FINE_ACTIONS + "[2]." + TYPE_ACTION, equalTo("Transferred partially"));
+
+    requestAndCheck(List.of(
+      buildRefundReportEntry(account, refundAction,
+        "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "", "",
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+        item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
+    ));
+  }
+
   private void requestAndCheck(List<RefundReportEntry> reportEntries) {
     requestAndCheck(reportEntries, null);
   }
@@ -604,11 +640,11 @@ public class FeeFineReportsAPITest extends ApiTests {
   private ReportSourceObjects createMinimumViableReportData() {
     Account account = charge(10.0, "ff-type", item1.getId());
 
-    Feefineaction payment = createAction(1, account, "2020-01-02 12:00:00",
+    Feefineaction payment = createAction(1, account, "2020-01-01 12:00:00",
       PAID_PARTIALLY, PAYMENT_METHOD, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO);
 
-    Feefineaction refund = createAction(1, account, "2020-01-01 12:00:00",
+    Feefineaction refund = createAction(1, account, "2020-01-02 12:00:00",
       REFUNDED_PARTIALLY, REFUND_REASON, 2.0, 7.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 

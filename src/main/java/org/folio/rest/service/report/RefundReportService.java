@@ -14,6 +14,7 @@ import static org.joda.time.DateTimeZone.UTC;
 import static org.apache.commons.lang.StringUtils.defaultString;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
@@ -431,8 +432,21 @@ public class RefundReportService {
 
     return feeFineActionRepository.findActionsOfTypesForAccount(accountId,
       List.of(REFUND, PAY, TRANSFER))
+      .map(ffa -> ffa.stream().sorted(actionDateComparator()).collect(Collectors.toList()))
       .map(ctx.accounts.get(accountId)::withActions)
       .map(AccountContextData::getActions);
+  }
+
+  private Comparator<Feefineaction> actionDateComparator() {
+    return (left, right) -> {
+      if (left == null || right == null || left.getDateAction() == null
+        || right.getDateAction() == null || left.getDateAction().equals(right.getDateAction())) {
+        return 0;
+      } else {
+        return new DateTime(left.getDateAction())
+          .isAfter(new DateTime(right.getDateAction())) ? 1 : -1;
+      }
+    };
   }
 
   private void setUpLocale(LocaleSettings localeSettings) {
