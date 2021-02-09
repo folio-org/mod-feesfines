@@ -47,11 +47,9 @@ public class FeeFineReportsAPI implements FeefineReports {
         failedFuture(new FailedValidationException(INVALID_START_DATE_MESSAGE)),
         asyncResultHandler);
     } else {
-
-      if(endDate == null){
+      if (endDate == null) {
         endDate = DateTime.now();
       }
-
       new RefundReportService(okapiHeaders, vertxContext)
         .buildReport(startDate, endDate, entity.getFeeFineOwners())
         .onComplete(result -> handleRefundReportResult(result, asyncResultHandler));
