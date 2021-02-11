@@ -14,6 +14,7 @@ import org.folio.rest.jaxrs.model.RefundReportRequest;
 import org.folio.rest.jaxrs.resource.FeefineReports;
 import org.folio.rest.service.report.RefundReportService;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.ISODateTimeFormat;
 
 import io.vertx.core.AsyncResult;
@@ -28,6 +29,7 @@ public class FeeFineReportsAPI implements FeefineReports {
   private static final String INVALID_START_DATE_MESSAGE =
     "Invalid startDate parameter";
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
+  private static final DateTime DEFAULT_START_DATE = new DateTime(0, 1, 1, 0, 0, 0, DateTimeZone.UTC);
 
   @Validate
   @Override
@@ -42,7 +44,7 @@ public class FeeFineReportsAPI implements FeefineReports {
     DateTime endDate = parseDate(entity.getEndDate());
 
     if (startDate == null && endDate == null) {
-      startDate = new DateTime(Long.MIN_VALUE);
+      startDate = DEFAULT_START_DATE;
       endDate = DateTime.now();
     }
 
