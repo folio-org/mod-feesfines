@@ -40,8 +40,14 @@ public class FeeFineReportsAPI implements FeefineReports {
 
     DateTime startDate = parseDate(entity.getStartDate());
     DateTime endDate = parseDate(entity.getEndDate());
+
+    if (startDate == null && endDate == null) {
+      startDate = new DateTime(Long.MIN_VALUE);
+      endDate = DateTime.now();
+    }
+
     if (startDate == null) {
-      log.error("Invalid parameter: startDate=null");
+      log.error("Invalid parameter: startDate is null");
 
       handleRefundReportResult(
         failedFuture(new FailedValidationException(INVALID_START_DATE_MESSAGE)),

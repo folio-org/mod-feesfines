@@ -195,13 +195,13 @@ public class FeeFineReportsAPITest extends ApiTests {
   public void shouldReturn422WhenRequestIsNotValid() {
     refundReportsClient.getFeeFineRefundReports(null, "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReports(null, null, HTTP_UNPROCESSABLE_ENTITY);
   }
 
   @Test
-  public void shouldReturn200WhenEndDateIsNotValid() {
+  public void shouldReturn200WhenRequestIsValid() {
     refundReportsClient.getFeeFineRefundReports("2020-01-01", null, HTTP_OK);
     refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_OK);
+    refundReportsClient.getFeeFineRefundReports(null, null, HTTP_OK);
   }
 
   @Test
@@ -284,8 +284,18 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     removeStub(instanceStubMapping);
 
-    requestAndCheckWithoutEndDate(List.of(createResponseForMinimumViableData(sourceObjects)
-      .withInstance("")),null);
+    requestAndCheckWithoutSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)
+      .withInstance("")),null, START_DATE, null);
+  }
+
+  @Test
+  public void validReportWhenStartDateAndEndDateAreNull() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
+
+    removeStub(instanceStubMapping);
+
+    requestAndCheckWithoutSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)
+      .withInstance("")), null, null, null);
   }
 
   @Test
@@ -603,10 +613,10 @@ public class FeeFineReportsAPITest extends ApiTests {
         refundReportEntryMatcher(reportEntries.get(index))));
   }
 
-  private void requestAndCheckWithoutEndDate(List<RefundReportEntry> reportEntries,
-                               List<String> ownerIds) {
+  private void requestAndCheckWithoutSpecificDates(List<RefundReportEntry> reportEntries,
+                               List<String> ownerIds, String startDate, String endDate) {
 
-    ValidatableResponse response = requestRefundReport(START_DATE, null, ownerIds)
+    ValidatableResponse response = requestRefundReport(startDate, endDate, ownerIds)
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(reportEntries.size()));

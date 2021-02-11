@@ -21,9 +21,5 @@
         "$ref": "../raml-util/schemas/uuid.schema"
       }
     }
-  },
-  "additionalProperties": false,
-  "required": [
-    "startDate"
-  ]
+  }
 }
