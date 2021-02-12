@@ -3,6 +3,7 @@ package org.folio.rest.service.report;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.math.BigDecimal.ZERO;
+import static org.apache.commons.lang.StringUtils.defaultString;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
@@ -11,7 +12,6 @@ import static org.folio.rest.utils.AccountHelper.STAFF_COMMENTS_KEY;
 import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
-import static org.apache.commons.lang.StringUtils.defaultString;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -432,9 +432,15 @@ public class RefundReportService {
 
     return feeFineActionRepository.findActionsOfTypesForAccount(accountId,
       List.of(REFUND, PAY, TRANSFER))
-      .map(ffa -> ffa.stream().sorted(actionDateComparator()).collect(Collectors.toList()))
+      .map(this::sortFeeFineActionsByDate)
       .map(ctx.accounts.get(accountId)::withActions)
       .map(AccountContextData::getActions);
+  }
+
+  private List<Feefineaction> sortFeeFineActionsByDate(List<Feefineaction> feeFineActions) {
+    return feeFineActions.stream()
+      .sorted(actionDateComparator())
+      .collect(Collectors.toList());
   }
 
   private Comparator<Feefineaction> actionDateComparator() {
