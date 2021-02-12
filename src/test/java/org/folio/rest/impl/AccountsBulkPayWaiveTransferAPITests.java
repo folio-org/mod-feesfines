@@ -14,7 +14,7 @@ import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkWaiveClient;
-import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -67,7 +67,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ApiTests {
   private static final List<String> FIRST_ACCOUNT_ID_AS_LIST = singletonList(FIRST_ACCOUNT_ID);
   private static final List<String> TWO_ACCOUNT_IDS = Arrays.asList(FIRST_ACCOUNT_ID, SECOND_ACCOUNT_ID);
 
-  private final ResourceClient actionsClient = feeFineActionsClient();
+  private final ResourceClient actionsClient = buildFeeFineActionsClient();
   private final Action action;
   private ResourceClient resourceClient;
 
