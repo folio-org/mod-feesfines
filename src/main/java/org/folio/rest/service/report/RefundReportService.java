@@ -445,12 +445,18 @@ public class RefundReportService {
 
   private Comparator<Feefineaction> actionDateComparator() {
     return (left, right) -> {
-      if (left.getDateAction() == null || right.getDateAction() == null
-        || left.getDateAction().equals(right.getDateAction())) {
+      if (left == null || right == null) {
+        return 0;
+      }
+
+      Date leftDate = left.getDateAction();
+      Date rightDate = right.getDateAction();
+
+      if (leftDate == null || rightDate == null || leftDate.equals(rightDate)) {
         return 0;
       } else {
-        return new DateTime(left.getDateAction())
-          .isAfter(new DateTime(right.getDateAction())) ? 1 : -1;
+        return new DateTime(leftDate)
+          .isAfter(new DateTime(rightDate)) ? 1 : -1;
       }
     };
   }
