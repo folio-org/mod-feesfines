@@ -25,6 +25,7 @@ import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
@@ -168,8 +169,14 @@ public abstract class ActionService {
     try {
       MetadataUtil.populateMetadata(account, headers);
     } catch (ReflectiveOperationException e) {
-      log.error("Can not populate Metadata, cause {}", e.getMessage());
-      account.getMetadata().setUpdatedDate(new Date());
+      log.error("Can not populate Metadata for Account with Id {}, cause {}", account.getId(), e.getMessage());
+      if (account.getMetadata() != null) {
+        account.getMetadata().setUpdatedDate(new Date());
+      } else {
+        Metadata metadata = new Metadata();
+        metadata.setUpdatedDate(new Date());
+        account.setMetadata(metadata);
+      }
     }
   }
 
