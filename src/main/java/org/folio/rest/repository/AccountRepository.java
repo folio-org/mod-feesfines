@@ -67,5 +67,4 @@ public class AccountRepository {
     pgClient.update(ACCOUNTS_TABLE, account, account.getId(), promise);
     return promise.future().map(account);
   }
-
 }

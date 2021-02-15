@@ -195,8 +195,10 @@
             "DELETE"
           ],
           "pathPattern":"/accounts/{id}",
-          "permissionsRequired":[
-            "accounts.item.delete",
+          "permissionsRequired": [
+            "accounts.item.delete"
+          ],
+          "modulePermissions": [
             "pubsub.publish.post"
           ]
         },
@@ -933,15 +935,15 @@
     },
     {
       "id" : "feefine-reports",
-      "version" : "1.0",
+      "version" : "2.0",
       "handlers": [
         {
           "methods":[
-            "GET"
+            "POST"
           ],
           "pathPattern":"/feefine-reports/refund",
           "permissionsRequired":[
-            "feefine-reports.refund.get"
+            "feefine-reports.refund.post"
           ],
           "modulePermissions": [
             "configuration.entries.collection.get",
@@ -1381,7 +1383,7 @@
       "visible": false
     },
     {
-      "permissionName":"feefine-reports.refund.get",
+      "permissionName":"feefine-reports.refund.post",
       "displayName":"module permissions for loading refund report",
       "description":"Load a refund report"
     }
