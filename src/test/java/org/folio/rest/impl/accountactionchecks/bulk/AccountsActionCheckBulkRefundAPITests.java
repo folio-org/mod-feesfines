@@ -4,7 +4,7 @@ import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckRefundClient;
-import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.impl.accountactionchecks.AccountsActionChecksAPITestsBase;
@@ -34,12 +34,12 @@ public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksA
       .withUserId(firstAccount.getUserId())
       .withAmountAction((REQUESTED_AMOUNT + expectedRemainingAmount) / 2);
 
-    feeFineActionsClient()
+    buildFeeFineActionsClient()
       .post(feeFineAction.withTypeAction(PAY.getPartialResult()))
       .then()
       .statusCode(HttpStatus.SC_CREATED);
 
-    feeFineActionsClient()
+    buildFeeFineActionsClient()
       .post(feeFineAction.withTypeAction(TRANSFER.getPartialResult()))
       .then()
       .statusCode(HttpStatus.SC_CREATED);

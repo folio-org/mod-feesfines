@@ -13,7 +13,7 @@ import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
-import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.test.support.matcher.FeeFineActionMatchers.feeFineAction;
 import static org.folio.test.support.matcher.LogEventMatcher.feeFineActionLogEventPayload;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -53,7 +53,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
   private static final String ACCOUNT_ID = randomId();
   private static final String FEE_FINE_ACTIONS = "feefineactions";
 
-  private final ResourceClient actionsClient = feeFineActionsClient();
+  private final ResourceClient actionsClient = buildFeeFineActionsClient();
   private final Action action;
   private ResourceClient resourceClient;
 
