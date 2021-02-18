@@ -195,13 +195,15 @@ public class FeeFineReportsAPITest extends ApiTests {
   public void shouldReturn422WhenRequestIsNotValid() {
     refundReportsClient.getFeeFineRefundReports(null, "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports("not-a-date", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
   }
 
   @Test
   public void shouldReturn200WhenRequestIsValid() {
     refundReportsClient.getFeeFineRefundReports("2020-01-01", null, HTTP_OK);
-    refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_OK);
     refundReportsClient.getFeeFineRefundReports(null, null, HTTP_OK);
+    refundReportsClient.getFeeFineRefundReports("2020-01-01", "2020-02-01", HTTP_OK);
   }
 
   @Test

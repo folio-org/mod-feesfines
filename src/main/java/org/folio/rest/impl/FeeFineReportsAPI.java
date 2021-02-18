@@ -26,10 +26,9 @@ import io.vertx.core.logging.LoggerFactory;
 public class FeeFineReportsAPI implements FeefineReports {
   private static final Logger log = LoggerFactory.getLogger(FeeFineReportsAPI.class);
 
-  private static final String INVALID_START_DATE_MESSAGE =
-    "Invalid startDate parameter";
+  private static final String INVALID_START_DATE_MESSAGE = "Invalid startDate parameter";
+  private static final String INVALID_START_DATE_OR_END_DATE_MESSAGE = "Invalid startDate or endDate parameter";
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
-  private static final DateTime DEFAULT_START_DATE = new DateTime(0, 1, 1, 0, 0, 0, DateTimeZone.UTC);
 
   @Validate
   @Override
@@ -40,28 +39,35 @@ public class FeeFineReportsAPI implements FeefineReports {
     log.info("Refund report requested, parameters: startDate={}, endDate={}",
       entity.getStartDate(), entity.getEndDate());
 
-    DateTime startDate = parseDate(entity.getStartDate());
-    DateTime endDate = parseDate(entity.getEndDate());
+    String rawStartDate = entity.getStartDate();
+    String rawEndDate = entity.getEndDate();
 
-    if (startDate == null && endDate == null) {
-      startDate = DEFAULT_START_DATE;
-      endDate = DateTime.now();
-    }
-
-    if (startDate == null) {
-      log.error("Invalid parameter: startDate is null");
+    if (rawStartDate == null && rawEndDate != null){
+      log.error("Invalid request: startDate is null");
 
       handleRefundReportResult(
         failedFuture(new FailedValidationException(INVALID_START_DATE_MESSAGE)),
         asyncResultHandler);
-    } else {
-      if (endDate == null) {
-        endDate = DateTime.now();
-      }
-      new RefundReportService(okapiHeaders, vertxContext)
-        .buildReport(startDate, endDate, entity.getFeeFineOwners())
-        .onComplete(result -> handleRefundReportResult(result, asyncResultHandler));
     }
+
+    DateTime startDate = null;
+    DateTime endDate = null;
+
+    try {
+      startDate = parseDate(rawStartDate);
+      endDate = parseDate(rawEndDate);
+    } catch (IllegalArgumentException e) {
+      log.error("Invalid request parameters: startDate={}, endDate={}", rawStartDate, rawEndDate);
+
+      handleRefundReportResult(
+        failedFuture(new FailedValidationException(INVALID_START_DATE_OR_END_DATE_MESSAGE)),
+        asyncResultHandler);
+    }
+
+    new RefundReportService(okapiHeaders, vertxContext)
+      .buildReport(startDate, endDate, entity.getFeeFineOwners())
+      .onComplete(result -> handleRefundReportResult(result, asyncResultHandler));
+
   }
 
   private void handleRefundReportResult(AsyncResult<RefundReport> asyncResult,
@@ -88,12 +94,6 @@ public class FeeFineReportsAPI implements FeefineReports {
     if (date == null) {
       return null;
     }
-
-    try {
-      return DateTime.parse(date, ISODateTimeFormat.date());
-    }
-    catch (IllegalArgumentException e) {
-      return null;
-    }
+    return DateTime.parse(date, ISODateTimeFormat.date());
   }
 }
