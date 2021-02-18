@@ -6,7 +6,7 @@ import static java.lang.String.format;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCancelClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCancelClient;
-import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
+import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.test.support.EntityBuilder.buildAccount;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.either;
@@ -39,7 +39,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ACCOUNT_ID = randomId();
 
-  private final ResourceClient actionsClient = feeFineActionsClient();
+  private final ResourceClient actionsClient = buildFeeFineActionsClient();
   private final ResourceClient accountCancelClient = buildAccountCancelClient(ACCOUNT_ID);
   private final ResourceClient accountBulkCancelClient = buildAccountBulkCancelClient();
 

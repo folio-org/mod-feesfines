@@ -3,6 +3,7 @@ package org.folio.rest.service.report;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.math.BigDecimal.ZERO;
+import static org.apache.commons.lang.StringUtils.defaultString;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
@@ -11,9 +12,9 @@ import static org.folio.rest.utils.AccountHelper.STAFF_COMMENTS_KEY;
 import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
-import static org.apache.commons.lang.StringUtils.defaultString;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
@@ -442,8 +443,33 @@ public class RefundReportService {
 
     return feeFineActionRepository.findActionsOfTypesForAccount(accountId,
       List.of(REFUND, PAY, TRANSFER))
+      .map(this::sortFeeFineActionsByDate)
       .map(ctx.accounts.get(accountId)::withActions)
       .map(AccountContextData::getActions);
+  }
+
+  private List<Feefineaction> sortFeeFineActionsByDate(List<Feefineaction> feeFineActions) {
+    return feeFineActions.stream()
+      .sorted(actionDateComparator())
+      .collect(Collectors.toList());
+  }
+
+  private Comparator<Feefineaction> actionDateComparator() {
+    return (left, right) -> {
+      if (left == null || right == null) {
+        return 0;
+      }
+
+      Date leftDate = left.getDateAction();
+      Date rightDate = right.getDateAction();
+
+      if (leftDate == null || rightDate == null || leftDate.equals(rightDate)) {
+        return 0;
+      } else {
+        return new DateTime(leftDate)
+          .isAfter(new DateTime(rightDate)) ? 1 : -1;
+      }
+    };
   }
 
   private void setUpLocale(LocaleSettings localeSettings) {
