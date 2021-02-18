@@ -287,7 +287,7 @@ public class FeeFineReportsAPITest extends ApiTests {
     removeStub(instanceStubMapping);
 
     requestAndCheckWithoutSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)
-      .withInstance("")),null, START_DATE, null);
+      .withInstance("")), null, START_DATE, null);
   }
 
   @Test
@@ -616,7 +616,7 @@ public class FeeFineReportsAPITest extends ApiTests {
   }
 
   private void requestAndCheckWithoutSpecificDates(List<RefundReportEntry> reportEntries,
-                               List<String> ownerIds, String startDate, String endDate) {
+    List<String> ownerIds, String startDate, String endDate) {
 
     ValidatableResponse response = requestRefundReport(startDate, endDate, ownerIds)
       .then()
