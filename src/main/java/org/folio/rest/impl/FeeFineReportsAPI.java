@@ -14,7 +14,6 @@ import org.folio.rest.jaxrs.model.RefundReportRequest;
 import org.folio.rest.jaxrs.resource.FeefineReports;
 import org.folio.rest.service.report.RefundReportService;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.ISODateTimeFormat;
 
 import io.vertx.core.AsyncResult;
@@ -26,7 +25,7 @@ import io.vertx.core.logging.LoggerFactory;
 public class FeeFineReportsAPI implements FeefineReports {
   private static final Logger log = LoggerFactory.getLogger(FeeFineReportsAPI.class);
 
-  private static final String INVALID_START_DATE_MESSAGE = "Invalid startDate parameter";
+  private static final String INVALID_START_DATE_MESSAGE = "Start date should not be empty when end date is specified";
   private static final String INVALID_START_DATE_OR_END_DATE_MESSAGE = "Invalid startDate or endDate parameter";
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
 
@@ -43,11 +42,12 @@ public class FeeFineReportsAPI implements FeefineReports {
     String rawEndDate = entity.getEndDate();
 
     if (rawStartDate == null && rawEndDate != null){
-      log.error("Invalid request: startDate is null");
+      log.error("startDate is null and endDate is not null");
 
       handleRefundReportResult(
         failedFuture(new FailedValidationException(INVALID_START_DATE_MESSAGE)),
         asyncResultHandler);
+      return;
     }
 
     DateTime startDate = null;
@@ -62,6 +62,7 @@ public class FeeFineReportsAPI implements FeefineReports {
       handleRefundReportResult(
         failedFuture(new FailedValidationException(INVALID_START_DATE_OR_END_DATE_MESSAGE)),
         asyncResultHandler);
+      return;
     }
 
     new RefundReportService(okapiHeaders, vertxContext)

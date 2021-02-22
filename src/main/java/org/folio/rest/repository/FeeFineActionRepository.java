@@ -75,7 +75,7 @@ public class FeeFineActionRepository {
   }
 
   public Future<List<Feefineaction>> findActionsOfTypesForAccount(String accountId,
-                                                                  List<Action> types) {
+    List<Action> types) {
 
     if (accountId == null) {
       return failedFuture(new IllegalArgumentException("Account ID is null"));
@@ -132,58 +132,42 @@ public class FeeFineActionRepository {
   }
 
   public Future<List<Feefineaction>> findActionsByTypeForPeriodAndOwners(Action typeAction,
-                                                                         String startDate, String endDate, List<String> ownerIds, int limit) {
+    String startDate, String endDate, List<String> ownerIds, int limit) {
+
+    final String startDateParameter = "actions.jsonb->>'dateAction' >= $4";
+    final String endDateParameter = "actions.jsonb->>'dateAction' < $5";
+    final String actionsParameter ="WHERE actions.jsonb->>'typeAction' IN ($2, $3)";
 
     String ownerIdsFilter = buildOwnerIdsFilter(ownerIds);
-    String selectWithJoin = "SELECT actions.jsonb FROM %1$s.%2$s actions " +
-      "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->>'accountId' = accounts.jsonb->>'id' ";
-    String orderBy = "ORDER BY actions.jsonb->>'dateAction' ASC ";
-    String query = null;
     Tuple params = null;
 
+    List<String> dateParams = new ArrayList<>();
+    dateParams.add(actionsParameter);
+
     if (startDate != null && endDate != null) {
-      query = format(
-        selectWithJoin +
-          "WHERE actions.jsonb->>'dateAction' >= $1 " +
-          "AND actions.jsonb->>'dateAction' < $2 " +
-          "AND actions.jsonb->>'typeAction' IN ($3, $4) " +
-          "%4$s" +
-          orderBy +
-          "LIMIT $5",
-        PostgresClient.convertToPsqlStandard(tenantId),
-        ACTIONS_TABLE,
-        ACCOUNTS_TABLE,
-        ownerIdsFilter);
-      params = Tuple.of(startDate, endDate, typeAction.getFullResult(),
-        typeAction.getPartialResult(), limit);
+      dateParams.add(startDateParameter);
+      dateParams.add(endDateParameter);
+      params = Tuple.of(limit, typeAction.getFullResult(),
+        typeAction.getPartialResult(), startDate, endDate);
     } else if (startDate == null && endDate == null) {
-      query = format(
-        selectWithJoin +
-          "WHERE actions.jsonb->>'typeAction' IN ($1, $2) " +
-          "%4$s" +
-          orderBy +
-          "LIMIT $3",
-        PostgresClient.convertToPsqlStandard(tenantId),
-        ACTIONS_TABLE,
-        ACCOUNTS_TABLE,
-        ownerIdsFilter);
-      params = Tuple.of(typeAction.getFullResult(),
-        typeAction.getPartialResult(), limit);
+      params = Tuple.of(limit, typeAction.getFullResult(), typeAction.getPartialResult());
     } else if (startDate != null && endDate == null) {
-      query = format(
-        selectWithJoin +
-          "WHERE actions.jsonb->>'dateAction' >= $1 " +
-          "AND actions.jsonb->>'typeAction' IN ($2, $3) " +
-          "%4$s" +
-          orderBy +
-          "LIMIT $4",
-        PostgresClient.convertToPsqlStandard(tenantId),
-        ACTIONS_TABLE,
-        ACCOUNTS_TABLE,
-        ownerIdsFilter);
-      params = Tuple.of(startDate, typeAction.getFullResult(),
-        typeAction.getPartialResult(), limit);
+      dateParams.add(startDateParameter);
+      params = Tuple.of(limit, typeAction.getFullResult(),
+        typeAction.getPartialResult(), startDate);
     }
+
+    String query = format(
+      "SELECT actions.jsonb FROM %1$s.%2$s actions " +
+        "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->>'accountId' = accounts.jsonb->>'id' " +
+        String.join(" AND ", dateParams) +
+        "%4$s" +
+        "ORDER BY actions.jsonb->>'dateAction' ASC " +
+        "LIMIT $1",
+      PostgresClient.convertToPsqlStandard(tenantId),
+      ACTIONS_TABLE,
+      ACCOUNTS_TABLE,
+      ownerIdsFilter);
 
     Promise<RowSet<Row>> promise = Promise.promise();
     pgClient.select(query, params, promise);
@@ -196,7 +180,7 @@ public class FeeFineActionRepository {
       return EMPTY;
     }
 
-    return format("AND accounts.jsonb->>'ownerId' IN (%s) ",
+    return format("accounts.jsonb->>'ownerId' IN (%s) ",
       ownerIds.stream()
         .map(id -> format("'%s'", id))
         .collect(Collectors.joining(", ")));

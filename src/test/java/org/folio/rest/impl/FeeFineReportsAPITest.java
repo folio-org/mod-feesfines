@@ -202,6 +202,7 @@ public class FeeFineReportsAPITest extends ApiTests {
     refundReportsClient.getFeeFineRefundReports("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports("not-a-date", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports("12 Apr 2021", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
   }
 
   @Test
@@ -289,20 +290,16 @@ public class FeeFineReportsAPITest extends ApiTests {
   public void validReportWhenEndDateIsNull() {
     ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
-    removeStub(instanceStubMapping);
-
-    requestAndCheckWithoutSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)
-      .withInstance("")), null, START_DATE, null);
+    requestAndCheckWithSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)), null,
+      START_DATE, null);
   }
 
   @Test
   public void validReportWhenStartDateAndEndDateAreNull() {
     ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
-    removeStub(instanceStubMapping);
-
-    requestAndCheckWithoutSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)
-      .withInstance("")), null, null, null);
+    requestAndCheckWithSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)), null,
+      null, null);
   }
 
   @Test
@@ -646,18 +643,10 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   private void requestAndCheck(List<RefundReportEntry> reportEntries,
     List<String> ownerIds) {
-
-    ValidatableResponse response = requestRefundReport(START_DATE, END_DATE, ownerIds)
-      .then()
-      .statusCode(HttpStatus.SC_OK)
-      .body("reportData", iterableWithSize(reportEntries.size()));
-
-    IntStream.range(0, reportEntries.size())
-      .forEach(index -> response.body(format("reportData[%d]", index),
-        refundReportEntryMatcher(reportEntries.get(index))));
+    requestAndCheckWithSpecificDates(reportEntries, ownerIds, START_DATE, END_DATE);
   }
 
-  private void requestAndCheckWithoutSpecificDates(List<RefundReportEntry> reportEntries,
+  private void requestAndCheckWithSpecificDates(List<RefundReportEntry> reportEntries,
     List<String> ownerIds, String startDate, String endDate) {
 
     ValidatableResponse response = requestRefundReport(startDate, endDate, ownerIds)
