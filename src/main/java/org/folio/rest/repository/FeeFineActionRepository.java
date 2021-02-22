@@ -180,7 +180,7 @@ public class FeeFineActionRepository {
       return EMPTY;
     }
 
-    return format("accounts.jsonb->>'ownerId' IN (%s) ",
+    return format("AND accounts.jsonb->>'ownerId' IN (%s) ",
       ownerIds.stream()
         .map(id -> format("'%s'", id))
         .collect(Collectors.joining(", ")));
