@@ -106,21 +106,32 @@ public class RefundReportService {
 
     setUpLocale(localeSettings);
 
-    String startDateTimeFormatted = startDate
-      .withTimeAtStartOfDay()
-      .withZoneRetainFields(timeZone)
-      .withZone(UTC)
-      .toString(ISODateTimeFormat.dateTime());
+    String startDateTimeFormatted = null;
+    String endDateTimeFormatted = null;
+    String logStartDate = "null";
+    String logEndDate = "null";
 
-    String endDateTimeFormatted = endDate
-      .withTimeAtStartOfDay()
-      .plusDays(1)
-      .withZoneRetainFields(timeZone)
-      .withZone(UTC)
-      .toString(ISODateTimeFormat.dateTime());
+    if (startDate != null) {
+      startDateTimeFormatted = startDate
+        .withTimeAtStartOfDay()
+        .withZoneRetainFields(timeZone)
+        .withZone(UTC)
+        .toString(ISODateTimeFormat.dateTime());
+      logStartDate = startDate.toDateTimeISO().toString();
+    }
+
+    if (endDate != null) {
+      endDateTimeFormatted = endDate
+        .withTimeAtStartOfDay()
+        .plusDays(1)
+        .withZoneRetainFields(timeZone)
+        .withZone(UTC)
+        .toString(ISODateTimeFormat.dateTime());
+      logEndDate = endDate.toDateTimeISO().toString();
+    }
 
     log.info("Building refund report with parameters: startDate={}, endDate={}, ownerIds={}, tz={}",
-      startDate.toDateTimeISO(), endDate.toDateTimeISO(), ownerIds, timeZone);
+      logStartDate, logEndDate, ownerIds, timeZone);
 
     RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
 

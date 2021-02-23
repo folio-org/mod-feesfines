@@ -22,9 +22,5 @@
       }
     }
   },
-  "additionalProperties": false,
-  "required": [
-    "startDate",
-    "endDate"
-  ]
+  "additionalProperties": false
 }
