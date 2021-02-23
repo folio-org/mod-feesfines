@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static java.lang.String.format;
+import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.utils.ResourceClients.buildRefundReportClient;
 import static org.folio.test.support.EntityBuilder.createCampus;
@@ -197,11 +198,18 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   @Test
   public void shouldReturn422WhenRequestIsNotValid() {
-    refundReportsClient.getFeeFineRefundReports("2020-01-01", null, HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports(null, "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
     refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReports(null, null, HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports("not-a-date", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReports("12 Apr 2021", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
+  }
+
+  @Test
+  public void shouldReturn200WhenRequestIsValid() {
+    refundReportsClient.getFeeFineRefundReports("2020-01-01", null, HTTP_OK);
+    refundReportsClient.getFeeFineRefundReports(null, null, HTTP_OK);
+    refundReportsClient.getFeeFineRefundReports("2020-01-01", "2020-02-01", HTTP_OK);
   }
 
   @Test
@@ -276,6 +284,22 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     requestAndCheck(List.of(createResponseForMinimumViableData(sourceObjects)
       .withInstance("")));
+  }
+
+  @Test
+  public void validReportWhenEndDateIsNull() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
+
+    requestAndCheckWithSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)), null,
+      START_DATE, null);
+  }
+
+  @Test
+  public void validReportWhenStartDateAndEndDateAreNull() {
+    ReportSourceObjects sourceObjects = createMinimumViableReportData();
+
+    requestAndCheckWithSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)), null,
+      null, null);
   }
 
   @Test
@@ -620,7 +644,13 @@ public class FeeFineReportsAPITest extends ApiTests {
   private void requestAndCheck(List<RefundReportEntry> reportEntries,
     List<String> ownerIds) {
 
-    ValidatableResponse response = requestRefundReport(START_DATE, END_DATE, ownerIds)
+    requestAndCheckWithSpecificDates(reportEntries, ownerIds, START_DATE, END_DATE);
+  }
+
+  private void requestAndCheckWithSpecificDates(List<RefundReportEntry> reportEntries,
+    List<String> ownerIds, String startDate, String endDate) {
+
+    ValidatableResponse response = requestRefundReport(startDate, endDate, ownerIds)
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(reportEntries.size()));
