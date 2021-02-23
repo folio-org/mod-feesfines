@@ -134,25 +134,25 @@ public class FeeFineActionRepository {
   public Future<List<Feefineaction>> findActionsByTypeForPeriodAndOwners(Action typeAction,
     String startDate, String endDate, List<String> ownerIds, int limit) {
 
-    final String startDateParameter = "actions.jsonb->>'dateAction' >= $4";
-    final String endDateParameter = "actions.jsonb->>'dateAction' < $5";
-    final String actionsParameter ="WHERE actions.jsonb->>'typeAction' IN ($2, $3)";
+    final String typeCondition ="WHERE actions.jsonb->>'typeAction' IN ($2, $3)";
+    final String startDateCondition = "actions.jsonb->>'dateAction' >= $4";
+    final String endDateCondition = "actions.jsonb->>'dateAction' < $5";
 
     String ownerIdsFilter = buildOwnerIdsFilter(ownerIds);
     Tuple params = null;
 
-    List<String> dateParams = new ArrayList<>();
-    dateParams.add(actionsParameter);
+    List<String> whereConditions = new ArrayList<>();
+    whereConditions.add(typeCondition);
 
     if (startDate != null && endDate != null) {
-      dateParams.add(startDateParameter);
-      dateParams.add(endDateParameter);
+      whereConditions.add(startDateCondition);
+      whereConditions.add(endDateCondition);
       params = Tuple.of(limit, typeAction.getFullResult(),
         typeAction.getPartialResult(), startDate, endDate);
     } else if (startDate == null && endDate == null) {
       params = Tuple.of(limit, typeAction.getFullResult(), typeAction.getPartialResult());
     } else if (startDate != null && endDate == null) {
-      dateParams.add(startDateParameter);
+      whereConditions.add(startDateCondition);
       params = Tuple.of(limit, typeAction.getFullResult(),
         typeAction.getPartialResult(), startDate);
     }
@@ -160,7 +160,7 @@ public class FeeFineActionRepository {
     String query = format(
       "SELECT actions.jsonb FROM %1$s.%2$s actions " +
         "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->>'accountId' = accounts.jsonb->>'id' " +
-        String.join(" AND ", dateParams) +
+        String.join(" AND ", whereConditions) +
         "%4$s" +
         "ORDER BY actions.jsonb->>'dateAction' ASC " +
         "LIMIT $1",
