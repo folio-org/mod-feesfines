@@ -134,32 +134,27 @@ public class FeeFineActionRepository {
   public Future<List<Feefineaction>> findActionsByTypeForPeriodAndOwners(Action typeAction,
     String startDate, String endDate, List<String> ownerIds, int limit) {
 
-    final String typeCondition ="WHERE actions.jsonb->>'typeAction' IN ($2, $3)";
-    final String startDateCondition = "actions.jsonb->>'dateAction' >= $4";
+    final String startDateCondition = "AND actions.jsonb->>'dateAction' >= $4";
     final String endDateCondition = "actions.jsonb->>'dateAction' < $5";
 
     String ownerIdsFilter = buildOwnerIdsFilter(ownerIds);
-    Tuple params = null;
-
+    Tuple params = Tuple.of(limit, typeAction.getFullResult(), typeAction.getPartialResult());
     List<String> whereConditions = new ArrayList<>();
-    whereConditions.add(typeCondition);
 
     if (startDate != null && endDate != null) {
       whereConditions.add(startDateCondition);
       whereConditions.add(endDateCondition);
-      params = Tuple.of(limit, typeAction.getFullResult(),
-        typeAction.getPartialResult(), startDate, endDate);
-    } else if (startDate == null && endDate == null) {
-      params = Tuple.of(limit, typeAction.getFullResult(), typeAction.getPartialResult());
+      params.addString(startDate);
+      params.addString(endDate);
     } else if (startDate != null && endDate == null) {
       whereConditions.add(startDateCondition);
-      params = Tuple.of(limit, typeAction.getFullResult(),
-        typeAction.getPartialResult(), startDate);
+      params.addString(startDate);
     }
 
     String query = format(
       "SELECT actions.jsonb FROM %1$s.%2$s actions " +
         "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->>'accountId' = accounts.jsonb->>'id' " +
+        "WHERE actions.jsonb->>'typeAction' IN ($2, $3)" +
         String.join(" AND ", whereConditions) +
         "%4$s" +
         "ORDER BY actions.jsonb->>'dateAction' ASC " +

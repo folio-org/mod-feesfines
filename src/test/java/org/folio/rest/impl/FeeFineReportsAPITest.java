@@ -643,6 +643,7 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   private void requestAndCheck(List<RefundReportEntry> reportEntries,
     List<String> ownerIds) {
+
     requestAndCheckWithSpecificDates(reportEntries, ownerIds, START_DATE, END_DATE);
   }
 
