@@ -11,21 +11,19 @@ import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.rest.utils.AccountHelper.populateMetadata;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
+
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
-import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
@@ -35,9 +33,12 @@ import org.folio.rest.service.LogEventService;
 import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.service.action.context.ActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
-import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.rest.utils.amountsplitter.BulkActionAmountSplitterStrategy;
 import org.folio.rest.utils.amountsplitter.SplitEvenlyRecursively;
+
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class ActionService {
@@ -153,7 +154,7 @@ public abstract class ActionService {
       .withDateAction(new Date());
 
     account.getPaymentStatus().setName(actionType);
-    populateMetadata(account);
+    populateMetadata(account, headers);
 
     if (isFullAction) {
       account.getStatus().setName(CLOSED.getValue());
@@ -163,21 +164,6 @@ public abstract class ActionService {
     }
 
     return feeFineAction;
-  }
-
-  private void populateMetadata(Account account) {
-    try {
-      MetadataUtil.populateMetadata(account, headers);
-    } catch (ReflectiveOperationException e) {
-      log.error("Can not populate Metadata for Account with Id {}, cause {}", account.getId(), e.getMessage());
-      if (account.getMetadata() != null) {
-        account.getMetadata().setUpdatedDate(new Date());
-      } else {
-        Metadata metadata = new Metadata();
-        metadata.setUpdatedDate(new Date());
-        account.setMetadata(metadata);
-      }
-    }
   }
 
   private Future<ActionContext> updateAccounts(ActionContext context) {

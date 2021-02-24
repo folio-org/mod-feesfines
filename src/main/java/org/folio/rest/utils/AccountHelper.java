@@ -5,6 +5,7 @@ import static org.folio.rest.domain.FeeFineStatus.OPEN;
 import static org.apache.commons.lang.StringUtils.defaultString;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -12,8 +13,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Status;
+import org.folio.rest.tools.utils.MetadataUtil;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class AccountHelper {
   public static final String PATRON_COMMENTS_KEY = "PATRON";
   public static final String STAFF_COMMENTS_KEY = "STAFF";
@@ -46,5 +52,17 @@ public class AccountHelper {
       .filter(arr -> arr.length == 2)
       .map(strings -> Pair.of(strings[0], strings[1]))
       .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (s, s2) -> s));
+  }
+
+  public static void populateMetadata(Account account, Map<String, String> headers) {
+    try {
+      MetadataUtil.populateMetadata(account, headers);
+    } catch (ReflectiveOperationException e) {
+      log.error("Failed to populate Metadata for Account {}: {}", account.getId(), e.getMessage());
+      if (account.getMetadata() == null) {
+        account.setMetadata(new Metadata());
+      }
+      account.getMetadata().setUpdatedDate(new Date());
+    }
   }
 }
