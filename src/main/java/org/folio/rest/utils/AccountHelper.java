@@ -59,10 +59,6 @@ public class AccountHelper {
       MetadataUtil.populateMetadata(account, headers);
     } catch (ReflectiveOperationException e) {
       log.error("Failed to populate Metadata for Account {}: {}", account.getId(), e.getMessage());
-      if (account.getMetadata() == null) {
-        account.setMetadata(new Metadata());
-      }
-      account.getMetadata().setUpdatedDate(new Date());
     }
   }
 }
