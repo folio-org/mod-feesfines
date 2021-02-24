@@ -5,22 +5,21 @@ import static org.folio.rest.domain.FeeFineStatus.OPEN;
 import static org.apache.commons.lang.StringUtils.defaultString;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.tools.utils.MetadataUtil;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class AccountHelper {
+  private static final Logger log = LogManager.getLogger(AccountHelper.class);
+
   public static final String PATRON_COMMENTS_KEY = "PATRON";
   public static final String STAFF_COMMENTS_KEY = "STAFF";
 
