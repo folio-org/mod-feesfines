@@ -13,12 +13,8 @@ import org.folio.rest.utils.ResourceClient;
 
 public abstract class ActionsAPITests extends ApiTests {
 
-  public static Account verifyAccountAndGet(
-    ResourceClient accountsClient,
-    String accountId,
-    String expectedPaymentStatus,
-    double amount,
-    String statusName) {
+  public static Account verifyAccountAndGet(ResourceClient accountsClient, String accountId,
+    String expectedPaymentStatus, double amount, String statusName) {
 
     final Response getAccountByIdResponse = accountsClient.getById(accountId);
     getAccountByIdResponse
@@ -32,7 +28,7 @@ public abstract class ActionsAPITests extends ApiTests {
     final Date dateCreated = updatedAccount.getMetadata().getCreatedDate();
     final Date dateUpdated = updatedAccount.getMetadata().getUpdatedDate();
 
-    assertThat(dateCreated, not(equalTo(dateUpdated)));
+    assertThat("Account's dateUpdated must be after dateCreated", dateUpdated.after(dateCreated));
 
     return updatedAccount;
   }

@@ -197,7 +197,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, 0.0f, "Closed");
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, 0.0, "Closed");
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request, action.getFullResult(), 1.0, 0.0)));
@@ -230,7 +230,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, 0.24f, "Open");
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, 0.24, "Open");
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request, action.getPartialResult(), 1.0, 0.24)));
@@ -276,7 +276,8 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         expectedPaymentStatus, request.getTransactionInfo(), request))
       );
 
-    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, expectedAccountBalanceAfter, expectedAccountStatus);
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus,
+      expectedAccountBalanceAfter, expectedAccountStatus);
 
     verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
       .put("userId", account.getUserId())

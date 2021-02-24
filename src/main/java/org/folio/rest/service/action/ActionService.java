@@ -11,7 +11,6 @@ import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.rest.utils.AccountHelper.populateMetadata;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -154,7 +153,6 @@ public abstract class ActionService {
       .withDateAction(new Date());
 
     account.getPaymentStatus().setName(actionType);
-    populateMetadata(account, headers);
 
     if (isFullAction) {
       account.getStatus().setName(CLOSED.getValue());
@@ -171,7 +169,7 @@ public abstract class ActionService {
       context.getAccounts()
         .values()
         .stream()
-        .map(accountUpdateService::updateAccount)
+        .map(account -> accountUpdateService.updateAccount(account, headers))
         .collect(toList())
     ).map(context);
   }

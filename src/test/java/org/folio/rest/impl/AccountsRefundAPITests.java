@@ -408,14 +408,14 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     verifyBulkResponse(response, refundAmount, expectedFeeFineActions);
     verifyActions(18, expectedFeeFineActions); // 6 payments/transfer actions + 12 refund actions
 
-    Account firstAccount = verifyAccountAndGet(
-      accountsClient, FIRST_ACCOUNT_ID, REFUND.getPartialResult(), expectedRemainingAmount1, CLOSED.getValue());
+    Account firstAccount = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
+      REFUND.getPartialResult(), expectedRemainingAmount1, CLOSED.getValue());
 
-    Account secondAccount = verifyAccountAndGet(
-      accountsClient, SECOND_ACCOUNT_ID, REFUND.getFullResult(), expectedRemainingAmount2, OPEN.getValue());
+    Account secondAccount = verifyAccountAndGet(accountsClient, SECOND_ACCOUNT_ID,
+      REFUND.getFullResult(), expectedRemainingAmount2, OPEN.getValue());
 
-    Account thirdAccount = verifyAccountAndGet(
-      accountsClient, THIRD_ACCOUNT_ID, REFUND.getPartialResult(), expectedRemainingAmount3, OPEN.getValue());
+    Account thirdAccount = verifyAccountAndGet(accountsClient, THIRD_ACCOUNT_ID,
+      REFUND.getPartialResult(), expectedRemainingAmount3, OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount, thirdAccount);
 

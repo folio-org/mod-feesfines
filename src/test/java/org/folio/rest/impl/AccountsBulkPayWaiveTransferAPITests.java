@@ -219,7 +219,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, 0.0f, "Closed");
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, 0.0, "Closed");
   }
 
   @Test
@@ -249,7 +249,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, 0.24f, "Open");
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, 0.24, "Open");
   }
 
   @Test
@@ -297,19 +297,11 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       .body(FEE_FINE_ACTIONS, hasSize(2))
       .body(FEE_FINE_ACTIONS, feeFineActionsMatcher);
 
-    verifyAccountAndGet(
-      accountsClient,
-      FIRST_ACCOUNT_ID,
-      expectedPaymentStatus1,
-      expectedRemainingAmount1,
-      expectedAccountStatus1);
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus1,
+      expectedRemainingAmount1, expectedAccountStatus1);
 
-    verifyAccountAndGet(
-      accountsClient,
-      SECOND_ACCOUNT_ID,
-      expectedPaymentStatus2,
-      expectedRemainingAmount2,
-      expectedAccountStatus2);
+    verifyAccountAndGet(accountsClient, SECOND_ACCOUNT_ID, expectedPaymentStatus2,
+      expectedRemainingAmount2, expectedAccountStatus2);
 
     verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
       .put("userId", account1.getUserId())
