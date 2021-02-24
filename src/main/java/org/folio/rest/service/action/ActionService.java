@@ -27,8 +27,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.service.AccountUpdateService;
-import org.folio.rest.service.LogEventService;
 import org.folio.rest.service.LogEventPublisher;
+import org.folio.rest.service.LogEventService;
 import org.folio.rest.service.PatronNoticeService;
 import org.folio.rest.service.action.context.ActionContext;
 import org.folio.rest.service.action.validation.ActionValidationService;
@@ -37,7 +37,9 @@ import org.folio.rest.utils.amountsplitter.SplitEvenlyRecursively;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class ActionService {
   protected final Action action;
   protected final AccountRepository accountRepository;
@@ -48,8 +50,9 @@ public abstract class ActionService {
   protected final BulkActionAmountSplitterStrategy amountSplitterStrategy;
   private final LogEventService logEventService;
   private final LogEventPublisher logEventPublisher;
+  private final Map<String, String> headers;
 
-  public ActionService(Action action, ActionValidationService validationService,
+  protected ActionService(Action action, ActionValidationService validationService,
     Map<String, String> headers, Context context) {
 
     PostgresClient postgresClient = getInstance(context.owner(), tenantId(headers));
@@ -63,9 +66,10 @@ public abstract class ActionService {
     this.amountSplitterStrategy = new SplitEvenlyRecursively();
     this.logEventService = new LogEventService(context.owner(), headers);
     this.logEventPublisher = new LogEventPublisher(context.owner(), headers);
+    this.headers = headers;
   }
 
-  public ActionService(Action action, ActionValidationService validationService,
+  protected ActionService(Action action, ActionValidationService validationService,
     BulkActionAmountSplitterStrategy bulkActionAmountSplitterStrategy,
     Map<String, String> headers, Context context) {
 
@@ -80,6 +84,7 @@ public abstract class ActionService {
     this.amountSplitterStrategy = bulkActionAmountSplitterStrategy;
     this.logEventService = new LogEventService(context.owner(), headers);
     this.logEventPublisher = new LogEventPublisher(context.owner(), headers);
+    this.headers = headers;
   }
 
   public Future<ActionContext> performAction(ActionRequest request) {
@@ -164,7 +169,7 @@ public abstract class ActionService {
       context.getAccounts()
         .values()
         .stream()
-        .map(accountUpdateService::updateAccount)
+        .map(account -> accountUpdateService.updateAccount(account, headers))
         .collect(toList())
     ).map(context);
   }
