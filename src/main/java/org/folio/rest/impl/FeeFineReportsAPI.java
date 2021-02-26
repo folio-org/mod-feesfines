@@ -25,8 +25,8 @@ import io.vertx.core.logging.LoggerFactory;
 public class FeeFineReportsAPI implements FeefineReports {
   private static final Logger log = LoggerFactory.getLogger(FeeFineReportsAPI.class);
 
-  private static final String INVALID_START_DATE_OR_END_DATE_MESSAGE =
-    "Invalid startDate or endDate parameter";
+  private static final String INVALID_START_DATE_MESSAGE = "Start date should not be empty when end date is specified";
+  private static final String INVALID_START_DATE_OR_END_DATE_MESSAGE = "Invalid startDate or endDate parameter";
   private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server error";
 
   @Validate
@@ -38,19 +38,37 @@ public class FeeFineReportsAPI implements FeefineReports {
     log.info("Refund report requested, parameters: startDate={}, endDate={}",
       entity.getStartDate(), entity.getEndDate());
 
-    DateTime startDate = parseDate(entity.getStartDate());
-    DateTime endDate = parseDate(entity.getEndDate());
-    if (startDate == null || endDate == null) {
-      log.error("Invalid parameters: startDate={}, endDate={}", startDate, endDate);
+    String rawStartDate = entity.getStartDate();
+    String rawEndDate = entity.getEndDate();
+
+    if (rawStartDate == null && rawEndDate != null){
+      log.error("startDate is null and endDate is not null");
+
+      handleRefundReportResult(
+        failedFuture(new FailedValidationException(INVALID_START_DATE_MESSAGE)),
+        asyncResultHandler);
+      return;
+    }
+
+    DateTime startDate = null;
+    DateTime endDate = null;
+
+    try {
+      startDate = parseDate(rawStartDate);
+      endDate = parseDate(rawEndDate);
+    } catch (IllegalArgumentException e) {
+      log.error("Invalid request parameters: startDate={}, endDate={}", rawStartDate, rawEndDate);
 
       handleRefundReportResult(
         failedFuture(new FailedValidationException(INVALID_START_DATE_OR_END_DATE_MESSAGE)),
         asyncResultHandler);
-    } else {
-      new RefundReportService(okapiHeaders, vertxContext)
-        .buildReport(startDate, endDate, entity.getFeeFineOwners())
-        .onComplete(result -> handleRefundReportResult(result, asyncResultHandler));
+      return;
     }
+
+    new RefundReportService(okapiHeaders, vertxContext)
+      .buildReport(startDate, endDate, entity.getFeeFineOwners())
+      .onComplete(result -> handleRefundReportResult(result, asyncResultHandler));
+
   }
 
   private void handleRefundReportResult(AsyncResult<RefundReport> asyncResult,
@@ -77,12 +95,6 @@ public class FeeFineReportsAPI implements FeefineReports {
     if (date == null) {
       return null;
     }
-
-    try {
-      return DateTime.parse(date, ISODateTimeFormat.date());
-    }
-    catch (IllegalArgumentException e) {
-      return null;
-    }
+    return DateTime.parse(date, ISODateTimeFormat.date());
   }
 }

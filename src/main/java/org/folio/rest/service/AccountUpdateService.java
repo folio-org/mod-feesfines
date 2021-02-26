@@ -7,6 +7,7 @@ import static org.folio.rest.jaxrs.resource.Accounts.PutAccountsByAccountIdRespo
 import static org.folio.rest.jaxrs.resource.Accounts.PutAccountsByAccountIdResponse.respond500WithTextPlain;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.utils.AccountHelper.isClosedAndHasZeroRemainingAmount;
+import static org.folio.rest.utils.AccountHelper.populateMetadata;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -63,7 +64,9 @@ public class AccountUpdateService {
     });
   }
 
-  public Future<Account> updateAccount(Account account) {
+  public Future<Account> updateAccount(Account account, Map<String, String> headers) {
+    populateMetadata(account, headers);
+
     return accountRepository.update(account)
       .onSuccess(a -> {
         eventPublisher.publishAccountBalanceChangeEvent(account);

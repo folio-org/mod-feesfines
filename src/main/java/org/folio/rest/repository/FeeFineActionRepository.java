@@ -134,24 +134,38 @@ public class FeeFineActionRepository {
   public Future<List<Feefineaction>> findActionsByTypeForPeriodAndOwners(Action typeAction,
     String startDate, String endDate, List<String> ownerIds, int limit) {
 
+    final String typeCondition = "actions.jsonb->>'typeAction' IN ($2, $3)";
+    final String startDateCondition = "actions.jsonb->>'dateAction' >= $4";
+    final String endDateCondition = "actions.jsonb->>'dateAction' < $5";
+
     String ownerIdsFilter = buildOwnerIdsFilter(ownerIds);
+    Tuple params = Tuple.of(limit, typeAction.getFullResult(), typeAction.getPartialResult());
+    List<String> whereConditions = new ArrayList<>();
+    whereConditions.add(typeCondition);
+
+    if (startDate != null && endDate != null) {
+      whereConditions.add(startDateCondition);
+      whereConditions.add(endDateCondition);
+      params.addString(startDate);
+      params.addString(endDate);
+    } else if (startDate != null && endDate == null) {
+      whereConditions.add(startDateCondition);
+      params.addString(startDate);
+    }
 
     String query = format(
       "SELECT actions.jsonb FROM %1$s.%2$s actions " +
         "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->>'accountId' = accounts.jsonb->>'id' " +
-        "WHERE actions.jsonb->>'dateAction' >= $1 " +
-        "AND actions.jsonb->>'dateAction' < $2 " +
-        "AND actions.jsonb->>'typeAction' IN ($3, $4) " +
+        "WHERE " +
+        String.join(" AND ", whereConditions) +
         "%4$s" +
         "ORDER BY actions.jsonb->>'dateAction' ASC " +
-        "LIMIT $5",
+        "LIMIT $1",
       PostgresClient.convertToPsqlStandard(tenantId),
       ACTIONS_TABLE,
       ACCOUNTS_TABLE,
       ownerIdsFilter);
 
-    Tuple params = Tuple.of(startDate, endDate, typeAction.getFullResult(),
-      typeAction.getPartialResult(), limit);
     Promise<RowSet<Row>> promise = Promise.promise();
     pgClient.select(query, params, promise);
 
