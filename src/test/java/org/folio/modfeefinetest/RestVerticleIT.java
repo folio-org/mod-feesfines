@@ -2,10 +2,14 @@ package org.folio.modfeefinetest;
 
 import java.net.HttpURLConnection;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import io.vertx.core.AsyncResult;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.persist.PostgresClient;
@@ -111,8 +115,8 @@ public class RestVerticleIT {
              */
             CompletableFuture<Response> addManualBlockCF = new CompletableFuture();
             String addManualBlockURL = manualBlockURL;
-            send(addManualBlockURL, context, HttpMethod.POST, MANUAL_BLOCK,
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, new HTTPResponseHandler(addManualBlockCF));
+            send(addManualBlockURL, HttpMethod.POST, MANUAL_BLOCK,
+                    SUPPORTED_CONTENT_TYPE_JSON_DEF, new HTTPResponseHandler(addManualBlockCF));
             Response addManualBlockResponse = addManualBlockCF.get(5, TimeUnit.SECONDS);
             context.assertEquals(addManualBlockResponse.code, HttpURLConnection.HTTP_CREATED);
             String manualBlockId = addManualBlockResponse.body.getString("id");
@@ -122,8 +126,8 @@ public class RestVerticleIT {
              */
             CompletableFuture<Response> getAllManualBlocksCF = new CompletableFuture();
             String getAllManualBlocksURL = manualBlockURL;
-            send(getAllManualBlocksURL, context, HttpMethod.GET, null,
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, 200, new HTTPResponseHandler(getAllManualBlocksCF));
+            send(getAllManualBlocksURL, HttpMethod.GET, null,
+                    SUPPORTED_CONTENT_TYPE_JSON_DEF, new HTTPResponseHandler(getAllManualBlocksCF));
             Response getAllManualBlocksResponse = getAllManualBlocksCF.get(5, TimeUnit.SECONDS);
             context.assertEquals(getAllManualBlocksResponse.code, HttpURLConnection.HTTP_OK);
             context.assertTrue(isSizeMatch(getAllManualBlocksResponse, 1));
@@ -133,45 +137,23 @@ public class RestVerticleIT {
 
     }
 
-    private void send(String url, TestContext context, HttpMethod method, String content,
-            String contentType, int errorCode, Handler<HttpClientResponse> handler) {
-        HttpClient client = vertx.createHttpClient();
-        HttpClientRequest request;
-        if (content == null) {
-            content = "";
-        }
-        Buffer buffer = Buffer.buffer(content);
+    private void send(String url, HttpMethod method, String content,
+            String contentType, Handler<AsyncResult<HttpResponse<Buffer>>> handler) {
 
-        if (null == method) {
-            request = client.putAbs(url);
-        } else {
-            switch (method) {
-                case POST:
-                    request = client.postAbs(url);
-                    break;
-                case DELETE:
-                    request = client.deleteAbs(url);
-                    break;
-                case GET:
-                    request = client.getAbs(url);
-                    break;
-                default:
-                    request = client.putAbs(url);
-                    break;
-            }
-        }
-        request.exceptionHandler(error -> {
-            context.fail(error.getMessage());
-        })
-                .handler(handler);
-        request.putHeader("Authorization", "diku");
-        request.putHeader("X-Okapi-Tenant", "diku");
-        request.putHeader("accept", "application/json,text/plain");
-        request.putHeader("content-type", "application/json");
-        request.end(buffer);
+      WebClient client = WebClient.create(vertx);
+      var request = client.requestAbs(Objects.requireNonNullElse(method, HttpMethod.PUT), url);
+      if (content == null) {
+        content = "";
+      }
+      Buffer buffer = Buffer.buffer(content);
+      request.putHeader("Authorization", "diku");
+      request.putHeader("X-Okapi-Tenant", "diku");
+      request.putHeader("accept", "application/json,text/plain");
+      request.putHeader("content-type", "application/json");
+      request.sendBuffer(buffer, handler);
     }
 
-    class HTTPResponseHandler implements Handler<HttpClientResponse> {
+    class HTTPResponseHandler implements Handler<AsyncResult<HttpResponse<Buffer>>> {
 
         CompletableFuture<Response> event;
 
@@ -179,15 +161,14 @@ public class RestVerticleIT {
             event = cf;
         }
 
-        @Override
-        public void handle(HttpClientResponse hcr) {
-            hcr.bodyHandler(bh -> {
-                Response r = new Response();
-                r.code = hcr.statusCode();
-                r.body = bh.toJsonObject();
-                event.complete(r);
-            });
-        }
+      @Override
+      public void handle(AsyncResult<HttpResponse<Buffer>> httpResponseAsyncResult) {
+        var responseResult = httpResponseAsyncResult.result();
+        var r = new Response();
+        r.code = responseResult.statusCode();
+        r.body = responseResult.bodyAsJsonObject();
+        event.complete(r);
+      }
     }
 
     class HTTPNoBodyResponseHandler implements Handler<HttpClientResponse> {

@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.client.ConfigurationClient;
 import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.UserGroupsClient;
@@ -52,8 +54,6 @@ import org.joda.time.format.ISODateTimeFormat;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -61,7 +61,7 @@ import lombok.Setter;
 import lombok.With;
 
 public class RefundReportService {
-  private static final Logger log = LoggerFactory.getLogger(RefundReportService.class);
+  private static final Logger log = LogManager.getLogger(RefundReportService.class);
 
   private static final int REPORT_ROWS_LIMIT = 1_000_000;
   private static final String MULTIPLE_MESSAGE = "Multiple";

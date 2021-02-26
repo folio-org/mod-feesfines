@@ -7,7 +7,10 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.service.PubSubRegistrationService;
 import org.folio.rest.tools.utils.TenantLoading;
 
@@ -16,11 +19,9 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class TenantRefAPI extends TenantAPI {
-  private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
+  private static final Logger log = LogManager.getLogger(TenantRefAPI.class);
 
   @Override
   public void postTenant(TenantAttributes tenantAttributes,
@@ -61,7 +62,7 @@ public class TenantRefAPI extends TenantAPI {
               } else {
                 log.info("postTenant executed successfully");
                 handler.handle(succeededFuture(PostTenantResponse
-                  .respond201WithApplicationJson(EMPTY)));
+                  .respond201WithApplicationJson(new TenantJob(), null)));
               }
             }
           );

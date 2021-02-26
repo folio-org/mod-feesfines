@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
@@ -66,11 +68,9 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class AccountsAPI implements Accounts {
-  private static final Logger logger = LoggerFactory.getLogger(AccountsAPI.class);
+  private static final Logger logger = LogManager.getLogger(AccountsAPI.class);
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String ACCOUNT_ID_FIELD = "'id'";
   private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";

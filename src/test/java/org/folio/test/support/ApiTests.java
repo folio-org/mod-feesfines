@@ -15,7 +15,7 @@ import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockTemplateClient;
-import static org.folio.rest.utils.ResourceClients.tenantClient;
+import static org.junit.Assert.assertThat;
 
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -26,15 +26,22 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
 
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.PomReader;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
+import org.hamcrest.CoreMatchers;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -74,6 +81,7 @@ public class ApiTests {
   protected final ResourceClient feeFinesClient = buildFeeFinesClient();
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
+  private final static Logger logger = LogManager.getLogger("ApiTests");
 
   @BeforeClass
   public static void deployVerticle() throws Exception {
@@ -87,7 +95,7 @@ public class ApiTests {
       res -> future.complete(null));
 
     get(future);
-    createTenant();
+    createTenant(getTenantAttributes());
   }
 
   @AfterClass
@@ -107,8 +115,36 @@ public class ApiTests {
     okapiDeployment.setUpMapping();
   }
 
-  private static void createTenant() {
-    tenantClient().create(getTenantAttributes());
+  public static void createTenant(TenantAttributes attributes) {
+    var tenantClient = new TenantClient(getOkapiUrl(), TENANT_NAME, null);
+
+    try {
+      tenantClient.postTenant(attributes, response -> {
+        if (response.failed()) {
+          Throwable cause = response.cause();
+          logger.error(cause);
+          return;
+        }
+
+        final HttpResponse<Buffer> postResponse = response.result();
+        assertThat(response.result().statusCode(), CoreMatchers.is(HttpStatus.SC_CREATED));
+        String jobId = postResponse.bodyAsJson(TenantJob.class).getId();
+
+        tenantClient.getTenantByOperationId(jobId, 10000, getResult -> {
+          if (getResult.failed()) {
+            Throwable cause = getResult.cause();
+            logger.error(cause.getMessage());
+            return;
+          }
+
+          final HttpResponse<Buffer> getResponse = getResult.result();
+          assertThat(getResponse.statusCode(), CoreMatchers.is(HttpStatus.SC_OK));
+          assertThat(getResponse.bodyAsJson(TenantJob.class).getComplete(), CoreMatchers.is(true));
+        });
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   protected static TenantAttributes getTenantAttributes() {

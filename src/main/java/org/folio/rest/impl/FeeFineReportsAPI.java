@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.RefundReport;
@@ -19,11 +21,9 @@ import org.joda.time.format.ISODateTimeFormat;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class FeeFineReportsAPI implements FeefineReports {
-  private static final Logger log = LoggerFactory.getLogger(FeeFineReportsAPI.class);
+  private static final Logger log = LogManager.getLogger(FeeFineReportsAPI.class);
 
   private static final String INVALID_START_DATE_MESSAGE = "Start date should not be empty when end date is specified";
   private static final String INVALID_START_DATE_OR_END_DATE_MESSAGE = "Invalid startDate or endDate parameter";
