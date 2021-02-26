@@ -34,7 +34,7 @@
     },
     {
       "tableName":"accounts",
-      "fromModuleVersion":"15.9.2",
+      "fromModuleVersion":"15.10.0",
       "withMetadata":true,
       "index" : [
         {
