@@ -34,12 +34,16 @@
     },
     {
       "tableName":"accounts",
-      "fromModuleVersion":"15.0",
+      "fromModuleVersion":"15.10.0",
       "withMetadata":true,
       "index" : [
         {
           "fieldName" : "loanId",
           "tOps" : "ADD"
+        },
+        {
+          "fieldName": "userId",
+          "tOps": "ADD"
         }
       ]
     },
@@ -81,8 +85,14 @@
     },
     {
       "tableName":"manualblocks",
-      "fromModuleVersion":"15.0",
-      "withMetadata":true
+      "fromModuleVersion":"15.10.0",
+      "withMetadata":true,
+      "index" : [
+        {
+          "fieldName" : "userId",
+          "tOps" : "ADD"
+        }
+      ]
     },
     {
       "tableName":"manual_block_templates",
