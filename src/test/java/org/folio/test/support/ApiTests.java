@@ -103,6 +103,11 @@ public class ApiTests {
 
         tenantAPI.postTenantSync(getTenantAttributes(), headers, responseAsyncResult -> {
           assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
+          try {
+            Thread.sleep(1000);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
           future.complete(null);
         }, vertx.getOrCreateContext());
       });
