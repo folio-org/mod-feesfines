@@ -28,17 +28,14 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
 
-import io.vertx.core.buffer.Buffer;
-import io.vertx.ext.web.client.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.client.TenantClient;
 import org.folio.rest.impl.TenantAPI;
+import org.folio.rest.impl.TenantRefAPI;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.PomReader;
@@ -95,10 +92,22 @@ public class ApiTests {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions(),
-      res -> future.complete(null));
+      res -> {
+        TenantAPI tenantAPI = new TenantAPI(); new TenantRefAPI();
+        Map<String, String> headers = new HashMap<>();
+
+        headers.put("Content-type", "application/json");
+        headers.put("Accept", "application/json,text/plain");
+        headers.put("x-okapi-tenant", TENANT_NAME);
+        headers.put("X-Okapi-Url", getOkapiUrl());
+
+        tenantAPI.postTenantSync(getTenantAttributes(), headers, responseAsyncResult -> {
+          assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
+          future.complete(null);
+        }, vertx.getOrCreateContext());
+      });
 
     get(future);
-    createTenant(getTenantAttributes());
   }
 
   @AfterClass
@@ -119,7 +128,7 @@ public class ApiTests {
   }
 
   public static void createTenant(TenantAttributes attributes) {
-    TenantAPI tenantAPI = new TenantAPI();
+    TenantAPI tenantAPI = new TenantAPI(); new TenantRefAPI();
     Map<String, String> headers = new HashMap<>();
 
     headers.put("Content-type", "application/json");
@@ -128,7 +137,7 @@ public class ApiTests {
     headers.put("X-Okapi-Url", getOkapiUrl());
 
     tenantAPI.postTenantSync(attributes, headers, responseAsyncResult -> {
-      assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_OK));
+      assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
     }, vertx.getOrCreateContext());
   }
 
