@@ -61,6 +61,7 @@ import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import org.junit.runner.RunWith;
 
 public class ApiTests {
   public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
@@ -93,7 +94,7 @@ public class ApiTests {
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions(),
       res -> {
-        TenantAPI tenantAPI = new TenantAPI(); new TenantRefAPI();
+        TenantAPI tenantAPI = new TenantAPI();
         Map<String, String> headers = new HashMap<>();
 
         headers.put("Content-type", "application/json");
@@ -102,12 +103,8 @@ public class ApiTests {
         headers.put("X-Okapi-Url", getOkapiUrl());
 
         tenantAPI.postTenantSync(getTenantAttributes(), headers, responseAsyncResult -> {
+          assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
           assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
-          try {
-            Thread.sleep(1000);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
           future.complete(null);
         }, vertx.getOrCreateContext());
       });
