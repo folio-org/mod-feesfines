@@ -93,21 +93,7 @@ public class ApiTests {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions(),
-      res -> {
-        TenantAPI tenantAPI = new TenantAPI();
-        Map<String, String> headers = new HashMap<>();
-
-        headers.put("Content-type", "application/json");
-        headers.put("Accept", "application/json,text/plain");
-        headers.put("x-okapi-tenant", TENANT_NAME);
-        headers.put("X-Okapi-Url", getOkapiUrl());
-
-        tenantAPI.postTenantSync(getTenantAttributes(), headers, responseAsyncResult -> {
-          assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
-          assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
-          future.complete(null);
-        }, vertx.getOrCreateContext());
-      });
+      res -> createTenant(getTenantAttributes(), future));
 
     get(future);
   }
@@ -129,7 +115,7 @@ public class ApiTests {
     okapiDeployment.setUpMapping();
   }
 
-  public static void createTenant(TenantAttributes attributes) {
+  public static void createTenant(TenantAttributes attributes, CompletableFuture<Void> future) {
     TenantAPI tenantAPI = new TenantAPI(); new TenantRefAPI();
     Map<String, String> headers = new HashMap<>();
 
@@ -139,7 +125,9 @@ public class ApiTests {
     headers.put("X-Okapi-Url", getOkapiUrl());
 
     tenantAPI.postTenantSync(attributes, headers, responseAsyncResult -> {
+      assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
       assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
+      future.complete(null);
     }, vertx.getOrCreateContext());
   }
 

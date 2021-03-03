@@ -25,7 +25,9 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
       .withModuleFrom(MODULE_NAME + "-15.9.0")
       .withModuleTo(MODULE_NAME + "-" + PomReader.INSTANCE.getVersion());
 
-    createTenant(tenantAttributes);
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    createTenant(tenantAttributes, future);
+    get(future);
 
     feeFinesClient.getAll().then()
       .body(hasAllAutomaticFeeFineTypes());
