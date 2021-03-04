@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
 
+import io.vertx.core.VertxOptions;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,7 +62,6 @@ import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import org.junit.runner.RunWith;
 
 public class ApiTests {
   public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
@@ -86,7 +86,7 @@ public class ApiTests {
 
   @BeforeClass
   public static void deployVerticle() throws Exception {
-    vertx = Vertx.vertx();
+    vertx = Vertx.vertx(new VertxOptions().setMaxEventLoopExecuteTimeUnit(TimeUnit.SECONDS).setMaxEventLoopExecuteTime(10));
 
     PostgresClient.getInstance(vertx).startEmbeddedPostgres();
 
@@ -116,7 +116,7 @@ public class ApiTests {
   }
 
   public static void createTenant(TenantAttributes attributes, CompletableFuture<Void> future) {
-    TenantAPI tenantAPI = new TenantAPI(); new TenantRefAPI();
+    TenantAPI tenantAPI = new TenantRefAPI();
     Map<String, String> headers = new HashMap<>();
 
     headers.put("Content-type", "application/json");
