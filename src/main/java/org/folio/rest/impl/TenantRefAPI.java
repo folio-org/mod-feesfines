@@ -9,6 +9,7 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.service.PubSubRegistrationService;
 import org.folio.rest.tools.utils.TenantLoading;
 
 import io.vertx.core.AsyncResult;
@@ -47,23 +48,20 @@ public class TenantRefAPI extends TenantAPI {
               .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
             return;
           }
-          handler.handle(res);
 
-//          vertx.executeBlocking(
-//            promise -> new PubSubRegistrationService(vertx, headers).registerModule(promise),
-//            registration -> {
-//              if (registration.failed()) {
-//                log.error("postTenant failure", registration.cause());
-//                handler.handle(succeededFuture(PostTenantResponse
-//                  .respond500WithTextPlain(registration.cause().getLocalizedMessage())));
-//              } else {
-//                log.info("postTenant executed successfully");
-////                handler.handle(succeededFuture(PostTenantResponse
-////                  .respond201WithApplicationJson(new TenantJob(), null)));
-//                handler.handle(res);
-//              }
-//            }
-//          );
+          vertx.executeBlocking(
+            promise -> new PubSubRegistrationService(vertx, headers).registerModule(promise),
+            registration -> {
+              if (registration.failed()) {
+                log.error("postTenant failure", registration.cause());
+                handler.handle(succeededFuture(PostTenantResponse
+                  .respond500WithTextPlain(registration.cause().getLocalizedMessage())));
+              } else {
+                log.info("postTenant executed successfully");
+                handler.handle(res);
+              }
+            }
+          );
         });
     }, context);
   }

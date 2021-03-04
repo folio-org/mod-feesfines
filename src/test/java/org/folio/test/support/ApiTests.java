@@ -122,6 +122,7 @@ public class ApiTests {
     headers.put("Content-type", "application/json");
     headers.put("Accept", "application/json,text/plain");
     headers.put("x-okapi-tenant", TENANT_NAME);
+    headers.put("x-okapi-url", getOkapiUrl());
     headers.put("X-Okapi-Url", getOkapiUrl());
 
     tenantAPI.postTenant(attributes, headers, responseAsyncResult -> {
