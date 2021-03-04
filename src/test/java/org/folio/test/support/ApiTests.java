@@ -86,7 +86,7 @@ public class ApiTests {
 
   @BeforeClass
   public static void deployVerticle() throws Exception {
-    vertx = Vertx.vertx(new VertxOptions().setMaxEventLoopExecuteTimeUnit(TimeUnit.SECONDS).setMaxEventLoopExecuteTime(10));
+    vertx = Vertx.vertx();
 
     PostgresClient.getInstance(vertx).startEmbeddedPostgres();
 
@@ -116,7 +116,7 @@ public class ApiTests {
   }
 
   public static void createTenant(TenantAttributes attributes, CompletableFuture<Void> future) {
-    TenantAPI tenantAPI = new TenantRefAPI();
+    TenantRefAPI tenantAPI = new TenantRefAPI();
     Map<String, String> headers = new HashMap<>();
 
     headers.put("Content-type", "application/json");
@@ -124,7 +124,7 @@ public class ApiTests {
     headers.put("x-okapi-tenant", TENANT_NAME);
     headers.put("X-Okapi-Url", getOkapiUrl());
 
-    tenantAPI.postTenantSync(attributes, headers, responseAsyncResult -> {
+    tenantAPI.postTenant(attributes, headers, responseAsyncResult -> {
       assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
       assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
       future.complete(null);

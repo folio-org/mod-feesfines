@@ -1,7 +1,6 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.util.Map;
 
@@ -10,8 +9,6 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.jaxrs.model.TenantJob;
-import org.folio.rest.service.PubSubRegistrationService;
 import org.folio.rest.tools.utils.TenantLoading;
 
 import io.vertx.core.AsyncResult;
@@ -32,7 +29,7 @@ public class TenantRefAPI extends TenantAPI {
     log.info("Tenant attributes: {}", JsonObject.mapFrom(tenantAttributes));
 
     Vertx vertx = context.owner();
-    super.postTenant(tenantAttributes, headers, res -> {
+    super.postTenantSync(tenantAttributes, headers, res -> {
       if (res.failed()) {
         handler.handle(res);
         return;
@@ -46,26 +43,27 @@ public class TenantRefAPI extends TenantAPI {
         .perform(tenantAttributes, headers, vertx, performResponse -> {
           if (performResponse.failed()) {
             log.error("postTenant failure", performResponse.cause());
-
             handler.handle(succeededFuture(PostTenantResponse
               .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
             return;
           }
+          handler.handle(res);
 
-          vertx.executeBlocking(
-            promise -> new PubSubRegistrationService(vertx, headers).registerModule(promise),
-            registration -> {
-              if (registration.failed()) {
-                log.error("postTenant failure", registration.cause());
-                handler.handle(succeededFuture(PostTenantResponse
-                  .respond500WithTextPlain(registration.cause().getLocalizedMessage())));
-              } else {
-                log.info("postTenant executed successfully");
-                handler.handle(succeededFuture(PostTenantResponse
-                  .respond201WithApplicationJson(new TenantJob(), null)));
-              }
-            }
-          );
+//          vertx.executeBlocking(
+//            promise -> new PubSubRegistrationService(vertx, headers).registerModule(promise),
+//            registration -> {
+//              if (registration.failed()) {
+//                log.error("postTenant failure", registration.cause());
+//                handler.handle(succeededFuture(PostTenantResponse
+//                  .respond500WithTextPlain(registration.cause().getLocalizedMessage())));
+//              } else {
+//                log.info("postTenant executed successfully");
+////                handler.handle(succeededFuture(PostTenantResponse
+////                  .respond201WithApplicationJson(new TenantJob(), null)));
+//                handler.handle(res);
+//              }
+//            }
+//          );
         });
     }, context);
   }
