@@ -28,12 +28,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
 
-import io.vertx.core.VertxOptions;
 import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.impl.TenantAPI;
 import org.folio.rest.impl.TenantRefAPI;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -82,7 +78,6 @@ public class ApiTests {
   protected final ResourceClient feeFinesClient = buildFeeFinesClient();
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
-  private final static Logger logger = LogManager.getLogger("ApiTests");
 
   @BeforeClass
   public static void deployVerticle() throws Exception {
