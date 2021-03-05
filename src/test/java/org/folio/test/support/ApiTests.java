@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.TenantRefAPI;
@@ -112,13 +112,12 @@ public class ApiTests {
 
   public static void createTenant(TenantAttributes attributes, CompletableFuture<Void> future) {
     TenantRefAPI tenantAPI = new TenantRefAPI();
-    Map<String, String> headers = new HashMap<>();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
 
     headers.put("Content-type", "application/json");
     headers.put("Accept", "application/json,text/plain");
     headers.put("x-okapi-tenant", TENANT_NAME);
-    headers.put("x-okapi-url", getOkapiUrl());
-    headers.put("X-Okapi-Url", getOkapiUrl());
+    headers.put(OKAPI_URL_HEADER, getOkapiUrl());
 
     tenantAPI.postTenant(attributes, headers, responseAsyncResult -> {
       assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
