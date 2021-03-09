@@ -1,12 +1,13 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.service.PubSubRegistrationService;
 import org.folio.rest.tools.utils.TenantLoading;
@@ -16,11 +17,9 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class TenantRefAPI extends TenantAPI {
-  private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
+  private static final Logger log = LogManager.getLogger(TenantRefAPI.class);
 
   @Override
   public void postTenant(TenantAttributes tenantAttributes,
@@ -31,7 +30,7 @@ public class TenantRefAPI extends TenantAPI {
     log.info("Tenant attributes: {}", JsonObject.mapFrom(tenantAttributes));
 
     Vertx vertx = context.owner();
-    super.postTenant(tenantAttributes, headers, res -> {
+    super.postTenantSync(tenantAttributes, headers, res -> {
       if (res.failed()) {
         handler.handle(res);
         return;
@@ -45,7 +44,6 @@ public class TenantRefAPI extends TenantAPI {
         .perform(tenantAttributes, headers, vertx, performResponse -> {
           if (performResponse.failed()) {
             log.error("postTenant failure", performResponse.cause());
-
             handler.handle(succeededFuture(PostTenantResponse
               .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
             return;
@@ -60,8 +58,7 @@ public class TenantRefAPI extends TenantAPI {
                   .respond500WithTextPlain(registration.cause().getLocalizedMessage())));
               } else {
                 log.info("postTenant executed successfully");
-                handler.handle(succeededFuture(PostTenantResponse
-                  .respond201WithApplicationJson(EMPTY)));
+                handler.handle(res);
               }
             }
           );

@@ -11,6 +11,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.exception.AccountNotFoundValidationException;
@@ -36,11 +38,9 @@ import org.folio.rest.utils.ActionResultAdapter;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class AccountsBulkAPI implements AccountsBulk {
-  private static final Logger logger = LoggerFactory.getLogger(AccountsBulkAPI.class);
+  private static final Logger logger = LogManager.getLogger(AccountsBulkAPI.class);
 
   @Override
   public void postAccountsBulkCheckPay(BulkCheckActionRequest request,

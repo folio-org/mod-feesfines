@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
@@ -19,11 +21,9 @@ import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public abstract class ActionValidationService {
-  private static final Logger logger = LoggerFactory.getLogger(ActionValidationService.class);
+  private static final Logger logger = LogManager.getLogger(ActionValidationService.class);
 
   private final AccountRepository accountRepository;
 

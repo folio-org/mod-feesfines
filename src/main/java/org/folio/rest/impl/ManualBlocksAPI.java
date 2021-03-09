@@ -13,6 +13,8 @@ import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.core.Response;
 
 import io.vertx.core.json.JsonObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
@@ -36,8 +38,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class ManualBlocksAPI implements Manualblocks {
 
@@ -46,7 +46,7 @@ public class ManualBlocksAPI implements Manualblocks {
     private final Messages messages = Messages.getInstance();
     private static final String MANUALBLOCK_ID_FIELD = "'id'";
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
-    private final Logger logger = LoggerFactory.getLogger(ManualBlocksAPI.class);
+    private final Logger logger = LogManager.getLogger(ManualBlocksAPI.class);
 
     private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(MANUALBLOCKS_TABLE + ".jsonb");

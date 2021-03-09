@@ -916,7 +916,7 @@
     },
     {
       "id" : "_tenant",
-      "version" : "1.2",
+      "version" : "2.0",
       "interfaceType": "system",
       "handlers": [
         {
@@ -928,8 +928,8 @@
             "pubsub.subscribers.post"
           ]
         }, {
-          "methods": ["DELETE"],
-          "pathPattern": "/_/tenant"
+          "methods": ["GET","DELETE"],
+          "pathPattern": "/_/tenant/{id}"
         }
       ]
     },

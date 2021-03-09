@@ -4,16 +4,16 @@ import static org.apache.commons.lang3.BooleanUtils.isTrue;
 
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.util.pubsub.PubSubClientUtils;
 
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class PubSubRegistrationService {
-  private final Logger logger = LoggerFactory.getLogger(PubSubRegistrationService.class);
+  private final Logger logger = LogManager.getLogger(PubSubRegistrationService.class);
   private final OkapiConnectionParams connectionParams;
 
   public PubSubRegistrationService(Vertx vertx, Map<String, String> headers) {

@@ -6,6 +6,8 @@ import static java.lang.String.format;
 
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.LocaleSettings;
 import org.folio.rest.exception.EntityNotFoundException;
 import org.folio.rest.jaxrs.model.Config;
@@ -20,12 +22,10 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.client.HttpResponse;
 
 public class ConfigurationClient extends OkapiClient {
-  private static final Logger log = LoggerFactory.getLogger(ConfigurationClient.class);
+  private static final Logger log = LogManager.getLogger(ConfigurationClient.class);
 
   private static final DateTimeZone DEFAULT_DATE_TIME_ZONE = DateTimeZone.UTC;
   private static final String TIMEZONE_KEY = "timezone";

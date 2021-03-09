@@ -15,19 +15,22 @@ import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockTemplateClient;
-import static org.folio.rest.utils.ResourceClients.tenantClient;
+import static org.junit.Assert.assertThat;
 
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.impl.TenantRefAPI;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -35,6 +38,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.PomReader;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
+import org.hamcrest.CoreMatchers;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -84,10 +88,9 @@ public class ApiTests {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions(),
-      res -> future.complete(null));
+      res -> createTenant(getTenantAttributes(), future));
 
     get(future);
-    createTenant();
   }
 
   @AfterClass
@@ -107,8 +110,20 @@ public class ApiTests {
     okapiDeployment.setUpMapping();
   }
 
-  private static void createTenant() {
-    tenantClient().create(getTenantAttributes());
+  public static void createTenant(TenantAttributes attributes, CompletableFuture<Void> future) {
+    TenantRefAPI tenantAPI = new TenantRefAPI();
+    Map<String, String> headers = new CaseInsensitiveMap<>();
+
+    headers.put("Content-type", "application/json");
+    headers.put("Accept", "application/json,text/plain");
+    headers.put("x-okapi-tenant", TENANT_NAME);
+    headers.put(OKAPI_URL_HEADER, getOkapiUrl());
+
+    tenantAPI.postTenant(attributes, headers, responseAsyncResult -> {
+      assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
+      assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
+      future.complete(null);
+    }, vertx.getOrCreateContext());
   }
 
   protected static TenantAttributes getTenantAttributes() {

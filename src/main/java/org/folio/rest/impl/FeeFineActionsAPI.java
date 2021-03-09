@@ -11,6 +11,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
@@ -38,8 +40,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class FeeFineActionsAPI implements Feefineactions {
 
@@ -48,7 +48,7 @@ public class FeeFineActionsAPI implements Feefineactions {
   private final Messages messages = Messages.getInstance();
   private static final String FEEFINEACTION_ID_FIELD = "'id'";
   private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
-  private final Logger logger = LoggerFactory.getLogger(FeeFineActionsAPI.class);
+  private final Logger logger = LogManager.getLogger(FeeFineActionsAPI.class);
 
   private CQLWrapper getCQL(String query, int limit, int offset)
     throws CQL2PgJSONException, IOException {
