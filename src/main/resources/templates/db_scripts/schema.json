@@ -34,7 +34,7 @@
     },
     {
       "tableName":"accounts",
-      "fromModuleVersion":"15.10.0",
+      "fromModuleVersion":"16.1.0",
       "withMetadata":true,
       "index" : [
         {
@@ -43,6 +43,10 @@
         },
         {
           "fieldName": "userId",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "status.name",
           "tOps": "ADD"
         }
       ]
