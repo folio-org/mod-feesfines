@@ -49,11 +49,15 @@
     },
     {
       "tableName":"feefineactions",
-      "fromModuleVersion":"15.0",
+      "fromModuleVersion":"16.1.0",
       "withMetadata":true,
       "index" : [
         {
           "fieldName" : "accountId",
+          "tOps" : "ADD"
+        },
+        {
+          "fieldName" : "userId",
           "tOps" : "ADD"
         }
       ]
