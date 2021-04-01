@@ -62,7 +62,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
   private static final String USER_ID = randomId();
   private static final String SERVICE_POINT_ID = randomId();
 
-  private static final String PAYMENT_METHOD = "Cash";
+  private static final String PAYMENT_METHOD = "Bursar";
   private static final String USER_NAME = "Folio, Tester";
   private static final String COMMENTS = "STAFF : staff comment \\n PATRON : patron comment";
   private static final boolean NOTIFY_PATRON = false;

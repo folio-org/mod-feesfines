@@ -1,16 +1,15 @@
 package org.folio.rest.service.action;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.summingDouble;
 import static java.util.stream.Collectors.toList;
 import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
-import static org.folio.rest.domain.Action.TRANSFER;
+import static org.folio.rest.utils.FeeFineActionHelper.getTotalAmount;
+import static org.folio.rest.utils.FeeFineActionHelper.getTotalAmounts;
+import static org.folio.rest.utils.FeeFineActionHelper.groupTransferredAmountsByTransferAccount;
+import static org.folio.rest.utils.FeeFineActionHelper.groupFeeFineActionsByAccountId;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +28,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 
 public class RefundActionService extends ActionService {
-  private static final String PATRON = "patron";
+  private static final String PAYMENT_REFUND_RECIPIENT = "patron";
 
   public RefundActionService(Map<String, String> headers, Context context) {
     super(Action.REFUND, new RefundActionValidationService(headers, context), headers, context);
@@ -38,133 +37,109 @@ public class RefundActionService extends ActionService {
   @Override
   protected Future<ActionContext> createFeeFineActions(ActionContext context) {
     return feeFineActionRepository.findRefundableActionsForAccounts(context.getAccounts().keySet())
-      .compose(feeFineActions -> createFeeFineActions(context, feeFineActions));
+      .compose(feeFineActions -> processRefund(context, feeFineActions));
   }
 
-  private Future<ActionContext> createFeeFineActions(ActionContext context,
+  private Future<ActionContext> processRefund(ActionContext context,
     List<Feefineaction> refundableFeeFineActions) {
 
-    Collection<Account> accounts = context.getAccounts().values();
+    Map<String, List<Feefineaction>> refundableActionsByAccountId =
+      groupFeeFineActionsByAccountId(refundableFeeFineActions);
 
-    Map<String, MonetaryValue> refundableAmounts = refundableFeeFineActions.stream()
-      .collect(groupingBy(
-        Feefineaction::getAccountId,
-        collectingAndThen(
-          summingDouble(Feefineaction::getAmountAction),
-          MonetaryValue::new
-        )));
+    Map<String, MonetaryValue> refundableAmountsByAccountId =
+      getTotalAmounts(refundableActionsByAccountId);
 
-    Map<String, MonetaryValue> distributedAmounts =
-      amountSplitterStrategy.split(context.getRequestedAmount(), accounts, refundableAmounts);
-
-    Map<String, List<Feefineaction>> refundableActionsByAccount = refundableFeeFineActions.stream()
-      .collect(groupingBy(Feefineaction::getAccountId));
+    Map<String, MonetaryValue> refundAmountsByAccountId =
+      distributeRefundAmount(context.getRequestedAmount(), refundableAmountsByAccountId);
 
     return CompositeFuture.all(
-      accounts.stream()
+      context.getAccounts()
+        .values()
+        .stream()
         .map(account -> createFeeFineActionsForAccount(context, account,
-          distributedAmounts.get(account.getId()), refundableActionsByAccount.get(account.getId())))
+          refundableAmountsByAccountId.get(account.getId()),
+          refundAmountsByAccountId.get(account.getId()),
+          refundableActionsByAccountId.get(account.getId())))
         .collect(toList()))
       .map(context);
   }
 
   private Future<ActionContext> createFeeFineActionsForAccount(ActionContext context,
-    Account account, MonetaryValue refundAmount, List<Feefineaction> refundableFeeFineActions) {
+    Account account, MonetaryValue refundableAmount, MonetaryValue refundAmount,
+    List<Feefineaction> refundableFeeFineActions) {
 
-    double refundableAmountDouble = refundableFeeFineActions.stream()
-      .mapToDouble(Feefineaction::getAmountAction)
-      .sum();
-
-    double paidAmountDouble = refundableFeeFineActions.stream()
-      .filter(ffa -> PAY.isActionForResult(ffa.getTypeAction()))
-      .mapToDouble(Feefineaction::getAmountAction)
-      .sum();
-
-    MonetaryValue refundableAmount = new MonetaryValue(refundableAmountDouble);
-    MonetaryValue paidAmount = new MonetaryValue(paidAmountDouble);
+    MonetaryValue paidAmount = getTotalAmount(refundableFeeFineActions, PAY);
     MonetaryValue transferredAmount = refundableAmount.subtract(paidAmount);
-    MonetaryValue paymentRefundAmount = paidAmount.min(refundAmount);
-    MonetaryValue transfersRefundAmount = refundAmount.subtract(paymentRefundAmount);
+    MonetaryValue paymentsRefundAmount = paidAmount.min(refundAmount);
+    MonetaryValue transfersRefundAmount = refundAmount.subtract(paymentsRefundAmount);
 
-    boolean isFullPaymentRefund = paidAmount.subtract(paymentRefundAmount).isZero();
-    boolean isFullTransferRefund = transferredAmount.subtract(transfersRefundAmount).isZero();
+    boolean isFullPaymentsRefund = paidAmount.subtract(paymentsRefundAmount).isZero();
+    boolean isFullTransfersRefund = transferredAmount.subtract(transfersRefundAmount).isZero();
 
-    Map<String, MonetaryValue> transferAccountToRefundAmount =
-      getTransferRefundAmountsGroupedByTransferAccount(refundableFeeFineActions);
+    Map<String, MonetaryValue> transferRefundAmounts = distributeRefundAmount(
+      transfersRefundAmount, groupTransferredAmountsByTransferAccount(refundableFeeFineActions));
 
     return succeededFuture(context)
-      .compose(ctx -> createFeeFineActionForPayment(ctx, account, CREDIT,
-        isFullPaymentRefund, paymentRefundAmount))
-      .compose(ctx -> createFeeFineActionsForTransfers(ctx, account, CREDIT,
-        isFullTransferRefund, transferAccountToRefundAmount))
-      .compose(ctx -> createFeeFineActionForPayment(ctx, account, REFUND,
-        isFullPaymentRefund, paymentRefundAmount))
-      .compose(ctx -> createFeeFineActionsForTransfers(ctx, account, REFUND,
-        isFullTransferRefund, transferAccountToRefundAmount));
+      .compose(ctx -> refundPayments(ctx, account, CREDIT, isFullPaymentsRefund, paymentsRefundAmount))
+      .compose(ctx -> refundTransfers(ctx, account, CREDIT, isFullTransfersRefund, transferRefundAmounts))
+      .compose(ctx -> refundPayments(ctx, account, REFUND, isFullPaymentsRefund, paymentsRefundAmount))
+      .compose(ctx -> refundTransfers(ctx, account, REFUND, isFullTransfersRefund, transferRefundAmounts));
   }
 
-  private Future<ActionContext> createFeeFineActionForPayment(ActionContext ctx,
-    Account account, Action action, boolean isFullRefund, MonetaryValue refundAmount) {
+  private Future<ActionContext> refundPayments(ActionContext ctx, Account account, Action action,
+    boolean isFullRefund, MonetaryValue refundAmount) {
 
-    return createFeeFineAction(ctx, account, action, refundAmount, isFullRefund, PATRON);
+    return createFeeFineActionAndUpdateAccount(ctx, account, action, isFullRefund, refundAmount,
+      PAYMENT_REFUND_RECIPIENT);
   }
 
-  private Future<ActionContext> createFeeFineActionsForTransfers(ActionContext ctx,
-    Account account, Action action, boolean isFullRefund,
-    Map<String, MonetaryValue> transferAccountToRefundAmount) {
+  private Future<ActionContext> refundTransfers(ActionContext ctx, Account account, Action action,
+    boolean isFullRefund, Map<String, MonetaryValue> refundAmountByTransferAccount) {
 
     return CompositeFuture.all(
-      transferAccountToRefundAmount.keySet().stream()
-        .map(transferAccount -> createFeeFineActionForTransferRefund(ctx, account, action,
-          transferAccountToRefundAmount.get(transferAccount), isFullRefund, transferAccount))
+      refundAmountByTransferAccount.keySet().stream()
+        .map(transferAccount -> refundTransfer(ctx, account, action,
+          refundAmountByTransferAccount.get(transferAccount), isFullRefund, transferAccount))
         .collect(toList()))
       .map(ctx);
   }
 
-  private Future<ActionContext> createFeeFineActionForTransferRefund(ActionContext ctx,
-    Account account, Action action, MonetaryValue refundAmount,
-    boolean isFullRefund, String transferAccount) {
+  private Future<ActionContext> refundTransfer(ActionContext ctx, Account account, Action action,
+    MonetaryValue refundAmount, boolean isFullRefund, String transferAccount) {
 
-    return createFeeFineAction(ctx, account, action, refundAmount, isFullRefund, transferAccount);
+    return createFeeFineActionAndUpdateAccount(ctx, account, action, isFullRefund, refundAmount,
+      transferAccount);
   }
 
-  private static Map<String, MonetaryValue> getTransferRefundAmountsGroupedByTransferAccount(
-    List<Feefineaction> refundableFeeFineActions) {
-
-    return refundableFeeFineActions.stream()
-      .filter(ffa -> TRANSFER.isActionForResult(ffa.getTypeAction()))
-      .collect(groupingBy(
-        Feefineaction::getPaymentMethod,
-        collectingAndThen(
-          summingDouble(Feefineaction::getAmountAction),
-          MonetaryValue::new
-        )));
-  }
-
-  private Future<ActionContext> createFeeFineAction(ActionContext context, Account account,
-    Action action, MonetaryValue amount, boolean isFullAction, String recipient) {
+  private Future<ActionContext> createFeeFineActionAndUpdateAccount(ActionContext context,
+    Account account, Action action, boolean isFullAction,MonetaryValue amount,
+    String refundRecipient) {
 
     if (!amount.isPositive()) {
       return succeededFuture(context);
     }
 
-    ActionRequest request = context.getRequest();
+    Feefineaction feeFineAction = buildFeeFineAction(account, action, amount, isFullAction,
+      refundRecipient, context);
 
-    MonetaryValue remainingAmountBefore = new MonetaryValue(account.getRemaining());
-    MonetaryValue remainingAmountAfter = action == CREDIT
-      ? remainingAmountBefore.subtract(amount)
-      : remainingAmountBefore.add(amount);
+    updateAccountInMemory(account, feeFineAction);
+
+    return feeFineActionRepository.save(feeFineAction)
+      .map(context::withFeeFineAction);
+  }
+
+  private Feefineaction buildFeeFineAction(Account account, Action action, MonetaryValue amount,
+    boolean isFullAction, String refundRecipient, ActionContext context) {
 
     String actionType = action.getResult(isFullAction);
-    String transactionInfo = buildTransactionInfo(action, recipient);
+    Double balance = calculateFeeFineActionBalance(account, action, amount);
+    String transactionInfo = buildTransactionInfo(action, refundRecipient);
+    ActionRequest request = context.getRequest();
 
-    account.setRemaining(remainingAmountAfter.toDouble());
-    account.getPaymentStatus().setName(actionType);
-
-    Feefineaction feeFineAction = new Feefineaction()
+    return new Feefineaction()
       .withTypeAction(actionType)
       .withAmountAction(amount.toDouble())
-      .withBalance(account.getRemaining())
+      .withBalance(balance)
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
       .withTransactionInformation(transactionInfo)
@@ -175,9 +150,17 @@ public class RefundActionService extends ActionService {
       .withAccountId(account.getId())
       .withDateAction(new Date())
       .withId(UUID.randomUUID().toString());
+  }
 
-    return feeFineActionRepository.save(feeFineAction)
-      .map(context::withFeeFineAction);
+  private Map<String, MonetaryValue> distributeRefundAmount(MonetaryValue refundAmount,
+    Map<String, MonetaryValue> refundableAmountsByAccountId) {
+
+    return amountSplitterStrategy.split(refundAmount, refundableAmountsByAccountId);
+  }
+
+  private static void updateAccountInMemory(Account account, Feefineaction feeFineAction) {
+    account.setRemaining(feeFineAction.getBalance());
+    account.getPaymentStatus().setName(feeFineAction.getTypeAction());
   }
 
   private static String buildTransactionInfo(Action action, String targetAccount) {
@@ -189,5 +172,17 @@ public class RefundActionService extends ActionService {
       default:
         throw new IllegalArgumentException("Cannot build transaction info for action: " + action);
     }
+  }
+
+  private static Double calculateFeeFineActionBalance(Account account,
+    Action action, MonetaryValue refundAmount) {
+
+    MonetaryValue remainingAmount = new MonetaryValue(account.getRemaining());
+
+    MonetaryValue feeFineActionBalance = action == CREDIT
+      ? remainingAmount.subtract(refundAmount)
+      : remainingAmount.add(refundAmount);
+
+    return feeFineActionBalance.toDouble();
   }
 }

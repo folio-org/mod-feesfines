@@ -118,7 +118,7 @@ public abstract class ActionService {
       .collect(toMap(Account::getId, account -> new MonetaryValue(account.getRemaining())));
 
     Map<String, MonetaryValue> distributedAmounts = amountSplitterStrategy.split(
-      requestedAmount, accounts, actionableAmounts);
+      requestedAmount, actionableAmounts);
 
     List<Feefineaction> feeFineActions = accounts.stream()
       .map(account -> createFeeFineActionAndUpdateAccount(
