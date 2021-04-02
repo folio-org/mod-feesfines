@@ -98,5 +98,4 @@ public class MonetaryValue {
   public String toString() {
     return amount.toString();
   }
-
 }
