@@ -7,16 +7,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Currency;
 
-import lombok.EqualsAndHashCode;
-
-@EqualsAndHashCode
-public class MonetaryValue implements Comparable<MonetaryValue> {
+public class MonetaryValue {
   private static final Currency USD = Currency.getInstance("USD");
   private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN;
 
   private final BigDecimal amount;
-
-  @EqualsAndHashCode.Exclude
   private final Currency currency;
 
   public MonetaryValue(BigDecimal amount) {
@@ -104,8 +99,4 @@ public class MonetaryValue implements Comparable<MonetaryValue> {
     return amount.toString();
   }
 
-  @Override
-  public int compareTo(MonetaryValue other) {
-    return this.getAmount().compareTo(other.getAmount());
-  }
 }

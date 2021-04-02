@@ -2,11 +2,14 @@ package org.folio.rest.utils.amountsplitter;
 
 import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
-import static org.folio.rest.utils.CollectionUtils.sortByValue;
+import static java.util.Comparator.comparing;
+import static java.util.Map.Entry.comparingByValue;
+import static java.util.stream.Collectors.toMap;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -100,5 +103,17 @@ public class SplitEvenlyRecursively implements BulkActionAmountSplitterStrategy 
 
   private BigDecimal splitEvenly(BigDecimal amount, int numberOfPieces) {
     return amount.divide(new BigDecimal(numberOfPieces), RoundingMode.FLOOR);
+  }
+
+  private static Map<String, MonetaryValue> sortByValue(Map<String, MonetaryValue> map) {
+    return map.entrySet()
+      .stream()
+      .sorted(comparingByValue(comparing(MonetaryValue::getAmount)))
+      .collect(toMap(
+        Map.Entry::getKey,
+        Map.Entry::getValue,
+        (e1, e2) -> e1,
+        LinkedHashMap::new
+      ));
   }
 }
