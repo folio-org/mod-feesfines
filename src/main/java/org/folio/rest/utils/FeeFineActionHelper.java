@@ -41,6 +41,19 @@ public class FeeFineActionHelper {
       .collect(groupingBy(Feefineaction::getAccountId));
   }
 
+  public static Map<String, MonetaryValue> groupTransferredAmountsByTransferAccount(
+    Collection<Feefineaction> feeFineActions) {
+
+    return feeFineActions.stream()
+      .filter(actionPredicate(TRANSFER))
+      .collect(groupingBy(
+        Feefineaction::getPaymentMethod,
+        collectingAndThen(
+          summingDouble(Feefineaction::getAmountAction),
+          MonetaryValue::new
+        )));
+  }
+
   public static MonetaryValue getTotalAmount(Collection<Feefineaction> feeFineActions) {
     return getTotalAmount(feeFineActions, ffa -> true);
   }
@@ -72,19 +85,6 @@ public class FeeFineActionHelper {
         Map.Entry::getKey,
         entry -> getTotalAmount(entry.getValue())
       ));
-  }
-
-  public static Map<String, MonetaryValue> groupTransferredAmountsByTransferAccount(
-    Collection<Feefineaction> feeFineActions) {
-
-    return feeFineActions.stream()
-      .filter(actionPredicate(TRANSFER))
-      .collect(groupingBy(
-        Feefineaction::getPaymentMethod,
-        collectingAndThen(
-          summingDouble(Feefineaction::getAmountAction),
-          MonetaryValue::new
-        )));
   }
 
   public static Predicate<Feefineaction> actionPredicate(Action action) {
