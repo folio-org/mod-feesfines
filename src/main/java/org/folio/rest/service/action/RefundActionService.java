@@ -112,7 +112,7 @@ public class RefundActionService extends ActionService {
   }
 
   private Future<ActionContext> createFeeFineActionAndUpdateAccount(ActionContext context,
-    Account account, Action action, boolean isFullAction,MonetaryValue amount,
+    Account account, Action action, boolean isFullAction, MonetaryValue amount,
     String refundRecipient) {
 
     if (!amount.isPositive()) {
@@ -133,7 +133,7 @@ public class RefundActionService extends ActionService {
 
     String actionType = action.getResult(isFullAction);
     Double balance = calculateFeeFineActionBalance(account, action, amount);
-    String transactionInfo = buildTransactionInfo(action, refundRecipient);
+    String transactionInfo = buildRefundTransactionInfo(action, refundRecipient);
     ActionRequest request = context.getRequest();
 
     return new Feefineaction()
@@ -163,7 +163,7 @@ public class RefundActionService extends ActionService {
     account.getPaymentStatus().setName(feeFineAction.getTypeAction());
   }
 
-  private static String buildTransactionInfo(Action action, String targetAccount) {
+  private static String buildRefundTransactionInfo(Action action, String targetAccount) {
     switch (action) {
       case CREDIT:
         return "Refund to " + targetAccount;
