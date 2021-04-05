@@ -60,6 +60,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.With;
 
+// TODO: inherit from DateBasedReportService<RefundReport>
 public class RefundReportService {
   private static final Logger log = LogManager.getLogger(RefundReportService.class);
 
@@ -136,7 +137,7 @@ public class RefundReportService {
     RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
 
     return feeFineActionRepository
-      .findActionsByTypeForPeriodAndOwners(REFUND, startDateTimeFormatted, endDateTimeFormatted,
+      .findByParameters(REFUND, startDateTimeFormatted, endDateTimeFormatted,
         ownerIds, REPORT_ROWS_LIMIT)
       .map(RefundReportService::toRefundDataMap)
       .map(ctx::withRefunds)

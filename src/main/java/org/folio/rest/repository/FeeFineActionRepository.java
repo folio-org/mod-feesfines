@@ -3,11 +3,11 @@ package org.folio.rest.repository;
 import static io.vertx.core.Future.failedFuture;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.domain.Action;
+import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -37,11 +38,19 @@ import io.vertx.sqlclient.Tuple;
 public class FeeFineActionRepository {
   private static final String ACTIONS_TABLE = "feefineactions";
   private static final String ACCOUNTS_TABLE = "accounts";
+  public static final String ACTIONS_TABLE_ALIAS = "actions";
+  private static final String ACCOUNTS_TABLE_ALIAS = "accounts";
   private static final String DATE_FIELD = "dateAction";
   private static final String TYPE_FIELD = "typeAction";
+  private static final String CREATED_AT_FIELD = "createdAt";
+  private static final String SOURCE_FIELD = "source";
+  private static final String OWNER_ID_FIELD = "ownerId";
   private static final int ACTIONS_LIMIT = 1000;
   private static final String FIND_REFUNDABLE_ACTIONS_QUERY_TEMPLATE =
     "typeAction any \"Paid Transferred\" AND accountId any \"%s\"";
+  public static final String ORDER_BY_ACTION_DATE_ASC = "actions.jsonb->>'dateAction' ASC";
+  public static final String ORDER_BY_OWNER_SOURCE_ASC = "accounts.jsonb->>'ownerId', " +
+    "actions.jsonb->>'source' ASC";
 
   private final PostgresClient pgClient;
   private final String tenantId;
@@ -131,56 +140,78 @@ public class FeeFineActionRepository {
       );
   }
 
-  public Future<List<Feefineaction>> findActionsByTypeForPeriodAndOwners(Action typeAction,
-    String startDate, String endDate, List<String> ownerIds, int limit) {
+  public Future<List<Feefineaction>> findByParameters(
+    Action typeAction, String startDate, String endDate, List<String> ownerIds, int limit) {
 
-    final String typeCondition = "actions.jsonb->>'typeAction' IN ($2, $3)";
-    final String startDateCondition = "actions.jsonb->>'dateAction' >= $4";
-    final String endDateCondition = "actions.jsonb->>'dateAction' < $5";
+    return findFeeFineActionsAndAccountsByParameters(typeAction, startDate, endDate, ownerIds,
+      null, null, ORDER_BY_ACTION_DATE_ASC, limit)
+      .map(Map::keySet)
+      .map(ArrayList::new);
+  }
 
-    String ownerIdsFilter = buildOwnerIdsFilter(ownerIds);
-    Tuple params = Tuple.of(limit, typeAction.getFullResult(), typeAction.getPartialResult());
-    List<String> whereConditions = new ArrayList<>();
-    whereConditions.add(typeCondition);
+  public Future<Map<Feefineaction, Account>> findFeeFineActionsAndAccountsByParameters(
+    Action typeAction, String startDate, String endDate, List<String> ownerIds, String createdAt,
+    List<String> sources, String orderBy, int limit) {
 
-    if (startDate != null && endDate != null) {
-      whereConditions.add(startDateCondition);
-      whereConditions.add(endDateCondition);
+//    Tuple params = Tuple.of(limit, typeAction.getFullResult(), typeAction.getPartialResult(),
+//      startDate, endDate);
+
+    Tuple params = Tuple.of(limit);
+    List<String> conditions = new ArrayList<>();
+
+    params.addString(typeAction.getFullResult());
+    params.addString(typeAction.getPartialResult());
+    conditions.add(format("%s.jsonb->>'%s' IN ($2, $3)", ACTIONS_TABLE_ALIAS, TYPE_FIELD));
+    int paramNum = 3;
+
+    if (startDate != null) {
+      paramNum++;
       params.addString(startDate);
+      conditions.add(format("%s.jsonb->>'%s' >= $%d", ACTIONS_TABLE_ALIAS, DATE_FIELD, paramNum));
+    }
+    if (endDate != null) {
+      paramNum++;
       params.addString(endDate);
-    } else if (startDate != null && endDate == null) {
-      whereConditions.add(startDateCondition);
-      params.addString(startDate);
+      conditions.add(format("%s.jsonb->>'%s' < $%d", ACTIONS_TABLE_ALIAS, DATE_FIELD, paramNum));
+    }
+    if (createdAt != null) {
+      paramNum++;
+      params.addString(createdAt);
+      conditions.add(format("%s.jsonb->>'%s' = $%d", ACTIONS_TABLE_ALIAS, CREATED_AT_FIELD,
+        paramNum));
     }
 
+    addFilterByListToConditions(conditions, ACCOUNTS_TABLE_ALIAS, OWNER_ID_FIELD, ownerIds);
+    addFilterByListToConditions(conditions, ACTIONS_TABLE_ALIAS, SOURCE_FIELD, sources);
+
     String query = format(
-      "SELECT actions.jsonb FROM %1$s.%2$s actions " +
-        "LEFT OUTER JOIN %1$s.%3$s accounts ON actions.jsonb->>'accountId' = accounts.jsonb->>'id' " +
-        "WHERE " +
-        String.join(" AND ", whereConditions) +
-        "%4$s" +
-        "ORDER BY actions.jsonb->>'dateAction' ASC " +
+      "SELECT actions.jsonb, accounts.jsonb FROM %1$s.%2$s %3$s " +
+        "LEFT OUTER JOIN %1$s.%4$s accounts ON %3$s.jsonb->>'accountId' = %5$s.jsonb->>'id' " +
+        "WHERE " + String.join(" AND ", conditions) + " " +
+        "ORDER BY %6$s " +
         "LIMIT $1",
       PostgresClient.convertToPsqlStandard(tenantId),
-      ACTIONS_TABLE,
-      ACCOUNTS_TABLE,
-      ownerIdsFilter);
+      ACTIONS_TABLE, ACTIONS_TABLE_ALIAS,
+      ACCOUNTS_TABLE, ACCOUNTS_TABLE_ALIAS,
+      orderBy);
 
     Promise<RowSet<Row>> promise = Promise.promise();
     pgClient.select(query, params, promise);
 
-    return promise.future().map(this::mapToFeeFineActions);
+    return promise.future().map(this::mapToFeeFineActionsAndAccounts);
   }
 
-  private String buildOwnerIdsFilter(List<String> ownerIds) {
-    if (ownerIds == null || ownerIds.isEmpty()) {
-      return EMPTY;
+  private void addFilterByListToConditions(List<String> conditions, String tableName,
+    String fieldName, List<String> valueList) {
+
+    if (valueList == null || valueList.isEmpty()) {
+      return;
     }
 
-    return format("AND accounts.jsonb->>'ownerId' IN (%s) ",
-      ownerIds.stream()
+    conditions.add(format("%s.jsonb->>'%s' IN (%s)", tableName, fieldName,
+      valueList.stream()
         .map(id -> format("'%s'", id))
-        .collect(Collectors.joining(", ")));
+        .collect(Collectors.joining(", "))));
   }
 
   public Future<Feefineaction> save(Feefineaction feefineaction) {
@@ -207,13 +238,18 @@ public class FeeFineActionRepository {
       .collect(toList());
   }
 
-  private List<Feefineaction> mapToFeeFineActions(RowSet<Row> rowSet) {
+  private Map<Feefineaction, Account> mapToFeeFineActionsAndAccounts(RowSet<Row> rowSet) {
     RowIterator<Row> iterator = rowSet.iterator();
-    List<Feefineaction> feeFineActions = new ArrayList<>();
-    iterator.forEachRemaining(row -> feeFineActions.add(
-      row.get(JsonObject.class, 0).mapTo(Feefineaction.class)));
+    Map<Feefineaction, Account> feeFineActionsToAccountsMap = new LinkedHashMap<>();
+    iterator.forEachRemaining(row -> {
+      JsonObject actionJsonObject = row.get(JsonObject.class, 0);
+      JsonObject accountJsonObject = row.get(JsonObject.class, 1);
+      feeFineActionsToAccountsMap.put(
+        actionJsonObject != null ? actionJsonObject.mapTo(Feefineaction.class) : null,
+        accountJsonObject != null ? accountJsonObject.mapTo(Account.class) : null);
+    });
 
-    return feeFineActions;
+    return feeFineActionsToAccountsMap;
   }
 
   private GroupedCriterias groupCriterias(List<Criteria> criterias, String op) {

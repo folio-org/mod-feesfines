@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Cash drawer reconciliation report entry",
+  "description": "Represents a single row of a cash drawer reconciliation report",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry",
+  "properties": {
+    "source": {
+      "type": "string",
+      "description": "Person who performed an activity (from login information)",
+      "default": ""
+    },
+    "paymentMethod": {
+      "type": "string",
+      "description": "Payment method",
+      "default": ""
+    },
+    "paidAmount": {
+      "type": "string",
+      "description": "Paid amount",
+      "default": ""
+    },
+    "feeFineOwner": {
+      "type": "string",
+      "description": "Fee/fine owner",
+      "default": ""
+    },
+    "feeFineType": {
+      "type": "string",
+      "description": "Fee/fine type",
+      "default": ""
+    },
+    "paymentDate": {
+      "type": "string",
+      "description": "Date and time of a refund action",
+      "default": ""
+    },
+    "paymentStatus": {
+      "type": "string",
+      "description": "Payment action - 'Paid fully' or 'Paid partially'",
+      "default": ""
+    },
+    "transactionInfo": {
+      "type": "string",
+      "description": "Transaction info",
+      "default": ""
+    },
+    "additionalStaffInfo": {
+      "type": "string",
+      "description": "Additional information for staff",
+      "default": ""
+    },
+    "additionalPatronInfo": {
+      "type": "string",
+      "description": "Additional information for patron",
+      "default": ""
+    },
+    "patronId": {
+      "type": "string",
+      "description": "A globally unique (UUID) identifier for the user",
+      "$ref": "../raml-util/schemas/uuid.schema",
+      "default": ""
+    },
+    "feeFineId": {
+      "type": "string",
+      "description": "Fee/fine ID",
+      "$ref": "../raml-util/schemas/uuid.schema",
+      "default": ""
+    }
+  }
+}

@@ -53,6 +53,14 @@ public class AccountHelper {
       .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (s, s2) -> s));
   }
 
+  public static String getStaffInfoFromComment(String comments) {
+    return defaultString(parseFeeFineComments(comments).get(STAFF_COMMENTS_KEY));
+  }
+
+  public static String getPatronInfoFromComment(String comments) {
+    return defaultString(parseFeeFineComments(comments).get(PATRON_COMMENTS_KEY));
+  }
+
   public static void populateMetadata(Account account, Map<String, String> headers) {
     try {
       MetadataUtil.populateMetadata(account, headers);
