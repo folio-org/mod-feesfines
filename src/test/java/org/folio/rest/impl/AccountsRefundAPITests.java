@@ -480,8 +480,9 @@ public class AccountsRefundAPITests extends ActionsAPITests {
   }
 
   @Test
-  public void transfersAreCombinedAndRefundedToMultipleTransferAccounts() {
+  public void refundForTransfersToMultipleTransferAccounts() {
     double initialAmount = 10.0;
+    double refundAmount = initialAmount;
 
     double transferToBursar1 = 1.0;
     double transferToUniversity1 = 2.0;
@@ -496,8 +497,8 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     performAction(transferClient, createRequest(transferToBursar2, TRANSFER_ACCOUNT_BURSAR));
     performAction(transferClient, createRequest(transferToUniversity2, TRANSFER_ACCOUNT_UNIVERSITY));
 
-    double amountTransferredToBursar = transferToBursar1 + transferToBursar2;
-    double amountTransferredToUniversity = transferToUniversity1 + transferToUniversity2;
+    double amountTransferredToBursar = transferToBursar1 + transferToBursar2; // 4
+    double amountTransferredToUniversity = transferToUniversity1 + transferToUniversity2; // 6
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(FIRST_ACCOUNT_ID, -4.0, amountTransferredToBursar,
@@ -510,11 +511,72 @@ public class AccountsRefundAPITests extends ActionsAPITests {
         REFUND.getFullResult(), REFUNDED_TO_UNIVERSITY)
     );
 
-    Response response = refundClient.post(createRefundRequest(initialAmount));
+    Response response = refundClient.post(createRefundRequest(refundAmount));
 
-    verifyResponse(response, initialAmount, expectedFeeFineActions.size());
+    verifyResponse(response, refundAmount, expectedFeeFineActions.size());
     verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, REFUND.getFullResult(), 0.0, CLOSED.getValue());
     verifyActions(8, expectedFeeFineActions); // 4 transfers + 2 credits + 2 refunds
+  }
+
+  @Test
+  public void bulkRefundForTransfersToMultipleTransferAccounts() {
+    double initialAmount = 10.0;
+    double refundAmount = initialAmount * 2;
+
+    double transferToBursar1 = 1.0;
+    double transferToUniversity1 = 2.0;
+    double transferToBursar2 = 3.0;
+    double transferToUniversity2 = 4.0;
+
+    postAccount(createAccount(FIRST_ACCOUNT_ID, initialAmount, initialAmount));
+    ResourceClient transferClient1 = buildAccountTransferClient(FIRST_ACCOUNT_ID);
+    performAction(transferClient1, createRequest(transferToBursar1, TRANSFER_ACCOUNT_BURSAR));
+    performAction(transferClient1, createRequest(transferToUniversity1, TRANSFER_ACCOUNT_UNIVERSITY));
+    performAction(transferClient1, createRequest(transferToBursar2, TRANSFER_ACCOUNT_BURSAR));
+    performAction(transferClient1, createRequest(transferToUniversity2, TRANSFER_ACCOUNT_UNIVERSITY));
+
+    postAccount(createAccount(SECOND_ACCOUNT_ID, initialAmount, initialAmount));
+    ResourceClient transferClient2 = buildAccountTransferClient(SECOND_ACCOUNT_ID);
+    performAction(transferClient2, createRequest(transferToBursar1, TRANSFER_ACCOUNT_BURSAR));
+    performAction(transferClient2, createRequest(transferToUniversity1, TRANSFER_ACCOUNT_UNIVERSITY));
+    performAction(transferClient2, createRequest(transferToBursar2, TRANSFER_ACCOUNT_BURSAR));
+    performAction(transferClient2, createRequest(transferToUniversity2, TRANSFER_ACCOUNT_UNIVERSITY));
+
+    double amountTransferredToBursar = transferToBursar1 + transferToBursar2;
+    double amountTransferredToUniversity = transferToUniversity1 + transferToUniversity2;
+
+    List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, -4.0, amountTransferredToBursar,
+        CREDIT.getFullResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, -10.0, amountTransferredToUniversity,
+        CREDIT.getFullResult(), REFUND_TO_UNIVERSITY),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, -6.0, amountTransferredToBursar,
+        REFUND.getFullResult(), REFUNDED_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, amountTransferredToUniversity,
+        REFUND.getFullResult(), REFUNDED_TO_UNIVERSITY),
+
+      feeFineActionMatcher(SECOND_ACCOUNT_ID, -4.0, amountTransferredToBursar,
+        CREDIT.getFullResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID, -10.0, amountTransferredToUniversity,
+        CREDIT.getFullResult(), REFUND_TO_UNIVERSITY),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID, -6.0, amountTransferredToBursar,
+        REFUND.getFullResult(), REFUNDED_TO_BURSAR),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID, 0.0, amountTransferredToUniversity,
+        REFUND.getFullResult(), REFUNDED_TO_UNIVERSITY)
+    );
+
+    Response response = bulkRefundClient.post(createBulkRequest(refundAmount, TWO_ACCOUNT_IDS));
+
+    verifyBulkResponse(response, refundAmount, expectedFeeFineActions);
+    verifyActions(16, expectedFeeFineActions); // 8 transfers + 4 credits + 4 refunds
+
+    Account firstAccount = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
+      REFUND.getFullResult(), 0.0, CLOSED.getValue());
+
+    Account secondAccount = verifyAccountAndGet(accountsClient, SECOND_ACCOUNT_ID,
+      REFUND.getFullResult(), 0.0, CLOSED.getValue());
+
+    verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount);
   }
 
   private void testSingleAccountRefundSuccess(double initialAmount, double payAmount, double transferAmount,
