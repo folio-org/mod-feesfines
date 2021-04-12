@@ -2,19 +2,12 @@ package org.folio.rest.utils.amountsplitter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.folio.rest.domain.MonetaryValue;
-import org.folio.rest.jaxrs.model.Account;
-import org.folio.test.support.EntityBuilder;
-import org.joda.time.DateTime;
 import org.junit.Test;
 
 public class SplitEvenlyRecursivelyTest {
@@ -22,11 +15,10 @@ public class SplitEvenlyRecursivelyTest {
   @Test
   public void shouldCoverOneAccountFullyAndDistributeRemainderEvenly() {
     MonetaryValue requestedAmount = new MonetaryValue(200.0);
-    List<Account> accounts = buildAccounts(100, 1, 150);
-    Map<String, MonetaryValue> actionableAmounts = buildActionableAmountsEqualToRemaining(accounts);
+    Map<String, MonetaryValue> actionableAmounts = buildActionableAmounts(100.0, 1.0, 150.0);
 
     Map<String, MonetaryValue> splitAmount = new SplitEvenlyRecursively()
-      .split(requestedAmount, accounts, actionableAmounts);
+      .split(requestedAmount, actionableAmounts);
 
     assertEquals(3, splitAmount.size());
     assertEquals(1, numberOfValueOccurrences(splitAmount, 1.0));
@@ -36,11 +28,11 @@ public class SplitEvenlyRecursivelyTest {
   @Test
   public void shouldCoverOneAccountFullyAndDistributeRemainderAsEvenlyAsPossible() {
     MonetaryValue requestedAmount = new MonetaryValue(50.0);
-    List<Account> accounts = buildAccounts(15, 15, 15, 15, 7.5);
-    Map<String, MonetaryValue> actionableAmounts = buildActionableAmountsEqualToRemaining(accounts);
+    Map<String, MonetaryValue> actionableAmounts = buildActionableAmounts(
+      15.0, 15.0, 15.0, 15.0, 7.5);
 
     Map<String, MonetaryValue> splitAmount = new SplitEvenlyRecursively()
-      .split(requestedAmount, accounts, actionableAmounts);
+      .split(requestedAmount, actionableAmounts);
 
     assertEquals(5, splitAmount.size());
     assertEquals(1, numberOfValueOccurrences(splitAmount, 7.5));
@@ -51,11 +43,10 @@ public class SplitEvenlyRecursivelyTest {
   @Test
   public void shouldCoverAllAccountsPartiallyWithOnePieceSmallerThanTheRest() {
     MonetaryValue requestedAmount = new MonetaryValue(50.0);
-    List<Account> accounts = buildAccounts(100, 100, 100);
-    Map<String, MonetaryValue> actionableAmounts = buildActionableAmountsEqualToRemaining(accounts);
+    Map<String, MonetaryValue> actionableAmounts = buildActionableAmounts(100.0, 100.0, 100.0);
 
     Map<String, MonetaryValue> splitAmount = new SplitEvenlyRecursively()
-      .split(requestedAmount, accounts, actionableAmounts);
+      .split(requestedAmount, actionableAmounts);
 
     assertEquals(3, splitAmount.size());
     assertEquals(2, numberOfValueOccurrences(splitAmount, 16.67));
@@ -65,11 +56,10 @@ public class SplitEvenlyRecursivelyTest {
   @Test
   public void shouldCoverAllAccountsPartiallyWithOnePieceLargerThanTheRest() {
     MonetaryValue requestedAmount = new MonetaryValue(15.01);
-    List<Account> accounts = buildAccounts(5, 6, 7, 8);
-    Map<String, MonetaryValue> actionableAmounts = buildActionableAmountsEqualToRemaining(accounts);
+    Map<String, MonetaryValue> actionableAmounts = buildActionableAmounts(5.0, 6.0, 7.0, 8.0);
 
     Map<String, MonetaryValue> splitAmount = new SplitEvenlyRecursively()
-      .split(requestedAmount, accounts, actionableAmounts);
+      .split(requestedAmount, actionableAmounts);
 
     assertEquals(4, splitAmount.size());
     assertEquals(3, numberOfValueOccurrences(splitAmount, 3.75));
@@ -79,11 +69,11 @@ public class SplitEvenlyRecursivelyTest {
   @Test
   public void shouldFullyCoverMultipleAccountsAndDistributeRemainderAsEvenlyAsPossible1() {
     MonetaryValue requestedAmount = new MonetaryValue(24.56);
-    List<Account> accounts = buildAccounts(1.23, 2.34, 3.45, 4.56, 5.67, 6.78, 7.89);
-    Map<String, MonetaryValue> actionableAmounts = buildActionableAmountsEqualToRemaining(accounts);
+    Map<String, MonetaryValue> actionableAmounts = buildActionableAmounts(
+      1.23, 2.34, 3.45, 4.56, 5.67, 6.78, 7.89);
 
     Map<String, MonetaryValue> splitAmount = new SplitEvenlyRecursively()
-      .split(requestedAmount, accounts, actionableAmounts);
+      .split(requestedAmount, actionableAmounts);
 
     assertEquals(7, splitAmount.size());
     assertEquals(1, numberOfValueOccurrences(splitAmount, 1.23));
@@ -96,11 +86,11 @@ public class SplitEvenlyRecursivelyTest {
   @Test
   public void shouldFullyCoverMultipleAccountsAndDistributeRemainderAsEvenlyAsPossible2() {
     MonetaryValue requestedAmount = new MonetaryValue(24.52);
-    List<Account> accounts = buildAccounts(1.23, 2.34, 3.45, 4.56, 5.67, 6.78, 7.89);
-    Map<String, MonetaryValue> actionableAmounts = buildActionableAmountsEqualToRemaining(accounts);
+    Map<String, MonetaryValue> actionableAmounts = buildActionableAmounts(
+      1.23, 2.34, 3.45, 4.56, 5.67, 6.78, 7.89);
 
     Map<String, MonetaryValue> splitAmount = new SplitEvenlyRecursively()
-      .split(requestedAmount, accounts, actionableAmounts);
+      .split(requestedAmount, actionableAmounts);
 
     assertEquals(7, splitAmount.size());
     assertEquals(1, numberOfValueOccurrences(splitAmount, 1.23));
@@ -110,16 +100,11 @@ public class SplitEvenlyRecursivelyTest {
     assertEquals(2, numberOfValueOccurrences(splitAmount, 4.38));
   }
 
-  private List<Account> buildAccounts(double... amounts) {
+  private Map<String, MonetaryValue> buildActionableAmounts(Double... amounts) {
     return Arrays.stream(amounts)
-      .mapToObj(amount -> EntityBuilder.buildAccount(amount, amount))
-      .collect(Collectors.toList());
-  }
-
-  private Map<String, MonetaryValue> buildActionableAmountsEqualToRemaining(List<Account> accounts) {
-    return accounts.stream()
-      .collect(Collectors.toMap(Account::getId,
-        account -> new MonetaryValue(account.getRemaining())));
+      .collect(Collectors.toMap(
+        amount -> UUID.randomUUID().toString(),
+        MonetaryValue::new));
   }
 
   private long numberOfValueOccurrences(Map<String, MonetaryValue> splitAmount, double value) {
