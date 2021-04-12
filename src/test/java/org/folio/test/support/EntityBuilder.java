@@ -12,6 +12,7 @@ import java.util.List;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BlockTemplate;
 import org.folio.rest.jaxrs.model.Campus;
+import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
 import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.Contributor;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
@@ -27,6 +28,7 @@ import org.folio.rest.jaxrs.model.ManualBlockTemplate;
 import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
+import org.folio.rest.jaxrs.model.ReportTotalsEntry;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
@@ -56,7 +58,7 @@ public class EntityBuilder {
   }
 
   public static Account buildAccount(String userId, String itemId, String feeFineType,
-    Double amount, String ownerId) {
+    Double amount, String ownerId, String owner) {
 
     return new Account()
       .withId(randomId())
@@ -67,7 +69,7 @@ public class EntityBuilder {
       .withMaterialTypeId(randomId())
       .withFeeFineId(randomId())
       .withFeeFineType(feeFineType)
-      .withFeeFineOwner("owner")
+      .withFeeFineOwner(owner)
       .withAmount(amount)
       .withRemaining(amount)
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
@@ -103,7 +105,8 @@ public class EntityBuilder {
 
   public static Feefineaction buildFeeFineAction(String userId, String accountId, String type,
     String paymentMethod, Double amount, Double balance, Date date,
-    String commentForStaff, String commentForPatron) {
+    String commentForStaff, String commentForPatron, String transactionInformation,
+    String createdAt, String source) {
 
     return new Feefineaction()
       .withId(randomId())
@@ -114,7 +117,10 @@ public class EntityBuilder {
       .withAmountAction(amount)
       .withBalance(balance)
       .withDateAction(date)
-      .withComments(format("STAFF : %s \n PATRON : %s", commentForStaff, commentForPatron));
+      .withComments(format("STAFF : %s \n PATRON : %s", commentForStaff, commentForPatron))
+      .withTransactionInformation(transactionInformation)
+      .withCreatedAt(createdAt)
+      .withSource(source);
   }
 
   public static Feefineaction buildFeeFineActionWithoutComments(String userId, String accountId, String type,
@@ -233,5 +239,34 @@ public class EntityBuilder {
         .withValue(
           "{\"locale\":\"en-US\",\"timezone\":\"America/New_York\",\"currency\":\"USD\"}")))
       .withTotalRecords(1);
+  }
+
+  public static CashDrawerReconciliationReportEntry buildCashDrawerReconciliationReportEntry(
+    String source, String paymentMethod, String paidAmount, String feeFineOwner,
+    String feeFineType, String paymentDate, String paymentStatus, String transactionInfo,
+    String additionalStaffInfo, String additionalPatronInfo, String patronId, String feeFineId) {
+
+    return new CashDrawerReconciliationReportEntry()
+      .withSource(source)
+      .withPaymentMethod(paymentMethod)
+      .withPaidAmount(paidAmount)
+      .withFeeFineOwner(feeFineOwner)
+      .withFeeFineType(feeFineType)
+      .withPaymentDate(paymentDate)
+      .withPaymentStatus(paymentStatus)
+      .withTransactionInfo(transactionInfo)
+      .withAdditionalStaffInfo(additionalStaffInfo)
+      .withAdditionalPatronInfo(additionalPatronInfo)
+      .withPatronId(patronId)
+      .withFeeFineId(feeFineId);
+  }
+
+  public static ReportTotalsEntry buildReportTotalsEntry(String name, String totalAmount,
+    String totalCount) {
+
+    return new ReportTotalsEntry()
+      .withName(name)
+      .withTotalAmount(totalAmount)
+      .withTotalCount(totalCount);
   }
 }

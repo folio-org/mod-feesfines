@@ -22,8 +22,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "description": "A globally unique (UUID) identifier for the user",
-        "$ref": "../raml-util/schemas/uuid.schema"
+        "description": "Name of the user"
       }
     }
   },

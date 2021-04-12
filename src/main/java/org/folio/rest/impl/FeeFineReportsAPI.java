@@ -48,7 +48,7 @@ public class FeeFineReportsAPI implements FeefineReports {
     if (rawStartDate == null && rawEndDate != null){
       log.error("startDate is null and endDate is not null");
 
-      handleRefundReportResult(
+      handleReportResult(
         failedFuture(new FailedValidationException(INVALID_START_DATE_MESSAGE)),
         asyncResultHandler);
       return;
@@ -67,7 +67,7 @@ public class FeeFineReportsAPI implements FeefineReports {
 
     new RefundReportService(okapiHeaders, vertxContext)
       .buildReport(startDate, endDate, entity.getFeeFineOwners())
-      .onComplete(result -> handleRefundReportResult(result, asyncResultHandler,
+      .onComplete(result -> handleReportResult(result, asyncResultHandler,
         PostFeefineReportsRefundResponse::respond200WithApplicationJson));
   }
 
@@ -87,7 +87,7 @@ public class FeeFineReportsAPI implements FeefineReports {
     if (rawStartDate == null) {
       log.error("startDate parameter is null");
 
-      handleRefundReportResult(
+      handleReportResult(
         failedFuture(new FailedValidationException(START_DATE_IS_NULL_MESSAGE)),
         asyncResultHandler);
       return;
@@ -107,17 +107,17 @@ public class FeeFineReportsAPI implements FeefineReports {
     new CashDrawerReconciliationReportService(okapiHeaders, vertxContext, startDate, endDate,
       entity.getCreatedAt(), entity.getSources())
       .build()
-      .onComplete(result -> handleRefundReportResult(result, asyncResultHandler,
+      .onComplete(result -> handleReportResult(result, asyncResultHandler,
         PostFeefineReportsCashDrawerReconciliationResponse::respond200WithApplicationJson));
   }
 
-  private <T> void handleRefundReportResult(AsyncResult<T> asyncResult,
+  private <T> void handleReportResult(AsyncResult<T> asyncResult,
     Handler<AsyncResult<Response>> asyncResultHandler) {
 
-    handleRefundReportResult(asyncResult, asyncResultHandler, null);
+    handleReportResult(asyncResult, asyncResultHandler, null);
   }
 
-  private <T> void handleRefundReportResult(AsyncResult<T> asyncResult,
+  private <T> void handleReportResult(AsyncResult<T> asyncResult,
     Handler<AsyncResult<Response>> asyncResultHandler, Function<T, Response> responseFunction) {
     if (asyncResult.succeeded()) {
       asyncResultHandler.handle(succeededFuture(responseFunction.apply(asyncResult.result())));
@@ -136,32 +136,12 @@ public class FeeFineReportsAPI implements FeefineReports {
     }
   }
 
-//  private void handleRefundReportResult(AsyncResult<RefundReport> asyncResult,
-//    Handler<AsyncResult<Response>> asyncResultHandler) {
-//    if (asyncResult.succeeded()) {
-//      asyncResultHandler.handle(succeededFuture(FeefineReports.PostFeefineReportsRefundResponse
-//        .respond200WithApplicationJson(asyncResult.result())));
-//    }
-//    else if (asyncResult.failed()) {
-//      final Throwable cause = asyncResult.cause();
-//      if (cause instanceof FailedValidationException) {
-//        log.error("Report parameters validation failed: " + cause.getLocalizedMessage());
-//        asyncResultHandler.handle(succeededFuture(FeefineReports.PostFeefineReportsRefundResponse
-//          .respond422WithTextPlain(cause.getLocalizedMessage())));
-//      } else {
-//        log.error("Failed to build report: " + cause.getLocalizedMessage());
-//        asyncResultHandler.handle(succeededFuture(FeefineReports.PostFeefineReportsRefundResponse
-//          .respond500WithTextPlain(INTERNAL_SERVER_ERROR_MESSAGE)));
-//      }
-//    }
-//  }
-
   private void logInvalidDatesAndHandleResult(String rawStartDate, String rawEndDate,
     Handler<AsyncResult<Response>> asyncResultHandler) {
 
     log.error("Invalid request parameters: startDate={}, endDate={}", rawStartDate, rawEndDate);
 
-    handleRefundReportResult(
+    handleReportResult(
       failedFuture(new FailedValidationException(INVALID_START_DATE_OR_END_DATE_MESSAGE)),
       asyncResultHandler);
   }

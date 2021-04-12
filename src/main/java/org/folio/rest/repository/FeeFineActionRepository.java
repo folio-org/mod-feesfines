@@ -49,8 +49,8 @@ public class FeeFineActionRepository {
   private static final String FIND_REFUNDABLE_ACTIONS_QUERY_TEMPLATE =
     "typeAction any \"Paid Transferred\" AND accountId any \"%s\"";
   public static final String ORDER_BY_ACTION_DATE_ASC = "actions.jsonb->>'dateAction' ASC";
-  public static final String ORDER_BY_OWNER_SOURCE_ASC = "accounts.jsonb->>'ownerId', " +
-    "actions.jsonb->>'source' ASC";
+  public static final String ORDER_BY_OWNER_SOURCE_DATE_ASC = "accounts.jsonb->>'feeFineOwner', " +
+    "actions.jsonb->>'source' ASC, actions.jsonb->>'dateAction' ASC";
 
   private final PostgresClient pgClient;
   private final String tenantId;
@@ -152,9 +152,6 @@ public class FeeFineActionRepository {
   public Future<Map<Feefineaction, Account>> findFeeFineActionsAndAccountsByParameters(
     Action typeAction, String startDate, String endDate, List<String> ownerIds, String createdAt,
     List<String> sources, String orderBy, int limit) {
-
-//    Tuple params = Tuple.of(limit, typeAction.getFullResult(), typeAction.getPartialResult(),
-//      startDate, endDate);
 
     Tuple params = Tuple.of(limit);
     List<String> conditions = new ArrayList<>();

@@ -15,6 +15,7 @@
     },
     "reportStats": {
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats",
       "description": "Report statistics",
       "properties": {
         "bySource": {
