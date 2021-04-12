@@ -497,8 +497,8 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     performAction(transferClient, createRequest(transferToBursar2, TRANSFER_ACCOUNT_BURSAR));
     performAction(transferClient, createRequest(transferToUniversity2, TRANSFER_ACCOUNT_UNIVERSITY));
 
-    double amountTransferredToBursar = transferToBursar1 + transferToBursar2; // 4
-    double amountTransferredToUniversity = transferToUniversity1 + transferToUniversity2; // 6
+    double amountTransferredToBursar = transferToBursar1 + transferToBursar2;
+    double amountTransferredToUniversity = transferToUniversity1 + transferToUniversity2;
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(FIRST_ACCOUNT_ID, -4.0, amountTransferredToBursar,
