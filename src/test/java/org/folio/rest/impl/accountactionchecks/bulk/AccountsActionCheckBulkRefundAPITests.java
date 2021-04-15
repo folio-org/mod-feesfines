@@ -95,9 +95,14 @@ public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksA
   }
 
   @Test
-  public void checkRefundAmountShouldBeCorrectWithSimilarAccountIds() {
+  public void checkRefundRemainingAmountShouldBeCorrectWithSimilarAccountId() {
+    // We need to create an accountId that would have the same first segment as the existing
+    // accountId, but the rest of it would be different. This will demonstrate that we are
+    // filtering fee/fine actions by the whole UUIDs and not just by their parts as CQL's "any"
+    // filter would.
     String similarAccountId = firstAccount.getId().split("-")[0] + "-" +
       String.join("-", List.of(UUID.randomUUID().toString().split("-")).subList(1, 5));
+
     Account accountToPost = createAccount().withId(similarAccountId);
     accountsClient.create(accountToPost)
       .then()
