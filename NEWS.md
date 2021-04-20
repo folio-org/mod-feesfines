@@ -1,3 +1,6 @@
+## 16.0.1 2021-04-20
+* Fix Remaining amount calculation for refund action (MODFEE-182)
+
 ## 16.0.0 2021-03-10
 * Upgrade to RMB 32.1.0 and Vertx 4.0.0 (MODFEE-163)
 * Add missing indexes (MODFEE-169)
