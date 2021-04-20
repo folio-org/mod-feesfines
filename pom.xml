@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-feesfines</artifactId>
-  <version>16.0.1-SNAPSHOT</version>
+  <version>16.0.1</version>
   <packaging>jar</packaging>
 
   <licenses>
@@ -483,7 +483,7 @@
     <url>https://github.com/folio-org/mod-feesfines</url>
     <connection>scm:git:git://github.com:folio-org/mod-feesfines.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-feesfines.git</developerConnection>
-    <tag>v16.0.0</tag>
+    <tag>v16.0.1</tag>
   </scm>
 
   <repositories>
