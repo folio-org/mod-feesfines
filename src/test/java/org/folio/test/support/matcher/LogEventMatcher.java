@@ -2,7 +2,10 @@ package org.folio.test.support.matcher;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.folio.rest.domain.Action.CREDIT;
+import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
+import static org.folio.rest.domain.Action.TRANSFER;
+import static org.folio.rest.domain.Action.WAIVE;
 import static org.folio.rest.domain.logs.LogEventPayloadField.ACTION;
 import static org.folio.rest.domain.logs.LogEventPayloadField.AMOUNT;
 import static org.folio.rest.domain.logs.LogEventPayloadField.BALANCE;
@@ -19,6 +22,7 @@ import static org.folio.rest.domain.logs.LogEventPayloadField.SOURCE;
 import static org.folio.rest.domain.logs.LogEventPayloadField.USER_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -102,8 +106,57 @@ public class LogEventMatcher {
       hasJsonPath(COMMENTS.value(), is(comments))));
   }
 
-  public static Matcher<? super Object> notCreditOrRefundActionLogEventPayload() {
-    return hasJsonPath(ACTION.value(), not(anyOf(is(CREDIT.getFullResult()), is(CREDIT.getPartialResult()),
-        is(REFUND.getPartialResult()), is(REFUND.getPartialResult()))));
+  public static Matcher<? super Object> partialRefundOfClosedAccountWithPaymentPayloads() {
+    return hasJsonPath(ACTION.value(), anyOf(
+      is(WAIVE.getFullResult()),
+      is(CREDIT.getPartialResult()),
+      is(REFUND.getPartialResult()),
+      is(PAY.getPartialResult())));
+  }
+
+  public static Matcher<? super Object> partialRefundOfClosedAccountWithTransferPayloads() {
+    return hasJsonPath(ACTION.value(), anyOf(
+      is(TRANSFER.getFullResult()),
+      is(CREDIT.getPartialResult()),
+      is(REFUND.getPartialResult()),
+      is(WAIVE.getPartialResult())));
+  }
+
+  public static Matcher<? super Object> partialRefundOfOpenAccountWithPaymentPayloads() {
+    return hasJsonPath(ACTION.value(), anyOf(
+      is(PAY.getPartialResult()),
+      is(WAIVE.getPartialResult()),
+      is(CREDIT.getPartialResult()),
+      is(REFUND.getPartialResult())));
+  }
+
+  public static Matcher<? super Object> partialRefundOfOpenAccountWithTransferPayloads() {
+    return hasJsonPath(ACTION.value(), anyOf(
+      is(TRANSFER.getPartialResult()),
+      is(WAIVE.getPartialResult()),
+      is(CREDIT.getPartialResult()),
+      is(REFUND.getPartialResult())));
+  }
+
+  public static Matcher<? super Object> partialRefundOfClosedAccountWithPaymentAndTransferPayloads() {
+    return hasJsonPath(ACTION.value(), anyOf(
+      is(PAY.getPartialResult()),
+      is(WAIVE.getPartialResult()),
+      is(TRANSFER.getFullResult()),
+      is(CREDIT.getFullResult()),
+      is(CREDIT.getPartialResult()),
+      is(REFUND.getFullResult()),
+      is(REFUND.getPartialResult())));
+  }
+
+  public static Matcher<? super Object> partialRefundOfOpenAccountWithPaymentAndTransferPayloads() {
+    return hasJsonPath(ACTION.value(), anyOf(
+      is(PAY.getPartialResult()),
+      is(WAIVE.getPartialResult()),
+      is(TRANSFER.getPartialResult()),
+      is(CREDIT.getFullResult()),
+      is(CREDIT.getPartialResult()),
+      is(REFUND.getFullResult()),
+      is(REFUND.getPartialResult())));
   }
 }

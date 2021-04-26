@@ -18,7 +18,12 @@ import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
 import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountsRefundClient;
-import static org.folio.test.support.matcher.LogEventMatcher.notCreditOrRefundActionLogEventPayload;
+import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfClosedAccountWithPaymentPayloads;
+import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfClosedAccountWithTransferPayloads;
+import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfClosedAccountWithPaymentAndTransferPayloads;
+import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfOpenAccountWithPaymentPayloads;
+import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfOpenAccountWithTransferPayloads;
+import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfOpenAccountWithPaymentAndTransferPayloads;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -214,6 +219,10 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       CLOSED, REFUND.getPartialResult(), expectedFeeFineActions);
+
+    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    payloads.forEach(payload -> assertThat(payload, is(partialRefundOfClosedAccountWithPaymentPayloads())));
+    assertThat(payloads, hasSize(4));
   }
 
   @Test
@@ -231,6 +240,10 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       CLOSED, REFUND.getPartialResult(), expectedFeeFineActions);
+
+    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    payloads.forEach(payload -> assertThat(payload, is(partialRefundOfClosedAccountWithTransferPayloads())));
+    assertThat(payloads, hasSize(4));
   }
 
   @Test
@@ -252,6 +265,10 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       CLOSED, REFUND.getPartialResult(), expectedFeeFineActions);
+
+    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    payloads.forEach(payload -> assertThat(payload, is(partialRefundOfClosedAccountWithPaymentAndTransferPayloads())));
+    assertThat(payloads, hasSize(7));
   }
 
   @Test
@@ -269,6 +286,10 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       OPEN, REFUND.getPartialResult(), expectedFeeFineActions);
+
+    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    payloads.forEach(payload -> assertThat(payload, is(partialRefundOfOpenAccountWithPaymentPayloads())));
+    assertThat(payloads, hasSize(4));
   }
 
   @Test
@@ -286,6 +307,10 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       OPEN, REFUND.getPartialResult(), expectedFeeFineActions);
+
+    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    payloads.forEach(payload -> assertThat(payload, is(partialRefundOfOpenAccountWithTransferPayloads())));
+    assertThat(payloads, hasSize(4));
   }
 
   @Test
@@ -307,6 +332,10 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       OPEN, REFUND.getPartialResult(), expectedFeeFineActions);
+
+    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    payloads.forEach(payload -> assertThat(payload, is(partialRefundOfOpenAccountWithPaymentAndTransferPayloads())));
+    assertThat(payloads, hasSize(7));
   }
 
   @Test
@@ -425,9 +454,6 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       REFUND.getPartialResult(), expectedRemainingAmount3, OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount, thirdAccount);
-
-    fetchLogEventPayloads(getOkapi()).forEach(payload ->
-      assertThat(payload, is(notCreditOrRefundActionLogEventPayload())));
   }
 
   @Test
@@ -598,9 +624,6 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       expectedPaymentStatus, expectedRemainingAmount, expectedStatus.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund);
-
-    fetchLogEventPayloads(getOkapi()).forEach(payload ->
-      assertThat(payload, is(notCreditOrRefundActionLogEventPayload())));
   }
 
   private void verifyResponse(Response response, double requestedAmount, int expectedActionsCount) {

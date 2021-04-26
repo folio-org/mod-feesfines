@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.folio.rest.domain.Action.CREDIT;
-import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
@@ -186,9 +185,8 @@ public abstract class ActionService {
 
   private Future<ActionContext> publishLogEvents(ActionContext actionContext) {
     return all(actionContext.getFeeFineActions().stream()
-      // do not publish log records for CREDIT and REFUND actions
-      .filter(ffa -> !CREDIT.isActionForResult(ffa.getTypeAction()) && !REFUND.isActionForResult(ffa.getTypeAction()))
-      .map(ffa -> logEventService.createFeeFineLogEventPayload(ffa, actionContext.getAccounts().get(ffa.getAccountId()))
+      .map(ffa -> logEventService.createFeeFineLogEventPayload(ffa,
+        actionContext.getAccounts().get(ffa.getAccountId()))
         .compose(eventPayload -> {
           logEventPublisher.publishLogEvent(eventPayload, FEE_FINE);
           return succeededFuture();
