@@ -3,8 +3,8 @@ package org.folio.rest.service.report;
 import static java.math.BigDecimal.ZERO;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.repository.FeeFineActionRepository.ORDER_BY_OWNER_SOURCE_DATE_ASC;
-import static org.folio.rest.utils.AccountHelper.getPatronInfoFromComment;
-import static org.folio.rest.utils.AccountHelper.getStaffInfoFromComment;
+import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
+import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,9 @@ import org.folio.rest.service.report.parameters.CashDrawerReconciliationReportPa
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-public class CashDrawerReconciliationReportService extends DateBasedReportService<CashDrawerReconciliationReport> {
+public class CashDrawerReconciliationReportService extends
+  DateBasedReportService<CashDrawerReconciliationReport, CashDrawerReconciliationReportParameters> {
+
   private static final Logger log = LogManager.getLogger(CashDrawerReconciliationReportService.class);
 
   private static final int REPORT_ROWS_LIMIT = 1_000_000;
@@ -43,6 +45,7 @@ public class CashDrawerReconciliationReportService extends DateBasedReportServic
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
   }
 
+  @Override
   public Future<CashDrawerReconciliationReport> build(
     CashDrawerReconciliationReportParameters params) {
 
@@ -88,16 +91,16 @@ public class CashDrawerReconciliationReportService extends DateBasedReportServic
         .withPaymentDate(formatDate(action.getDateAction()))
         .withPaymentStatus(action.getTypeAction())
         .withTransactionInfo(action.getTransactionInformation())
-        .withAdditionalStaffInfo(getStaffInfoFromComment(action.getComments()))
-        .withAdditionalPatronInfo(getPatronInfoFromComment(action.getComments()))
-        .withFeeFineId(action.getAccountId());
+        .withAdditionalStaffInfo(getStaffInfoFromComment(action))
+        .withAdditionalPatronInfo(getPatronInfoFromComment(action))
+        .withFeeFineId(action.getAccountId())
+        .withPatronId(action.getUserId());
     }
 
     if (account != null) {
       entry = entry
         .withFeeFineOwner(account.getFeeFineOwner())
-        .withFeeFineType(account.getFeeFineType())
-        .withPatronId(account.getUserId());
+        .withFeeFineType(account.getFeeFineType());
     }
 
     return entry;

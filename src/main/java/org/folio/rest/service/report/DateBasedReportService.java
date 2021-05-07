@@ -20,7 +20,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-public abstract class DateBasedReportService<T> {
+public abstract class DateBasedReportService<T, P> {
   private static final LocaleSettings FALLBACK_LOCALE_SETTINGS =
     new LocaleSettings(Locale.US.toLanguageTag(), UTC.getID(),
       Currency.getInstance(Locale.US).getCurrencyCode());
@@ -35,6 +35,8 @@ public abstract class DateBasedReportService<T> {
     configurationClient = new ConfigurationClient(context.owner(), headers);
   }
 
+  public abstract Future<T> build(P params);
+
   void setUpLocale(LocaleSettings localeSettings) {
     timeZone = localeSettings.getDateTimeZone();
     dateTimeFormatter = DateTimeFormat.forPattern(DateTimeFormat.patternForStyle("SS",
@@ -43,7 +45,6 @@ public abstract class DateBasedReportService<T> {
   }
 
   public Future<Void> adjustDates(DateBasedReportParameters params) {
-
     return configurationClient.getLocaleSettings()
       .recover(throwable -> succeededFuture(FALLBACK_LOCALE_SETTINGS))
       .onSuccess(localeSettings -> adjustDates(params, localeSettings))

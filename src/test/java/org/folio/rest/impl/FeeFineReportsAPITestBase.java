@@ -23,7 +23,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
-public class FeeFineReportsAPITest extends ApiTests {
+public class FeeFineReportsAPITestBase extends ApiTests {
   static final String PAID_PARTIALLY = "Paid partially";
   static final String PAID_FULLY = "Paid fully";
   static final String TRANSFERRED_PARTIALLY = "Transferred partially";

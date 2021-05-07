@@ -4,6 +4,8 @@ import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 
 public class DateUtils {
+  private DateUtils() { }
+
   public static DateTime parseDateReportParameter(String date) {
     if (date == null) {
       return null;

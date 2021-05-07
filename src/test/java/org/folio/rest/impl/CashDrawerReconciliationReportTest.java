@@ -16,6 +16,7 @@ import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReport;
@@ -30,11 +31,8 @@ import org.junit.Test;
 
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.With;
 
-public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITest {
+public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBase {
   private static final String START_DATE = "2020-01-01";
   private static final String END_DATE = "2020-01-15";
   private static final String OWNER_ID_1 = randomId();
@@ -86,8 +84,11 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITest {
   }
 
   @Test
-  public void emptyReportWhenPaidAfterEndDate() {
+  public void emptyReportWhenPaidBeforeStartDateAndAfterEndDate() {
     Account account = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, null, OWNER_ID_1);
+
+    createAction(USER_ID_1, 1, account, "2019-12-31 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD_1,
+      3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
 
     createAction(USER_ID_1, 1, account, "2020-02-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD_1,
       3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
@@ -127,17 +128,17 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITest {
 
   @Test
   public void returnsResultWhenAccountIsDeleted() {
-    ReportSourceObjects sourceObjects = createMinimumViableReportData();
+    Pair<Account, Feefineaction> sourceObjects = createMinimumViableReportData();
 
-    assert sourceObjects.account != null;
-    deleteEntity(ACCOUNTS_PATH, sourceObjects.account.getId());
+    assert sourceObjects.getLeft() != null;
+    deleteEntity(ACCOUNTS_PATH, sourceObjects.getLeft().getId());
 
-    assert sourceObjects.paymentAction != null;
+    assert sourceObjects.getRight() != null;
     reportClient.getCashDrawerReconciliationReport("2020-01-01", "2020-01-02", CREATED_AT, null)
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(1))
-      .body("reportData[0].feeFineId", is(sourceObjects.account.getId()));
+      .body("reportData[0].feeFineId", is(sourceObjects.getLeft().getId()));
   }
 
   @Test
@@ -260,23 +261,13 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITest {
           .withTotalCount(ZERO_COUNT))));
   }
 
-  private ReportSourceObjects createMinimumViableReportData() {
+  private Pair<Account, Feefineaction> createMinimumViableReportData() {
     Account account = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, null, OWNER_ID_1);
 
     Feefineaction action = createAction(USER_ID_1, 1, account, "2020-01-01 12:00:00",
       PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
 
-    return new ReportSourceObjects()
-      .withAccount(account)
-      .withPaymentAction(action);
-  }
-
-  @With
-  @AllArgsConstructor
-  @NoArgsConstructor(force = true)
-  private static class ReportSourceObjects {
-    final Account account;
-    final Feefineaction paymentAction;
+    return Pair.of(account, action);
   }
 }

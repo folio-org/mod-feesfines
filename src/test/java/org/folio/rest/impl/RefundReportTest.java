@@ -54,7 +54,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
-public class RefundReportTest extends FeeFineReportsAPITest {
+public class RefundReportTest extends FeeFineReportsAPITestBase {
   private static final String FEE_FINE_ACTIONS = "feefineactions";
   private static final String TYPE_ACTION = "typeAction";
 
