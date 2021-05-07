@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.folio.rest.client.ConfigurationClient;
 import org.folio.rest.domain.LocaleSettings;
+import org.folio.rest.service.report.parameters.DateBasedReportParameters;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -30,9 +31,6 @@ public abstract class DateBasedReportService<T> {
   DateTimeFormatter dateTimeFormatter;
   Currency currency;
 
-  String startDateAdjusted;
-  String endDateAdjusted;
-
   public DateBasedReportService(Map<String, String> headers, Context context) {
     configurationClient = new ConfigurationClient(context.owner(), headers);
   }
@@ -44,34 +42,32 @@ public abstract class DateBasedReportService<T> {
     currency = Currency.getInstance(localeSettings.getCurrency());
   }
 
-  public abstract Future<T> build();
-
-  public Future<Void> adjustDates(DateTime startDate, DateTime endDate) {
+  public Future<Void> adjustDates(DateBasedReportParameters params) {
 
     return configurationClient.getLocaleSettings()
       .recover(throwable -> succeededFuture(FALLBACK_LOCALE_SETTINGS))
-      .onSuccess(localeSettings -> adjustDates(startDate, endDate, localeSettings))
+      .onSuccess(localeSettings -> adjustDates(params, localeSettings))
       .mapEmpty();
   }
 
-  private void adjustDates(DateTime startDate, DateTime endDate, LocaleSettings localeSettings) {
+  private void adjustDates(DateBasedReportParameters params, LocaleSettings localeSettings) {
     setUpLocale(localeSettings);
 
-    if (startDate != null) {
-      startDateAdjusted = startDate
+    if (params.getRawStartDate() != null) {
+      params.setStartDate(params.getRawStartDate()
         .withTimeAtStartOfDay()
         .withZoneRetainFields(timeZone)
         .withZone(UTC)
-        .toString(ISODateTimeFormat.dateTime());
+        .toString(ISODateTimeFormat.dateTime()));
     }
 
-    if (endDate != null) {
-      endDateAdjusted = endDate
+    if (params.getRawEndDate() != null) {
+      params.setEndDate(params.getRawEndDate()
         .withTimeAtStartOfDay()
         .plusDays(1)
         .withZoneRetainFields(timeZone)
         .withZone(UTC)
-        .toString(ISODateTimeFormat.dateTime());
+        .toString(ISODateTimeFormat.dateTime()));
     }
   }
 

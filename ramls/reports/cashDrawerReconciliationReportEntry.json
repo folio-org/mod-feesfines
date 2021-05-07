@@ -37,7 +37,7 @@
     },
     "paymentStatus": {
       "type": "string",
-      "description": "Payment action - 'Paid fully' or 'Paid partially'",
+      "description": "Payment action type - 'Paid fully' or 'Paid partially'",
       "default": ""
     },
     "transactionInfo": {

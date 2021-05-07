@@ -2,6 +2,7 @@ package org.folio.rest.repository;
 
 import static io.vertx.core.Future.failedFuture;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 
@@ -122,7 +123,7 @@ public class FeeFineActionRepository {
     }
 
     String query = format(FIND_REFUNDABLE_ACTIONS_QUERY_TEMPLATE,
-      String.join(SPACE, accountIds));
+      join(SPACE, accountIds));
 
     CQLWrapper cqlWrapper = new CQLWrapper(cql2pgJson, query, ACTIONS_LIMIT, 0);
     Promise<Results<Feefineaction>> promise = Promise.promise();
@@ -140,16 +141,16 @@ public class FeeFineActionRepository {
       );
   }
 
-  public Future<List<Feefineaction>> findByParameters(
+  public Future<List<Feefineaction>> find(
     Action typeAction, String startDate, String endDate, List<String> ownerIds, int limit) {
 
-    return findFeeFineActionsAndAccountsByParameters(typeAction, startDate, endDate, ownerIds,
+    return findFeeFineActionsAndAccounts(typeAction, startDate, endDate, ownerIds,
       null, null, ORDER_BY_ACTION_DATE_ASC, limit)
       .map(Map::keySet)
       .map(ArrayList::new);
   }
 
-  public Future<Map<Feefineaction, Account>> findFeeFineActionsAndAccountsByParameters(
+  public Future<Map<Feefineaction, Account>> findFeeFineActionsAndAccounts(
     Action typeAction, String startDate, String endDate, List<String> ownerIds, String createdAt,
     List<String> sources, String orderBy, int limit) {
 
@@ -159,23 +160,21 @@ public class FeeFineActionRepository {
     params.addString(typeAction.getFullResult());
     params.addString(typeAction.getPartialResult());
     conditions.add(format("%s.jsonb->>'%s' IN ($2, $3)", ACTIONS_TABLE_ALIAS, TYPE_FIELD));
-    int paramNum = 3;
 
     if (startDate != null) {
-      paramNum++;
       params.addString(startDate);
-      conditions.add(format("%s.jsonb->>'%s' >= $%d", ACTIONS_TABLE_ALIAS, DATE_FIELD, paramNum));
+      conditions.add(format("%s.jsonb->>'%s' >= $%d", ACTIONS_TABLE_ALIAS, DATE_FIELD,
+        params.size()));
     }
     if (endDate != null) {
-      paramNum++;
       params.addString(endDate);
-      conditions.add(format("%s.jsonb->>'%s' < $%d", ACTIONS_TABLE_ALIAS, DATE_FIELD, paramNum));
+      conditions.add(format("%s.jsonb->>'%s' < $%d", ACTIONS_TABLE_ALIAS, DATE_FIELD,
+        params.size()));
     }
     if (createdAt != null) {
-      paramNum++;
       params.addString(createdAt);
       conditions.add(format("%s.jsonb->>'%s' = $%d", ACTIONS_TABLE_ALIAS, CREATED_AT_FIELD,
-        paramNum));
+        params.size()));
     }
 
     addFilterByListToConditions(conditions, ACCOUNTS_TABLE_ALIAS, OWNER_ID_FIELD, ownerIds);
@@ -184,7 +183,7 @@ public class FeeFineActionRepository {
     String query = format(
       "SELECT actions.jsonb, accounts.jsonb FROM %1$s.%2$s %3$s " +
         "LEFT OUTER JOIN %1$s.%4$s accounts ON %3$s.jsonb->>'accountId' = %5$s.jsonb->>'id' " +
-        "WHERE " + String.join(" AND ", conditions) + " " +
+        "WHERE " + join(" AND ", conditions) + " " +
         "ORDER BY %6$s " +
         "LIMIT $1",
       PostgresClient.convertToPsqlStandard(tenantId),

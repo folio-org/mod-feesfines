@@ -137,7 +137,7 @@ public class RefundReportService {
     RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
 
     return feeFineActionRepository
-      .findByParameters(REFUND, startDateTimeFormatted, endDateTimeFormatted,
+      .find(REFUND, startDateTimeFormatted, endDateTimeFormatted,
         ownerIds, REPORT_ROWS_LIMIT)
       .map(RefundReportService::toRefundDataMap)
       .map(ctx::withRefunds)

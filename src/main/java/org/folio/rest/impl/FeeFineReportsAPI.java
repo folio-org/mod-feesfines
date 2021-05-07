@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.String.format;
 import static org.folio.rest.utils.DateUtils.parseDateReportParameter;
 
 import java.util.List;
@@ -19,6 +20,7 @@ import org.folio.rest.jaxrs.model.RefundReportRequest;
 import org.folio.rest.jaxrs.resource.FeefineReports;
 import org.folio.rest.service.report.CashDrawerReconciliationReportService;
 import org.folio.rest.service.report.RefundReportService;
+import org.folio.rest.service.report.parameters.CashDrawerReconciliationReportParameters;
 import org.joda.time.DateTime;
 
 import io.vertx.core.AsyncResult;
@@ -84,15 +86,6 @@ public class FeeFineReportsAPI implements FeefineReports {
     log.info("Cash drawer reconciliation report requested, parameters: startDate={}, endDate={}, " +
         "createdAt={}, sources={}", rawStartDate, rawEndDate, createdAt, sources);
 
-    if (rawStartDate == null) {
-      log.error("startDate parameter is null");
-
-      handleReportResult(
-        failedFuture(new FailedValidationException(START_DATE_IS_NULL_MESSAGE)),
-        asyncResultHandler);
-      return;
-    }
-
     DateTime startDate;
     DateTime endDate;
 
@@ -104,9 +97,9 @@ public class FeeFineReportsAPI implements FeefineReports {
       return;
     }
 
-    new CashDrawerReconciliationReportService(okapiHeaders, vertxContext, startDate, endDate,
-      entity.getCreatedAt(), entity.getSources())
-      .build()
+    new CashDrawerReconciliationReportService(okapiHeaders, vertxContext)
+      .build(new CashDrawerReconciliationReportParameters(startDate, endDate,
+        entity.getCreatedAt(), entity.getSources()))
       .onComplete(result -> handleReportResult(result, asyncResultHandler,
         PostFeefineReportsCashDrawerReconciliationResponse::respond200WithApplicationJson));
   }
@@ -131,7 +124,8 @@ public class FeeFineReportsAPI implements FeefineReports {
       } else {
         log.error("Failed to build report: " + cause.getLocalizedMessage());
         asyncResultHandler.handle(succeededFuture(FeefineReports.PostFeefineReportsRefundResponse
-          .respond500WithTextPlain(INTERNAL_SERVER_ERROR_MESSAGE)));
+          .respond500WithTextPlain(format("%s. %s", INTERNAL_SERVER_ERROR_MESSAGE,
+            cause.getLocalizedMessage()))));
       }
     }
   }

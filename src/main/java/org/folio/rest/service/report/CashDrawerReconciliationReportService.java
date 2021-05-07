@@ -1,35 +1,31 @@
 package org.folio.rest.service.report;
 
 import static java.math.BigDecimal.ZERO;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.repository.FeeFineActionRepository.ORDER_BY_OWNER_SOURCE_DATE_ASC;
 import static org.folio.rest.utils.AccountHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.AccountHelper.getStaffInfoFromComment;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.client.UsersClient;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReport;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
-import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats;
+import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
-import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.repository.FeeFineActionRepository;
-import org.joda.time.DateTime;
+import org.folio.rest.service.report.parameters.CashDrawerReconciliationReportParameters;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
@@ -40,44 +36,30 @@ public class CashDrawerReconciliationReportService extends DateBasedReportServic
   private static final String EMPTY_VALUE = "-";
 
   private final FeeFineActionRepository feeFineActionRepository;
-  private final UsersClient usersClient;
 
-  // Report parameters
-  private final DateTime startDate;
-  private final DateTime endDate;
-  private final String createdAt;
-  private final List<String> sourceIds;
-  private final List<String> sources;
-
-  public CashDrawerReconciliationReportService(Map<String, String> headers, Context context,
-    DateTime startDate, DateTime endDate, String createdAt, List<String> sources) {
-
+  public CashDrawerReconciliationReportService(Map<String, String> headers, Context context) {
     super(headers, context);
 
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
-    usersClient = new UsersClient(context.owner(), headers);
-
-    this.startDate = startDate;
-    this.endDate = endDate;
-    this.createdAt = createdAt;
-    this.sourceIds = sources;
-    this.sources = new ArrayList<>();
   }
 
-  public Future<CashDrawerReconciliationReport> build() {
-    return adjustDates(startDate, endDate)
-      .compose(v -> resolveSources())
-      .compose(v -> buildWithAdjustedDates());
+  public Future<CashDrawerReconciliationReport> build(
+    CashDrawerReconciliationReportParameters params) {
+
+    return adjustDates(params)
+      .compose(v -> buildWithAdjustedDates(params));
   }
 
-  private Future<CashDrawerReconciliationReport> buildWithAdjustedDates() {
+  private Future<CashDrawerReconciliationReport> buildWithAdjustedDates(
+    CashDrawerReconciliationReportParameters params) {
 
     log.info("Building cash drawer reconciliation report with parameters: startDate={}, " +
-        "endDate={}, createdAt={}, sources={}, tz={}", startDateAdjusted, endDateAdjusted,
-      createdAt, sources, timeZone);
+        "endDate={}, createdAt={}, sources={}, tz={}", params.getStartDate(), params.getEndDate(),
+      params.getCreatedAt(), params.getSources(), timeZone);
 
-    return feeFineActionRepository.findFeeFineActionsAndAccountsByParameters(PAY, startDateAdjusted,
-      endDateAdjusted, null, createdAt, sources, ORDER_BY_OWNER_SOURCE_DATE_ASC, REPORT_ROWS_LIMIT)
+    return feeFineActionRepository.findFeeFineActionsAndAccounts(PAY,
+      params.getStartDate(), params.getEndDate(), null, params.getCreatedAt(), params.getSources(),
+      ORDER_BY_OWNER_SOURCE_DATE_ASC, REPORT_ROWS_LIMIT)
       .map(this::buildReport);
   }
 
@@ -96,7 +78,7 @@ public class CashDrawerReconciliationReportService extends DateBasedReportServic
   private CashDrawerReconciliationReportEntry buildReportEntry(Feefineaction action,
     Account account) {
 
-    CashDrawerReconciliationReportEntry entry =new CashDrawerReconciliationReportEntry();
+    CashDrawerReconciliationReportEntry entry = new CashDrawerReconciliationReportEntry();
 
     if (action != null) {
       entry = entry
@@ -146,23 +128,22 @@ public class CashDrawerReconciliationReportService extends DateBasedReportServic
     };
 
     calculateTotals(stats.getBySource(), actions, Feefineaction::getSource,
-      Feefineaction::getAmountAction, "Source totals");
+      "Source totals");
 
     calculateTotals(stats.getByPaymentMethod(), actions, Feefineaction::getPaymentMethod,
-      Feefineaction::getAmountAction, "Payment method totals");
+      "Payment method totals");
 
     calculateTotals(stats.getByFeeFineType(), actions, feeFineTypeCategoryNameFunction,
-      Feefineaction::getAmountAction, "Fee/fine type totals");
+      "Fee/fine type totals");
 
     calculateTotals(stats.getByFeeFineOwner(), actions, feeFineOwnerCategoryNameFunction,
-      Feefineaction::getAmountAction, "Fee/fine owner totals");
+      "Fee/fine owner totals");
 
     return stats;
   }
 
   private void calculateTotals(List<ReportTotalsEntry> totalsEntries, List<Feefineaction> actions,
-    Function<Feefineaction, String> categoryNameFunction,
-    Function<Feefineaction, Double> amountFunction, String totalsCategoryName) {
+    Function<Feefineaction, String> categoryNameFunction, String totalsCategoryName) {
 
     List<String> categories = actions.stream()
       .map(categoryNameFunction)
@@ -174,59 +155,46 @@ public class CashDrawerReconciliationReportService extends DateBasedReportServic
     categories.forEach(category -> totalsEntries.add(new ReportTotalsEntry()
       .withName(category)
       .withTotalAmount(actions.stream()
-        .filter(action -> category.equals(categoryNameFunction.apply(action)))
-        .map(amountFunction)
+        .filter(filterByCategory(category, categoryNameFunction))
+        .map(Feefineaction::getAmountAction)
         .filter(Objects::nonNull)
         .map(MonetaryValue::new)
         .reduce(MonetaryValue::add)
         .orElse(new MonetaryValue(ZERO))
         .toString())
       .withTotalCount(String.valueOf(actions.stream()
-        .filter(action -> category.equals(categoryNameFunction.apply(action)))
+        .filter(filterByCategory(category, categoryNameFunction))
         .count()))));
 
     // Calculate total
     totalsEntries.add(new ReportTotalsEntry()
       .withName(totalsCategoryName)
       .withTotalAmount(actions.stream()
-        .filter(action -> categories.contains(categoryNameFunction.apply(action)))
-        .map(amountFunction)
+        .filter(filterByCategories(categories, categoryNameFunction))
+        .map(Feefineaction::getAmountAction)
         .filter(Objects::nonNull)
         .map(MonetaryValue::new)
         .reduce(MonetaryValue::add)
         .orElse(new MonetaryValue(ZERO))
         .toString())
       .withTotalCount(String.valueOf(actions.stream()
-        .filter(action -> categories.contains(categoryNameFunction.apply(action)))
+        .filter(filterByCategories(categories, categoryNameFunction))
         .count())));
   }
 
-  public CompositeFuture resolveSources() {
-    if (sourceIds == null || sourceIds.isEmpty()) {
-      return CompositeFuture.all(Collections.singletonList(Future.succeededFuture(null)));
-    }
+  private Predicate<Feefineaction> filterByCategory(String category,
+    Function<Feefineaction, String> categoryNameFunction) {
 
-    return CompositeFuture.all(sourceIds.stream().map(userId -> usersClient.fetchUserById(userId)
-      .map(this::getPersonalName)
-      .map(sources::add)
-      .mapEmpty())
-      .collect(Collectors.toList()));
+    return action -> category.equals(categoryNameFunction.apply(action));
+  }
+
+  private Predicate<Feefineaction> filterByCategories(List<String> categories,
+    Function<Feefineaction, String> categoryNameFunction) {
+
+    return action -> categories.contains(categoryNameFunction.apply(action));
   }
 
   private String formatMonetaryValue(Double value) {
     return new MonetaryValue(value, currency).toString();
-  }
-
-  public String getPersonalName(User user) {
-    if (isNotBlank(user.getPersonal().getFirstName()) &&
-      isNotBlank(user.getPersonal().getLastName())) {
-
-      return String.format("%s, %s", user.getPersonal().getLastName(),
-        user.getPersonal().getFirstName());
-    }
-    else {
-      //Fallback to user name if insufficient personal details
-      return user.getUsername();
-    }
   }
 }

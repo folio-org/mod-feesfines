@@ -18,11 +18,11 @@
       "$ref": "../raml-util/schemas/uuid.schema"
     },
     "sources": {
-      "description": "List of sources",
+      "description": "List of sources (users that performed an activity)",
       "type": "array",
       "items": {
         "type": "string",
-        "description": "Name of the user"
+        "description": "Name of the source (user that performed an activity)"
       }
     }
   },
