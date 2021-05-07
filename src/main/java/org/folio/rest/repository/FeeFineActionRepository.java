@@ -4,7 +4,8 @@ import static io.vertx.core.Future.failedFuture;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.SPACE;
+import static org.folio.rest.domain.Action.PAY;
+import static org.folio.rest.domain.Action.TRANSFER;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,16 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.domain.Action;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.GroupedCriterias;
+import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.interfaces.Results;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.utils.FeeFineActionHelper;
@@ -43,12 +42,11 @@ public class FeeFineActionRepository {
   private static final String ACCOUNTS_TABLE_ALIAS = "accounts";
   private static final String DATE_FIELD = "dateAction";
   private static final String TYPE_FIELD = "typeAction";
+  private static final String ACCOUNT_ID_FIELD = "accountId";
   private static final String CREATED_AT_FIELD = "createdAt";
   private static final String SOURCE_FIELD = "source";
   private static final String OWNER_ID_FIELD = "ownerId";
   private static final int ACTIONS_LIMIT = 1000;
-  private static final String FIND_REFUNDABLE_ACTIONS_QUERY_TEMPLATE =
-    "typeAction any \"Paid Transferred\" AND accountId any \"%s\"";
   public static final String ORDER_BY_ACTION_DATE_ASC = "actions.jsonb->>'dateAction' ASC";
   public static final String ORDER_BY_OWNER_SOURCE_DATE_ASC = "accounts.jsonb->>'feeFineOwner', " +
     "actions.jsonb->>'source' ASC, actions.jsonb->>'dateAction' ASC";
@@ -95,7 +93,7 @@ public class FeeFineActionRepository {
       return failedFuture(new IllegalArgumentException("Types list is empty"));
     }
 
-    GroupedCriterias typeCriterias = groupCriterias(getTypeCriterias(types), "OR");
+    GroupedCriterias typeCriterias = buildGroupedCriterias(getTypeCriterias(types), "OR");
 
     Criterion criterion = new Criterion(new Criteria()
       .addField("'accountId'")
@@ -115,21 +113,23 @@ public class FeeFineActionRepository {
       return failedFuture(new IllegalArgumentException("List of account IDs is empty or null"));
     }
 
-    CQL2PgJSON cql2pgJson;
-    try {
-      cql2pgJson = new CQL2PgJSON(ACTIONS_TABLE + ".jsonb");
-    } catch (FieldException e) {
-      return failedFuture(e);
-    }
+    GroupedCriterias accountIdsCriterias = buildGroupedCriterias(
+      buildEqualsCriteriaList(ACCOUNT_ID_FIELD, accountIds), "OR");
 
-    String query = format(FIND_REFUNDABLE_ACTIONS_QUERY_TEMPLATE,
-      join(SPACE, accountIds));
+    GroupedCriterias typeCriterias = buildGroupedCriterias(
+      buildEqualsCriteriaList(TYPE_FIELD, List.of(PAY.getPartialResult(), PAY.getFullResult(),
+        TRANSFER.getPartialResult(), TRANSFER.getFullResult())), "OR");
 
-    CQLWrapper cqlWrapper = new CQLWrapper(cql2pgJson, query, ACTIONS_LIMIT, 0);
+    Criterion criterion = new Criterion()
+      .addGroupOfCriterias(typeCriterias)
+      .addGroupOfCriterias(accountIdsCriterias)
+      .setLimit(new Limit(ACTIONS_LIMIT));
+
     Promise<Results<Feefineaction>> promise = Promise.promise();
-    pgClient.get(ACTIONS_TABLE, Feefineaction.class, cqlWrapper, false, promise);
+    pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, false, promise);
 
-    return promise.future().map(Results::getResults);
+    return promise.future()
+      .map(Results::getResults);
   }
 
   public Future<Feefineaction> findChargeForAccount(String accountId) {
@@ -234,6 +234,17 @@ public class FeeFineActionRepository {
       .collect(toList());
   }
 
+  private List<Criteria> buildEqualsCriteriaList(String fieldName, Collection<String> values) {
+    return values.stream()
+      .map(value ->
+        new Criteria()
+          .addField(format("'%s'", fieldName))
+          .setOperation("=")
+          .setVal(value)
+          .setJSONB(true))
+      .collect(toList());
+  }
+
   private Map<Feefineaction, Account> mapToFeeFineActionsAndAccounts(RowSet<Row> rowSet) {
     RowIterator<Row> iterator = rowSet.iterator();
     Map<Feefineaction, Account> feeFineActionsToAccountsMap = new LinkedHashMap<>();
@@ -248,7 +259,7 @@ public class FeeFineActionRepository {
     return feeFineActionsToAccountsMap;
   }
 
-  private GroupedCriterias groupCriterias(List<Criteria> criterias, String op) {
+  private GroupedCriterias buildGroupedCriterias(List<Criteria> criterias, String op) {
     GroupedCriterias groupedCriterias = new GroupedCriterias();
     criterias.forEach(criteria -> groupedCriterias.addCriteria(criteria, op));
     return groupedCriterias;
