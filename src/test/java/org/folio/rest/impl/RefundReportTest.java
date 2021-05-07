@@ -11,7 +11,7 @@ import static org.folio.test.support.EntityBuilder.createInstitution;
 import static org.folio.test.support.EntityBuilder.createItem;
 import static org.folio.test.support.EntityBuilder.createLibrary;
 import static org.folio.test.support.EntityBuilder.createLocation;
-import static org.folio.test.support.matcher.ReportEntryMatcher.refundReportEntryMatcher;
+import static org.folio.test.support.matcher.ReportMatcher.refundReportEntryMatcher;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;

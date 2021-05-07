@@ -9,6 +9,7 @@ import static org.hamcrest.Matchers.isEmptyString;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.folio.rest.jaxrs.model.CashDrawerReconciliationReport;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
@@ -17,9 +18,9 @@ import org.hamcrest.Matcher;
 
 import io.restassured.response.Response;
 
-public class ReportEntryMatcher {
+public class ReportMatcher {
 
-  private ReportEntryMatcher() {}
+  private ReportMatcher() {}
 
   public static Matcher<Response> refundReportEntryMatcher(RefundReportEntry refundReportEntry) {
     return allOf(List.of(
@@ -48,6 +49,17 @@ public class ReportEntryMatcher {
       hasJsonPath("staffMemberName", isEmptyString()),
       hasJsonPath("actionTaken", isEmptyString())
     ));
+  }
+
+  public static Matcher<Response> cashDrawerReconciliationReportMatcher(
+    CashDrawerReconciliationReport cashDrawerReconciliationReport) {
+
+    return allOf(
+      hasJsonPath("reportData", contains(
+        cashDrawerReconciliationReport.getReportData().stream()
+          .map(ReportMatcher::cashDrawerReconciliationReportEntryMatcher)
+          .collect(Collectors.toList()))),
+      hasJsonPath("reportStats", reportStatsMatcher(cashDrawerReconciliationReport.getReportStats())));
   }
 
   public static Matcher<Response> cashDrawerReconciliationReportEntryMatcher(
@@ -86,7 +98,7 @@ public class ReportEntryMatcher {
     List<ReportTotalsEntry> entries) {
 
     return entries.stream()
-      .map(ReportEntryMatcher::reportTotalsEntryMatcher)
+      .map(ReportMatcher::reportTotalsEntryMatcher)
       .collect(Collectors.toList());
   }
 

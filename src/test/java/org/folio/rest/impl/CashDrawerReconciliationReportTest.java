@@ -1,20 +1,17 @@
 package org.folio.rest.impl;
 
-import static java.lang.String.format;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.utils.ResourceClients.buildCashDrawerReconciliationReportClient;
 import static org.folio.test.support.EntityBuilder.buildCashDrawerReconciliationReportEntry;
 import static org.folio.test.support.EntityBuilder.buildReportTotalsEntry;
-import static org.folio.test.support.matcher.ReportEntryMatcher.cashDrawerReconciliationReportEntryMatcher;
-import static org.folio.test.support.matcher.ReportEntryMatcher.reportStatsMatcher;
+import static org.folio.test.support.matcher.ReportMatcher.cashDrawerReconciliationReportMatcher;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 
 import java.util.List;
-import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpStatus;
@@ -226,11 +223,7 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(numberOfEntries));
 
-    IntStream.range(0, numberOfEntries)
-      .forEach(index -> response.body(format("reportData[%d]", index),
-        cashDrawerReconciliationReportEntryMatcher(entries.get(index))));
-
-    response.body("reportStats", reportStatsMatcher(report.getReportStats()));
+    cashDrawerReconciliationReportMatcher(report);
   }
 
   private Response requestReport(String startDate, String endDate, String createdAt,
