@@ -935,7 +935,7 @@
     },
     {
       "id" : "feefine-reports",
-      "version" : "2.1",
+      "version" : "2.2",
       "handlers": [
         {
           "methods":[
@@ -962,8 +962,16 @@
             "feefine-reports.cash-drawer-reconciliation.post"
           ],
           "modulePermissions": [
-            "configuration.entries.collection.get",
-            "users.item.get"
+            "configuration.entries.collection.get"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/feefine-reports/cash-drawer-reconciliation/sources",
+          "permissionsRequired":[
+            "feefine-reports.cash-drawer-reconciliation.post"
           ]
         }
       ]

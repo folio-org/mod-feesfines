@@ -7,6 +7,7 @@ import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,6 +21,7 @@ import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReport;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
+import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportSources;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
@@ -43,6 +45,20 @@ public class CashDrawerReconciliationReportService extends
     super(headers, context);
 
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
+  }
+
+  public Future<CashDrawerReconciliationReportSources> findSources(String createdAt) {
+    return feeFineActionRepository.findFeeFineActionsAndAccounts(PAY, null, null, null, createdAt,
+      null, ORDER_BY_OWNER_SOURCE_DATE_ASC, REPORT_ROWS_LIMIT)
+      .map(Map::keySet)
+      .map(Collection::stream)
+      .map(stream -> stream
+        .map(Feefineaction::getSource)
+        .filter(Objects::nonNull)
+        .distinct()
+        .collect(Collectors.toList()))
+      .map(sources -> new CashDrawerReconciliationReportSources()
+        .withSources(sources));
   }
 
   @Override

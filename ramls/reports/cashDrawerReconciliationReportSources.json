@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Cash drawer reconciliation report sources",
+  "description": "Outputs sources (users that performed activities) required for a cash drawer reconciliation report",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "description": "List of sources (users that performed activities)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
