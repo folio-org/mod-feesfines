@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Cash drawer reconciliation report",
+  "description": "Outputs data required for a cash drawer reconciliation report",
+  "type": "object",
+  "properties": {
+    "reportData": {
+      "description": "List of report entries",
+      "type": "array",
+      "id": "cashDrawerReconciliationReportData",
+      "items": {
+        "type": "object",
+        "$ref": "cashDrawerReconciliationReportEntry.json"
+      }
+    },
+    "reportStats": {
+      "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats",
+      "description": "Report statistics",
+      "properties": {
+        "bySource": {
+          "description": "Totals by source",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        },
+        "byPaymentMethod": {
+          "description": "Totals by payment method",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        },
+        "byFeeFineType": {
+          "description": "Totals by fee/fine type",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        },
+        "byFeeFineOwner": {
+          "description": "Totals by fee/fine owner",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        }
+      }
+    }
+  }
+}

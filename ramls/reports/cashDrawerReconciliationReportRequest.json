@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Cash drawer reconciliation report request",
+  "description": "Represents a request for cash drawer reconciliation report",
+  "type": "object",
+  "properties": {
+    "startDate": {
+      "type": "string",
+      "description": "Start date for a refund report"
+    },
+    "endDate": {
+      "type": "string",
+      "description": "End date for a refund report"
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "A globally unique (UUID) identifier for the service point",
+      "$ref": "../raml-util/schemas/uuid.schema"
+    },
+    "sources": {
+      "description": "List of sources (users that performed an activity)",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Name of the source (user that performed an activity)"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "startDate",
+    "createdAt"
+  ]
+}

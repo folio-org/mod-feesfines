@@ -10,12 +10,8 @@ import static org.folio.test.support.EntityBuilder.createInstance;
 import static org.folio.test.support.EntityBuilder.createInstitution;
 import static org.folio.test.support.EntityBuilder.createItem;
 import static org.folio.test.support.EntityBuilder.createLibrary;
-import static org.folio.test.support.EntityBuilder.createLocaleSettingsConfigurations;
 import static org.folio.test.support.EntityBuilder.createLocation;
-import static org.folio.test.support.matcher.RefundReportEntryMatcher.refundReportEntryMatcher;
-import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
-import static org.folio.test.support.matcher.constant.DbTable.FEEFINES_TABLE;
-import static org.folio.test.support.matcher.constant.DbTable.FEE_FINE_ACTIONS_TABLE;
+import static org.folio.test.support.matcher.ReportMatcher.refundReportEntryMatcher;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
@@ -27,12 +23,10 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.IntStream;
 
 import org.apache.http.HttpStatus;
-import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Campus;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -40,7 +34,6 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Personal;
@@ -48,13 +41,8 @@ import org.folio.rest.jaxrs.model.RefundReportEntry;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
 import org.folio.rest.utils.ReportResourceClient;
-import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.constant.ServicePath;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -66,7 +54,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
-public class FeeFineReportsAPITest extends ApiTests {
+public class RefundReportTest extends FeeFineReportsAPITestBase {
   private static final String FEE_FINE_ACTIONS = "feefineactions";
   private static final String TYPE_ACTION = "typeAction";
 
@@ -76,18 +64,10 @@ public class FeeFineReportsAPITest extends ApiTests {
   private static final String OWNER_ID_2 = randomId();
   private static final String START_DATE = "2020-01-01";
   private static final String END_DATE = "2020-01-15";
-  private static final DateTimeZone TENANT_TZ = DateTimeZone.forID("America/New_York");
 
   private static final String PAYMENT_METHOD = "payment-method";
   private static final String REFUND_REASON = "refund-reason";
   private static final String TRANSFER_ACCOUNT = "Bursar";
-
-  private static final String PAID_PARTIALLY = "Paid partially";
-  private static final String PAID_FULLY = "Paid fully";
-  private static final String TRANSFERRED_PARTIALLY = "Transferred partially";
-  private static final String TRANSFERRED_FULLY = "Transferred fully";
-  private static final String REFUNDED_PARTIALLY = "Refunded partially";
-  private static final String REFUNDED_FULLY = "Refunded fully";
 
   private static final String PAYMENT_STAFF_INFO = "Payment - info for staff";
   private static final String PAYMENT_PATRON_INFO = "Payment - info for patron";
@@ -105,9 +85,6 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   private static final String FEE_FINE_OWNER = "owner";
 
-  private static final DateTimeFormatter dateTimeFormatter =
-    DateTimeFormat.forPattern("M/d/yy, h:mm a");
-
   private final ReportResourceClient refundReportsClient =
     buildRefundReportClient();
 
@@ -120,20 +97,14 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   private StubMapping user1StubMapping;
   private StubMapping userGroupStubMapping;
-  private StubMapping localeSettingsStubMapping;
   private StubMapping itemStubMapping;
   private StubMapping holdingsStubMapping;
   private StubMapping instanceStubMapping;
 
   @Before
   public void setUp() {
-    removeAllFromTable(FEEFINES_TABLE);
-    removeAllFromTable(ACCOUNTS_TABLE);
-    removeAllFromTable(FEE_FINE_ACTIONS_TABLE);
-
-    final KvConfigurations localeSettingsConfigurations = createLocaleSettingsConfigurations();
-    localeSettingsStubMapping = createStubForPath(ServicePath.CONFIGURATION_ENTRIES,
-      localeSettingsConfigurations, ".*");
+    clearDatabase();
+    createLocaleSettingsStub();
 
     final Library library = createLibrary();
     final Campus campus = createCampus();
@@ -142,9 +113,7 @@ public class FeeFineReportsAPITest extends ApiTests {
     instance = createInstance();
     final HoldingsRecord holdingsRecord = createHoldingsRecord(instance);
     item1 = createItem(holdingsRecord, location);
-
-    item2 = createItem(holdingsRecord, location)
-    .withBarcode("item2-barcode");
+    item2 = createItem(holdingsRecord, location).withBarcode("item2-barcode");
 
     itemStubMapping = createStub(ServicePath.ITEMS_PATH, item1, item1.getId());
     createStub(ServicePath.ITEMS_PATH, item2, item2.getId());
@@ -172,7 +141,7 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   @Test
   public void okResponseWhenLocaleConfigDoesNotExist() {
-    removeStub(localeSettingsStubMapping);
+    removeLocaleSettingsStub();
 
     requestAndCheck(List.of());
   }
@@ -198,18 +167,18 @@ public class FeeFineReportsAPITest extends ApiTests {
 
   @Test
   public void shouldReturn422WhenRequestIsNotValid() {
-    refundReportsClient.getFeeFineRefundReports(null, "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReports("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReports("2020-01-01", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReports("not-a-date", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReports("12 Apr 2021", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReport(null, "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReport("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReport("2020-01-01", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReport("not-a-date", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReport("12 Apr 2021", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
   }
 
   @Test
   public void shouldReturn200WhenRequestIsValid() {
-    refundReportsClient.getFeeFineRefundReports("2020-01-01", null, HTTP_OK);
-    refundReportsClient.getFeeFineRefundReports(null, null, HTTP_OK);
-    refundReportsClient.getFeeFineRefundReports("2020-01-01", "2020-02-01", HTTP_OK);
+    refundReportsClient.getFeeFineRefundReport("2020-01-01", null, HTTP_OK);
+    refundReportsClient.getFeeFineRefundReport(null, null, HTTP_OK);
+    refundReportsClient.getFeeFineRefundReport("2020-01-01", "2020-02-01", HTTP_OK);
   }
 
   @Test
@@ -664,15 +633,6 @@ public class FeeFineReportsAPITest extends ApiTests {
     return charge(USER_ID_1, amount, feeFineType, itemId, randomId());
   }
 
-  private Account charge(String userID, Double amount, String feeFineType,
-    String itemId, String ownerId) {
-
-    final var account = EntityBuilder.buildAccount(userID, itemId, feeFineType, amount, ownerId);
-    createEntity(ACCOUNTS_PATH, account);
-
-    return accountsClient.getById(account.getId()).as(Account.class);
-  }
-
   private ReportSourceObjects createMinimumViableReportData() {
     Account account = charge(10.0, "ff-type", item1.getId());
 
@@ -703,20 +663,6 @@ public class FeeFineReportsAPITest extends ApiTests {
 
     return createAction(USER_ID_1, actionCounter, account, dateTime, type, method, amount, balance,
       staffInfo, patronInfo, txInfo);
-  }
-
-  private Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
-    String type, String method, Double amount, Double balance, String staffInfo,
-    String patronInfo, String txInfo) {
-
-    Feefineaction action = EntityBuilder.buildFeeFineAction(userId, account.getId(),
-      type, method, amount, balance, parseDateTime(dateTime),
-      addSuffix(staffInfo, actionCounter), addSuffix(patronInfo, actionCounter))
-      .withTransactionInformation(txInfo);
-
-    createEntity(ServicePath.ACTIONS_PATH, action);
-
-    return action;
   }
 
   private Feefineaction createActionWithNullComments(Account account, String dateTime,
@@ -778,32 +724,12 @@ public class FeeFineReportsAPITest extends ApiTests {
       .withFeeFineOwner(feeFineOwner);
   }
 
-  private String addSuffix(String info, int counter) {
-    return format("%s %d", info, counter);
-  }
-
   private Response requestRefundReport(String startDate, String endDate) {
     return requestRefundReport(startDate, endDate, null);
   }
 
   private Response requestRefundReport(String startDate, String endDate, List<String> ownerIds) {
-    return refundReportsClient.getFeeFineRefundReports(startDate, endDate, ownerIds);
-  }
-
-  private String formatMonetaryValue(Double value) {
-    return new MonetaryValue(value).toString();
-  }
-
-  private String formatRefundReportDate(Date date, DateTimeZone timeZone) {
-    return new DateTime(date).withZone(timeZone).toString(dateTimeFormatter);
-  }
-
-  private Date parseDateTime(String date) {
-    if (date == null) {
-      return null;
-    }
-
-    return DateTime.parse(date, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")).toDate();
+    return refundReportsClient.getFeeFineRefundReport(startDate, endDate, ownerIds);
   }
 
   @With

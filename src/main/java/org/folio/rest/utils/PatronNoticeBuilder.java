@@ -3,8 +3,8 @@ package org.folio.rest.utils;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.folio.rest.utils.AccountHelper.PATRON_COMMENTS_KEY;
-import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
+import static org.folio.rest.utils.FeeFineActionHelper.PATRON_COMMENTS_KEY;
+import static org.folio.rest.utils.FeeFineActionHelper.parseFeeFineComments;
 import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
 
 import java.util.Date;

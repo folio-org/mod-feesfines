@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Report statistics totals entry",
+  "description": "Represents totals entry for a single category",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.ReportTotalsEntry",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of a category"
+    },
+    "totalAmount": {
+      "type": "string",
+      "description": "Total amount",
+      "default": "0.00"
+    },
+    "totalCount": {
+      "type": "string",
+      "description": "Total count",
+      "default": "0"
+    }
+  }
+}

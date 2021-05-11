@@ -1,0 +1,127 @@
+{
+  "reportData": [
+    {
+      "source": "Mistlebauer, Holly",
+      "paymentMethod": "Cash",
+      "paidAmount": "70.00",
+      "feeFineOwner": "Main circ desk",
+      "feeFineType": "Lost item fee",
+      "paymentDate": "12/10/2020, 2:37 PM",
+      "paymentStatus": "Paid partially",
+      "transactionInfo": "",
+      "additionalStaffInfo": "Patron will pay remaining balance tomorrow",
+      "additionalPatronInfo": "",
+      "patronId": "2a424823-588a-45ee-9441-a6384b6614b2",
+      "feeFineId": "6d8d0c4c-1dbd-47f0-a55f-08b0e97e58e9"
+    },
+    {
+      "source": "Leary, Joanne",
+      "paymentMethod": "Check",
+      "paidAmount": "12.45",
+      "feeFineOwner": "Main circ desk",
+      "feeFineType": "Overdue fine",
+      "paymentDate": "12/10/2020, 3:33 PM",
+      "paymentStatus": "Paid fully",
+      "transactionInfo": "Check #3112",
+      "additionalStaffInfo": "Patron used check from parent",
+      "additionalPatronInfo": "You have been assigned locker #234",
+      "patronId": "2a424823-588a-45ee-9441-a6384b6614b2",
+      "feeFineId": "ef02dd47-6013-4190-b96c-01e8efeb9204"
+    }
+  ],
+  "reportStats": {
+    "bySource": [
+      {
+        "name": "Doe, Jane",
+        "totalAmount": "149.64",
+        "totalCount": "4"
+      },
+      {
+        "name": "Leary, Joanne",
+        "totalAmount": "37.45",
+        "totalCount": "2"
+      },
+      {
+        "name": "Mistlebauer, Holly",
+        "totalAmount": "75.00",
+        "totalCount": "2"
+      },
+      {
+        "name": "Source totals",
+        "totalAmount": "262.09",
+        "totalCount": "8"
+      }
+    ],
+    "byPaymentMethod": [
+      {
+        "name": "Cash",
+        "totalAmount": "83.32",
+        "totalCount": "9"
+      },
+      {
+        "name": "Check",
+        "totalAmount": "37.45",
+        "totalCount": "9"
+      },
+      {
+        "name": "Credit card",
+        "totalAmount": "116.32",
+        "totalCount": "9"
+      },
+      {
+        "name": "Department charge",
+        "totalAmount": "25.00",
+        "totalCount": "9"
+      },
+      {
+        "name": "Payment method totals",
+        "totalAmount": "262.09",
+        "totalCount": "99"
+      }
+    ],
+    "byFeeFineType": [
+      {
+        "name": "Locker rental fee",
+        "totalAmount": "50.00",
+        "totalCount": "9"
+      },
+      {
+        "name": "Lost item fee",
+        "totalAmount": "50.00",
+        "totalCount": "9"
+      },
+      {
+        "name": "Lost item processing fee",
+        "totalAmount": "25.00",
+        "totalCount": "9"
+      },
+      {
+        "name": "Overdue fine",
+        "totalAmount": "137.09",
+        "totalCount": "99"
+      },
+      {
+        "name": "Fee/fine type totals",
+        "totalAmount": "262.09",
+        "totalCount": "99"
+      }
+    ],
+    "byFeeFineOwner": [
+      {
+        "name": "Main circ desk",
+        "totalAmount": "253.77",
+        "totalCount": "9"
+      },
+      {
+        "name": "Science circ desk",
+        "totalAmount": "8.32",
+        "totalCount": "9"
+      },
+      {
+        "name": "Fee/fine owner totals",
+        "totalAmount": "262.09",
+        "totalCount": "99"
+      }
+    ]
+  }
+}
