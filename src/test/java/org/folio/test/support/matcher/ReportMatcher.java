@@ -115,10 +115,11 @@ public class ReportMatcher {
     );
   }
 
-  public static Matcher<? super Object> cashDrawerReconciliationReportSourcesMatcher(
+  public static Matcher<ValidatableResponse> cashDrawerReconciliationReportSourcesMatcher(
     CashDrawerReconciliationReportSources cashDrawerReconciliationReportSources) {
 
-//    return hasJsonPath("sources", contains(cashDrawerReconciliationReportSources.getSources()));
-    return hasJsonPath("sources", contains(cashDrawerReconciliationReportSources.getSources().toArray()));
+    return allOf(
+      hasJsonPath("sources", contains(cashDrawerReconciliationReportSources.getSources().toArray()))
+    );
   }
 }

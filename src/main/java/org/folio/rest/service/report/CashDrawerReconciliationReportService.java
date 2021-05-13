@@ -7,7 +7,6 @@ import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,15 +47,7 @@ public class CashDrawerReconciliationReportService extends
   }
 
   public Future<CashDrawerReconciliationReportSources> findSources(String createdAt) {
-    return feeFineActionRepository.findFeeFineActionsAndAccounts(PAY, null, null, null, createdAt,
-      null, ORDER_BY_OWNER_SOURCE_DATE_ASC, REPORT_ROWS_LIMIT)
-      .map(Map::keySet)
-      .map(Collection::stream)
-      .map(stream -> stream
-        .map(Feefineaction::getSource)
-        .filter(Objects::nonNull)
-        .distinct()
-        .collect(Collectors.toList()))
+    return feeFineActionRepository.findPaymentSources(createdAt, REPORT_ROWS_LIMIT)
       .map(sources -> new CashDrawerReconciliationReportSources()
         .withSources(sources));
   }

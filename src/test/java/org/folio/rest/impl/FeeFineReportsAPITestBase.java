@@ -100,11 +100,6 @@ public class FeeFineReportsAPITestBase extends ApiTests {
     return new MonetaryValue(value).toString();
   }
 
-  String withTenantTz(String date) {
-    return DateTime.parse(date, DateTimeFormat.forPattern(DATE_TIME_JSON_FORMAT))
-      .withZoneRetainFields(TENANT_TZ).toString(DATE_TIME_JSON_FORMATTER);
-  }
-
   String formatRefundReportDate(Date date, DateTimeZone timeZone) {
     return new DateTime(date).withZone(timeZone).toString(DATE_TIME_REPORT_FORMATTER);
   }
