@@ -3,13 +3,11 @@ package org.folio.rest.service.report;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.math.BigDecimal.ZERO;
-import static org.apache.commons.lang.StringUtils.defaultString;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
-import static org.folio.rest.utils.AccountHelper.PATRON_COMMENTS_KEY;
-import static org.folio.rest.utils.AccountHelper.STAFF_COMMENTS_KEY;
-import static org.folio.rest.utils.AccountHelper.parseFeeFineComments;
+import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
+import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
 
@@ -60,6 +58,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.With;
 
+// TODO: inherit from DateBasedReportService<RefundReport>
 public class RefundReportService {
   private static final Logger log = LogManager.getLogger(RefundReportService.class);
 
@@ -136,7 +135,7 @@ public class RefundReportService {
     RefundReportContext ctx = new RefundReportContext().withTimeZone(timeZone);
 
     return feeFineActionRepository
-      .findActionsByTypeForPeriodAndOwners(REFUND, startDateTimeFormatted, endDateTimeFormatted,
+      .find(REFUND, startDateTimeFormatted, endDateTimeFormatted,
         ownerIds, REPORT_ROWS_LIMIT)
       .map(RefundReportService::toRefundDataMap)
       .map(ctx::withRefunds)
@@ -227,8 +226,8 @@ public class RefundReportService {
         .withRefundAmount(formatMonetaryValue(feeFineAction.getAmountAction()))
         .withRefundAction(feeFineAction.getTypeAction())
         .withRefundReason(feeFineAction.getPaymentMethod())
-        .withStaffInfo(getStaffInfo(feeFineAction.getComments()))
-        .withPatronInfo(getPatronInfo(feeFineAction.getComments()));
+        .withStaffInfo(getStaffInfoFromComment(feeFineAction))
+        .withPatronInfo(getPatronInfoFromComment(feeFineAction));
 
       if (user != null) {
         reportEntry
@@ -502,14 +501,6 @@ public class RefundReportService {
     }
 
     return message;
-  }
-
-  private static String getStaffInfo(String comments) {
-    return defaultString(parseFeeFineComments(comments).get(STAFF_COMMENTS_KEY));
-  }
-
-  private static String getPatronInfo(String comments) {
-    return defaultString(parseFeeFineComments(comments).get(PATRON_COMMENTS_KEY));
   }
 
   private static String getItemBarcode(RefundReportContext ctx, String accountId) {

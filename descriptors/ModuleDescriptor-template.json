@@ -935,7 +935,7 @@
     },
     {
       "id" : "feefine-reports",
-      "version" : "2.0",
+      "version" : "2.1",
       "handlers": [
         {
           "methods":[
@@ -951,6 +951,19 @@
             "usergroups.item.get",
             "inventory-storage.holdings.item.get",
             "inventory-storage.instances.item.get"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/feefine-reports/cash-drawer-reconciliation",
+          "permissionsRequired":[
+            "feefine-reports.cash-drawer-reconciliation.post"
+          ],
+          "modulePermissions": [
+            "configuration.entries.collection.get",
+            "users.item.get"
           ]
         }
       ]
@@ -1386,6 +1399,11 @@
       "permissionName":"feefine-reports.refund.post",
       "displayName":"module permissions for loading refund report",
       "description":"Load a refund report"
+    },
+    {
+      "permissionName":"feefine-reports.cash-drawer-reconciliation.post",
+      "displayName":"module permissions for loading cash drawer reconciliation report",
+      "description":"Load a cash drawer reconciliation report"
     }
   ],
   "launchDescriptor": {

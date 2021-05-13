@@ -13,29 +13,36 @@ public class ReportResourceClient extends ResourceClient {
     super(baseUri);
   }
 
-  public Response getFeeFineRefundReports(String startDate, String endDate) {
-    return getFeeFineRefundReports(startDate, endDate, null, HttpStatus.HTTP_OK);
-  }
-
-  public Response getFeeFineRefundReports(String startDate, String endDate,
+  public Response getFeeFineRefundReport(String startDate, String endDate,
     List<String> ownerIds) {
-    return getFeeFineRefundReports(startDate, endDate, ownerIds, HttpStatus.HTTP_OK);
+
+    return getFeeFineRefundReport(startDate, endDate, ownerIds, HttpStatus.HTTP_OK);
   }
 
-  public Response getFeeFineRefundReports(String startDate, String endDate, List<String> ownerIds,
+  public Response getFeeFineRefundReport(String startDate, String endDate,
     HttpStatus expectedStatus) {
 
-    return okapiClient.post(baseUri, createRefundReportRequest(startDate, endDate, ownerIds))
-      .then()
-      .statusCode(expectedStatus.toInt())
-      .extract()
-      .response();
+    return getFeeFineRefundReport(startDate, endDate, null, expectedStatus);
   }
 
-  public Response getFeeFineRefundReports(String startDate, String endDate,
+  private Response getFeeFineRefundReport(String startDate, String endDate, List<String> ownerIds,
     HttpStatus expectedStatus) {
 
-    return getFeeFineRefundReports(startDate, endDate, null, expectedStatus);
+    return getReport(createRefundReportRequest(startDate, endDate, ownerIds), expectedStatus);
+  }
+
+  public Response getCashDrawerReconciliationReport(String startDate, String endDate,
+    String createdAt, List<String> sources) {
+
+    return getCashDrawerReconciliationReport(startDate, endDate, createdAt, sources,
+      HttpStatus.HTTP_OK);
+  }
+
+  public Response getCashDrawerReconciliationReport(String startDate, String endDate,
+    String createdAt, List<String> sources, HttpStatus expectedStatus) {
+
+    return getReport(createCashDrawerReconciliationReportRequest(startDate, endDate,
+      createdAt, sources), expectedStatus);
   }
 
   private String createRefundReportRequest(String startDate, String endDate,
@@ -51,5 +58,29 @@ public class ReportResourceClient extends ResourceClient {
       .put("endDate", endDate)
       .put("feeFineOwners", feeFineOwners)
       .encodePrettily();
+  }
+
+  private String createCashDrawerReconciliationReportRequest(String startDate, String endDate,
+    String createdAt, List<String> sources) {
+
+    JsonArray sourceArray = null;
+    if (sources != null) {
+      sourceArray = new JsonArray(sources);
+    }
+
+    return new JsonObject()
+      .put("startDate", startDate)
+      .put("endDate", endDate)
+      .put("createdAt", createdAt)
+      .put("sources", sourceArray)
+      .encodePrettily();
+  }
+
+  private Response getReport(String requestBody, HttpStatus expectedStatus) {
+    return okapiClient.post(baseUri, requestBody)
+      .then()
+      .statusCode(expectedStatus.toInt())
+      .extract()
+      .response();
   }
 }

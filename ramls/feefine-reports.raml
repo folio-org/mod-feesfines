@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Fee/fine reports
-version: v1.0
+version: v2.1
 baseUri: http://github.com/org/folio/mod-feesfines
 
 documentation:
@@ -12,6 +12,8 @@ types:
   userGroup: !include usergroup.json
   refundReport: !include reports/refundReport.json
   refundReportRequest: !include reports/refundReportRequest.json
+  cashDrawerReconciliationReport: !include reports/cashDrawerReconciliationReport.json
+  cashDrawerReconciliationReportRequest: !include reports/cashDrawerReconciliationReportRequest.json
   kvConfigurations: !include kv-configurations.json
   kvConfiguration: !include kv-configuration.json
   errors: !include raml-util/schemas/errors.schema
@@ -36,6 +38,30 @@ traits:
             application/json:
               schema: refundReport
               example: !include examples/refundReport.sample
+        422:
+          description: "Unprocessable entity"
+          body:
+            text/plain:
+              example: "Invalid startDate or endDate parameter"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error"
+  /cash-drawer-reconciliation:
+    post:
+      is: [validate]
+      description: "Return data for a refund cash drawer reconciliation report"
+      body:
+        application/json:
+          schema: cashDrawerReconciliationReportRequest
+          example: !include examples/cashDrawerReconciliationReportRequest.sample
+      responses:
+        200:
+          body:
+            application/json:
+              schema: cashDrawerReconciliationReport
+              example: !include examples/cashDrawerReconciliationReport.sample
         422:
           description: "Unprocessable entity"
           body:

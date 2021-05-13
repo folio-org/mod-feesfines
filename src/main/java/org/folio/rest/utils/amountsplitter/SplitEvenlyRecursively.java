@@ -2,43 +2,43 @@ package org.folio.rest.utils.amountsplitter;
 
 import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
+import static java.util.Comparator.comparing;
+import static java.util.Map.Entry.comparingByValue;
+import static java.util.stream.Collectors.toMap;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.exception.ActionException;
-import org.folio.rest.jaxrs.model.Account;
 
 public class SplitEvenlyRecursively implements BulkActionAmountSplitterStrategy {
+
   @Override
   public Map<String, MonetaryValue> split(MonetaryValue totalRequestedAmount,
-    Collection<Account> accounts, Map<String, MonetaryValue> actionableAmounts) {
-
-    int numberOfAccountsToProcess = accounts.size();
-    BigDecimal amountToDistribute = totalRequestedAmount.getAmount();
-    BigDecimal evenlySplitAmount = splitEvenly(amountToDistribute, numberOfAccountsToProcess);
-
-    List<Account> accountsSorted = accounts.stream()
-      .sorted(Comparator.comparingLong(
-        account -> actionableAmounts.get(account.getId()).getAmount().longValue()))
-      .collect(Collectors.toList());
+    Map<String, MonetaryValue> actionableAmounts) {
 
     Map<String, MonetaryValue> result = new HashMap<>();
 
-    for (Account account : accountsSorted) {
+    if (actionableAmounts.isEmpty()) {
+      return result;
+    }
+
+    int numberOfAccountsToProcess = actionableAmounts.size();
+    BigDecimal amountToDistribute = totalRequestedAmount.getAmount();
+    BigDecimal evenlySplitAmount = splitEvenly(amountToDistribute, numberOfAccountsToProcess);
+
+
+    for (String key : sortByValue(actionableAmounts).keySet()) {
       if (amountToDistribute.compareTo(BigDecimal.ZERO) <= 0) {
         break;
       }
 
-      BigDecimal actionableAmount = actionableAmounts.get(account.getId()).getAmount();
+      BigDecimal actionableAmount = actionableAmounts.get(key).getAmount();
       numberOfAccountsToProcess--;
 
       BigDecimal calculatedActionAmount;
@@ -52,7 +52,7 @@ public class SplitEvenlyRecursively implements BulkActionAmountSplitterStrategy 
       }
 
       if (calculatedActionAmount.compareTo(BigDecimal.ZERO) > 0) {
-        result.put(account.getId(), new MonetaryValue(calculatedActionAmount));
+        result.put(key, new MonetaryValue(calculatedActionAmount));
       }
     }
 
@@ -103,5 +103,17 @@ public class SplitEvenlyRecursively implements BulkActionAmountSplitterStrategy 
 
   private BigDecimal splitEvenly(BigDecimal amount, int numberOfPieces) {
     return amount.divide(new BigDecimal(numberOfPieces), RoundingMode.FLOOR);
+  }
+
+  private static Map<String, MonetaryValue> sortByValue(Map<String, MonetaryValue> map) {
+    return map.entrySet()
+      .stream()
+      .sorted(comparingByValue(comparing(MonetaryValue::getAmount)))
+      .collect(toMap(
+        Map.Entry::getKey,
+        Map.Entry::getValue,
+        (e1, e2) -> e1,
+        LinkedHashMap::new
+      ));
   }
 }
