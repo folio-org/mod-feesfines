@@ -44,10 +44,6 @@
         {
           "fieldName": "userId",
           "tOps": "ADD"
-        },
-        {
-          "fieldName": "status.name",
-          "tOps": "ADD"
         }
       ]
     },
