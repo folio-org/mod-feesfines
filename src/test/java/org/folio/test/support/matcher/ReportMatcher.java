@@ -57,13 +57,11 @@ public class ReportMatcher {
     CashDrawerReconciliationReport cashDrawerReconciliationReport) {
 
     return allOf(
-      hasJsonPath("reportData",
-        cashDrawerReconciliationReport.getReportData().isEmpty() ?
-          is(List.of()) :
-          contains(
-            cashDrawerReconciliationReport.getReportData().stream()
-              .map(ReportMatcher::cashDrawerReconciliationReportEntryMatcher)
-              .collect(Collectors.toList()))),
+      hasJsonPath("reportData", cashDrawerReconciliationReport.getReportData().isEmpty()
+        ? is(List.of())
+        : contains(cashDrawerReconciliationReport.getReportData().stream()
+        .map(ReportMatcher::cashDrawerReconciliationReportEntryMatcher)
+        .collect(Collectors.toList()))),
       hasJsonPath("reportStats", reportStatsMatcher(cashDrawerReconciliationReport.getReportStats())));
   }
 

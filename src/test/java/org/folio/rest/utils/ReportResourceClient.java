@@ -46,7 +46,6 @@ public class ReportResourceClient extends ResourceClient {
   }
 
   public Response getCashDrawerReconciliationReportSources(String createdAt) {
-
     return getCashDrawerReconciliationReportSources(createdAt, HttpStatus.HTTP_OK);
   }
 
