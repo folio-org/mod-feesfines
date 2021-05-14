@@ -197,12 +197,12 @@ public class FeeFineActionRepository {
     return promise.future().map(this::mapToFeeFineActionsAndAccounts);
   }
 
-  public Future<List<String>> findPaymentSources(String createdAt, int limit) {
+  public Future<List<String>> findSources(Action typeAction, String createdAt, int limit) {
     Tuple params = Tuple.of(limit);
     List<String> conditions = new ArrayList<>();
 
-    params.addString(PAY.getFullResult());
-    params.addString(PAY.getPartialResult());
+    params.addString(typeAction.getFullResult());
+    params.addString(typeAction.getPartialResult());
     conditions.add(format("%s.jsonb->>'%s' IN ($2, $3)", ACTIONS_TABLE_ALIAS, TYPE_FIELD));
 
     if (createdAt != null) {

@@ -47,7 +47,7 @@ public class CashDrawerReconciliationReportService extends
   }
 
   public Future<CashDrawerReconciliationReportSources> findSources(String createdAt) {
-    return feeFineActionRepository.findPaymentSources(createdAt, REPORT_ROWS_LIMIT)
+    return feeFineActionRepository.findSources(PAY, createdAt, REPORT_ROWS_LIMIT)
       .map(sources -> new CashDrawerReconciliationReportSources()
         .withSources(sources));
   }

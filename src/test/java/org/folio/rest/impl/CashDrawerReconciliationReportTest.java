@@ -154,20 +154,30 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
     Account account2 = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_2, null, OWNER_ID_1, OWNER_1);
     Account account3 = charge(USER_ID_2, 10.0, FEE_FINE_TYPE_2, null, OWNER_ID_2, OWNER_2);
 
-    Feefineaction paymentAction1 = createAction(USER_ID_1, 1, account1, "2020-01-01 12:00:00",
+    // This payment should not be included in the report - it's 1 second before the interval start
+    createAction(USER_ID_1, 1, account1, withTenantTz("2019-12-31 23:59:59"),
       PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
 
-    Feefineaction paymentAction2 = createAction(USER_ID_1, 2, account1, "2020-01-03 12:00:00",
+    Feefineaction paymentAction1 = createAction(USER_ID_1, 1, account1, withTenantTz("2020-01-01 00:00:01"),
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    Feefineaction paymentAction2 = createAction(USER_ID_1, 2, account1, withTenantTz("2020-01-03 12:00:00"),
       PAID_PARTIALLY, PAYMENT_METHOD_2, 2.0, 8.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
 
-    Feefineaction paymentAction3 = createAction(USER_ID_2, 3, account2, "2020-01-05 12:00:00",
+    Feefineaction paymentAction3 = createAction(USER_ID_2, 3, account2, withTenantTz("2020-01-05 12:00:00"),
       PAID_PARTIALLY, PAYMENT_METHOD_1, 1.0, 9.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT, SOURCE_2);
 
-    Feefineaction paymentAction4 = createAction(USER_ID_2, 4, account3, "2020-01-15 12:00:00",
+    Feefineaction paymentAction4 = createAction(USER_ID_2, 4, account3, withTenantTz("2020-01-15 23:59:59"),
       PAID_FULLY, PAYMENT_METHOD_2, 10.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    // This payment should not be included in the report - it's 1 second after the interval end
+    createAction(USER_ID_1, 1, account1, withTenantTz("2020-01-16 00:00:01"),
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
 
     requestAndCheck(new CashDrawerReconciliationReport()
@@ -277,12 +287,10 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
     String startDate, String endDate, String createdAt, List<String> sources) {
 
     List<CashDrawerReconciliationReportEntry> entries = report.getReportData();
-    int numberOfEntries = entries.size();
 
     requestReport(startDate, endDate, createdAt, sources)
       .then()
       .statusCode(HttpStatus.SC_OK)
-      .body("reportData", iterableWithSize(numberOfEntries))
       .body(cashDrawerReconciliationReportMatcher(report));
   }
 

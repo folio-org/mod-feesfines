@@ -109,10 +109,19 @@ public class FeeFineReportsAPITestBase extends ApiTests {
       return null;
     }
 
-    return DateTime.parse(date, DateTimeFormat.forPattern(DATE_TIME_JSON_FORMAT)).toDate();
+    return DateTime.parse(date, DateTimeFormat.forPattern(DATE_TIME_JSON_FORMAT))
+      .withZoneRetainFields(DateTimeZone.UTC)
+      .toDate();
   }
 
   String addSuffix(String info, int counter) {
     return format("%s %d", info, counter);
+  }
+
+  String withTenantTz(String date) {
+    return DateTime.parse(date, DateTimeFormat.forPattern(DATE_TIME_JSON_FORMAT))
+      .withZoneRetainFields(TENANT_TZ)
+      .withZone(DateTimeZone.UTC)
+      .toString(DATE_TIME_JSON_FORMATTER);
   }
 }
