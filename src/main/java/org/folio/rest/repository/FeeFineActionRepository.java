@@ -197,6 +197,33 @@ public class FeeFineActionRepository {
     return promise.future().map(this::mapToFeeFineActionsAndAccounts);
   }
 
+  public Future<List<String>> findSources(Action typeAction, String createdAt, int limit) {
+    Tuple params = Tuple.of(limit);
+    List<String> conditions = new ArrayList<>();
+
+    params.addString(typeAction.getFullResult());
+    params.addString(typeAction.getPartialResult());
+    conditions.add(format("%s.jsonb->>'%s' IN ($2, $3)", ACTIONS_TABLE_ALIAS, TYPE_FIELD));
+
+    if (createdAt != null) {
+      params.addString(createdAt);
+      conditions.add(format("%s.jsonb->>'%s' = $%d", ACTIONS_TABLE_ALIAS, CREATED_AT_FIELD,
+        params.size()));
+    }
+
+    String query = format(
+      "SELECT DISTINCT actions.jsonb->>'source' " +
+        "FROM %1$s.%2$s %3$s " +
+        "WHERE " + join(" AND ", conditions) + " " +
+        "LIMIT $1",
+      PostgresClient.convertToPsqlStandard(tenantId), ACTIONS_TABLE, ACTIONS_TABLE_ALIAS);
+
+    Promise<RowSet<Row>> promise = Promise.promise();
+    pgClient.select(query, params, promise);
+
+    return promise.future().map(this::mapToListOfStrings);
+  }
+
   private void addFilterByListToConditions(List<String> conditions, String tableName,
     String fieldName, List<String> valueList) {
 
@@ -257,6 +284,16 @@ public class FeeFineActionRepository {
     });
 
     return feeFineActionsToAccountsMap;
+  }
+
+  private List<String> mapToListOfStrings(RowSet<Row> rowSet) {
+    RowIterator<Row> iterator = rowSet.iterator();
+    List<String> result = new ArrayList<>();
+    iterator.forEachRemaining(row -> {
+      String source = row.get(String.class, 0);
+      result.add(source);
+    });
+    return result;
   }
 
   private GroupedCriterias buildGroupedCriterias(List<Criteria> criterias, String op) {

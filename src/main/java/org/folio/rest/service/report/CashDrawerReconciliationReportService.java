@@ -20,6 +20,7 @@ import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReport;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
+import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportSources;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
@@ -43,6 +44,12 @@ public class CashDrawerReconciliationReportService extends
     super(headers, context);
 
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
+  }
+
+  public Future<CashDrawerReconciliationReportSources> findSources(String createdAt) {
+    return feeFineActionRepository.findSources(PAY, createdAt, REPORT_ROWS_LIMIT)
+      .map(sources -> new CashDrawerReconciliationReportSources()
+        .withSources(sources));
   }
 
   @Override

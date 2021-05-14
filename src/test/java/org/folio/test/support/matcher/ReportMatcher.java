@@ -11,12 +11,14 @@ import java.util.stream.Collectors;
 
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReport;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
+import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportSources;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
 import org.hamcrest.Matcher;
 
 import io.restassured.response.Response;
+import io.restassured.response.ValidatableResponse;
 
 public class ReportMatcher {
 
@@ -51,14 +53,15 @@ public class ReportMatcher {
     ));
   }
 
-  public static Matcher<Response> cashDrawerReconciliationReportMatcher(
+  public static Matcher<ValidatableResponse> cashDrawerReconciliationReportMatcher(
     CashDrawerReconciliationReport cashDrawerReconciliationReport) {
 
     return allOf(
-      hasJsonPath("reportData", contains(
-        cashDrawerReconciliationReport.getReportData().stream()
-          .map(ReportMatcher::cashDrawerReconciliationReportEntryMatcher)
-          .collect(Collectors.toList()))),
+      hasJsonPath("reportData", cashDrawerReconciliationReport.getReportData().isEmpty()
+        ? is(List.of())
+        : contains(cashDrawerReconciliationReport.getReportData().stream()
+        .map(ReportMatcher::cashDrawerReconciliationReportEntryMatcher)
+        .collect(Collectors.toList()))),
       hasJsonPath("reportStats", reportStatsMatcher(cashDrawerReconciliationReport.getReportStats())));
   }
 
@@ -107,6 +110,14 @@ public class ReportMatcher {
       hasJsonPath("name", is(entry.getName())),
       hasJsonPath("totalAmount", is(entry.getTotalAmount())),
       hasJsonPath("totalCount", is(entry.getTotalCount()))
+    );
+  }
+
+  public static Matcher<ValidatableResponse> cashDrawerReconciliationReportSourcesMatcher(
+    CashDrawerReconciliationReportSources cashDrawerReconciliationReportSources) {
+
+    return allOf(
+      hasJsonPath("sources", contains(cashDrawerReconciliationReportSources.getSources().toArray()))
     );
   }
 }

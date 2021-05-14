@@ -14,6 +14,8 @@ types:
   refundReportRequest: !include reports/refundReportRequest.json
   cashDrawerReconciliationReport: !include reports/cashDrawerReconciliationReport.json
   cashDrawerReconciliationReportRequest: !include reports/cashDrawerReconciliationReportRequest.json
+  cashDrawerReconciliationReportSources: !include reports/cashDrawerReconciliationReportSources.json
+  cashDrawerReconciliationReportSourcesRequest: !include reports/cashDrawerReconciliationReportSourcesRequest.json
   kvConfigurations: !include kv-configurations.json
   kvConfiguration: !include kv-configuration.json
   errors: !include raml-util/schemas/errors.schema
@@ -72,3 +74,26 @@ traits:
           body:
             text/plain:
               example: "Internal server error"
+    /sources:
+      post:
+        is: [validate]
+        description: "Return list of sources for a refund cash drawer reconciliation report"
+        body:
+          application/json:
+            schema: cashDrawerReconciliationReportSourcesRequest
+            example: !include examples/cashDrawerReconciliationReportSourcesRequest.sample
+        responses:
+          200:
+            body:
+              application/json:
+                schema: cashDrawerReconciliationReportSources
+                example: !include examples/cashDrawerReconciliationReportSources.sample
+          422:
+            description: "Unprocessable entity"
+            body:
+              text/plain:
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "Internal server error"

@@ -45,6 +45,16 @@ public class ReportResourceClient extends ResourceClient {
       createdAt, sources), expectedStatus);
   }
 
+  public Response getCashDrawerReconciliationReportSources(String createdAt) {
+    return getCashDrawerReconciliationReportSources(createdAt, HttpStatus.HTTP_OK);
+  }
+
+  public Response getCashDrawerReconciliationReportSources(String createdAt,
+    HttpStatus expectedStatus) {
+
+    return getReport(createCashDrawerReconciliationReportSourcesRequest(createdAt), expectedStatus);
+  }
+
   private String createRefundReportRequest(String startDate, String endDate,
     List<String> ownerIds) {
 
@@ -73,6 +83,12 @@ public class ReportResourceClient extends ResourceClient {
       .put("endDate", endDate)
       .put("createdAt", createdAt)
       .put("sources", sourceArray)
+      .encodePrettily();
+  }
+
+  private String createCashDrawerReconciliationReportSourcesRequest(String createdAt) {
+    return new JsonObject()
+      .put("createdAt", createdAt)
       .encodePrettily();
   }
 

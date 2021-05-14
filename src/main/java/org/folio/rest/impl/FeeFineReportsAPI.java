@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportRequest;
+import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportSourcesRequest;
 import org.folio.rest.jaxrs.model.RefundReportRequest;
 import org.folio.rest.jaxrs.resource.FeefineReports;
 import org.folio.rest.service.report.CashDrawerReconciliationReportService;
@@ -102,6 +103,22 @@ public class FeeFineReportsAPI implements FeefineReports {
         entity.getCreatedAt(), entity.getSources()))
       .onComplete(result -> handleReportResult(result, asyncResultHandler,
         PostFeefineReportsCashDrawerReconciliationResponse::respond200WithApplicationJson));
+  }
+
+  @Override
+  public void postFeefineReportsCashDrawerReconciliationSources(
+    CashDrawerReconciliationReportSourcesRequest entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    String createdAt = entity.getCreatedAt();
+
+    log.info("Cash drawer reconciliation report sources requested, parameters: createdAt={}",
+      createdAt);
+
+    new CashDrawerReconciliationReportService(okapiHeaders, vertxContext)
+      .findSources(createdAt)
+      .onComplete(result -> handleReportResult(result, asyncResultHandler,
+        PostFeefineReportsCashDrawerReconciliationSourcesResponse::respond200WithApplicationJson));
   }
 
   private <T> void handleReportResult(AsyncResult<T> asyncResult,

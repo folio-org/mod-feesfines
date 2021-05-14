@@ -3,9 +3,11 @@ package org.folio.rest.impl;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.utils.ResourceClients.buildCashDrawerReconciliationReportClient;
+import static org.folio.rest.utils.ResourceClients.buildCashDrawerReconciliationReportSourcesClient;
 import static org.folio.test.support.EntityBuilder.buildCashDrawerReconciliationReportEntry;
 import static org.folio.test.support.EntityBuilder.buildReportTotalsEntry;
 import static org.folio.test.support.matcher.ReportMatcher.cashDrawerReconciliationReportMatcher;
+import static org.folio.test.support.matcher.ReportMatcher.cashDrawerReconciliationReportSourcesMatcher;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
 import static org.hamcrest.CoreMatchers.is;
@@ -18,6 +20,7 @@ import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReport;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
+import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportSources;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
@@ -27,7 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
 
 public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBase {
   private static final String START_DATE = "2020-01-01";
@@ -58,6 +60,7 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
   private static final String ZERO_COUNT = "0";
 
   private final ReportResourceClient reportClient = buildCashDrawerReconciliationReportClient();
+  private final ReportResourceClient reportSourcesClient = buildCashDrawerReconciliationReportSourcesClient();
 
   @Before
   public void setUp() {
@@ -151,7 +154,12 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
     Account account2 = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_2, null, OWNER_ID_1, OWNER_1);
     Account account3 = charge(USER_ID_2, 10.0, FEE_FINE_TYPE_2, null, OWNER_ID_2, OWNER_2);
 
-    Feefineaction paymentAction1 = createAction(USER_ID_1, 1, account1, withTenantTz("2020-01-01 12:00:00"),
+    // This payment should not be included in the report - it's 1 second before the interval start
+    createAction(USER_ID_1, 1, account1, withTenantTz("2019-12-31 23:59:59"),
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    Feefineaction paymentAction1 = createAction(USER_ID_1, 1, account1, withTenantTz("2020-01-01 00:00:01"),
       PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
 
@@ -163,8 +171,13 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
       PAID_PARTIALLY, PAYMENT_METHOD_1, 1.0, 9.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT, SOURCE_2);
 
-    Feefineaction paymentAction4 = createAction(USER_ID_2, 4, account3, withTenantTz("2020-01-15 12:00:00"),
+    Feefineaction paymentAction4 = createAction(USER_ID_2, 4, account3, withTenantTz("2020-01-15 23:59:59"),
       PAID_FULLY, PAYMENT_METHOD_2, 10.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    // This payment should not be included in the report - it's 1 second after the interval end
+    createAction(USER_ID_1, 1, account1, withTenantTz("2020-01-16 00:00:01"),
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
 
     requestAndCheck(new CashDrawerReconciliationReport()
@@ -183,7 +196,7 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
           SOURCE_2, PAYMENT_METHOD_1, "1.00", OWNER_1, FEE_FINE_TYPE_2,
           formatRefundReportDate(paymentAction3.getDateAction(), TENANT_TZ), PAID_PARTIALLY,
           PAYMENT_TX_INFO, addSuffix(PAYMENT_STAFF_INFO, 3), addSuffix(PAYMENT_PATRON_INFO, 3),
-          USER_ID_1, account2.getId()),
+          USER_ID_2, account2.getId()),
         buildCashDrawerReconciliationReportEntry(
           SOURCE_1, PAYMENT_METHOD_2, "10.00", OWNER_2, FEE_FINE_TYPE_2,
           formatRefundReportDate(paymentAction4.getDateAction(), TENANT_TZ), PAID_FULLY,
@@ -208,6 +221,64 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
           buildReportTotalsEntry(FEE_FINE_OWNER_TOTALS, "16.00", "4")))));
   }
 
+  @Test
+  public void validReportSourcesWhenPaymentsExist() {
+    Account account1 = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, null, OWNER_ID_1, OWNER_1);
+    Account account2 = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_2, null, OWNER_ID_1, OWNER_1);
+    Account account3 = charge(USER_ID_2, 10.0, FEE_FINE_TYPE_2, null, OWNER_ID_2, OWNER_2);
+
+    createAction(USER_ID_1, 1, account1, "2020-01-01 12:00:00",
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    createAction(USER_ID_1, 2, account1, "2020-01-03 12:00:00",
+      PAID_PARTIALLY, PAYMENT_METHOD_2, 2.0, 8.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    createAction(USER_ID_2, 3, account2, "2020-01-05 12:00:00",
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 1.0, 9.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_2);
+
+    createAction(USER_ID_2, 4, account3, "2020-01-15 12:00:00",
+      PAID_FULLY, PAYMENT_METHOD_2, 10.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    reportSourcesClient.getCashDrawerReconciliationReportSources(CREATED_AT)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body(cashDrawerReconciliationReportSourcesMatcher(new CashDrawerReconciliationReportSources()
+        .withSources(List.of(SOURCE_1, SOURCE_2))));
+  }
+
+  @Test
+  public void sourceNotIncludedWhenServicePointIsDifferent() {
+    Account account1 = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, null, OWNER_ID_1, OWNER_1);
+    Account account2 = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_2, null, OWNER_ID_1, OWNER_1);
+    Account account3 = charge(USER_ID_2, 10.0, FEE_FINE_TYPE_2, null, OWNER_ID_2, OWNER_2);
+
+    createAction(USER_ID_1, 1, account1, "2020-01-01 12:00:00",
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    createAction(USER_ID_1, 2, account1, "2020-01-03 12:00:00",
+      PAID_PARTIALLY, PAYMENT_METHOD_2, 2.0, 8.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    createAction(USER_ID_2, 3, account2, "2020-01-05 12:00:00",
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 1.0, 9.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, randomId(), SOURCE_2);
+
+    createAction(USER_ID_2, 4, account3, "2020-01-15 12:00:00",
+      PAID_FULLY, PAYMENT_METHOD_2, 10.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT, SOURCE_1);
+
+    reportSourcesClient.getCashDrawerReconciliationReportSources(CREATED_AT)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body(cashDrawerReconciliationReportSourcesMatcher(new CashDrawerReconciliationReportSources()
+        .withSources(List.of(SOURCE_1))));
+  }
+
   private void requestAndCheck(CashDrawerReconciliationReport report) {
     requestAndCheck(report, START_DATE, END_DATE, CREATED_AT, null);
   }
@@ -216,14 +287,11 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
     String startDate, String endDate, String createdAt, List<String> sources) {
 
     List<CashDrawerReconciliationReportEntry> entries = report.getReportData();
-    int numberOfEntries = entries.size();
 
-    ValidatableResponse response = requestReport(startDate, endDate, createdAt, sources)
+    requestReport(startDate, endDate, createdAt, sources)
       .then()
       .statusCode(HttpStatus.SC_OK)
-      .body("reportData", iterableWithSize(numberOfEntries));
-
-    cashDrawerReconciliationReportMatcher(report);
+      .body(cashDrawerReconciliationReportMatcher(report));
   }
 
   private Response requestReport(String startDate, String endDate, String createdAt,

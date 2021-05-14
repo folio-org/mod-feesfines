@@ -114,6 +114,10 @@ public final class ResourceClients {
     return new ReportResourceClient("/feefine-reports/cash-drawer-reconciliation");
   }
 
+  public static ReportResourceClient buildCashDrawerReconciliationReportSourcesClient() {
+    return new ReportResourceClient("/feefine-reports/cash-drawer-reconciliation/sources");
+  }
+
   public static ResourceClient tenantClient() {
     return new ResourceClient("/_/tenant");
   }

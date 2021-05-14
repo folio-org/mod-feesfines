@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -181,7 +182,9 @@ public class ApiTests {
   }
 
   protected <T> void createEntity(String path, T entity) {
-    ObjectMapper mapper = new ObjectMapper().setDateFormat(new SimpleDateFormat(DATE_TIME_FORMAT));
+    ObjectMapper mapper = new ObjectMapper()
+      .setDateFormat(new SimpleDateFormat(DATE_TIME_FORMAT))
+      .setTimeZone(TimeZone.getTimeZone("UTC"));
 
     try {
       RestAssured.given()
