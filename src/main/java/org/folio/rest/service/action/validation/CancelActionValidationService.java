@@ -18,6 +18,7 @@ import io.vertx.core.Future;
 public class CancelActionValidationService extends ActionValidationService {
 
   private static final String FEEFINE_CLOSED_MSG = "Fee/fine is already closed";
+  private static final String SUSPENDED_PAYMENT_STATUS = "Suspended claim returned";
 
   public CancelActionValidationService(Map<String, String> headers, Context context) {
     super(headers, context);
@@ -34,7 +35,7 @@ public class CancelActionValidationService extends ActionValidationService {
 
     validateIfAccountsExist(singletonMap(accountId, account));
 
-    if (isClosed(account)) {
+    if (isClosed(account) && !(account.getPaymentStatus().getName().equals(SUSPENDED_PAYMENT_STATUS))) {
       throw new FailedValidationException(FEEFINE_CLOSED_MSG);
     }
 
