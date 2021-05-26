@@ -82,6 +82,41 @@ public class AccountsCancelActionAPITests extends ApiTests {
   }
 
   @Test
+  public void cancelActionShouldCancelAccountWithSuspendedPaymentStatus() {
+    Account accountToPost = buildAccount(ACCOUNT_ID);
+    accountToPost.getStatus().setName(FeeFineStatus.CLOSED.getValue());
+    accountToPost.getPaymentStatus().setName("Suspended claim returned");
+    postAccount(accountToPost);
+
+    CancelActionRequest cancelActionRequest = createCancelActionRequest();
+    accountCancelClient.attemptCreate(cancelActionRequest)
+      .then()
+      .statusCode(HttpStatus.SC_CREATED)
+      .body("accountId", is(ACCOUNT_ID))
+      .body(FEE_FINE_ACTIONS, hasSize(1));
+
+    accountsClient.getById(ACCOUNT_ID)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .contentType(JSON)
+      .body("status.name", is("Closed"))
+      .body("paymentStatus.name", is("Cancelled as error"))
+      .body("remaining", is(0.0f));
+
+    actionsClient.getAll()
+      .then()
+      .log().body()
+      .body(FEE_FINE_ACTIONS, hasSize(1))
+      .body(FEE_FINE_ACTIONS, hasItem(allOf(
+        hasJsonPath("amountAction", is((float) accountToPost.getAmount().doubleValue())),
+        hasJsonPath("balance", is(0.0f)),
+        hasJsonPath("typeAction", is("Cancelled as error"))
+      )));
+
+    assertThat(fetchLogEventPayloads(getOkapi()).get(0), is(LogEventMatcher.cancelledActionLogEventPayload(accountToPost, cancelActionRequest)));
+  }
+
+  @Test
   public void shouldUseCancellationReason() {
     final String cancellationReason = "Cancelled item returned";
     final Account accountToPost = postAccount();
