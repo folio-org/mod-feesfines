@@ -1,13 +1,12 @@
 package org.folio.migration;
 
-import static org.folio.rest.utils.ResourceClients.tenantClient;
 import static org.folio.test.support.matcher.FeeFineMatchers.hasAllAutomaticFeeFineTypes;
+import static org.folio.util.PomUtils.getModuleVersion;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
 import org.folio.test.support.ApiTests;
 import org.junit.Test;
 
@@ -23,7 +22,7 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
 
     final var tenantAttributes = getTenantAttributes()
       .withModuleFrom(MODULE_NAME + "-15.9.0")
-      .withModuleTo(MODULE_NAME + "-" + PomReader.INSTANCE.getVersion());
+      .withModuleTo(MODULE_NAME + "-" + getModuleVersion());
 
     CompletableFuture<Void> future = new CompletableFuture<>();
     createTenant(tenantAttributes, future);

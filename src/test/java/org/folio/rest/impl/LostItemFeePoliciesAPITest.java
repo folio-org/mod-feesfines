@@ -4,8 +4,6 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.hamcrest.core.StringStartsWith.startsWith;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Collections;
 
@@ -89,7 +87,7 @@ public class LostItemFeePoliciesAPITest extends ApiTests {
       .statusCode(HttpStatus.SC_BAD_REQUEST)
       .contentType(ContentType.TEXT)
       .body(startsWith(
-        "Json content error Cannot construct instance of `org.folio.rest.jaxrs.model.LostItemFeePolicy`"));
+        "Cannot construct instance of `org.folio.rest.jaxrs.model.LostItemFeePolicy`"));
   }
 
   @Test

@@ -30,7 +30,7 @@ import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.service.LogEventPublisher;
 import org.folio.test.support.ApiTests;
-import org.folio.util.pubsub.PubSubClientUtils;
+import org.folio.util.PomUtils;
 import org.junit.Test;
 
 import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
@@ -107,7 +107,7 @@ public class ManualBlocksAPITests extends ApiTests {
     EventMetadata eventMetadata = event.getEventMetadata();
 
     assertEquals(EventType.LOG_RECORD.name(), event.getEventType());
-    assertEquals(PubSubClientUtils.constructModuleName(), eventMetadata.getPublishedBy());
+    assertEquals(PomUtils.getModuleNameAndVersion(), eventMetadata.getPublishedBy());
     assertEquals(TENANT_NAME, eventMetadata.getTenantId());
     assertEquals(1, eventMetadata.getEventTTL()
       .intValue());

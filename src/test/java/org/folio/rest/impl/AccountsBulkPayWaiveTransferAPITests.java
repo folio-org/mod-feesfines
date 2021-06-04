@@ -41,6 +41,7 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
+import org.folio.rest.utils.PomUtils;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
 import org.folio.util.pubsub.PubSubClientUtils;
@@ -380,7 +381,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       .withEventType(eventType.name())
       .withEventPayload(eventPayload.encode())
       .withEventMetadata(new EventMetadata()
-        .withPublishedBy(PubSubClientUtils.constructModuleName())
+        .withPublishedBy(PomUtils.getModuleNameAndVersion())
         .withTenantId(TENANT_NAME)
         .withEventTTL(1));
 

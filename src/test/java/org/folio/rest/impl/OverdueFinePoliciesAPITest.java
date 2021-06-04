@@ -86,7 +86,7 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
       .statusCode(HttpStatus.SC_BAD_REQUEST)
       .contentType(ContentType.TEXT)
       .body(startsWith(
-        "Json content error Cannot construct instance of `org.folio.rest.jaxrs.model.OverdueFinePolicy`"));
+        "Cannot construct instance of `org.folio.rest.jaxrs.model.OverdueFinePolicy`"));
   }
 
   @Test

@@ -16,14 +16,14 @@ import static org.folio.rest.utils.ResourceClients.buildAccountBulkRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountWaiveClient;
-import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountsRefundClient;
+import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
+import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfClosedAccountWithPaymentAndTransferPayloads;
 import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfClosedAccountWithPaymentPayloads;
 import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfClosedAccountWithTransferPayloads;
-import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfClosedAccountWithPaymentAndTransferPayloads;
+import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfOpenAccountWithPaymentAndTransferPayloads;
 import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfOpenAccountWithPaymentPayloads;
 import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfOpenAccountWithTransferPayloads;
-import static org.folio.test.support.matcher.LogEventMatcher.partialRefundOfOpenAccountWithPaymentAndTransferPayloads;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,13 +32,10 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isOneOf;
 
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
-import io.vertx.core.json.JsonObject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
@@ -53,10 +50,15 @@ import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
-import org.folio.util.pubsub.PubSubClientUtils;
+import org.folio.util.PomUtils;
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
+
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
+import io.restassured.response.ValidatableResponse;
+import io.vertx.core.json.JsonObject;
 
 public class AccountsRefundAPITests extends ActionsAPITests {
   private static final String FIRST_ACCOUNT_ID = randomId();
@@ -781,7 +783,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       .withEventType(eventType.name())
       .withEventPayload(eventPayload.encode())
       .withEventMetadata(new EventMetadata()
-        .withPublishedBy(PubSubClientUtils.constructModuleName())
+        .withPublishedBy(PomUtils.getModuleNameAndVersion())
         .withTenantId(TENANT_NAME)
         .withEventTTL(1));
 

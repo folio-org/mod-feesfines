@@ -23,9 +23,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
-import io.restassured.http.ContentType;
-import io.vertx.core.json.JsonObject;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.Action;
@@ -40,12 +39,15 @@ import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
-import org.folio.util.pubsub.PubSubClientUtils;
+import org.folio.util.PomUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import io.restassured.http.ContentType;
+import io.vertx.core.json.JsonObject;
 
 
 @RunWith(value = Parameterized.class)
@@ -347,7 +349,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .withEventType(eventType.name())
       .withEventPayload(eventPayload.encode())
       .withEventMetadata(new EventMetadata()
-        .withPublishedBy(PubSubClientUtils.constructModuleName())
+        .withPublishedBy(PomUtils.getModuleNameAndVersion())
         .withTenantId(TENANT_NAME)
         .withEventTTL(1));
 
