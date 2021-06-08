@@ -12,7 +12,7 @@ import org.folio.rest.client.FeeFinePubSubClient;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
-import org.folio.rest.utils.PomUtils;
+import org.folio.util.pubsub.PubSubClientUtils;
 
 import io.vertx.core.Vertx;
 
@@ -59,7 +59,7 @@ public class EventPublisher {
       .withEventType(eventType.name())
       .withEventPayload(payload)
       .withEventMetadata(new EventMetadata()
-        .withPublishedBy(PomUtils.getModuleNameAndVersion())
+        .withPublishedBy(PubSubClientUtils.getModuleId())
         .withTenantId(tenantId)
         .withEventTTL(1));
   }

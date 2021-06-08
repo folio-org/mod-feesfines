@@ -32,7 +32,6 @@ import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
-import org.folio.util.PomUtils;
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
@@ -358,7 +357,7 @@ public class AccountsAPITest extends ApiTests {
         hasJsonPath("eventType", is(FEEFINE_CLOSED_EVENT_NAME)),
         hasJsonPath("eventMetadata.tenantId", is(TENANT_NAME)),
         hasJsonPath("eventMetadata.publishedBy",
-          containsString("mod_feesfines")),
+          containsString("mod-feesfines-")),
         hasJsonPath("eventPayload", notNullValue())
       ));
   }
@@ -374,7 +373,7 @@ public class AccountsAPITest extends ApiTests {
     EventMetadata eventMetadata = event.getEventMetadata();
 
     assertEquals(EventType.FEE_FINE_BALANCE_CHANGED.name(), event.getEventType());
-    assertEquals(PomUtils.getModuleNameAndVersion(), eventMetadata.getPublishedBy());
+    assertThat(eventMetadata.getPublishedBy(), containsString("mod-feesfines-"));
     assertEquals(TENANT_NAME, eventMetadata.getTenantId());
     assertEquals(1, eventMetadata.getEventTTL().intValue());
 

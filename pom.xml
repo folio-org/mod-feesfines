@@ -86,7 +86,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>mod-pubsub-client</artifactId>
-      <version>2.1.0</version>
+      <version>2.2.0</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -156,6 +156,7 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model</artifactId>
       <version>3.3.9</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
