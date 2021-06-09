@@ -18,7 +18,7 @@ public class PomUtils {
     }
   }
 
-  public static String getModuleNameAndVersion() {
+  public static String getModuleId() {
     return "mod-feesfines-" + getModuleVersion().replaceAll("-.*", "");
   }
 }

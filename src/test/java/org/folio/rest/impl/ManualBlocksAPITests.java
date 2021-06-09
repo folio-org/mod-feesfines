@@ -107,7 +107,7 @@ public class ManualBlocksAPITests extends ApiTests {
     EventMetadata eventMetadata = event.getEventMetadata();
 
     assertEquals(EventType.LOG_RECORD.name(), event.getEventType());
-    assertEquals(PomUtils.getModuleNameAndVersion(), eventMetadata.getPublishedBy());
+    assertEquals(PomUtils.getModuleId(), eventMetadata.getPublishedBy());
     assertEquals(TENANT_NAME, eventMetadata.getTenantId());
     assertEquals(1, eventMetadata.getEventTTL()
       .intValue());

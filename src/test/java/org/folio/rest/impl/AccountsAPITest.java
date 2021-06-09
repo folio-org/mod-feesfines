@@ -15,6 +15,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Comparator;
@@ -357,7 +358,7 @@ public class AccountsAPITest extends ApiTests {
         hasJsonPath("eventType", is(FEEFINE_CLOSED_EVENT_NAME)),
         hasJsonPath("eventMetadata.tenantId", is(TENANT_NAME)),
         hasJsonPath("eventMetadata.publishedBy",
-          containsString("mod-feesfines-")),
+          matchesPattern("mod-feesfines-[0-9]+\\.[0-9]+\\.[0-9]+")),
         hasJsonPath("eventPayload", notNullValue())
       ));
   }
@@ -373,7 +374,7 @@ public class AccountsAPITest extends ApiTests {
     EventMetadata eventMetadata = event.getEventMetadata();
 
     assertEquals(EventType.FEE_FINE_BALANCE_CHANGED.name(), event.getEventType());
-    assertThat(eventMetadata.getPublishedBy(), containsString("mod-feesfines-"));
+    assertThat(eventMetadata.getPublishedBy(), matchesPattern("mod-feesfines-[0-9]+\\.[0-9]+\\.[0-9]+"));
     assertEquals(TENANT_NAME, eventMetadata.getTenantId());
     assertEquals(1, eventMetadata.getEventTTL().intValue());
 

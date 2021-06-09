@@ -783,7 +783,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       .withEventType(eventType.name())
       .withEventPayload(eventPayload.encode())
       .withEventMetadata(new EventMetadata()
-        .withPublishedBy(PomUtils.getModuleNameAndVersion())
+        .withPublishedBy(PomUtils.getModuleId())
         .withTenantId(TENANT_NAME)
         .withEventTTL(1));
 
