@@ -1,6 +1,6 @@
 package org.folio.rest.utils;
 
-import static org.apache.commons.lang.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
