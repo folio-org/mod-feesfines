@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-feesfines</artifactId>
-  <version>16.1.0-SNAPSHOT</version>
+  <version>16.2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <licenses>
@@ -17,8 +17,8 @@
     <powermock.version>2.0.7</powermock.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <raml-module-builder.version>32.1.0</raml-module-builder.version>
-    <vertx.version>4.0.0</vertx.version>
+    <raml-module-builder.version>33.0.0</raml-module-builder.version>
+    <vertx.version>4.1.0.CR1</vertx.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
     <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->
@@ -86,7 +86,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>mod-pubsub-client</artifactId>
-      <version>2.0.0</version>
+      <version>2.3.0</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -147,6 +147,21 @@
       <version>1.18.12</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.12.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-model</artifactId>
+      <version>3.3.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>postgres-testing</artifactId>
+      <version>${raml-module-builder.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -161,45 +176,14 @@
       </plugin>
 
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.5.0</version>
+        <groupId>org.folio</groupId>
+        <artifactId>domain-models-maven-plugin</artifactId>
+        <version>${raml-module-builder.version}</version>
         <executions>
           <execution>
             <id>generate_interfaces</id>
-            <phase>generate-sources</phase>
             <goals>
               <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>org.folio.rest.tools.GenerateRunner</mainClass>
-              <cleanupDaemonThreads>false</cleanupDaemonThreads>
-              <systemProperties>
-                <systemProperty>
-                  <key>project.basedir</key>
-                  <value>${basedir}</value>
-                </systemProperty>
-                <systemProperty>
-                  <key>raml_files</key>
-                  <value>${ramlfiles_path}</value>
-                </systemProperty>
-              </systemProperties>
-            </configuration>
-          </execution>
-          <execution>
-            <id>git submodule update</id>
-            <phase>initialize</phase>
-            <configuration>
-              <executable>git</executable>
-              <arguments>
-                <argument>submodule</argument>
-                <argument>update</argument>
-                <argument>--init</argument>
-                <argument>--recursive</argument>
-              </arguments>
-            </configuration>
-            <goals>
-              <goal>exec</goal>
             </goals>
           </execution>
         </executions>
@@ -384,16 +368,16 @@
             <goals>
               <goal>set-system-properties</goal>
             </goals>
+            <configuration>
+              <properties>
+                <property>
+                  <name>log4j.configuration</name>
+                  <value>${project.baseUri}src/main/resources/log4j.properties</value>
+                </property>
+              </properties>
+            </configuration>
           </execution>
         </executions>
-        <configuration>
-          <properties>
-            <property>
-              <name>log4j.configuration</name>
-              <value>${project.baseUri}src/main/resources/log4j.properties</value>
-            </property>
-          </properties>
-        </configuration>
       </plugin>
 
       <plugin>
@@ -493,6 +477,14 @@
       <url>https://repository.folio.org/repository/maven-folio</url>
     </repository>
   </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>folio-nexus</id>
+      <name>FOLIO Maven repository</name>
+      <url>https://repository.folio.org/repository/maven-folio</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <distributionManagement>
     <repository>

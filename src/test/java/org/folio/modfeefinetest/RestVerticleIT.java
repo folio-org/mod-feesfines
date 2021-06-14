@@ -5,11 +5,14 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import io.vertx.core.AsyncResult;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
+
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.persist.PostgresClient;
@@ -20,23 +23,20 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 
 @RunWith(VertxUnitRunner.class)
 public class RestVerticleIT {
@@ -51,15 +51,8 @@ public class RestVerticleIT {
     @Rule
     public Timeout rule = Timeout.seconds(15);
 
-    public static void initDatabase(TestContext context) throws SQLException {
-        PostgresClient.setIsEmbedded(true);
-        PostgresClient postgres = PostgresClient.getInstance(vertx);
-        try {
-            postgres.startEmbeddedPostgres();
-        } catch (IOException e) {
-            context.fail(e);
-            return;
-        }
+    public static void initDatabase(TestContext context) {
+        PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
         String sql = "drop schema if exists diku_mod_feesfines cascade;\n"
                 + "drop role if exists diku_mod_feesfines;\n";
@@ -100,7 +93,7 @@ public class RestVerticleIT {
     public static void teardown(TestContext context) {
         Async async = context.async();
         vertx.close(context.asyncAssertSuccess(res -> {
-            PostgresClient.stopEmbeddedPostgres();
+            PostgresClient.stopPostgresTester();
             async.complete();
         }));
     }

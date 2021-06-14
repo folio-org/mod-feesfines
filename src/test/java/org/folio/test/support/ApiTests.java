@@ -15,6 +15,7 @@ import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockTemplateClient;
+import static org.folio.util.PomUtils.getModuleVersion;
 import static org.junit.Assert.assertThat;
 
 import java.text.SimpleDateFormat;
@@ -30,13 +31,13 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.TenantRefAPI;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
 import org.hamcrest.CoreMatchers;
@@ -84,7 +85,7 @@ public class ApiTests {
   public static void deployVerticle() throws Exception {
     vertx = Vertx.vertx();
 
-    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
@@ -99,7 +100,7 @@ public class ApiTests {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
     vertx.close(notUsed -> {
-      PostgresClient.stopEmbeddedPostgres();
+      PostgresClient.stopPostgresTester();
       future.complete(null);
     });
 
@@ -133,7 +134,7 @@ public class ApiTests {
 
     return new TenantAttributes()
       .withModuleFrom(MODULE_NAME + "-14.2.4")
-      .withModuleTo(MODULE_NAME + "-" + PomReader.INSTANCE.getVersion())
+      .withModuleTo(MODULE_NAME + "-" + getModuleVersion())
       .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 
@@ -175,7 +176,7 @@ public class ApiTests {
 
   protected static <T> T get(CompletableFuture<T> future) {
     try {
-      return future.get(10, TimeUnit.SECONDS);
+      return future.get(20, TimeUnit.SECONDS);
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }

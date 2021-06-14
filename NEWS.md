@@ -1,3 +1,13 @@
+## 16.1.0 2021-06-14
+* Refund lost item processing fees transferred to more than one account to their corresponding transfer accounts (MODFEE-138)
+* Fix performance issues with large dataset of fees/fines (MODFEE-175)
+* Create endpoint to return data for cash drawer reconciliation report (MODFEE-178)
+* Fix remaining amount calculation for refund action (MODFEE-182)
+* Fix search/filter on fees/fines not pulling recent circulation log actions (MODFEE-187)
+* Create endpoint to fetch sources associated with service point (MODFEE-188)  
+* Upgrade to RMB 33.0.0 and Vertx 4.1.0 (MODFEE-190)
+* Upgrade to mod-pubsub-client 2.3.0 to fix error during registration in mod-pubsub (MODFEE-195)
+
 ## 16.0.0 2021-03-10
 * Upgrade to RMB 32.1.0 and Vertx 4.0.0 (MODFEE-163)
 * Add missing indexes (MODFEE-169)
