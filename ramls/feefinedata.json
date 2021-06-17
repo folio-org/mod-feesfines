@@ -19,15 +19,15 @@
     },
     "chargeNoticeId": {
       "description": "ID of the charge notice template",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "actionNoticeId": {
       "description": "ID of the action notice template",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "ownerId": {
       "description": "ID of the owner",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "metadata" : {
       "description": "Metadata about creation to fee/fine, provided by the server",
@@ -36,7 +36,7 @@
     },
     "id": {
       "description": "Fee/fine id, UUID",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     }
   },
   "additionalProperties": false,

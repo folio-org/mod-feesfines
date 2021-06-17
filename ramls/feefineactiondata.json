@@ -47,15 +47,15 @@
     },
     "accountId": {
       "description": "ID of the accounts",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "userId": {
       "description": "ID of the user",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "id": {
       "description": "Fine/fee action id, UUID",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     }
   },
   "additionalProperties": false,

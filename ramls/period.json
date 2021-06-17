@@ -9,7 +9,7 @@
       "minimum": 1
     },
     "intervalId": {
-      "type": "string",
+      "$ref": "raml-util/schemas/uuid.schema",
       "description": "Interval for the period, e.g. Hours, Days or Weeks",
       "enum": [
         "Minutes",

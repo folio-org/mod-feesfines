@@ -27,7 +27,7 @@
     },
     "id": {
       "description": "Comment required id, UUID",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     }
   },
   "additionalProperties": false
