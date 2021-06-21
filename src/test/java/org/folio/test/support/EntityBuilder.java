@@ -2,6 +2,7 @@ package org.folio.test.support;
 
 import static org.folio.test.support.ApiTests.randomId;
 
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.jaxrs.model.PaymentStatus;
@@ -34,10 +35,11 @@ public class EntityBuilder {
     return buildAccount().withId(accountId);
   }
 
-  public static Account buildAccount(double amount, double remaining) {
+  public static Account buildAccount(MonetaryValue amount, MonetaryValue remaining) {
     return buildAccount()
-      .withAmount(amount)
-      .withRemaining(remaining);
+      .withAmount(amount.toDouble())
+      .withRemaining(remaining.toDouble()
+      );
   }
 
   public static Manualblock buildManualBlock() {

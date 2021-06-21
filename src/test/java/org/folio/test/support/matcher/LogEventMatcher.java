@@ -24,6 +24,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 import org.folio.rest.domain.Action;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
@@ -38,14 +39,14 @@ public class LogEventMatcher {
   private LogEventMatcher(){}
 
   public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultBulkActionRequest request,
-    String action, double amount, double balance) {
+                                                             String action, MonetaryValue amount, MonetaryValue balance) {
     return feeFineActionLogEventPayload(account.getUserId(), account.getBarcode(), account.getItemId(),
       action, request.getServicePointId(), request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(),
       account.getLoanId(), amount, balance, request.getPaymentMethod(), request.getComments());
   }
 
   public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultActionRequest request,
-    String action, double amount, double balance) {
+    String action, MonetaryValue amount, MonetaryValue balance) {
     return feeFineActionLogEventPayload(account.getUserId(), account.getBarcode(), account.getItemId(),
       action, request.getServicePointId(), request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(),
       account.getLoanId(), amount, balance, request.getPaymentMethod(), request.getComments());
@@ -53,7 +54,7 @@ public class LogEventMatcher {
 
   public static Matcher<String> feeFineActionLogEventPayload(String userId, String itemBarcode, String itemId,
     String action, String servicePointId, String source, String feeFineId,
-    String feeFineOwner, String loanId, double amount, double balance, String paymentMethod, String comments) {
+    String feeFineOwner, String loanId, MonetaryValue amount, MonetaryValue balance, String paymentMethod, String comments) {
 
     return allOf(Arrays.asList(
       hasJsonPath(USER_ID.value(), is(userId)),
@@ -66,8 +67,8 @@ public class LogEventMatcher {
       hasJsonPath(FEE_FINE_ID.value(), is(feeFineId)),
       hasJsonPath(FEE_FINE_OWNER.value(), is(feeFineOwner)),
       hasJsonPath(LOAN_ID.value(), is(loanId)),
-      hasJsonPath(AMOUNT.value(), is(amount)),
-      hasJsonPath(BALANCE.value(), is(balance)),
+      hasJsonPath(AMOUNT.value(), is(amount.toDouble())),
+      hasJsonPath(BALANCE.value(), is(balance.toDouble())),
       hasJsonPath(PAYMENT_METHOD.value(), is(paymentMethod)),
       hasJsonPath(COMMENTS.value(), is(comments))));
   }

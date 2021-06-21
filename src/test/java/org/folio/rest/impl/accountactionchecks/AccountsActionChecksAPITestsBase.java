@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.FeeFineStatus;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
@@ -25,9 +26,9 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
 
   protected static final String ACCOUNTS_TABLE = "accounts";
   protected static final String ERROR_MESSAGE_ALREADY_CLOSED = "Fee/fine is already closed";
-  protected static final double ACCOUNT_INITIAL_AMOUNT = 9.00;
-  protected static final double ACCOUNT_REMAINING_AMOUNT = 4.55;
-  protected static final double REQUESTED_AMOUNT = 1.23;
+  protected static final MonetaryValue ACCOUNT_INITIAL_AMOUNT = new MonetaryValue(9.00);
+  protected static final MonetaryValue ACCOUNT_REMAINING_AMOUNT = new MonetaryValue(4.55);
+  protected static final MonetaryValue REQUESTED_AMOUNT = new MonetaryValue(1.23);
   protected static final String ERROR_MESSAGE_MUST_BE_POSITIVE = "Amount must be positive";
   protected static final String ERROR_MESSAGE_INVALID_AMOUNT = "Invalid amount entered";
 
@@ -67,7 +68,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
     ResourceClient actionCheckClient) {
 
     String expectedErrorMessage = "Requested amount exceeds remaining amount";
-    String amount = String.valueOf(bulk ? ACCOUNT_REMAINING_AMOUNT * 2 + 1 : REQUESTED_AMOUNT + 10);
+    String amount = String.valueOf(bulk ? ACCOUNT_REMAINING_AMOUNT.toDouble() * 2 + 1 : REQUESTED_AMOUNT.toDouble() + 10);
     Object request = buildRequest(bulk, amount);
 
     baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(actionCheckClient,
@@ -80,7 +81,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
     String expectedErrorMessage =
       "Refund amount must be greater than zero and less than or equal to Selected amount";
 
-    String amount = String.valueOf(REQUESTED_AMOUNT + 10);
+    String amount = String.valueOf(REQUESTED_AMOUNT.toDouble() + 10);
     Object request = buildRequest(bulk, amount);
 
     baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(

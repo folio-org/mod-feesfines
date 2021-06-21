@@ -112,7 +112,10 @@ public class SplitEvenlyRecursivelyTest {
 
   private List<Account> buildAccounts(double... amounts) {
     return Arrays.stream(amounts)
-      .mapToObj(amount -> EntityBuilder.buildAccount(amount, amount))
+      .mapToObj(amount -> {
+        MonetaryValue value = new MonetaryValue(amount) ;
+        return  EntityBuilder.buildAccount(value, value);
+      })
       .collect(Collectors.toList());
   }
 

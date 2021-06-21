@@ -83,6 +83,15 @@ public class AccountsRefundAPITests extends ApiTests {
   private final ResourceClient refundClient = buildAccountsRefundClient(FIRST_ACCOUNT_ID);
   private final ResourceClient bulkRefundClient = buildAccountBulkRefundClient();
 
+  private final MonetaryValue BALANCE_MINUS_1 = new MonetaryValue(-1.0);
+  private final MonetaryValue BALANCE_MINUS_2 = new MonetaryValue(-2.0);
+  private final MonetaryValue BALANCE_MINUS_3 = new MonetaryValue(-3.0);
+  private final MonetaryValue BALANCE_MINUS_4 = new MonetaryValue(-4.0);
+  private final MonetaryValue BALANCE_MINUS_5 = new MonetaryValue(-5.0);
+  private final MonetaryValue BALANCE_0 = new MonetaryValue(0.0);
+  private final MonetaryValue BALANCE_1 = new MonetaryValue(1.0);
+  private final MonetaryValue BALANCE_2 = new MonetaryValue(2.0);
+
   @Before
   public void beforeEach() {
     removeAllFromTable(FEE_FINE_ACTIONS);
@@ -91,32 +100,36 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void fullRefundOfClosedAccountWithPayment() {
-    double initialAmount = 6.0;
-    double payAmount = 5.0;
-    double transferAmount = 0.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 5.0;
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(5.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(5.0);
+
+    MonetaryValue amountMinus5 = new MonetaryValue(-5.0);
+    MonetaryValue amount0 = new MonetaryValue(0.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -5.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, amountMinus5, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, amount0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       CLOSED, REFUND.getFullResult(), expectedFeeFineActions);
   }
 
+
   @Test
   public void fullRefundOfClosedAccountWithTransfer() {
-    double initialAmount = 6.0;
-    double payAmount = 0.0;
-    double transferAmount = 5.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 5.0;
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(5.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(5.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -5.0, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, transferAmount, REFUND.getFullResult(), REFUNDED_TO_BURSAR)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_5, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_0, transferAmount, REFUND.getFullResult(), REFUNDED_TO_BURSAR)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -125,17 +138,17 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void fullRefundOfClosedAccountWithPaymentAndTransfer() {
-    double initialAmount = 6.0;
-    double payAmount = 3.0;
-    double transferAmount = 2.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 5.0;
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(3.0);
+    MonetaryValue transferAmount = new MonetaryValue(2.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(5.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -3.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -5.0, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -2.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID,  0.0, transferAmount, REFUND.getFullResult(), REFUNDED_TO_BURSAR)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_3, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_5, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_2, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_0, transferAmount, REFUND.getFullResult(), REFUNDED_TO_BURSAR)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -144,15 +157,15 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void fullRefundOfOpenAccountWithPayment() {
-    double initialAmount = 6.0;
-    double payAmount = 3.0;
-    double transferAmount = 0.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 3.0;
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(3.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(3.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -1.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 2.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_1, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_2, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -161,15 +174,15 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void fullRefundOfOpenAccountWithTransfer() {
-    double initialAmount = 6.0;
-    double payAmount = 0.0;
-    double transferAmount = 3.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 3.0;
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(3.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(3.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -1.0, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 2.0, transferAmount, REFUND.getFullResult(), REFUNDED_TO_BURSAR)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_1, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_2, transferAmount, REFUND.getFullResult(), REFUNDED_TO_BURSAR)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -178,17 +191,17 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void fullRefundOfOpenAccountWithPaymentAndTransfer() {
-    double initialAmount = 7.0;
-    double payAmount = 3.0;
-    double transferAmount = 2.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 5.0;
+    MonetaryValue initialAmount = new MonetaryValue(7.0);
+    MonetaryValue payAmount = new MonetaryValue(3.0);
+    MonetaryValue transferAmount = new MonetaryValue(2.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(5.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -2.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -4.0, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -1.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 1.0, transferAmount, REFUND.getFullResult(), REFUNDED_TO_BURSAR)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_2, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_4, transferAmount, CREDIT.getFullResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_1, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_1, transferAmount, REFUND.getFullResult(), REFUNDED_TO_BURSAR)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -197,15 +210,16 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void partialRefundOfClosedAccountWithPayment() {
-    double initialAmount = 6.0;
-    double payAmount = 5.0;
-    double transferAmount = 0.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 3.0;
+
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(5.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(3.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -3.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_3, refundAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -214,15 +228,15 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void partialRefundOfClosedAccountWithTransfer() {
-    double initialAmount = 6.0;
-    double payAmount = 0.0;
-    double transferAmount = 5.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 3.0;
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(5.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(3.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -3.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_3, refundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -231,19 +245,19 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void partialRefundOfClosedAccountWithPaymentAndTransfer() {
-    double initialAmount = 6.0;
-    double payAmount = 3.0;
-    double transferAmount = 2.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 4.0;
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(3.0);
+    MonetaryValue transferAmount = new MonetaryValue(2.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(4.0);
 
-    double transferRefundAmount = refundAmount - payAmount;
+    MonetaryValue transferRefundAmount = refundAmount.subtract(payAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -3.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -4.0, transferRefundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -1.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID,  0.0, transferRefundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_3, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_4, transferRefundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_1, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_0, transferRefundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -252,15 +266,15 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void partialRefundOfOpenAccountWithPayment() {
-    double initialAmount = 6.0;
-    double payAmount = 3.0;
-    double transferAmount = 0.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 2.0;
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(3.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(2.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 2.0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_2, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -269,15 +283,15 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void partialRefundOfOpenAccountWithTransfer() {
-    double initialAmount = 6.0;
-    double payAmount = 0.0;
-    double transferAmount = 3.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 2.0;
+    MonetaryValue initialAmount = new MonetaryValue(6.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(3.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(2.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 2.0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_2, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -286,19 +300,19 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void partialRefundOfOpenAccountWithPaymentAndTransfer() {
-    double initialAmount = 7.0;
-    double payAmount = 3.0;
-    double transferAmount = 2.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 4.0;
+    MonetaryValue initialAmount = new MonetaryValue(7.0);
+    MonetaryValue payAmount = new MonetaryValue(3.0);
+    MonetaryValue transferAmount = new MonetaryValue(2.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(4.0);
 
-    double transferRefundAmount = refundAmount - payAmount;
+    MonetaryValue transferRefundAmount = refundAmount.subtract(payAmount);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -2.0, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -3.0, transferRefundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 1.0, transferRefundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_2, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_MINUS_3, transferRefundAmount, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALANCE_1, transferRefundAmount, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
@@ -307,12 +321,11 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void refundFailsWhenRequestedAmountExceedsRefundableAmount() {
-    double initialAmount = 7.0;
-    double payAmount = 3.0;
-    double transferAmount = 2.0;
-    double waiveAmount = 1.0;
-    double refundAmount = 6.0;
-
+    MonetaryValue initialAmount = new MonetaryValue(7.0);
+    MonetaryValue payAmount = new MonetaryValue(3.0);
+    MonetaryValue transferAmount = new MonetaryValue(2.0);
+    MonetaryValue waiveAmount = new MonetaryValue(1.0);
+    MonetaryValue refundAmount = new MonetaryValue(6.0);
     DefaultActionRequest request = createRequest(refundAmount);
 
     testSingleRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
@@ -321,11 +334,14 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void refundFailsWhenThereAreNoRefundableActionsForAccount() {
-    double initialAmount = 7.0;
-    double payAmount = 0.0;
-    double transferAmount = 0.0;
-    double waiveAmount = 5.0;
-    double refundAmount = 4.0;
+
+
+    MonetaryValue initialAmount = new MonetaryValue(7.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue waiveAmount = new MonetaryValue(5.0);
+    MonetaryValue refundAmount = new MonetaryValue(4.0);
+
 
     DefaultActionRequest request = createRequest(refundAmount);
 
@@ -335,7 +351,7 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void return404WhenAccountDoesNotExist() {
-    refundClient.post(toJson(createRequest(10.0)))
+    refundClient.post(toJson(createRequest(new MonetaryValue(10.0))))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
@@ -344,65 +360,102 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void return422WhenRequestedAmountIsNegative() {
-    DefaultActionRequest request = createRequest(-1.0);
-    testSingleRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
+    MonetaryValue initialAmount = new MonetaryValue(10.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue waiveAmount = new MonetaryValue(0.0);
+    MonetaryValue amount = new MonetaryValue(-1.0);
+
+    DefaultActionRequest request = createRequest(amount);
+    testSingleRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
   }
 
   @Test
   public void return422WhenRequestedAmountIsZero() {
-    DefaultActionRequest request = createRequest(0.0);
-    testSingleRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
+    MonetaryValue initialAmount = new MonetaryValue(10.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue waiveAmount = new MonetaryValue(0.0);
+    MonetaryValue amount = new MonetaryValue(0.0);
+
+
+    DefaultActionRequest request = createRequest(amount);
+    testSingleRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive");
   }
 
   @Test
   public void return422WhenRequestedAmountIsInvalidString() {
-    DefaultActionRequest request = createRequest(0.0).withAmount("eleven");
-    testSingleRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Invalid amount entered");
+    MonetaryValue initialAmount = new MonetaryValue(10.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue waiveAmount = new MonetaryValue(0.0);
+    MonetaryValue amount = new MonetaryValue(0.0);
+
+    DefaultActionRequest request = createRequest(new MonetaryValue(0.0)).withAmount("eleven");
+    testSingleRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request, SC_UNPROCESSABLE_ENTITY, "Invalid amount entered");
   }
 
   @Test
   public void bulkRefundAmountIsDistributedBetweenAccountsEvenlyRecursively() {
-    final double refundAmount = 15.0; // even split is 15/3=5 per account
+    final MonetaryValue refundAmount = new MonetaryValue(15.0); // even split is 15/3=5 per account
 
     // Closed, served third, full payment refund, partial transfer refund
-    double initialAmount1 = 10.0;
-    double payAmount1 = 5.0;
-    double transferAmount1 = 5.0;
-    double waiveAmount1 = 0.0;
-    double expectedRemainingAmount1 = initialAmount1 - payAmount1 - transferAmount1 - waiveAmount1;
+
+    MonetaryValue initialAmount1 = new MonetaryValue(10.0);
+    MonetaryValue payAmount1 = new MonetaryValue(5.0);
+    MonetaryValue transferAmount1 = new MonetaryValue(5.0);
+    MonetaryValue  waiveAmount1  = new MonetaryValue(0.0);
+
+    MonetaryValue expectedRemainingAmount1 = initialAmount1.subtract(payAmount1).subtract(transferAmount1).subtract(waiveAmount1);
     prepareAccount(FIRST_ACCOUNT_ID, initialAmount1, payAmount1, transferAmount1, waiveAmount1);
 
     // Open, served first, full payment refund, full transfer refund
-    double initialAmount2 = 10.0;
-    double payAmount2 = 2.0;
-    double transferAmount2 = 1.0;
-    double waiveAmount2 = 0.0;
-    double expectedRemainingAmount2 = initialAmount2 - payAmount2 - transferAmount2 - waiveAmount2;
+    MonetaryValue initialAmount2 = new MonetaryValue(10.0);
+    MonetaryValue payAmount2 = new MonetaryValue(2.0);
+    MonetaryValue transferAmount2 = new MonetaryValue(1.0);
+    MonetaryValue waiveAmount2 = new MonetaryValue(0.0);
+    MonetaryValue expectedRemainingAmount2 = initialAmount2.subtract(payAmount2).subtract(transferAmount2).subtract(waiveAmount2);
     prepareAccount(SECOND_ACCOUNT_ID, initialAmount2, payAmount2, transferAmount2, waiveAmount2);
 
     // Open, served second, full payment refund, partial transfer refund
-    double initialAmount3 = 10.0;
-    double payAmount3 = 4.0;
-    double transferAmount3 = 3.0;
-    double waiveAmount3 = 0.0;
-    double expectedRemainingAmount3 = initialAmount3 - payAmount3 - transferAmount3 - waiveAmount3;
+    MonetaryValue initialAmount3 = new MonetaryValue(10.0);
+    MonetaryValue payAmount3 = new MonetaryValue(4.0);
+    MonetaryValue transferAmount3 = new  MonetaryValue(3.0);
+    MonetaryValue waiveAmount3 = new MonetaryValue(0.0);
+    MonetaryValue expectedRemainingAmount3 = initialAmount3.subtract(payAmount3).subtract(transferAmount3).subtract(waiveAmount3);
+
+    MonetaryValue amount1 = new MonetaryValue(1.0);
+    MonetaryValue amount2 = new MonetaryValue(2.0);
+
+    MonetaryValue BALACE_MINUS_5 = new MonetaryValue(-5.0);
+    MonetaryValue BALACE_MINUS_6 = new MonetaryValue(-6.0);
+    MonetaryValue BALACE_3 = new MonetaryValue(3.0);
+    MonetaryValue BALACE_1 = new MonetaryValue(1.0);
+    MonetaryValue BALACE_MINUS_1 = new MonetaryValue(-1.0);
+    MonetaryValue  BALACE_5 = new MonetaryValue(5.0);
+    MonetaryValue  BALACE_0 = new MonetaryValue(0.0);
+    MonetaryValue  BALACE_4 = new MonetaryValue(4.0);
+    MonetaryValue  BALACE_6 = new MonetaryValue(6.0);
+    MonetaryValue  BALACE_7 = new MonetaryValue(7.0);
+    MonetaryValue  BALACE_MINUS_3 = new MonetaryValue(-3.0);
+
     prepareAccount(THIRD_ACCOUNT_ID, initialAmount3, payAmount3, transferAmount3, waiveAmount3);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -5.0, payAmount1, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -6.0, 1.0, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -1.0, payAmount1, REFUND.getFullResult(), REFUNDED_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, 1.0, REFUND.getPartialResult(), REFUNDED_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALACE_MINUS_5, payAmount1, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALACE_MINUS_6, amount1, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, BALACE_MINUS_1, payAmount1, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID,  BALACE_0, amount1, REFUND.getPartialResult(), REFUNDED_TO_BURSAR),
 
-      feeFineActionMatcher(SECOND_ACCOUNT_ID, 5.0, payAmount2, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(SECOND_ACCOUNT_ID, 4.0, transferAmount2, CREDIT.getFullResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(SECOND_ACCOUNT_ID, 6.0, payAmount2, REFUND.getFullResult(), REFUNDED_TO_PATRON),
-      feeFineActionMatcher(SECOND_ACCOUNT_ID, 7.0, transferAmount2, REFUND.getFullResult(), REFUNDED_TO_BURSAR),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID,  BALACE_5, payAmount2, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID,  BALACE_4, transferAmount2, CREDIT.getFullResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID,  BALACE_6, payAmount2, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(SECOND_ACCOUNT_ID,  BALACE_7, transferAmount2, REFUND.getFullResult(), REFUNDED_TO_BURSAR),
 
-      feeFineActionMatcher(THIRD_ACCOUNT_ID, -1.0, payAmount3, CREDIT.getFullResult(), REFUND_TO_PATRON),
-      feeFineActionMatcher(THIRD_ACCOUNT_ID, -3.0, 2.0, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(THIRD_ACCOUNT_ID, 1.0, payAmount3, REFUND.getFullResult(), REFUNDED_TO_PATRON),
-      feeFineActionMatcher(THIRD_ACCOUNT_ID, 3.0, 2.0, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
+      feeFineActionMatcher(THIRD_ACCOUNT_ID, BALACE_MINUS_1, payAmount3, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(THIRD_ACCOUNT_ID, BALANCE_MINUS_3, amount2, CREDIT.getPartialResult(), REFUND_TO_BURSAR),
+      feeFineActionMatcher(THIRD_ACCOUNT_ID, BALACE_1, payAmount3, REFUND.getFullResult(), REFUNDED_TO_PATRON),
+      feeFineActionMatcher(THIRD_ACCOUNT_ID, BALACE_3, amount2, REFUND.getPartialResult(), REFUNDED_TO_BURSAR)
     );
 
     Response response = bulkRefundClient.post(
@@ -428,23 +481,37 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void bulkRefundFailsWhenRequestedAmountExceedsRefundableAmount() {
-    DefaultBulkActionRequest request = createBulkRequest(11, TWO_ACCOUNT_IDS);
-    testBulkRefundFailure(10, 2, 3, 4, request, SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE,
+    MonetaryValue initialAmount = new MonetaryValue(10.0);
+    MonetaryValue payAmount = new MonetaryValue(2.0);
+    MonetaryValue transferAmount = new MonetaryValue(3.0);
+    MonetaryValue  waiveAmount  = new MonetaryValue(4.0);
+
+    MonetaryValue amount = new MonetaryValue(11.0);
+
+    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request, SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE,
       TWO_ACCOUNT_IDS);
   }
 
   @Test
   public void bulkRefundFailsWhenThereAreNoRefundableActionsForAccount() {
-    DefaultBulkActionRequest request = createBulkRequest(5, TWO_ACCOUNT_IDS);
-    testBulkRefundFailure(10, 0, 0, 4, request, SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE,
+    MonetaryValue initialAmount = new MonetaryValue(10.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue  waiveAmount  = new MonetaryValue(4.0);
+
+    MonetaryValue amount = new MonetaryValue(5.0);
+
+    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request, SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE,
       TWO_ACCOUNT_IDS);
   }
 
   @Test
   public void bulkReturn404WhenAccountDoesNotExist() {
     String errorMessageTemplate = "Fee/fine ID %s not found";
-
-    bulkRefundClient.post(toJson(createBulkRequest(10.0, TWO_ACCOUNT_IDS)))
+    MonetaryValue request = new MonetaryValue(10.0);
+    bulkRefundClient.post(toJson(createBulkRequest(request, TWO_ACCOUNT_IDS)))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
@@ -456,30 +523,53 @@ public class AccountsRefundAPITests extends ApiTests {
 
   @Test
   public void bulkReturn422WhenRequestedAmountIsNegative() {
-    DefaultBulkActionRequest request = createBulkRequest(-1.0, TWO_ACCOUNT_IDS);
-    testBulkRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive",
+    MonetaryValue initialAmount = new MonetaryValue(10.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue  waiveAmount  = new MonetaryValue(0.0);
+
+    MonetaryValue amount = new MonetaryValue(-1.0);
+
+    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive",
       TWO_ACCOUNT_IDS);
   }
 
   @Test
   public void bulkReturn422WhenRequestedAmountIsZero() {
-    DefaultBulkActionRequest request = createBulkRequest(0.0, TWO_ACCOUNT_IDS);
-    testBulkRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive",
+
+    MonetaryValue initialAmount = new MonetaryValue(10.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue  waiveAmount  = new MonetaryValue(0.0);
+
+    MonetaryValue amount = new MonetaryValue(0.0);
+
+    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request, SC_UNPROCESSABLE_ENTITY, "Amount must be positive",
       TWO_ACCOUNT_IDS);
   }
 
   @Test
   public void bulkReturn422WhenRequestedAmountIsInvalidString() {
-    DefaultBulkActionRequest request = createBulkRequest(0.0, TWO_ACCOUNT_IDS).withAmount("eleven");
-    testBulkRefundFailure(10, 0, 0, 0, request, SC_UNPROCESSABLE_ENTITY, "Invalid amount entered",
+
+    MonetaryValue initialAmount = new MonetaryValue(10.0);
+    MonetaryValue payAmount = new MonetaryValue(0.0);
+    MonetaryValue transferAmount = new MonetaryValue(0.0);
+    MonetaryValue  waiveAmount  = new MonetaryValue(0.0);
+
+    MonetaryValue amount = new MonetaryValue(0.0);
+
+    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS).withAmount("eleven");
+    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request, SC_UNPROCESSABLE_ENTITY, "Invalid amount entered",
       TWO_ACCOUNT_IDS);
   }
 
-  private void testSingleAccountRefundSuccess(double initialAmount, double payAmount, double transferAmount,
-    double waiveAmount, double requestedAmount, FeeFineStatus expectedStatus,
+  private void testSingleAccountRefundSuccess(MonetaryValue initialAmount, MonetaryValue payAmount, MonetaryValue transferAmount,
+    MonetaryValue waiveAmount, MonetaryValue requestedAmount, FeeFineStatus expectedStatus,
     String expectedPaymentStatus, List<Matcher<JsonObject>> expectedFeeFineActions) {
 
-    double expectedRemainingAmount = initialAmount - payAmount - transferAmount - waiveAmount;
+    MonetaryValue expectedRemainingAmount = initialAmount.subtract(payAmount).subtract(transferAmount).subtract(waiveAmount);
 
     int actionsCountBeforeRefund = prepareAccount(FIRST_ACCOUNT_ID, initialAmount, payAmount,
       transferAmount, waiveAmount);
@@ -499,20 +589,20 @@ public class AccountsRefundAPITests extends ApiTests {
       assertThat(payload, is(notCreditOrRefundActionLogEventPayload())));
   }
 
-  private void verifyResponse(Response response, double requestedAmount) {
+  private void verifyResponse(Response response, MonetaryValue requestedAmount) {
     response.then()
       .statusCode(SC_CREATED)
       .body("accountId", is(FIRST_ACCOUNT_ID))
-      .body("amount", is(new MonetaryValue(requestedAmount).toString()));
+      .body("amount", is(requestedAmount.toString()));
   }
 
-  private void verifyBulkResponse(Response response, double requestedAmount,
+  private void verifyBulkResponse(Response response, MonetaryValue requestedAmount,
     List<Matcher<JsonObject>> expectedFeeFineActions, String... accountIds) {
 
     response.then()
       .statusCode(SC_CREATED)
       .body("accountIds", hasItems(accountIds))
-      .body("amount", is(new MonetaryValue(requestedAmount).toString()));
+      .body("amount", is(requestedAmount.toString()));
 
     for (Matcher<JsonObject> feeFineAction : expectedFeeFineActions) {
       response.then().body(FEE_FINE_ACTIONS, hasItem(feeFineAction));
@@ -532,12 +622,12 @@ public class AccountsRefundAPITests extends ApiTests {
     }
   }
 
-  private void testSingleRefundFailure(double initialAmount, double payAmount,
-    double transferAmount, double waiveAmount, DefaultActionRequest request, int expectedStatus,
+  private void testSingleRefundFailure(MonetaryValue initialAmount, MonetaryValue payAmount,
+    MonetaryValue transferAmount, MonetaryValue waiveAmount, DefaultActionRequest request, int expectedStatus,
     String errorMessage) {
 
     int expectedActionCount = prepareAccount(FIRST_ACCOUNT_ID,
-      initialAmount, payAmount, transferAmount, waiveAmount);
+          initialAmount, payAmount, transferAmount, waiveAmount);
 
     refundClient.post(request)
       .then()
@@ -551,8 +641,8 @@ public class AccountsRefundAPITests extends ApiTests {
       .body(FEE_FINE_ACTIONS, hasSize(expectedActionCount));
   }
 
-  private void testBulkRefundFailure(double initialAmount, double payAmount, double transferAmount,
-    double waiveAmount, DefaultBulkActionRequest request, int expectedStatus, String errorMessage,
+  private void testBulkRefundFailure(MonetaryValue initialAmount, MonetaryValue payAmount, MonetaryValue transferAmount,
+    MonetaryValue waiveAmount, DefaultBulkActionRequest request, int expectedStatus, String errorMessage,
     String... accountIds) {
 
     int expectedActionsCount = 0;
@@ -574,10 +664,10 @@ public class AccountsRefundAPITests extends ApiTests {
       .body(FEE_FINE_ACTIONS, hasSize(expectedActionsCount));
   }
 
-  private int prepareAccount(String accountId, double initialAmount, double payAmount,
-    double transferAmount, double waiveAmount) {
+  private int prepareAccount(String accountId, MonetaryValue initialAmount, MonetaryValue payAmount,
+    MonetaryValue transferAmount, MonetaryValue waiveAmount) {
 
-    if (payAmount < 0 || transferAmount < 0 || waiveAmount < 0) {
+    if (payAmount.isNegative() || transferAmount.isNegative() || waiveAmount.isNegative()) {
       throw new IllegalArgumentException("Amounts can't be negative");
     }
 
@@ -585,15 +675,15 @@ public class AccountsRefundAPITests extends ApiTests {
 
     int performedActionsCount = 0;
 
-    if (payAmount > 0) {
+    if (payAmount.isPositive()) {
       performAction(buildAccountPayClient(accountId), payAmount);
       performedActionsCount++;
     }
-    if (waiveAmount > 0) {
+    if (waiveAmount.isPositive()) {
       performAction(buildAccountWaiveClient(accountId), waiveAmount);
       performedActionsCount++;
     }
-    if (transferAmount > 0) {
+    if (transferAmount.isPositive()) {
       performAction(buildAccountTransferClient(accountId), transferAmount);
       performedActionsCount++;
     }
@@ -608,9 +698,9 @@ public class AccountsRefundAPITests extends ApiTests {
       .contentType(JSON);
   }
 
-  private static DefaultActionRequest createRequest(double amount) {
+  private static DefaultActionRequest createRequest(MonetaryValue amount) {
     return new DefaultActionRequest()
-      .withAmount(new MonetaryValue(amount).toString())
+      .withAmount(amount.toString())
       .withPaymentMethod(PAYMENT_METHOD)
       .withServicePointId(SERVICE_POINT_ID)
       .withUserName(USER_NAME)
@@ -618,10 +708,10 @@ public class AccountsRefundAPITests extends ApiTests {
       .withComments(COMMENTS);
   }
 
-  private static DefaultBulkActionRequest createBulkRequest(double amount, String... accountIds) {
+  private static DefaultBulkActionRequest createBulkRequest(MonetaryValue amount, String... accountIds) {
     return new DefaultBulkActionRequest()
       .withAccountIds(Arrays.asList(accountIds))
-      .withAmount(new MonetaryValue(amount).toString())
+      .withAmount(amount.toString())
       .withPaymentMethod(PAYMENT_METHOD)
       .withServicePointId(SERVICE_POINT_ID)
       .withUserName(USER_NAME)
@@ -660,13 +750,13 @@ public class AccountsRefundAPITests extends ApiTests {
       ));
   }
 
-  private static Account createAccount(String accountId, double amount, double remainingAmount) {
+  private static Account createAccount(String accountId, MonetaryValue amount, MonetaryValue remainingAmount) {
     return EntityBuilder.buildAccount(amount, remainingAmount)
       .withId(accountId)
       .withUserId(USER_ID);
   }
 
-  private Account verifyAccountAndGet(String accountId, double expectedRemainingAmount,
+  private Account verifyAccountAndGet(String accountId, MonetaryValue expectedRemainingAmount,
     FeeFineStatus expectedStatus, String expectedPaymentStatus) {
 
     final Response getAccountByIdResponse = accountsClient.getById(accountId);
@@ -674,21 +764,21 @@ public class AccountsRefundAPITests extends ApiTests {
     getAccountByIdResponse
       .then()
       .statusCode(SC_OK)
-      .body("remaining", is((float) expectedRemainingAmount))
+      .body("remaining", is((float) expectedRemainingAmount.toDouble()))
       .body("status.name", is(expectedStatus.getValue()))
       .body("paymentStatus.name", is(expectedPaymentStatus));
 
     return getAccountByIdResponse.as(Account.class);
   }
 
-  private ValidatableResponse performAction(ResourceClient resourceClient, double amount) {
+  private ValidatableResponse performAction(ResourceClient resourceClient, MonetaryValue amount) {
     return resourceClient.post(createRequest(amount))
       .then()
       .statusCode(SC_CREATED);
   }
 
-  public static Matcher<JsonObject> feeFineActionMatcher(String accountId, double balance,
-    double amount, String actionType, String transactionInfo) {
+  public static Matcher<JsonObject> feeFineActionMatcher(String accountId, MonetaryValue balance,
+    MonetaryValue amount, String actionType, String transactionInfo) {
 
     return FeeFineActionMatchers.feeFineAction(accountId, USER_ID, balance, amount, actionType,
       transactionInfo, USER_NAME, COMMENTS, NOTIFY_PATRON, SERVICE_POINT_ID, PAYMENT_METHOD);

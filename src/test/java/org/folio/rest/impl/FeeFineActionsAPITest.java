@@ -32,6 +32,7 @@ import javax.ws.rs.core.MediaType;
 import io.vertx.core.json.JsonArray;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.*;
 import org.folio.rest.service.LogEventPublisher;
 import org.folio.test.support.ApiTests;
@@ -247,8 +248,8 @@ public class FeeFineActionsAPITest extends ApiTests {
     final String feeFineType = "damaged book";
     final String typeAction = "damaged book";
     final boolean notify = false;
-    final double amountAction = 100;
-    final double balance = 100;
+    final MonetaryValue amountAction = new MonetaryValue(100.0);
+    final MonetaryValue balance = new MonetaryValue(100.0);
     final String dateAction = "2019-12-23T14:25:59.550+00:00";
     final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
       amountAction, balance, accountId, user.getId());
@@ -285,7 +286,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("action", "Billed")
       .put("feeFineId", feeFineId)
       .put("type", feeFineType)
-      .put("amount", amountAction);
+      .put("amount", amountAction.toDouble());
 
     assertThatPublishedLogRecordsCountIsEqualTo(1);
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
@@ -302,8 +303,8 @@ public class FeeFineActionsAPITest extends ApiTests {
     final String typeAction = "Staff info only";
     final String expectedTypeAction = "Staff information only added";
     final boolean notify = false;
-    final double amountAction = 100;
-    final double balance = 100;
+    final MonetaryValue amountAction = new MonetaryValue(100.0);
+    final MonetaryValue balance = new MonetaryValue(100.0);
     final String dateAction = "2019-12-23T14:25:59.550+00:00";
     final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
       amountAction, balance, accountId, user.getId());
@@ -340,22 +341,22 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("action", expectedTypeAction)
       .put("feeFineId", feeFineId)
       .put("type", feeFineType)
-      .put("amount", amountAction);
+      .put("amount", amountAction.toDouble());
 
     assertThatPublishedLogRecordsCountIsEqualTo(1);
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
   }
 
   private String createFeeFineActionJson(String dateAction, String typeAction, boolean notify,
-    double amountAction, double balance, String accountId, String userId) {
+    MonetaryValue amountAction, MonetaryValue balance, String accountId, String userId) {
 
     return new JsonObject()
       .put("dateAction", dateAction)
       .put("typeAction", typeAction)
       .put("comments", "STAFF : staff comment \n PATRON : patron comment")
       .put("notify", notify)
-      .put("amountAction", amountAction)
-      .put("balance", balance)
+      .put("amountAction", amountAction.toDouble())
+      .put("balance", balance.toDouble())
       .put("transactionInformation", "-")
       .put("createdAt", "Test")
       .put("source", "ADMINISTRATOR, DIKU")

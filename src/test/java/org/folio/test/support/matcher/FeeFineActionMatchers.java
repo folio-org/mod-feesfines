@@ -7,6 +7,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 
 import java.util.Arrays;
 
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.hamcrest.Matcher;
@@ -16,30 +17,30 @@ import io.vertx.core.json.JsonObject;
 public class FeeFineActionMatchers {
   private FeeFineActionMatchers(){}
 
-  public static Matcher<JsonObject> feeFineAction(String accountId, String userId, double balance,
-    double amount, String actionType, String transactionInfo, DefaultActionRequest request) {
+  public static Matcher<JsonObject> feeFineAction(String accountId, String userId, MonetaryValue balance,
+    MonetaryValue amount, String actionType, String transactionInfo, DefaultActionRequest request) {
 
     return feeFineAction(accountId, userId, balance, amount, actionType, transactionInfo,
       request.getUserName(), request.getComments(), request.getNotifyPatron(),
       request.getServicePointId(), request.getPaymentMethod());
   }
 
-  public static Matcher<JsonObject> feeFineAction(String accountId, String userId, double balance,
-    double amount, String actionType, String transactionInfo, DefaultBulkActionRequest request) {
+  public static Matcher<JsonObject> feeFineAction(String accountId, String userId, MonetaryValue balance,
+    MonetaryValue amount, String actionType, String transactionInfo, DefaultBulkActionRequest request) {
 
     return feeFineAction(accountId, userId, balance, amount, actionType, transactionInfo,
       request.getUserName(), request.getComments(), request.getNotifyPatron(),
       request.getServicePointId(), request.getPaymentMethod());
   }
 
-  public static Matcher<JsonObject> feeFineAction(String accountId, String userId, double balance,
-    double amount, String actionType, String transactionInfo, String userName, String comments,
+  public static Matcher<JsonObject> feeFineAction(String accountId, String userId, MonetaryValue balance,
+    MonetaryValue amount, String actionType, String transactionInfo, String userName, String comments,
     boolean notifyPatron, String createdAt, String paymentMethod) {
 
     return allOf(Arrays.asList(
       hasJsonPath("typeAction", is(actionType)),
-      hasJsonPath("amountAction", is((float) amount)),
-      hasJsonPath("balance", is((float) balance)),
+      hasJsonPath("amountAction", is((float) amount.toDouble())),
+      hasJsonPath("balance", is((float) balance.toDouble())),
       hasJsonPath("transactionInformation", is(transactionInfo)),
       hasJsonPath("accountId", is(accountId)),
       hasJsonPath("userId", is(userId)),

@@ -7,6 +7,7 @@ import static org.folio.rest.utils.ResourceClients.buildAccountCheckRefundClient
 import static org.folio.rest.utils.ResourceClients.feeFineActionsClient;
 
 import org.apache.http.HttpStatus;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.impl.accountactionchecks.AccountsActionChecksAPITestsBase;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.utils.ResourceClient;
@@ -27,12 +28,12 @@ public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksA
 
   @Test
   public void checkRefundAmountShouldBeAllowed() {
-    double expectedRemainingAmount = 0.77;
+    MonetaryValue expectedRemainingAmount = new MonetaryValue(0.77);
 
     final Feefineaction feeFineAction = new Feefineaction()
       .withAccountId(firstAccount.getId())
       .withUserId(firstAccount.getUserId())
-      .withAmountAction((REQUESTED_AMOUNT + expectedRemainingAmount) / 2);
+      .withAmountAction((REQUESTED_AMOUNT.toDouble() + expectedRemainingAmount.toDouble()) / 2);
 
     feeFineActionsClient()
       .post(feeFineAction.withTypeAction(PAY.getPartialResult()))
