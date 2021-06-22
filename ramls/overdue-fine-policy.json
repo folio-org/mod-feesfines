@@ -49,7 +49,7 @@
     },
     "id": {
       "description": "Overdue fine policy id, UUID",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "type": "string"
     }
   },
   "additionalProperties": false,
