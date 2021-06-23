@@ -30,11 +30,13 @@
       "$ref": "../uuid.json"
     },
     "permanentLocationId": {
+
       "type": "string",
       "description": "The permanent shelving location in which an item resides.",
       "$ref" : "../uuid.json"
     },
     "permanentLocation": {
+      "description": "Inventory instances identifier",
       "type": "object",
       "folio:$ref": "location.json",
       "readonly": true,
@@ -50,6 +52,7 @@
       "$ref": "../uuid.json"
     },
     "electronicAccess": {
+      "description": "List of electronic access items",
       "type": "array",
       "items": {
         "type": "object",
@@ -103,10 +106,12 @@
       "description": "Indicates the shelving form of title."
     },
     "acquisitionFormat": {
-      "type": "string"
+      "type": "string",
+      "description": "Format of holdings record acquisition"
     },
     "acquisitionMethod": {
-      "type": "string"
+      "type": "string",
+      "description": "Method of holdings record acquisition"
     },
     "receiptStatus": {
       "type": "string",
@@ -157,6 +162,7 @@
       "description": "Records information regarding how long we have agreed to keep something."
     },
     "digitizationPolicy": {
+      "description": "Records information regarding digitization aspects.",
       "type": "string"
     },
     "holdingsStatements": {
@@ -176,6 +182,7 @@
       }
     },
     "holdingsStatementsForIndexes": {
+      "description": "Holdings record indexes statements",
       "type": "array",
       "items": {
         "type": "object",
@@ -192,6 +199,7 @@
       }
     },
     "holdingsStatementsForSupplements": {
+      "description": "Holdings record for supplements statements",
       "type": "array",
       "items": {
         "type": "object",
@@ -216,6 +224,7 @@
       "description": "Text (Number)"
     },
     "receivingHistory": {
+      "description": "Receiving history of holdings record",
       "type": "object",
       "properties": {
         "displayType": {
@@ -223,6 +232,7 @@
           "description": "Display hint. 1: Display fields separately. 2: Display fields concatenated"
         },
         "entries": {
+          "description": "Entries of receiving history",
           "type": "array",
           "description": ".",
           "items": {
@@ -259,6 +269,7 @@
       "uniqueItems": true
     },
     "holdingsItems": {
+      "description": "Items related to holdings record",
       "type": "array",
       "items": {
         "type": "object",
@@ -272,6 +283,7 @@
       "folio:includedElement": "items"
     },
     "bareHoldingsItems": {
+      "description": "Items of bareHoldings",
       "type": "array",
       "items": {
         "type": "object",
@@ -285,6 +297,7 @@
       "folio:includedElement": "items"
     },
     "holdingsInstance": {
+      "description": "Instance of holding record",
       "type": "object",
       "folio:$ref": "instance.json",
       "readonly": true,
