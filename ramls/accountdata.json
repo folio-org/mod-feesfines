@@ -6,13 +6,11 @@
   "properties": {
     "amount": {
       "description": "Amount of the fine/fee",
-      "javaType": "java.math.BigDecimal",
-      "type": "object"
+      "type": "number"
     },
     "remaining": {
       "description": "Remaining of the fine/fee",
-      "javaType": "java.math.BigDecimal",
-      "type": "object"
+      "type": "number"
     },
     "dateCreated": {
       "description": "Date and time the account of the fine/fee was created",
