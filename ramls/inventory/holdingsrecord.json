@@ -36,7 +36,6 @@
       "$ref" : "../uuid.json"
     },
     "permanentLocation": {
-      "description": "Inventory instances identifier",
       "type": "object",
       "folio:$ref": "location.json",
       "readonly": true,
