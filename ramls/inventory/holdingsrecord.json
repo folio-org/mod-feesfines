@@ -31,7 +31,6 @@
       "$ref": "../uuid.json"
     },
     "permanentLocationId": {
-
       "type": "string",
       "description": "The permanent shelving location in which an item resides.",
       "$ref" : "../uuid.json"
