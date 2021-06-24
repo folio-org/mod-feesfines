@@ -122,7 +122,7 @@ public class AccountsRefundAPITests extends ApiTests {
     MonetaryValue amount0 = new MonetaryValue(0.0);
 
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, refundAmount, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, amountMinus5, payAmount, CREDIT.getFullResult(), REFUND_TO_PATRON),
       feeFineActionMatcher(FIRST_ACCOUNT_ID, amount0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON)
     );
 
