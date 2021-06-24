@@ -54,7 +54,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"16.3",
+      "version":"16.4",
       "handlers":[
         {
           "methods":[
