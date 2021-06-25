@@ -95,7 +95,8 @@ public class LostItemFeePoliciesAPITest extends ApiTests {
     String invalidUuid = randomId() + "a";
 
     String payloadWithInvalidUuid = createEntityJson()
-      .put("id", invalidUuid).encode();
+      .put("id", invalidUuid)
+      .encode();
 
     JsonObject parameters = new JsonObject()
       .put("key", "id")
