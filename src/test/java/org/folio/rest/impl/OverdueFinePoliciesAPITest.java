@@ -95,7 +95,7 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
 
     String payloadWithInvalidUuid = createEntityJson()
       .put("id", invalidUuid)
-      .encodePrettily();
+      .encode();
 
     JsonObject parameters = new JsonObject()
       .put("key", "id")
@@ -109,7 +109,7 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
 
     String errors = new JsonObject()
       .put("errors", new JsonArray(Collections.singletonList(error)))
-      .encodePrettily();
+      .encode();
 
     post(payloadWithInvalidUuid)
       .then()
