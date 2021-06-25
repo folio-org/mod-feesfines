@@ -20,7 +20,7 @@
         "properties": {
           "value": {
             "description": "ID of the service-point",
-            "type": "string"
+            "$ref": "raml-util/schemas/uuid.schema"
           },
           "label": {
             "description": "Service-point name label",
