@@ -391,7 +391,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("amountAction", amountAction)
       .put("balance", balance)
       .put("transactionInformation", "-")
-      .put("createdAt", "Test")
+      .put("createdAt", randomId())
       .put("source", "ADMINISTRATOR, DIKU")
       .put("accountId", accountId)
       .put("userId", userId)
