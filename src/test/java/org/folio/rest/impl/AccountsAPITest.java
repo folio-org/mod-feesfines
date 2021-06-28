@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
@@ -171,6 +172,8 @@ public class AccountsAPITest extends ApiTests {
     final String accountId = randomId();
     final String loanId = UUID.randomUUID().toString();
 
+    MonetaryValue paymentStatus = new MonetaryValue(0.1);
+
     final JsonObject account = createAccountJsonObject(accountId)
       .put("loanId", loanId)
       .put("remaining", 90.00)
@@ -188,14 +191,16 @@ public class AccountsAPITest extends ApiTests {
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
       hasJsonPath("status.name", is("Closed")),
       hasJsonPath("paymentStatus.name", is("Paid partially")),
-      hasJsonPath("remaining", is(0.1))
+      hasJsonPath("remaining", is(paymentStatus.toDouble()))
     ));
     assertThat(getLastFeeFineClosedEvent(), nullValue());
   }
 
   @Test
   public void eventNotPublishedWhenFeeFineIsClosedWithoutLoan() {
+    MonetaryValue remaining = new MonetaryValue(0.0);
     final String accountId = randomId();
+
     final JsonObject account = createAccountJsonObject(accountId)
       .put("remaining", 90.00)
       .put("status", createNamedObject("Open"));
@@ -205,7 +210,7 @@ public class AccountsAPITest extends ApiTests {
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
       .put("paymentStatus", createNamedObject("Paid fully"))
-      .put("remaining", 0.0);
+      .put("remaining", remaining.toDouble());
 
     accountsClient.update(accountId, updatedAccount);
 
@@ -215,6 +220,7 @@ public class AccountsAPITest extends ApiTests {
 
   @Test
   public void eventNotPublishedWhenFeeFineIsOpenButNoRemainingAmount() {
+    MonetaryValue remaining = new MonetaryValue(0.0);
     final String accountId = randomId();
     final JsonObject account = createAccountJsonObject(accountId)
       .put("loanId", UUID.randomUUID().toString())
@@ -226,7 +232,7 @@ public class AccountsAPITest extends ApiTests {
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Open"))
       .put("paymentStatus", createNamedObject("Paid fully"))
-      .put("remaining", 0.0);
+      .put("remaining", remaining.toDouble());
 
     accountsClient.update(accountId, updatedAccount);
 
@@ -240,6 +246,7 @@ public class AccountsAPITest extends ApiTests {
 
   @Test
   public void canForwardPubSubFailureOnFeeFineClose() {
+    final MonetaryValue remaining = new MonetaryValue(0.0);
     final String expectedError = "Pub-sub unavailable";
     getOkapi().stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
       .willReturn(aResponse().withStatus(500).withBody(expectedError)));
@@ -255,7 +262,7 @@ public class AccountsAPITest extends ApiTests {
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
       .put("paymentStatus", createNamedObject("Paid fully"))
-      .put("remaining", 0.0);
+      .put("remaining", remaining.toDouble());
 
     accountsClient.attemptUpdate(accountId, updatedAccount)
       .then()

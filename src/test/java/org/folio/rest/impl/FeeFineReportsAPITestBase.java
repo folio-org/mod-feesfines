@@ -54,13 +54,13 @@ public class FeeFineReportsAPITestBase extends ApiTests {
     removeStub(localeSettingsStubMapping);
   }
 
-  Account charge(String userID, Double amount, String feeFineType,
+  Account charge(String userID, MonetaryValue amount, String feeFineType,
     String itemId, String ownerId) {
 
     return charge(userID, amount, feeFineType, itemId, ownerId, "owner");
   }
 
-  Account charge(String userID, Double amount, String feeFineType,
+  Account charge(String userID, MonetaryValue amount, String feeFineType,
     String itemId, String ownerId, String owner) {
 
     final var account = EntityBuilder.buildAccount(userID, itemId, feeFineType, amount,
@@ -71,7 +71,7 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   }
 
   Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
-    String type, String method, Double amount, Double balance, String staffInfo,
+    String type, String method, MonetaryValue amount, MonetaryValue balance, String staffInfo,
     String patronInfo, String txInfo) {
 
     return createAction(userId, actionCounter, account, dateTime, type, method, amount, balance,
@@ -79,7 +79,7 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   }
 
   Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
-    String type, String method, Double amount, Double balance, String staffInfo,
+    String type, String method, MonetaryValue amount, MonetaryValue balance, String staffInfo,
     String patronInfo, String txInfo, String createdAt, String source) {
 
     Feefineaction action = EntityBuilder.buildFeeFineAction(userId, account.getId(),

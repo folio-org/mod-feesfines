@@ -8,18 +8,21 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import io.restassured.response.Response;
 import java.util.Date;
+
+import org.folio.rest.domain.MonetaryValue;
+import org.folio.rest.domain.MonetaryValueTest;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.utils.ResourceClient;
 
 public abstract class ActionsAPITests extends ApiTests {
 
   public static Account verifyAccountAndGet(ResourceClient accountsClient, String accountId,
-    String expectedPaymentStatus, double amount, String statusName) {
+      String expectedPaymentStatus, MonetaryValue amount, String statusName) {
 
     final Response getAccountByIdResponse = accountsClient.getById(accountId);
     getAccountByIdResponse
       .then()
-      .body("remaining", is((float) amount))
+      .body("remaining", is((float) amount.toDouble()))
       .body("status.name", is(statusName))
       .body("paymentStatus.name", is(expectedPaymentStatus))
       .body("metadata.updatedDate", notNullValue());
