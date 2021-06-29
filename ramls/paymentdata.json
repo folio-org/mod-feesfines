@@ -19,11 +19,11 @@
     },
     "ownerId": {
       "description": "ID of the owner",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "id": {
       "description": "Payment method id, UUID",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     }
   },
   "additionalProperties": false,

@@ -95,22 +95,21 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
 
     String payloadWithInvalidUuid = createEntityJson()
       .put("id", invalidUuid)
-      .encodePrettily();
+      .encode();
 
     JsonObject parameters = new JsonObject()
-      .put("key", "overdue_fine_policy.id")
+      .put("key", "id")
       .put("value", invalidUuid);
 
     JsonObject error = new JsonObject()
-      .put("message", "Invalid UUID format of id, should be xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx" +
-        " where M is 1-5 and N is 8, 9, a, b, A or B and x is 0-9, a-f or A-F.")
+      .put("message", "must match \"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$\"")
       .put("type", "1")
       .put("code", "-1")
       .put("parameters", new JsonArray(Collections.singletonList(parameters)));
 
     String errors = new JsonObject()
       .put("errors", new JsonArray(Collections.singletonList(error)))
-      .encodePrettily();
+      .encode();
 
     post(payloadWithInvalidUuid)
       .then()

@@ -86,7 +86,7 @@
     },
     "id": {
       "description": "Lost item fee policy id, UUID",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     }
   },
   "additionalProperties": false,
