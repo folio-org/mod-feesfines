@@ -35,7 +35,7 @@
     },
     "createdAt": {
       "description": "Location where activity took place (from login information)",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "type": "string"
     },
     "source": {
       "description": "Person who processed activity (from login information)",
