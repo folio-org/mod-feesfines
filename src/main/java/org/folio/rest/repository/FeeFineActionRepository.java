@@ -234,12 +234,13 @@ public class FeeFineActionRepository {
   private void addFilterByListToConditions(List<String> conditions, String tableName,
     String fieldName, List<String> valueList) {
 
-    if (valueList == null || valueList.isEmpty()) {
+    if (valueList == null || valueList.isEmpty() || valueList.stream().allMatch(Objects::isNull)) {
       return;
     }
 
     conditions.add(format("%s.jsonb->>'%s' IN (%s)", tableName, fieldName,
       valueList.stream()
+        .filter(Objects::nonNull)
         .map(value -> format("'%s'", value))
         .collect(Collectors.joining(", "))));
   }
