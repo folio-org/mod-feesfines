@@ -1,0 +1,204 @@
+{
+  "reportData": [
+    {
+      "feeFineOwner": "Main circ desk",
+      "feeFineType": "Lost item fee",
+      "billedAmount": "100.00",
+      "dateBilled": "12/6/2020, 1:33 PM",
+      "feeFineCreatedAt": "Service Point A",
+      "feeFineSource": "Foo, Alice",
+      "feeFineId": "6d8d0c4c-1dbd-47f0-a55f-08b0e97e58e9",
+      "action": "Payment",
+      "actionAmount": "50.00",
+      "actionDate": "12/10/2020, 2:37 PM",
+      "actionCreatedAt": "Service Point A",
+      "actionSource": "Foo, Alice",
+      "actionStatus": "Paid partially",
+      "actionAdditionalStaffInfo": "Patron used check from parent",
+      "actionAdditionalPatronInfo": "You have been assigned locker #234",
+      "paymentMethod": "Cash",
+      "transactionInfo": "",
+      "waiveReason": "",
+      "refundReason": "",
+      "transferAccount": "",
+      "patronId": "2a424823-588a-45ee-9441-a6384b6614b2",
+      "patronName": "Bar, Bob",
+      "patronBarcode": "12341234",
+      "patronGroup": "Faculty",
+      "patronEmail": "ff123@cornell.edu",
+      "instance": "Bridget Jones :mad about the boy",
+      "contributors": "Fielding, Helen",
+      "itemBarcode": "108850078",
+      "callNumber": "PR6056.I4588 B77 2013 c.1",
+      "effectiveLocation": "UC/HP/JRL/Gen",
+      "loanDate": "10/10/2020, 10:10 AM",
+      "dueDate": "11/10/2020, 11:59 PM",
+      "returnDate": "",
+      "loanPolicyId": "aaaaaaa-aaaaa-aaaaaa-aaaaaaa",
+      "loanPolicyName": "Faculty-loan-policy",
+      "overdueFinePolicyId": "aaaaaaa-aaaaa-aaaaaa-aaaaaaa",
+      "overdueFinePolicyName": "General-overdue-fine-policy",
+      "lostItemPolicyId": "aaaaaaa-aaaaa-aaaaaa-aaaaaaa",
+      "lostItemPolicyName": "General-lost-item-fee-policy",
+      "loanId": "aaaaaaa-aaaaa-aaaaaa-aaaaaaa",
+      "holdingsRecordId" : "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19",
+      "instanceId" : "5bf370e0-8cca-4d9c-82e4-5170ab2a0a39"
+    }
+  ],
+  "reportTotals": {
+    "byFeeFineOwner": [
+      {
+        "name": "Main circ desk",
+        "totalAmount": "253.77",
+        "totalCount": "9"
+      },
+      {
+        "name": "Science circ desk",
+        "totalAmount": "8.32",
+        "totalCount": "9"
+      },
+      {
+        "name": "Fee/fine owner totals",
+        "totalAmount": "262.09",
+        "totalCount": "99"
+      }
+    ],
+    "byFeeFineType": [
+      {
+        "name": "Locker rental fee",
+        "totalAmount": "50.00",
+        "totalCount": "9"
+      },
+      {
+        "name": "Lost item fee",
+        "totalAmount": "50.00",
+        "totalCount": "9"
+      },
+      {
+        "name": "Lost item processing fee",
+        "totalAmount": "25.00",
+        "totalCount": "9"
+      },
+      {
+        "name": "Overdue fine",
+        "totalAmount": "137.09",
+        "totalCount": "99"
+      },
+      {
+        "name": "Fee/fine type totals",
+        "totalAmount": "262.09",
+        "totalCount": "99"
+      }
+    ],
+    "byAction": [
+      {
+        "name": "Cancellation",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Payment",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Refund",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Transfer",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Transfer",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Action totals",
+        "totalAmount": "999.99",
+        "totalCount": "999"
+      }
+    ],
+    "byPaymentMethod": [
+      {
+        "name": "Cash",
+        "totalAmount": "83.32",
+        "totalCount": "9"
+      },
+      {
+        "name": "Check",
+        "totalAmount": "37.45",
+        "totalCount": "9"
+      },
+      {
+        "name": "Credit card",
+        "totalAmount": "116.32",
+        "totalCount": "9"
+      },
+      {
+        "name": "Department charge",
+        "totalAmount": "25.00",
+        "totalCount": "9"
+      },
+      {
+        "name": "Payment method totals",
+        "totalAmount": "262.09",
+        "totalCount": "99"
+      }
+    ],
+    "byWaiveReason": [
+      {
+        "name": "New patron",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Overcharged",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Special circumstances",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Waive reason totals",
+        "totalAmount": "999.99",
+        "totalCount": "999"
+      }
+    ],
+    "byRefundReason": [
+      {
+        "name": "Overcharged",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Special circumstances",
+        "totalAmount": "99.00",
+        "totalCount": "99"
+      },
+      {
+        "name": "Refund reason totals",
+        "totalAmount": "999.99",
+        "totalCount": "999"
+      }
+    ],
+    "byTransferAccount": [
+      {
+        "name": "Bursar",
+        "totalAmount": "999.00",
+        "totalCount": "999"
+      },
+      {
+        "name": "Transfer account totals",
+        "totalAmount": "999.99",
+        "totalCount": "999"
+      }
+    ]
+  }
+}

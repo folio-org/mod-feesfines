@@ -8,6 +8,7 @@ import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
+import static org.folio.rest.utils.PatronHelper.formatName;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
 
@@ -544,30 +545,6 @@ public class RefundReportService {
   private void withPaymentAndTransferInfo(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
     withPaymentInfo(reportEntry, accountCtx);
     withTransferInfo(reportEntry, accountCtx);
-  }
-
-  private static String formatName(User user) {
-    StringBuilder builder = new StringBuilder();
-    Personal personal = user.getPersonal();
-
-    if (personal == null) {
-      log.info("Personal info not found - user {}", user.getId());
-    }
-    else {
-      builder.append(personal.getLastName());
-
-      String firstName = personal.getFirstName();
-      if (firstName != null && !firstName.isBlank()) {
-        builder.append(format(", %s", firstName));
-      }
-
-      String middleName = personal.getMiddleName();
-      if (middleName != null && !middleName.isBlank()) {
-        builder.append(format(" %s", middleName));
-      }
-    }
-
-    return builder.toString();
   }
 
   @With

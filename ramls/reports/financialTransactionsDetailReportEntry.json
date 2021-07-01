@@ -1,0 +1,220 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Financial transactions detail report entry",
+  "description": "Represents a single row of a financial transactions detail report",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportEntry",
+  "properties": {
+    "feeFineOwner": {
+      "type": "string",
+      "description": "Fee/fine owner",
+      "default": ""
+    },
+    "feeFineType": {
+      "type": "string",
+      "description": "Fee/fine type",
+      "default": ""
+    },
+    "billedAmount": {
+      "type": "string",
+      "description": "Billed amount",
+      "default": ""
+    },
+    "dateBilled": {
+      "type": "string",
+      "description": "Date and time when the fee/fine was charged",
+      "default": ""
+    },
+    "feeFineCreatedAt": {
+      "type": "string",
+      "description": "Service point where fee/fine was created at",
+      "default": ""
+    },
+    "feeFineSource": {
+      "type": "string",
+      "description": "Fee/fine source",
+      "default": ""
+    },
+    "feeFineId": {
+      "type": "string",
+      "description": "Fee/fine ID",
+      "default": ""
+    },
+    "action": {
+      "type": "string",
+      "description": "Action",
+      "default": ""
+    },
+    "actionAmount": {
+      "type": "string",
+      "description": "Action amount",
+      "default": ""
+    },
+    "actionDate": {
+      "type": "string",
+      "description": "Date and time when action was taken",
+      "default": ""
+    },
+    "actionCreatedAt": {
+      "type": "string",
+      "description": "Service point where action was taken at",
+      "default": ""
+    },
+    "actionSource": {
+      "type": "string",
+      "description": "Action source",
+      "default": ""
+    },
+    "actionStatus": {
+      "type": "string",
+      "description": "Action status",
+      "default": ""
+    },
+    "actionAdditionalStaffInfo": {
+      "type": "string",
+      "description": "Action's additional information for staff",
+      "default": ""
+    },
+    "actionAdditionalPatronInfo": {
+      "type": "string",
+      "description": "Action's additional information for patron",
+      "default": ""
+    },
+    "paymentMethod": {
+      "type": "string",
+      "description": "Payment method",
+      "default": ""
+    },
+    "transactionInfo": {
+      "type": "string",
+      "description": "Transaction info",
+      "default": ""
+    },
+    "waiveReason": {
+      "type": "string",
+      "description": "Waive reason",
+      "default": ""
+    },
+    "refundReason": {
+      "type": "string",
+      "description": "Refund reason",
+      "default": ""
+    },
+    "transferAccount": {
+      "type": "string",
+      "description": "Transfer account",
+      "default": ""
+    },
+    "patronId": {
+      "type": "string",
+      "description": "A globally unique (UUID) identifier for the user",
+      "$ref": "../raml-util/schemas/uuid.schema",
+      "default": ""
+    },
+    "patronName": {
+      "type": "string",
+      "description": "Patron name",
+      "default": ""
+    },
+    "patronBarcode": {
+      "type": "string",
+      "description": "Patron barcode",
+      "default": ""
+    },
+    "patronGroup": {
+      "type": "string",
+      "description": "Patron group",
+      "default": ""
+    },
+    "patronEmail": {
+      "type": "string",
+      "description": "Patron email",
+      "default": ""
+    },
+    "instance": {
+      "type": "string",
+      "description": "Instance title",
+      "default": ""
+    },
+    "contributors": {
+      "type": "string",
+      "description": "Contributors from item record",
+      "default": ""
+    },
+    "itemBarcode": {
+      "type": "string",
+      "description": "Item barcode",
+      "default": ""
+    },
+    "callNumber": {
+      "type": "string",
+      "description": "Call number",
+      "default": ""
+    },
+    "effectiveLocation": {
+      "type": "string",
+      "description": "Effective location",
+      "default": ""
+    },
+    "loanDate": {
+      "type": "string",
+      "description": "Date and time when loan was created",
+      "default": ""
+    },
+    "dueDate": {
+      "type": "string",
+      "description": "Loan due date",
+      "default": ""
+    },
+    "returnDate": {
+      "type": "string",
+      "description": "Date and time when item was returned",
+      "default": ""
+    },
+    "loanPolicyId": {
+      "type": "string",
+      "description": "Loan policy ID",
+      "default": ""
+    },
+    "loanPolicyName": {
+      "type": "string",
+      "description": "Loan policy name",
+      "default": ""
+    },
+    "overdueFinePolicyId": {
+      "type": "string",
+      "description": "Overdue fine policy ID",
+      "default": ""
+    },
+    "overdueFinePolicyName": {
+      "type": "string",
+      "description": "Overdue fine policy name",
+      "default": ""
+    },
+    "lostItemPolicyId": {
+      "type": "string",
+      "description": "Lost item policy ID",
+      "default": ""
+    },
+    "lostItemPolicyName": {
+      "type": "string",
+      "description": "Lost item policy name",
+      "default": ""
+    },
+    "loanId": {
+      "type": "string",
+      "description": "Loan ID",
+      "default": ""
+    },
+    "holdingsRecordId": {
+      "type": "string",
+      "description": "Holdings record ID",
+      "default": ""
+    },
+    "instanceId": {
+      "type": "string",
+      "description": "Instance ID",
+      "default": ""
+    }
+  }
+}

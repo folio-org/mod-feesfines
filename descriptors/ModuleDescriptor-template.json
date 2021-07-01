@@ -973,6 +973,18 @@
           "permissionsRequired":[
             "feefine-reports.cash-drawer-reconciliation.post"
           ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/feefine-reports/financial-transactions-detail",
+          "permissionsRequired":[
+            "feefine-reports.financial-transactions-detail.post"
+          ],
+          "modulePermissions": [
+            "configuration.entries.collection.get"
+          ]
         }
       ]
     }
@@ -1412,6 +1424,11 @@
       "permissionName":"feefine-reports.cash-drawer-reconciliation.post",
       "displayName":"module permissions for loading cash drawer reconciliation report",
       "description":"Load a cash drawer reconciliation report"
+    },
+    {
+      "permissionName":"feefine-reports.financial-transactions-detail.post",
+      "displayName":"module permissions for loading financial transactions detail report",
+      "description":"Load a financial transactions detail report"
     }
   ],
   "launchDescriptor": {

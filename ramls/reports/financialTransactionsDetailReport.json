@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Financial transactions detail report",
+  "description": "Outputs data required for a financial transactions detail report",
+  "type": "object",
+  "properties": {
+    "reportData": {
+      "description": "List of report entries",
+      "type": "array",
+      "id": "FinancialTransactionsDetailReportData",
+      "items": {
+        "type": "object",
+        "$ref": "financialTransactionsDetailReportEntry.json"
+      }
+    },
+    "reportStats": {
+      "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportStats",
+      "description": "Report statistics",
+      "properties": {
+        "byFeeFineOwner": {
+          "description": "Totals by fee/fine owner",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        },
+        "byFeeFineType": {
+          "description": "Totals by fee/fine type",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        },
+        "byAction": {
+          "description": "Totals by action",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        },
+        "byPaymentMethod": {
+          "description": "Totals by payment method",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        },
+        "byWaiveReason": {
+          "description": "Totals by waive reason",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        },
+        "byRefundReason": {
+          "description": "Totals by transfer account",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        },
+        "byTransferAccount": {
+          "description": "Totals by transfer account",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "reportTotalsEntry.json"
+          }
+        }
+      }
+    }
+  }
+}
