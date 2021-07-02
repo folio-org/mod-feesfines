@@ -3,7 +3,7 @@ stages:
     steps:
       - runScriptConfig:
           image: maven:3.6.3-openjdk-11
-          shellScript: mvn package -DskipTests
+          shellScript: git submodule init && git submodule update && mvn package -DskipTests
   - name: Build Docker with DIND
     steps:
       - publishImageConfig:
