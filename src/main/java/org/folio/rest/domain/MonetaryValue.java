@@ -1,5 +1,12 @@
 package org.folio.rest.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.folio.rest.utils.JsonHelper;
+
 import static java.math.BigDecimal.ZERO;
 import static java.util.Objects.requireNonNull;
 
@@ -11,9 +18,15 @@ public class MonetaryValue {
   private static final Currency USD = Currency.getInstance("USD");
   private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN;
 
+  @JsonSerialize(using = JsonHelper.MonetaryValueSerializer.class)
+  @JsonDeserialize(using = JsonHelper.MonetaryValueDeserializer.class)
+  @JsonProperty("amount2")
   private final BigDecimal amount;
+
+  @JsonIgnore
   private final Currency currency;
 
+  @JsonCreator
   public MonetaryValue(BigDecimal amount) {
     this(amount, USD);
   }

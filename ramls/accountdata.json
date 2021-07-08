@@ -8,6 +8,10 @@
       "description": "Amount of the fine/fee",
       "type": "number"
     },
+    "amount2": {
+      "description": "Amount of the fine/fee",
+      "javaType": "org.folio.rest.domain.MonetaryValue"
+    },
     "remaining": {
       "description": "Remaining of the fine/fee",
       "type": "number"

@@ -22,6 +22,8 @@ import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import io.restassured.response.Response;
+import io.restassured.response.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
@@ -84,6 +86,9 @@ public class AccountsAPITest extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON);
+
+    Response byId = accountsClient.getById(accountId);
+    final ResponseBody body = byId.getBody();
 
     Account accountToPut = accountToPost.withRemaining(4.55);
 
@@ -324,6 +329,7 @@ public class AccountsAPITest extends ApiTests {
       .withFeeFineOwner("owner")
       .withAmount(7.77)
       .withRemaining(3.33)
+      .withAmount2(new MonetaryValue(7.77))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }
