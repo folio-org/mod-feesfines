@@ -4,13 +4,13 @@ import static java.lang.String.format;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.utils.ResourceClients.buildRefundReportClient;
-import static org.folio.test.support.EntityBuilder.createCampus;
-import static org.folio.test.support.EntityBuilder.createHoldingsRecord;
-import static org.folio.test.support.EntityBuilder.createInstance;
-import static org.folio.test.support.EntityBuilder.createInstitution;
-import static org.folio.test.support.EntityBuilder.createItem;
-import static org.folio.test.support.EntityBuilder.createLibrary;
-import static org.folio.test.support.EntityBuilder.createLocation;
+import static org.folio.test.support.EntityBuilder.buildCampus;
+import static org.folio.test.support.EntityBuilder.buildHoldingsRecord;
+import static org.folio.test.support.EntityBuilder.buildInstance;
+import static org.folio.test.support.EntityBuilder.buildInstitution;
+import static org.folio.test.support.EntityBuilder.buildItem;
+import static org.folio.test.support.EntityBuilder.buildLibrary;
+import static org.folio.test.support.EntityBuilder.buildLocation;
 import static org.folio.test.support.matcher.ReportMatcher.refundReportEntryMatcher;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
@@ -106,29 +106,29 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
     clearDatabase();
     createLocaleSettingsStub();
 
-    final Library library = createLibrary();
-    final Campus campus = createCampus();
-    final Institution institution = createInstitution();
-    final Location location = createLocation(library, campus, institution);
-    instance = createInstance();
-    final HoldingsRecord holdingsRecord = createHoldingsRecord(instance);
-    item1 = createItem(holdingsRecord, location);
-    item2 = createItem(holdingsRecord, location).withBarcode("item2-barcode");
+    final Library library = buildLibrary();
+    final Campus campus = buildCampus();
+    final Institution institution = buildInstitution();
+    final Location location = buildLocation(library, campus, institution);
+    instance = buildInstance();
+    final HoldingsRecord holdingsRecord = buildHoldingsRecord(instance);
+    item1 = buildItem(holdingsRecord, location);
+    item2 = buildItem(holdingsRecord, location).withBarcode("item2-barcode");
 
     itemStubMapping = createStub(ServicePath.ITEMS_PATH, item1, item1.getId());
     createStub(ServicePath.ITEMS_PATH, item2, item2.getId());
     holdingsStubMapping = createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
     instanceStubMapping = createStub(INSTANCES_PATH, instance, instance.getId());
 
-    userGroup = EntityBuilder.createUserGroup();
+    userGroup = EntityBuilder.buildUserGroup();
     userGroupStubMapping = createStub(USERS_GROUPS_PATH, userGroup, userGroup.getId());
 
-    user1 = EntityBuilder.createUser()
+    user1 = EntityBuilder.buildUser()
       .withId(USER_ID_1)
       .withPatronGroup(userGroup.getId());
     user1StubMapping = createStub(USERS_PATH, user1, USER_ID_1);
 
-    user2 = EntityBuilder.createUser()
+    user2 = EntityBuilder.buildUser()
       .withId(USER_ID_2)
       .withPersonal(new Personal()
         .withFirstName("First2")
@@ -669,7 +669,7 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
     String type, String method, Double amount, Double balance, String txInfo) {
 
     Feefineaction action = EntityBuilder.buildFeeFineActionWithoutComments(USER_ID_1, account.getId(),
-      type, method, amount, balance, parseDateTime(dateTime))
+      type, method, amount, balance, parseDateTimeUTC(dateTime))
       .withTransactionInformation(txInfo);
 
     createEntity(ServicePath.ACTIONS_PATH, action);
@@ -703,14 +703,14 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
       .withPatronGroup(userGroup.getGroup())
       .withFeeFineType(account.getFeeFineType())
       .withBilledAmount(formatMonetaryValue(account.getAmount()))
-      .withDateBilled(formatRefundReportDate(account.getMetadata().getCreatedDate(), TENANT_TZ))
+      .withDateBilled(formatReportDate(account.getMetadata().getCreatedDate(), TENANT_TZ))
       .withPaidAmount(paidAmount)
       .withPaymentMethod(paymentMethod)
       .withTransactionInfo(transactionInfo)
       .withTransferredAmount(transferredAmount)
       .withTransferAccount(transferAccount)
       .withFeeFineId(account.getId())
-      .withRefundDate(formatRefundReportDate(refundAction.getDateAction(), TENANT_TZ))
+      .withRefundDate(formatReportDate(refundAction.getDateAction(), TENANT_TZ))
       .withRefundAmount(formatMonetaryValue(refundAction.getAmountAction()))
       .withRefundAction(refundAction.getTypeAction())
       .withRefundReason(refundAction.getPaymentMethod())

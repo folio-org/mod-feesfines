@@ -215,6 +215,11 @@
       "type": "string",
       "description": "Instance ID",
       "default": ""
+    },
+    "itemId": {
+      "type": "string",
+      "description": "Item ID",
+      "default": ""
     }
   }
 }

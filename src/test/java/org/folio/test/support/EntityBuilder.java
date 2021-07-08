@@ -17,18 +17,24 @@ import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.Contributor;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportEntry;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Library;
+import org.folio.rest.jaxrs.model.Loan;
+import org.folio.rest.jaxrs.model.LoanPolicy;
 import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.ManualBlockTemplate;
 import org.folio.rest.jaxrs.model.Manualblock;
+import org.folio.rest.jaxrs.model.OverdueFinePolicy;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
+import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
@@ -41,17 +47,18 @@ public class EntityBuilder {
 
   private EntityBuilder() {}
 
-  public static User createUser() {
+  public static User buildUser() {
     return new User()
       .withId(randomId())
       .withBarcode("54321")
       .withPersonal(new Personal()
         .withFirstName("First")
         .withMiddleName("Middle")
-        .withLastName("Last"));
+        .withLastName("Last")
+        .withEmail("test@email.com"));
   }
 
-  public static UserGroup createUserGroup() {
+  public static UserGroup buildUserGroup() {
     return new UserGroup()
       .withId(randomId())
       .withGroup("User Group");
@@ -165,7 +172,7 @@ public class EntityBuilder {
       .withBlockTemplate(blockTemplate);
   }
 
-  public static Item createItem(HoldingsRecord holdingsRecord,
+  public static Item buildItem(HoldingsRecord holdingsRecord,
     Location location) {
     return new Item()
       .withId(randomId())
@@ -186,14 +193,14 @@ public class EntityBuilder {
           .withSuffix("SUFFIX"));
   }
 
-  public static HoldingsRecord createHoldingsRecord(Instance instance) {
+  public static HoldingsRecord buildHoldingsRecord(Instance instance) {
     return new HoldingsRecord()
       .withId(randomId())
       .withInstanceId(instance.getId())
       .withCopyNumber("cp.2");
   }
 
-  public static Instance createInstance() {
+  public static Instance buildInstance() {
     return new Instance()
       .withId(randomId())
       .withTitle("Instance title")
@@ -202,7 +209,13 @@ public class EntityBuilder {
         new Contributor().withName(NON_PRIMARY_CONTRIBUTOR_NAME).withPrimary(false)));
   }
 
-  public static Location createLocation(Library library, Campus campus, Institution institution) {
+  public static Location buildLocation(String name) {
+    return new Location()
+      .withId(randomId())
+      .withName(name);
+  }
+
+  public static Location buildLocation(Library library, Campus campus, Institution institution) {
     return new Location()
       .withId(randomId())
       .withName("Specific")
@@ -211,25 +224,25 @@ public class EntityBuilder {
       .withInstitutionId(String.valueOf(institution.getAdditionalProperties().get(KEY_ID)));
   }
 
-  public static Library createLibrary() {
+  public static Library buildLibrary() {
     return new Library()
       .withAdditionalProperty(KEY_ID, randomId())
       .withAdditionalProperty(KEY_NAME, "Library");
   }
 
-  public static Campus createCampus() {
+  public static Campus buildCampus() {
     return new Campus()
       .withAdditionalProperty(KEY_ID, randomId())
       .withAdditionalProperty(KEY_NAME, "Campus");
   }
 
-  public static Institution createInstitution() {
+  public static Institution buildInstitution() {
     return new Institution()
       .withAdditionalProperty(KEY_ID, randomId())
       .withAdditionalProperty(KEY_NAME, "Institution");
   }
 
-  public static KvConfigurations createLocaleSettingsConfigurations() {
+  public static KvConfigurations buildLocaleSettingsConfigurations() {
     return new KvConfigurations()
       .withConfigs(List.of(new Config()
         .withId(randomId())
@@ -239,6 +252,44 @@ public class EntityBuilder {
         .withValue(
           "{\"locale\":\"en-US\",\"timezone\":\"America/New_York\",\"currency\":\"USD\"}")))
       .withTotalRecords(1);
+  }
+
+  public static Loan buildLoan(String loanDate, Date dueDate, String returnDate, String itemId,
+    String loanPolicyId, String overdueFinePolicyId, String lostItemPolicyId) {
+
+    return new Loan()
+      .withId(randomId())
+      .withLoanDate(loanDate)
+      .withDueDate(dueDate)
+      .withReturnDate(returnDate)
+      .withItemId(itemId)
+      .withLoanPolicyId(loanPolicyId)
+      .withOverdueFinePolicyId(overdueFinePolicyId)
+      .withLostItemPolicyId(lostItemPolicyId);
+  }
+
+  public static LoanPolicy buildLoanPolicy(String name) {
+    return new LoanPolicy()
+      .withId(randomId())
+      .withName(name);
+  }
+
+  public static OverdueFinePolicy buildOverdueFinePolicy(String name) {
+    return new OverdueFinePolicy()
+      .withId(randomId())
+      .withName(name);
+  }
+
+  public static LostItemFeePolicy buildLostItemFeePolicy(String name) {
+    return new LostItemFeePolicy()
+      .withId(randomId())
+      .withName(name);
+  }
+
+  public static ServicePoint buildServicePoint(String id, String name) {
+    return new ServicePoint()
+      .withId(id)
+      .withName(name);
   }
 
   public static CashDrawerReconciliationReportEntry buildCashDrawerReconciliationReportEntry(
@@ -259,6 +310,66 @@ public class EntityBuilder {
       .withAdditionalPatronInfo(additionalPatronInfo)
       .withPatronId(patronId)
       .withFeeFineId(feeFineId);
+  }
+
+  public static FinancialTransactionsDetailReportEntry buildFinancialTransactionsDetailReportEntry(
+    String feeFineOwner, String feeFineType, String billedAmount, String dateBilled,
+    String feeFineCreatedAt, String feeFineSource, String feeFineId, String action,
+    String actionAmount, String actionDate, String actionCreatedAt, String actionSource,
+    String actionStatus, String actionAdditionalStaffInfo, String actionAdditionalPatronInfo,
+    String paymentMethod, String transactionInfo, String waiveReason, String refundReason,
+    String transferAccount, String patronId, String patronName, String patronBarcode,
+    String patronGroup, String patronEmail, String instance, String contributors,
+    String itemBarcode, String callNumber, String effectiveLocation, String loanDate,
+    String dueDate, String returnDate, String loanPolicyId, String loanPolicyName,
+    String overdueFinePolicyId, String overdueFinePolicyName, String lostItemPolicyId,
+    String lostItemPolicyName, String loanId, String holdingsRecordId, String instanceId,
+    String itemId) {
+
+    return new FinancialTransactionsDetailReportEntry()
+      .withFeeFineOwner(feeFineOwner)
+      .withFeeFineType(feeFineType)
+      .withBilledAmount(billedAmount)
+      .withDateBilled(dateBilled)
+      .withFeeFineCreatedAt(feeFineCreatedAt)
+      .withFeeFineSource(feeFineSource)
+      .withFeeFineId(feeFineId)
+      .withAction(action)
+      .withActionAmount(actionAmount)
+      .withActionDate(actionDate)
+      .withActionCreatedAt(actionCreatedAt)
+      .withActionSource(actionSource)
+      .withActionStatus(actionStatus)
+      .withActionAdditionalStaffInfo(actionAdditionalStaffInfo)
+      .withActionAdditionalPatronInfo(actionAdditionalPatronInfo)
+      .withPaymentMethod(paymentMethod)
+      .withTransactionInfo(transactionInfo)
+      .withWaiveReason(waiveReason)
+      .withRefundReason(refundReason)
+      .withTransferAccount(transferAccount)
+      .withPatronId(patronId)
+      .withPatronName(patronName)
+      .withPatronBarcode(patronBarcode)
+      .withPatronGroup(patronGroup)
+      .withPatronEmail(patronEmail)
+      .withInstance(instance)
+      .withContributors(contributors)
+      .withItemBarcode(itemBarcode)
+      .withCallNumber(callNumber)
+      .withEffectiveLocation(effectiveLocation)
+      .withLoanDate(loanDate)
+      .withDueDate(dueDate)
+      .withReturnDate(returnDate)
+      .withLoanPolicyId(loanPolicyId)
+      .withLoanPolicyName(loanPolicyName)
+      .withOverdueFinePolicyId(overdueFinePolicyId)
+      .withOverdueFinePolicyName(overdueFinePolicyName)
+      .withLostItemPolicyId(lostItemPolicyId)
+      .withLostItemPolicyName(lostItemPolicyName)
+      .withLoanId(loanId)
+      .withHoldingsRecordId(holdingsRecordId)
+      .withInstanceId(instanceId)
+      .withItemId(itemId);
   }
 
   public static ReportTotalsEntry buildReportTotalsEntry(String name, String totalAmount,

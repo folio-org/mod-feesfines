@@ -67,8 +67,8 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
     clearDatabase();
     createLocaleSettingsStub();
 
-    createStub(USERS_PATH, EntityBuilder.createUser().withId(SOURCE_1_ID), SOURCE_1_ID);
-    createStub(USERS_PATH, EntityBuilder.createUser().withId(SOURCE_2_ID), SOURCE_2_ID);
+    createStub(USERS_PATH, EntityBuilder.buildUser().withId(SOURCE_1_ID), SOURCE_1_ID);
+    createStub(USERS_PATH, EntityBuilder.buildUser().withId(SOURCE_2_ID), SOURCE_2_ID);
   }
 
   @Test
@@ -184,22 +184,22 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
       .withReportData(List.of(
         buildCashDrawerReconciliationReportEntry(
           SOURCE_1, PAYMENT_METHOD_1, "3.00", OWNER_1, FEE_FINE_TYPE_1,
-          formatRefundReportDate(paymentAction1.getDateAction(), TENANT_TZ), PAID_PARTIALLY,
+          formatReportDate(paymentAction1.getDateAction(), TENANT_TZ), PAID_PARTIALLY,
           PAYMENT_TX_INFO, addSuffix(PAYMENT_STAFF_INFO, 1), addSuffix(PAYMENT_PATRON_INFO, 1),
           USER_ID_1, account1.getId()),
         buildCashDrawerReconciliationReportEntry(
           SOURCE_1, PAYMENT_METHOD_2, "2.00", OWNER_1, FEE_FINE_TYPE_1,
-          formatRefundReportDate(paymentAction2.getDateAction(), TENANT_TZ), PAID_PARTIALLY,
+          formatReportDate(paymentAction2.getDateAction(), TENANT_TZ), PAID_PARTIALLY,
           PAYMENT_TX_INFO, addSuffix(PAYMENT_STAFF_INFO, 2), addSuffix(PAYMENT_PATRON_INFO, 2),
           USER_ID_1, account1.getId()),
         buildCashDrawerReconciliationReportEntry(
           SOURCE_2, PAYMENT_METHOD_1, "1.00", OWNER_1, FEE_FINE_TYPE_2,
-          formatRefundReportDate(paymentAction3.getDateAction(), TENANT_TZ), PAID_PARTIALLY,
+          formatReportDate(paymentAction3.getDateAction(), TENANT_TZ), PAID_PARTIALLY,
           PAYMENT_TX_INFO, addSuffix(PAYMENT_STAFF_INFO, 3), addSuffix(PAYMENT_PATRON_INFO, 3),
           USER_ID_2, account2.getId()),
         buildCashDrawerReconciliationReportEntry(
           SOURCE_1, PAYMENT_METHOD_2, "10.00", OWNER_2, FEE_FINE_TYPE_2,
-          formatRefundReportDate(paymentAction4.getDateAction(), TENANT_TZ), PAID_FULLY,
+          formatReportDate(paymentAction4.getDateAction(), TENANT_TZ), PAID_FULLY,
           PAYMENT_TX_INFO, addSuffix(PAYMENT_STAFF_INFO, 4), addSuffix(PAYMENT_PATRON_INFO, 4),
           USER_ID_2, account3.getId())))
       .withReportStats(new CashDrawerReconciliationReportStats()
