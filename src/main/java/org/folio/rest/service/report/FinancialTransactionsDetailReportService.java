@@ -30,6 +30,7 @@ import org.folio.rest.client.CirculationStorageClient;
 import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.UserGroupsClient;
 import org.folio.rest.client.UsersClient;
+import org.folio.rest.domain.Action;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Contributor;
@@ -189,12 +190,9 @@ public class FinancialTransactionsDetailReportService extends
         .withPaymentMethod(List.of(PAY.getPartialResult(), PAY.getFullResult())
           .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "")
         .withTransactionInfo(feeFineAction.getTransactionInformation())
-        .withWaiveReason(List.of(WAIVE.getPartialResult(), WAIVE.getFullResult())
-          .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "")
-        .withRefundReason(List.of(REFUND.getPartialResult(), REFUND.getFullResult())
-          .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "")
-        .withTransferAccount(List.of(TRANSFER.getPartialResult(), TRANSFER.getFullResult())
-          .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "");
+        .withWaiveReason(getPaymentMethod(WAIVE, feeFineAction))
+        .withRefundReason(getPaymentMethod(REFUND, feeFineAction))
+        .withTransferAccount(getPaymentMethod(TRANSFER, feeFineAction));
 
       Account account = ctx.actionsToAccounts.get(feeFineAction);
       if (account != null) {
@@ -332,22 +330,16 @@ public class FinancialTransactionsDetailReportService extends
       "Payment method totals");
 
     // Waive reason totals
-    calculateTotals(stats.getByWaiveReason(), actions,
-      action -> List.of(WAIVE.getPartialResult(), WAIVE.getFullResult())
-        .contains(action.getTypeAction()) ? action.getPaymentMethod() : "",
+    calculateTotals(stats.getByWaiveReason(), actions, action -> getPaymentMethod(WAIVE, action),
       "Waive reason totals");
 
     // Refund reason totals
-    calculateTotals(stats.getByRefundReason(), actions,
-      action -> List.of(REFUND.getPartialResult(), REFUND.getFullResult())
-        .contains(action.getTypeAction()) ? action.getPaymentMethod() : "",
+    calculateTotals(stats.getByRefundReason(), actions, action -> getPaymentMethod(REFUND, action),
       "Refund reason totals");
 
     // Transfer account totals
     calculateTotals(stats.getByTransferAccount(), actions,
-      action -> List.of(TRANSFER.getPartialResult(), TRANSFER.getFullResult())
-        .contains(action.getTypeAction()) ? action.getPaymentMethod() : "",
-      "Transfer account totals");
+      action -> getPaymentMethod(TRANSFER, action), "Transfer account totals");
 
     return stats;
   }
@@ -768,6 +760,11 @@ public class FinancialTransactionsDetailReportService extends
 
       return null;
     }
+  }
+
+  private String getPaymentMethod(Action action, Feefineaction feeFineAction) {
+    return List.of(action.getPartialResult(), action.getFullResult())
+      .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "";
   }
 
   @AllArgsConstructor
