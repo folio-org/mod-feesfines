@@ -129,6 +129,8 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   private StubMapping holdingsStubMapping;
   private StubMapping instanceStubMapping;
   private StubMapping locationStubMapping;
+  private StubMapping servicePoint1StubMapping;
+  private StubMapping servicePoint2StubMapping;
 
   @Before
   public void setUp() {
@@ -143,9 +145,9 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     createLostItemFeePolicy(lostItemFeePolicy);
 
     servicePoint1 = buildServicePoint(CREATED_AT_ID_1, CREATED_AT_1);
-    createStub(ServicePath.SERVICE_POINTS_PATH, servicePoint1, servicePoint1.getId());
+    servicePoint1StubMapping = createStub(ServicePath.SERVICE_POINTS_PATH, servicePoint1, servicePoint1.getId());
     servicePoint2 = buildServicePoint(CREATED_AT_ID_2, CREATED_AT_2);
-    createStub(ServicePath.SERVICE_POINTS_PATH, servicePoint2, servicePoint2.getId());
+    servicePoint2StubMapping = createStub(ServicePath.SERVICE_POINTS_PATH, servicePoint2, servicePoint2.getId());
 
     location = buildLocation("Location");
     locationStubMapping = createStub(ServicePath.LOCATIONS_PATH, location, location.getId());
@@ -345,7 +347,7 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   }
 
   @Test
-  public void validResponseWhenUserIsMissing() {
+  public void validResponseWhenStubsAreMissing() {
     Pair<Account, Feefineaction> sourceObjects =  createMinimumViableReportData();
 
     removeStub(user1StubMapping);
@@ -355,12 +357,29 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     removeStub(holdingsStubMapping);
     removeStub(instanceStubMapping);
     removeStub(locationStubMapping);
+    removeStub(servicePoint1StubMapping);
+    removeStub(servicePoint2StubMapping);
 
     assert sourceObjects.getLeft() != null;
     requestReport(START_DATE, END_DATE, List.of(CREATED_AT_ID_1), OWNER_ID_1).then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(1))
       .body("reportData[0].feeFineId", is(sourceObjects.getLeft().getId()));
+  }
+
+  @Test
+  public void validResponseWhenIdsAreInvalid() {
+    String chargeActionDate = withTenantTz("2020-01-01 00:00:01");
+    Account account1 = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, item1.getId(), loan1,
+      OWNER_ID_1, OWNER_1, chargeActionDate, CREATED_AT_ID_1, SOURCE_1);
+
+    createAction(USER_ID_1, 1, account1, withTenantTz("2020-01-01 00:10:00"),
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT_ID_1 + "-not-a-uuid", SOURCE_1);
+
+    requestReport(START_DATE, END_DATE, List.of(CREATED_AT_ID_1), OWNER_ID_1).then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("reportData", iterableWithSize(0));
   }
 
   private void requestAndCheck(FinancialTransactionsDetailReport report) {
