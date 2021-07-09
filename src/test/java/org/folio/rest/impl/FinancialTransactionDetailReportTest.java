@@ -21,6 +21,7 @@ import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_GROUPS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 
@@ -276,17 +277,49 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     requestAndCheck(new FinancialTransactionsDetailReport()
       .withReportData(List.of(
         buildFinancialTransactionsDetailReportEntry(
-          OWNER_1, FEE_FINE_TYPE_1, "10.00", formatReportDate(parseDateTimeUTC(chargeActionDate)),
+          OWNER_1,
+          FEE_FINE_TYPE_1,
+          "10.00",
+          formatReportDate(parseDateTimeUTC(chargeActionDate)),
           CREATED_AT_1,
-          SOURCE_1, account1.getId(), "Payment", "3.00", formatReportDate(paymentAction1.getDateAction()),
-          CREATED_AT_1, SOURCE_1, PAID_PARTIALLY, addSuffix(PAYMENT_STAFF_INFO, 1), addSuffix(PAYMENT_PATRON_INFO, 1),
-          PAYMENT_METHOD_1, PAYMENT_TX_INFO, "", "", "", USER_ID_1, getFullName(user1), USER_BARCODE_1,
-          USER_GROUP_1, user1.getPersonal().getEmail(), instance.getTitle(), "Primary contributor, Non-primary contributor",
-          item1.getBarcode(), item1.getEffectiveCallNumberComponents().getCallNumber(),
-          location.getName(), formatReportDate(parseDateTimeTenantTz(LOAN_DATE_1_RAW)), formatReportDate(loan1.getDueDate()),
-          formatReportDate(parseDateTimeTenantTz(RETURN_DATE_1_RAW)), loanPolicy.getId(), loanPolicy.getName(), overdueFinePolicy.getId(),
-          overdueFinePolicy.getName(), lostItemFeePolicy.getId(), lostItemFeePolicy.getName(),
-          loan1.getId(), holdingsRecord.getId(), instance.getId(), item1.getId())
+          SOURCE_1,
+          account1.getId(),
+          "Payment",
+          "3.00",
+          formatReportDate(paymentAction1.getDateAction()),
+          CREATED_AT_1,
+          SOURCE_1,
+          PAID_PARTIALLY,
+          addSuffix(PAYMENT_STAFF_INFO, 1),
+          addSuffix(PAYMENT_PATRON_INFO, 1),
+          PAYMENT_METHOD_1,
+          PAYMENT_TX_INFO,
+          "",
+          "",
+          "",
+          USER_ID_1,
+          getFullName(user1),
+          USER_BARCODE_1,
+          USER_GROUP_1,
+          user1.getPersonal().getEmail(),
+          instance.getTitle(),
+          "Primary contributor, Non-primary contributor",
+          item1.getBarcode(),
+          item1.getEffectiveCallNumberComponents().getCallNumber(),
+          location.getName(),
+          formatReportDate(parseDateTimeTenantTz(LOAN_DATE_1_RAW)),
+          formatReportDate(loan1.getDueDate()),
+          formatReportDate(parseDateTimeTenantTz(RETURN_DATE_1_RAW)),
+          loanPolicy.getId(),
+          loanPolicy.getName(),
+          overdueFinePolicy.getId(),
+          overdueFinePolicy.getName(),
+          lostItemFeePolicy.getId(),
+          lostItemFeePolicy.getName(),
+          loan1.getId(),
+          holdingsRecord.getId(),
+          instance.getId(),
+          item1.getId())
       ))
       .withReportStats(new FinancialTransactionsDetailReportStats()
         .withByFeeFineOwner(List.of(
@@ -308,6 +341,19 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
         .withByTransferAccount(List.of(
           buildReportTotalsEntry(TRANSFER_ACCOUNT_TOTALS, "0.00", "0")))
       ));
+  }
+
+  @Test
+  public void validResponseWhenUserIsMissing() {
+    Pair<Account, Feefineaction> sourceObjects =  createMinimumViableReportData();
+
+    removeStub(user1StubMapping);
+
+    assert sourceObjects.getLeft() != null;
+    requestReport(START_DATE, END_DATE, List.of(CREATED_AT_ID_1), OWNER_ID_1).then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("reportData", iterableWithSize(1))
+      .body("reportData[0].feeFineId", is(sourceObjects.getLeft().getId()));
   }
 
   private void requestAndCheck(FinancialTransactionsDetailReport report) {
@@ -359,9 +405,11 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   }
 
   private Pair<Account, Feefineaction> createMinimumViableReportData() {
-    Account account = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, null, OWNER_ID_1);
+    String chargeActionDate = withTenantTz("2020-01-01 00:00:01");
+    Account account = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, item1.getId(), loan1,
+      OWNER_ID_1, OWNER_1, chargeActionDate, CREATED_AT_ID_1, SOURCE_1);
 
-    Feefineaction action = createAction(USER_ID_1, 1, account, "2020-01-01 12:00:00",
+    Feefineaction action = createAction(USER_ID_1, 1, account, withTenantTz("2020-01-01 00:10:00"),
       PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT_ID_1, SOURCE_1);
 
