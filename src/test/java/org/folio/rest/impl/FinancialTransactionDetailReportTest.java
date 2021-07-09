@@ -348,17 +348,30 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
 
   @Test
   public void validResponseWhenStubsAreMissing() {
+    validResponseWithStubsMissing(() -> {
+      removeStub(user1StubMapping);
+      removeStub(userGroupStubMapping);
+      removeStub(itemStubMapping);
+      removeStub(loanStubMapping);
+      removeStub(holdingsStubMapping);
+      removeStub(instanceStubMapping);
+      removeStub(locationStubMapping);
+      removeStub(servicePoint1StubMapping);
+      removeStub(servicePoint2StubMapping);
+    });
+  }
+
+  @Test
+  public void validResponseWhenUserGroupStubIsMissing() {
+    validResponseWithStubsMissing(() -> {
+      removeStub(userGroupStubMapping);
+    });
+  }
+
+  public void validResponseWithStubsMissing(Runnable removeStubsRunnable) {
     Pair<Account, Feefineaction> sourceObjects =  createMinimumViableReportData();
 
-    removeStub(user1StubMapping);
-    removeStub(userGroupStubMapping);
-    removeStub(itemStubMapping);
-    removeStub(loanStubMapping);
-    removeStub(holdingsStubMapping);
-    removeStub(instanceStubMapping);
-    removeStub(locationStubMapping);
-    removeStub(servicePoint1StubMapping);
-    removeStub(servicePoint2StubMapping);
+    removeStubsRunnable.run();
 
     assert sourceObjects.getLeft() != null;
     requestReport(START_DATE, END_DATE, List.of(CREATED_AT_ID_1), OWNER_ID_1).then()
