@@ -128,6 +128,7 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   private StubMapping loanStubMapping;
   private StubMapping holdingsStubMapping;
   private StubMapping instanceStubMapping;
+  private StubMapping locationStubMapping;
 
   @Before
   public void setUp() {
@@ -147,7 +148,7 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     createStub(ServicePath.SERVICE_POINTS_PATH, servicePoint2, servicePoint2.getId());
 
     location = buildLocation("Location");
-    createStub(ServicePath.LOCATIONS_PATH, location, location.getId());
+    locationStubMapping = createStub(ServicePath.LOCATIONS_PATH, location, location.getId());
 
     instance = buildInstance();
     holdingsRecord = buildHoldingsRecord(instance);
@@ -348,6 +349,12 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     Pair<Account, Feefineaction> sourceObjects =  createMinimumViableReportData();
 
     removeStub(user1StubMapping);
+    removeStub(userGroupStubMapping);
+    removeStub(itemStubMapping);
+    removeStub(loanStubMapping);
+    removeStub(holdingsStubMapping);
+    removeStub(instanceStubMapping);
+    removeStub(locationStubMapping);
 
     assert sourceObjects.getLeft() != null;
     requestReport(START_DATE, END_DATE, List.of(CREATED_AT_ID_1), OWNER_ID_1).then()
