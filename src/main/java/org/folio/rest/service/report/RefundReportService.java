@@ -38,7 +38,6 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.RefundReport;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
 import org.folio.rest.jaxrs.model.User;
@@ -448,12 +447,14 @@ public class RefundReportService {
       .map(AccountContextData::getActions);
   }
 
+  // TODO: Delete this method after inheriting from DateBasedReportService
   private List<Feefineaction> sortFeeFineActionsByDate(List<Feefineaction> feeFineActions) {
     return feeFineActions.stream()
       .sorted(actionDateComparator())
       .collect(Collectors.toList());
   }
 
+  // TODO: Delete this method after inheriting from DateBasedReportService
   private Comparator<Feefineaction> actionDateComparator() {
     return (left, right) -> {
       if (left == null || right == null) {

@@ -3,13 +3,17 @@ package org.folio.rest.service.report;
 import static io.vertx.core.Future.succeededFuture;
 import static org.joda.time.DateTimeZone.UTC;
 
+import java.util.Comparator;
 import java.util.Currency;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.folio.rest.client.ConfigurationClient;
 import org.folio.rest.domain.LocaleSettings;
+import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.service.report.parameters.DateBasedReportParameters;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -29,6 +33,7 @@ public abstract class DateBasedReportService<T, P> {
 
   DateTimeZone timeZone;
   DateTimeFormatter dateTimeFormatter;
+  DateTimeFormatter loanDateTimeFormatter;
   Currency currency;
 
   public DateBasedReportService(Map<String, String> headers, Context context) {
@@ -41,6 +46,7 @@ public abstract class DateBasedReportService<T, P> {
     timeZone = localeSettings.getDateTimeZone();
     dateTimeFormatter = DateTimeFormat.forPattern(DateTimeFormat.patternForStyle("SS",
       Locale.forLanguageTag(localeSettings.getLocale())));
+    loanDateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     currency = Currency.getInstance(localeSettings.getCurrency());
   }
 
@@ -74,5 +80,36 @@ public abstract class DateBasedReportService<T, P> {
 
   String formatDate(Date date) {
     return new DateTime(date).withZone(timeZone).toString(dateTimeFormatter);
+  }
+
+  String reformatLoanDate(String date) {
+    return DateTime.parse(date, loanDateTimeFormatter)
+      .withZoneRetainFields(UTC)
+      .withZone(timeZone)
+      .toString(dateTimeFormatter);
+  }
+
+  List<Feefineaction> sortFeeFineActionsByDate(List<Feefineaction> feeFineActions) {
+    return feeFineActions.stream()
+      .sorted(actionDateComparator())
+      .collect(Collectors.toList());
+  }
+
+  private Comparator<Feefineaction> actionDateComparator() {
+    return (left, right) -> {
+      if (left == null || right == null) {
+        return 0;
+      }
+
+      Date leftDate = left.getDateAction();
+      Date rightDate = right.getDateAction();
+
+      if (leftDate == null || rightDate == null || leftDate.equals(rightDate)) {
+        return 0;
+      } else {
+        return new DateTime(leftDate)
+          .isAfter(new DateTime(rightDate)) ? 1 : -1;
+      }
+    };
   }
 }

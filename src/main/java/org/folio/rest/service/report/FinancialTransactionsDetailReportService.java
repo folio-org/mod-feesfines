@@ -30,6 +30,7 @@ import org.folio.rest.client.CirculationStorageClient;
 import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.UserGroupsClient;
 import org.folio.rest.client.UsersClient;
+import org.folio.rest.domain.Action;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Contributor;
@@ -83,7 +84,6 @@ public class FinancialTransactionsDetailReportService extends
     ACTION_NAMES.put("Staff info only", "Staff info only");
   }
 
-  private final LocationService locationService;
   private final InventoryClient inventoryClient;
   private final CirculationStorageClient circulationStorageClient;
   private final UsersClient usersClient;
@@ -95,7 +95,6 @@ public class FinancialTransactionsDetailReportService extends
   public FinancialTransactionsDetailReportService(Map<String, String> headers, io.vertx.core.Context context) {
     super(headers, context);
 
-    locationService = new LocationService(context.owner(), headers);
     inventoryClient = new InventoryClient(context.owner(), headers);
     circulationStorageClient = new CirculationStorageClient(context.owner(), headers);
     usersClient = new UsersClient(context.owner(), headers);
@@ -116,7 +115,7 @@ public class FinancialTransactionsDetailReportService extends
   private Future<FinancialTransactionsDetailReport> buildWithAdjustedDates(
     FinancialTransactionsDetailReportParameters params) {
 
-    log.info("Building cash drawer reconciliation report with parameters: startDate={}, " +
+    log.info("Building financial transactions detail report with parameters: startDate={}, " +
         "endDate={}, owner={}, createdAt={}, tz={}", params.getStartDate(), params.getEndDate(),
       params.getFeeFineOwner(), params.getCreatedAt(), timeZone);
 
@@ -124,7 +123,7 @@ public class FinancialTransactionsDetailReportService extends
       WAIVE.getPartialResult(), WAIVE.getFullResult(),
       TRANSFER.getPartialResult(), TRANSFER.getFullResult(),
       REFUND.getPartialResult(), REFUND.getFullResult(),
-      CANCEL.getPartialResult(), CANCEL.getFullResult(),
+      CANCEL.getFullResult(),
       "Staff info only");
 
     Context ctx = new Context();
@@ -144,16 +143,19 @@ public class FinancialTransactionsDetailReportService extends
   }
 
   private Future<Context> processSingleFeeFineAction(Context ctx, Feefineaction feeFineAction) {
+    Account account = ctx.actionsToAccounts.get(feeFineAction);
+    String accountId = account.getId();
 
-    return lookupServicePointForFeeFineAction(ctx, feeFineAction)
-      .compose(r -> lookupUserForAccount(ctx, ctx.actionsToAccounts.get(feeFineAction)))
-      .compose(r -> lookupUserGroupForUser(ctx, ctx.actionsToAccounts.get(feeFineAction).getId()))
-      .compose(r -> lookupItemForAccount(ctx, ctx.actionsToAccounts.get(feeFineAction).getId()))
-      .compose(r -> lookupInstanceForAccount(ctx, ctx.actionsToAccounts.get(feeFineAction).getId()))
-      .compose(r -> lookupLocationForAccount(ctx, ctx.actionsToAccounts.get(feeFineAction).getId()))
-      .compose(r -> lookupLoanForAccount(ctx, ctx.actionsToAccounts.get(feeFineAction).getId()))
-      .compose(r -> lookupOverdueFinePolicyForAccount(ctx, ctx.actionsToAccounts.get(feeFineAction).getId()))
-      .compose(r -> lookupLostItemFeePolicyForAccount(ctx, ctx.actionsToAccounts.get(feeFineAction).getId()));
+    return lookupFeeFineActionsForAccount(ctx, accountId)
+      .compose(r -> lookupServicePointsForAllActionsInAccount(ctx, accountId))
+      .compose(r -> lookupUserForAccount(ctx, account))
+      .compose(r -> lookupUserGroupForUser(ctx, accountId))
+      .compose(r -> lookupItemForAccount(ctx, accountId))
+      .compose(r -> lookupInstanceForAccount(ctx, accountId))
+      .compose(r -> lookupLocationForAccount(ctx, accountId))
+      .compose(r -> lookupLoanForAccount(ctx, accountId))
+      .compose(r -> lookupOverdueFinePolicyForAccount(ctx, accountId))
+      .compose(r -> lookupLostItemFeePolicyForAccount(ctx, accountId));
   }
 
   private FinancialTransactionsDetailReport buildReport(Context ctx) {
@@ -188,12 +190,9 @@ public class FinancialTransactionsDetailReportService extends
         .withPaymentMethod(List.of(PAY.getPartialResult(), PAY.getFullResult())
           .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "")
         .withTransactionInfo(feeFineAction.getTransactionInformation())
-        .withWaiveReason(List.of(WAIVE.getPartialResult(), WAIVE.getFullResult())
-          .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "")
-        .withRefundReason(List.of(REFUND.getPartialResult(), REFUND.getFullResult())
-          .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "")
-        .withTransferAccount(List.of(TRANSFER.getPartialResult(), TRANSFER.getFullResult())
-          .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "");
+        .withWaiveReason(getPaymentMethod(WAIVE, feeFineAction))
+        .withRefundReason(getPaymentMethod(REFUND, feeFineAction))
+        .withTransferAccount(getPaymentMethod(TRANSFER, feeFineAction));
 
       Account account = ctx.actionsToAccounts.get(feeFineAction);
       if (account != null) {
@@ -203,7 +202,6 @@ public class FinancialTransactionsDetailReportService extends
             .withFeeFineOwner(account.getFeeFineOwner())
             .withFeeFineType(account.getFeeFineType())
             .withBilledAmount(formatMonetaryValue(account.getAmount()))
-            .withDateBilled(formatDate(account.getDateCreated()))
             .withFeeFineId(account.getId())
             .withPatronId(account.getUserId())
             .withDueDate(formatDate(account.getDueDate()))
@@ -232,6 +230,7 @@ public class FinancialTransactionsDetailReportService extends
           Item item = ctx.getItemByAccountId(account.getId());
           if (item != null) {
             entry = entry
+              .withItemId(item.getId())
               .withItemBarcode(item.getBarcode())
               .withCallNumber(item.getEffectiveCallNumberComponents().getCallNumber())
               .withHoldingsRecordId(item.getHoldingsRecordId())
@@ -243,9 +242,7 @@ public class FinancialTransactionsDetailReportService extends
               .withEffectiveLocation(accountCtx.effectiveLocation);
           }
 
-          Feefineaction chargeAction = accountCtx.actions.stream()
-            .min((l, r) -> (int) Math.signum(r.getDateAction().getTime() - l.getDateAction().getTime()))
-            .orElse(null);
+          Feefineaction chargeAction = accountCtx.actions.stream().findFirst().orElse(null);
           if (chargeAction != null) {
             ServicePoint chargeActionCreatedAtServicePoint = ctx.servicePoints.get(
               chargeAction.getCreatedAt());
@@ -253,6 +250,7 @@ public class FinancialTransactionsDetailReportService extends
               chargeActionCreatedAtServicePoint.getName();
 
             entry = entry
+              .withDateBilled(formatDate(chargeAction.getDateAction()))
               .withFeeFineCreatedAt(chargeActionCreatedAt)
               .withFeeFineSource(chargeAction.getSource());
           } else {
@@ -265,7 +263,7 @@ public class FinancialTransactionsDetailReportService extends
           if (loan != null && loanPolicy != null) {
             entry = entry
               .withLoanId(loan.getId())
-              .withLoanDate(loan.getLoanDate())
+              .withLoanDate(reformatLoanDate(loan.getLoanDate()))
               .withLoanPolicyId(loan.getLoanPolicyId())
               .withLoanPolicyName(loanPolicy.getName());
 
@@ -324,7 +322,7 @@ public class FinancialTransactionsDetailReportService extends
       "Fee/fine type totals");
 
     // Action totals
-    calculateTotals(stats.getByFeeFineType(), actions,
+    calculateTotals(stats.getByAction(), actions,
       action -> ACTION_NAMES.get(action.getTypeAction()), "Action totals");
 
     // Payment method totals
@@ -332,22 +330,16 @@ public class FinancialTransactionsDetailReportService extends
       "Payment method totals");
 
     // Waive reason totals
-    calculateTotals(stats.getByFeeFineType(), actions,
-      action -> List.of(WAIVE.getPartialResult(), WAIVE.getFullResult())
-        .contains(action.getTypeAction()) ? action.getPaymentMethod() : "",
+    calculateTotals(stats.getByWaiveReason(), actions, action -> getPaymentMethod(WAIVE, action),
       "Waive reason totals");
 
     // Refund reason totals
-    calculateTotals(stats.getByFeeFineType(), actions,
-      action -> List.of(REFUND.getPartialResult(), REFUND.getFullResult())
-        .contains(action.getTypeAction()) ? action.getPaymentMethod() : "",
+    calculateTotals(stats.getByRefundReason(), actions, action -> getPaymentMethod(REFUND, action),
       "Refund reason totals");
 
     // Transfer account totals
-    calculateTotals(stats.getByFeeFineType(), actions,
-      action -> List.of(TRANSFER.getPartialResult(), TRANSFER.getFullResult())
-        .contains(action.getTypeAction()) ? action.getPaymentMethod() : "",
-      "Transfer account totals");
+    calculateTotals(stats.getByTransferAccount(), actions,
+      action -> getPaymentMethod(TRANSFER, action), "Transfer account totals");
 
     return stats;
   }
@@ -409,23 +401,52 @@ public class FinancialTransactionsDetailReportService extends
     return new MonetaryValue(value, currency).toString();
   }
 
-  private Future<Context> lookupServicePointForFeeFineAction(Context ctx,
-    Feefineaction feeFineAction) {
+  private Future<Context> lookupFeeFineActionsForAccount(Context ctx,
+    String accountId) {
 
-    if (feeFineAction == null) {
+    AccountContextData accountContextData = ctx.getAccountContextById(accountId);
+    if (accountContextData == null) {
       return succeededFuture(ctx);
     }
 
-    String servicePointId = feeFineAction.getCreatedAt();
+    return feeFineActionRepository.findActionsForAccount(accountId)
+      .map(this::sortFeeFineActionsByDate)
+      .map(ffa_list -> ctx.accountContexts.put(accountId, accountContextData.withActions(ffa_list)))
+      .map(ctx);
+  }
+
+  private Future<Context> lookupServicePointsForAllActionsInAccount(Context ctx,
+    String accountId) {
+
+    AccountContextData accountCtx = ctx.getAccountContextById(accountId);
+    if (accountCtx == null) {
+      return succeededFuture(ctx);
+    }
+
+    return accountCtx.getActions().stream()
+      .map(Feefineaction::getCreatedAt)
+      .distinct()
+      .reduce(succeededFuture(ctx),
+      (f, a) -> f.compose(result -> lookupServicePointForFeeFineAction(ctx, a)),
+      (a, b) -> succeededFuture(ctx));
+  }
+
+  private Future<Context> lookupServicePointForFeeFineAction(Context ctx,
+    String servicePointId) {
+
+    if (servicePointId == null) {
+      return succeededFuture(ctx);
+    }
+
     if (!isUuid(servicePointId)) {
-      log.info("Service point ID is not a valid UUID - fee/fine action {}", feeFineAction);
+      log.info("Service point ID is not a valid UUID - {}", servicePointId);
       return succeededFuture(ctx);
     } else {
       if (ctx.servicePoints.containsKey(servicePointId)) {
         return succeededFuture(ctx);
       } else {
         return inventoryClient.getServicePointById(servicePointId)
-          .map(sp -> addServicePointToContext(ctx, sp, feeFineAction.getId(), sp.getId()))
+          .map(sp -> addServicePointToContext(ctx, sp, sp.getId()))
           .map(ctx)
           .otherwise(ctx);
       }
@@ -433,11 +454,10 @@ public class FinancialTransactionsDetailReportService extends
   }
 
   private Future<Context> addServicePointToContext(Context ctx, ServicePoint servicePoint,
-    String feeFineActionId, String servicePointId) {
+    String servicePointId) {
 
     if (servicePoint == null) {
-      log.error("Service point not found - fee/fine action {}, service point {}", feeFineActionId,
-        servicePointId);
+      log.error("Service point not found - service point {}", servicePointId);
     } else {
       ctx.servicePoints.put(servicePoint.getId(), servicePoint);
     }
@@ -572,9 +592,9 @@ public class FinancialTransactionsDetailReportService extends
       return succeededFuture(ctx);
     }
 
-    return locationService.getEffectiveLocation(effectiveLocationId)
+    return inventoryClient.getLocationById(effectiveLocationId)
       .map(effectiveLocation -> ctx.accountContexts.put(accountId,
-        ctx.getAccountContextById(accountId).withEffectiveLocation(effectiveLocation.getDescription())))
+        ctx.getAccountContextById(accountId).withEffectiveLocation(effectiveLocation.getName())))
       .map(ctx)
       .otherwise(throwable -> {
         log.error("Failed to find location for account {}, effectiveLocationId is {}", accountId,
@@ -598,7 +618,8 @@ public class FinancialTransactionsDetailReportService extends
     return circulationStorageClient.getLoanById(loanId)
       .map(loan -> ctx.accountContexts.put(accountId,
         ctx.getAccountContextById(accountId).withLoan(loan)))
-      .compose(actx -> circulationStorageClient.getLoanPolicyById(actx.loan.getLoanPolicyId()))
+      .compose(actx -> circulationStorageClient.getLoanPolicyById(
+        ctx.getAccountContextById(accountId).loan.getLoanPolicyId()))
       .map(loanPolicy -> ctx.accountContexts.put(accountId,
         ctx.getAccountContextById(accountId).withLoanPolicy(loanPolicy)))
       .map(ctx)
@@ -739,6 +760,11 @@ public class FinancialTransactionsDetailReportService extends
 
       return null;
     }
+  }
+
+  private String getPaymentMethod(Action action, Feefineaction feeFineAction) {
+    return List.of(action.getPartialResult(), action.getFullResult())
+      .contains(feeFineAction.getTypeAction()) ? feeFineAction.getPaymentMethod() : "";
   }
 
   @AllArgsConstructor

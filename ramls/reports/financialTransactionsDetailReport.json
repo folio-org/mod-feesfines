@@ -59,7 +59,7 @@
           }
         },
         "byRefundReason": {
-          "description": "Totals by transfer account",
+          "description": "Totals by refund reason",
           "type": "array",
           "items": {
             "type": "object",
