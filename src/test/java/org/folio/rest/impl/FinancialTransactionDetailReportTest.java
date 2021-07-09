@@ -131,6 +131,7 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   private StubMapping locationStubMapping;
   private StubMapping servicePoint1StubMapping;
   private StubMapping servicePoint2StubMapping;
+  private StubMapping loanPolicyStubMapping;
 
   @Before
   public void setUp() {
@@ -138,7 +139,7 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     createLocaleSettingsStub();
 
     loanPolicy = buildLoanPolicy("Loan policy");
-    createStub(ServicePath.LOAN_POLICIES_PATH, loanPolicy, loanPolicy.getId());
+    loanPolicyStubMapping = createStub(ServicePath.LOAN_POLICIES_PATH, loanPolicy, loanPolicy.getId());
     overdueFinePolicy = buildOverdueFinePolicy("ofp-1" + randomId());
     createOverdueFinePolicy(overdueFinePolicy);
     lostItemFeePolicy = buildLostItemFeePolicy("lfp-1" + randomId());
@@ -365,6 +366,21 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   public void validResponseWhenUserGroupStubIsMissing() {
     validResponseWithStubsMissing(() -> {
       removeStub(userGroupStubMapping);
+    });
+  }
+
+  @Test
+  public void validResponseWhenFeeFinePoliciesAreMissing() {
+    validResponseWithStubsMissing(() -> {
+      deleteOverdueFinePolicy(overdueFinePolicy);
+      deleteLostItemFeePolicy(lostItemFeePolicy);
+    });
+  }
+
+  @Test
+  public void validResponseWhenLoanPolicyIsMissing() {
+    validResponseWithStubsMissing(() -> {
+      removeStub(loanPolicyStubMapping);
     });
   }
 

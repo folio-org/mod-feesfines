@@ -126,8 +126,16 @@ public class FeeFineReportsAPITestBase extends ApiTests {
     createEntity(ServicePath.OVERDUE_FINE_POLICIES_PATH, overdueFinePolicy);
   }
 
+  void deleteOverdueFinePolicy(OverdueFinePolicy overdueFinePolicy) {
+    deleteEntity(ServicePath.OVERDUE_FINE_POLICIES_PATH, overdueFinePolicy.getId());
+  }
+
   void createLostItemFeePolicy(LostItemFeePolicy lostItemFeePolicy) {
     createEntity(ServicePath.LOST_ITEM_FEE_POLICIES_PATH, lostItemFeePolicy);
+  }
+
+  void deleteLostItemFeePolicy(LostItemFeePolicy lostItemFeePolicy) {
+    deleteEntity(ServicePath.LOST_ITEM_FEE_POLICIES_PATH, lostItemFeePolicy.getId());
   }
 
   String formatMonetaryValue(Double value) {
