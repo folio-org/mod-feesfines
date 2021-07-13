@@ -5,7 +5,7 @@ import java.util.Map;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
 
-public interface HasUserInfo {
+public interface HasUserInfo extends HasAccountInfo {
   User getUserByAccountId(String accountId);
   UserGroup getUserGroupByAccountId(String accountId);
   Map<String, User> getUsers();

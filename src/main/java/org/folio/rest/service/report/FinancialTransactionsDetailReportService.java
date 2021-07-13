@@ -28,8 +28,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.client.CirculationStorageClient;
 import org.folio.rest.client.InventoryClient;
-import org.folio.rest.client.UserGroupsClient;
-import org.folio.rest.client.UsersClient;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
@@ -38,11 +36,11 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReport;
 import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportEntry;
 import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportStats;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LoanPolicy;
+import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
@@ -52,7 +50,7 @@ import org.folio.rest.jaxrs.model.UserGroup;
 import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.repository.LostItemFeePolicyRepository;
 import org.folio.rest.repository.OverdueFinePolicyRepository;
-import org.folio.rest.service.LocationService;
+import org.folio.rest.service.report.context.HasItemInfo;
 import org.folio.rest.service.report.context.HasUserInfo;
 import org.folio.rest.service.report.parameters.FinancialTransactionsDetailReportParameters;
 import org.folio.rest.service.report.utils.LookupHelper;
@@ -88,7 +86,6 @@ public class FinancialTransactionsDetailReportService extends
 
   private final InventoryClient inventoryClient;
   private final CirculationStorageClient circulationStorageClient;
-  private final UserGroupsClient userGroupsClient;
   private final FeeFineActionRepository feeFineActionRepository;
   private final LostItemFeePolicyRepository lostItemFeePolicyRepository;
   private final OverdueFinePolicyRepository overdueFinePolicyRepository;
@@ -100,7 +97,6 @@ public class FinancialTransactionsDetailReportService extends
 
     inventoryClient = new InventoryClient(context.owner(), headers);
     circulationStorageClient = new CirculationStorageClient(context.owner(), headers);
-    userGroupsClient = new UserGroupsClient(context.owner(), headers);
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
     lostItemFeePolicyRepository = new LostItemFeePolicyRepository(context, headers);
     overdueFinePolicyRepository = new OverdueFinePolicyRepository(context, headers);
@@ -150,13 +146,13 @@ public class FinancialTransactionsDetailReportService extends
     Account account = ctx.actionsToAccounts.get(feeFineAction);
     String accountId = account.getId();
 
-    return lookupFeeFineActionsForAccount(ctx, accountId)
+    return lookupHelper.lookupFeeFineActionsForAccount(ctx, accountId)
       .compose(r -> lookupServicePointsForAllActionsInAccount(ctx, accountId))
       .compose(r -> lookupHelper.lookupUserForAccount(ctx, account))
       .compose(r -> lookupHelper.lookupUserGroupForUser(ctx, accountId))
-      .compose(r -> lookupItemForAccount(ctx, accountId))
-      .compose(r -> lookupInstanceForAccount(ctx, accountId))
-      .compose(r -> lookupLocationForAccount(ctx, accountId))
+      .compose(r -> lookupHelper.lookupItemForAccount(ctx, accountId))
+      .compose(r -> lookupHelper.lookupInstanceForAccount(ctx, accountId))
+      .compose(r -> lookupHelper.lookupLocationForAccount(ctx, accountId))
       .compose(r -> lookupLoanForAccount(ctx, accountId))
       .compose(r -> lookupOverdueFinePolicyForAccount(ctx, accountId))
       .compose(r -> lookupLostItemFeePolicyForAccount(ctx, accountId));
@@ -405,19 +401,19 @@ public class FinancialTransactionsDetailReportService extends
     return new MonetaryValue(value, currency).toString();
   }
 
-  private Future<Context> lookupFeeFineActionsForAccount(Context ctx,
-    String accountId) {
-
-    AccountContextData accountContextData = ctx.getAccountContextById(accountId);
-    if (accountContextData == null) {
-      return succeededFuture(ctx);
-    }
-
-    return feeFineActionRepository.findActionsForAccount(accountId)
-      .map(this::sortFeeFineActionsByDate)
-      .map(ffa_list -> ctx.accountContexts.put(accountId, accountContextData.withActions(ffa_list)))
-      .map(ctx);
-  }
+//  private Future<Context> lookupFeeFineActionsForAccount(Context ctx,
+//    String accountId) {
+//
+//    AccountContextData accountContextData = ctx.getAccountContextById(accountId);
+//    if (accountContextData == null) {
+//      return succeededFuture(ctx);
+//    }
+//
+//    return feeFineActionRepository.findActionsForAccount(accountId)
+//      .map(this::sortFeeFineActionsByDate)
+//      .map(ffa_list -> ctx.accountContexts.put(accountId, accountContextData.withActions(ffa_list)))
+//      .map(ctx);
+//  }
 
   private Future<Context> lookupServicePointsForAllActionsInAccount(Context ctx,
     String accountId) {
@@ -467,112 +463,6 @@ public class FinancialTransactionsDetailReportService extends
     }
 
     return succeededFuture(ctx);
-  }
-
-  private Future<Context> lookupUserGroupForUser(Context ctx, String accountId) {
-    User user = ctx.getUserByAccountId(accountId);
-
-    if (user == null || ctx.getUserGroupByAccountId(accountId) != null) {
-      return succeededFuture(ctx);
-    }
-
-    return userGroupsClient.fetchUserGroupById(user.getPatronGroup())
-      .map(userGroup -> ctx.userGroups.put(userGroup.getId(), userGroup))
-      .map(ctx)
-      .otherwise(ctx);
-  }
-
-  private Future<Context> lookupItemForAccount(Context ctx, String accountId) {
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
-
-    String itemId = account.getItemId();
-    if (!isUuid(itemId)) {
-      log.info("Item ID is not a valid UUID - account {}", accountId);
-      return succeededFuture(ctx);
-    }
-    else {
-      if (ctx.items.containsKey(itemId)) {
-        return succeededFuture(ctx);
-      }
-      else {
-        return inventoryClient.getItemById(itemId)
-          .map(item -> addItemToContext(ctx, item, accountId, itemId))
-          .map(ctx)
-          .otherwise(ctx);
-      }
-    }
-  }
-
-  private Context addItemToContext(Context ctx, Item item, String accountId, String itemId) {
-    if (item == null) {
-      log.info("Item not found - account {}, item {}", accountId, itemId);
-    } else {
-      ctx.items.put(itemId, item);
-    }
-    return ctx;
-  }
-
-  private Future<Context> lookupInstanceForAccount(Context ctx, String accountId) {
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
-
-    Item item = ctx.getItemByAccountId(accountId);
-    if (item == null) {
-      return succeededFuture(ctx);
-    }
-
-    String holdingsRecordId = item.getHoldingsRecordId();
-    if (!isUuid(holdingsRecordId)) {
-      log.info("Holdings record ID {} is not a valid UUID - account {}", holdingsRecordId,
-        accountId);
-      return succeededFuture(ctx);
-    }
-
-    return inventoryClient.getHoldingById(holdingsRecordId)
-      .map(HoldingsRecord::getInstanceId)
-      .compose(inventoryClient::getInstanceById)
-      .map(instance -> ctx.accountContexts.put(accountId,
-        ctx.getAccountContextById(accountId).withInstance(instance)))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find instance for account {}, holdingsRecord is {}", accountId,
-          holdingsRecordId);
-        return ctx;
-      });
-  }
-
-  private Future<Context> lookupLocationForAccount(Context ctx, String accountId) {
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
-
-    Item item = ctx.getItemByAccountId(accountId);
-    if (item == null) {
-      return succeededFuture(ctx);
-    }
-
-    String effectiveLocationId = item.getEffectiveLocationId();
-    if (!isUuid(effectiveLocationId)) {
-      log.info("Effective location ID {} is not a valid UUID - account {}", effectiveLocationId,
-        accountId);
-      return succeededFuture(ctx);
-    }
-
-    return inventoryClient.getLocationById(effectiveLocationId)
-      .map(effectiveLocation -> ctx.accountContexts.put(accountId,
-        ctx.getAccountContextById(accountId).withEffectiveLocation(effectiveLocation.getName())))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find location for account {}, effectiveLocationId is {}", accountId,
-          effectiveLocationId);
-        return ctx;
-      });
   }
 
   private Future<Context> lookupLoanForAccount(Context ctx, String accountId) {
@@ -653,7 +543,7 @@ public class FinancialTransactionsDetailReportService extends
   @With
   @AllArgsConstructor
   @Getter
-  private static class Context implements HasUserInfo {
+  private static class Context implements HasUserInfo, HasItemInfo {
     final DateTimeZone timeZone;
     final Map<Feefineaction, Account> actionsToAccounts;
     final Map<String, AccountContextData> accountContexts;
@@ -696,12 +586,12 @@ public class FinancialTransactionsDetailReportService extends
       }
     }
 
-    Account getAccountById(String accountId) {
+    public Account getAccountById(String accountId) {
       AccountContextData accountContextData = getAccountContextById(accountId);
       return accountContextData == null ? null : accountContextData.account;
     }
 
-    Item getItemByAccountId(String accountId) {
+    public Item getItemByAccountId(String accountId) {
       Account account = getAccountById(accountId);
 
       if (account != null) {
@@ -732,6 +622,33 @@ public class FinancialTransactionsDetailReportService extends
       }
 
       return null;
+    }
+
+    public Future<Void> updateAccountContextWithInstance(String accountId, Instance instance) {
+      accountContexts.put(accountId, getAccountContextById(accountId).withInstance(instance));
+      return succeededFuture();
+    }
+
+    public Future<Void> updateAccountContextWithEffectiveLocation(String accountId,
+      Location effectiveLocation) {
+
+      accountContexts.put(accountId,
+        getAccountContextById(accountId).withEffectiveLocation(effectiveLocation.getName()));
+      return succeededFuture();
+    }
+
+    public Future<Void> updateAccountContextWithActions(String accountId, List<Feefineaction> actions) {
+      AccountContextData accountContextData = getAccountContextById(accountId);
+      if (accountContextData == null) {
+        return succeededFuture();
+      }
+
+      accountContexts.put(accountId, accountContextData.withActions(actions));
+      return succeededFuture();
+    }
+
+    public boolean isAccountContextCreated(String accountId) {
+      return getAccountContextById(accountId) == null;
     }
   }
 
