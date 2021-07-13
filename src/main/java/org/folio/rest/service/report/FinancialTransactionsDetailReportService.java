@@ -401,20 +401,6 @@ public class FinancialTransactionsDetailReportService extends
     return new MonetaryValue(value, currency).toString();
   }
 
-//  private Future<Context> lookupFeeFineActionsForAccount(Context ctx,
-//    String accountId) {
-//
-//    AccountContextData accountContextData = ctx.getAccountContextById(accountId);
-//    if (accountContextData == null) {
-//      return succeededFuture(ctx);
-//    }
-//
-//    return feeFineActionRepository.findActionsForAccount(accountId)
-//      .map(this::sortFeeFineActionsByDate)
-//      .map(ffa_list -> ctx.accountContexts.put(accountId, accountContextData.withActions(ffa_list)))
-//      .map(ctx);
-//  }
-
   private Future<Context> lookupServicePointsForAllActionsInAccount(Context ctx,
     String accountId) {
 
@@ -637,7 +623,9 @@ public class FinancialTransactionsDetailReportService extends
       return succeededFuture();
     }
 
-    public Future<Void> updateAccountContextWithActions(String accountId, List<Feefineaction> actions) {
+    public Future<Void> updateAccountContextWithActions(String accountId,
+      List<Feefineaction> actions) {
+
       AccountContextData accountContextData = getAccountContextById(accountId);
       if (accountContextData == null) {
         return succeededFuture();
@@ -648,7 +636,7 @@ public class FinancialTransactionsDetailReportService extends
     }
 
     public boolean isAccountContextCreated(String accountId) {
-      return getAccountContextById(accountId) == null;
+      return getAccountContextById(accountId) != null;
     }
   }
 

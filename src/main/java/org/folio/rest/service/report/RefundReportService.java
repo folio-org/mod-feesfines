@@ -475,7 +475,7 @@ public class RefundReportService {
     }
 
     public boolean isAccountContextCreated(String accountId) {
-      return getAccountContextById(accountId) == null;
+      return getAccountContextById(accountId) != null;
     }
   }
 
