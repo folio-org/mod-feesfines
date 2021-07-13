@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Fee/fine reports
-version: v2.1
+version: v2.2
 baseUri: http://github.com/org/folio/mod-feesfines
 
 documentation:
@@ -10,12 +10,17 @@ documentation:
 types:
   user: !include user.json
   userGroup: !include usergroup.json
+  servicePoint: !include servicepoint.json
+  loan: !include loan.json
+  loanPolicy: !include loan-policy.json
   refundReport: !include reports/refundReport.json
   refundReportRequest: !include reports/refundReportRequest.json
   cashDrawerReconciliationReport: !include reports/cashDrawerReconciliationReport.json
   cashDrawerReconciliationReportRequest: !include reports/cashDrawerReconciliationReportRequest.json
   cashDrawerReconciliationReportSources: !include reports/cashDrawerReconciliationReportSources.json
   cashDrawerReconciliationReportSourcesRequest: !include reports/cashDrawerReconciliationReportSourcesRequest.json
+  financialTransactionsDetailReport: !include reports/financialTransactionsDetailReport.json
+  financialTransactionsDetailReportRequest: !include reports/financialTransactionsDetailReportRequest.json
   kvConfigurations: !include kv-configurations.json
   kvConfiguration: !include kv-configuration.json
   errors: !include raml-util/schemas/errors.schema
@@ -92,6 +97,30 @@ traits:
             description: "Unprocessable entity"
             body:
               text/plain:
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "Internal server error"
+  /financial-transactions-detail:
+      post:
+        is: [validate]
+        description: "Return data for a financial transactions detail report"
+        body:
+          application/json:
+            schema: financialTransactionsDetailReportRequest
+            example: !include examples/financialTransactionsDetailReportRequest.sample
+        responses:
+          200:
+            body:
+              application/json:
+                schema: financialTransactionsDetailReport
+                example: !include examples/financialTransactionsDetailReport.sample
+          422:
+            description: "Unprocessable entity"
+            body:
+              text/plain:
+                example: "Invalid startDate or endDate parameter"
           500:
             description: "Internal server error, e.g. due to misconfiguration"
             body:

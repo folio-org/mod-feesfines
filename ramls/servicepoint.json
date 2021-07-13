@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A service point",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Id of service-point object"
+    },
+    "name": {
+      "type": "string",
+      "description" : "service-point name, a required field"
+    },
+    "code": {
+      "type": "string",
+      "description" : "service-point code, a required field"
+    },
+    "discoveryDisplayName": {
+      "type": "string",
+      "description": "display name, a required field"
+    },
+    "description": {
+      "type": "string",
+      "description" : "description of the service-point"
+    },
+    "shelvingLagTime": {
+      "type": "integer",
+      "description": "shelving lag time"
+    },
+    "pickupLocation": {
+      "type": "boolean",
+      "description": "indicates whether or not the service point is a pickup location"
+    },
+    "holdShelfExpiryPeriod" :{
+      "type": "object",
+      "$ref": "time-period.json",
+      "description": "expiration period for items on the hold shelf at the service point"
+    },
+    "staffSlips": {
+      "type": "array",
+      "description": "List of staff slips for this service point",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            "description": "The ID of the staff slip"
+          },
+          "printByDefault": {
+            "type": "boolean",
+            "description": "Whether or not to print the staff slip by default"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "printByDefault"
+        ]
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    }
+  },
+  "additionalProperties": true
+}

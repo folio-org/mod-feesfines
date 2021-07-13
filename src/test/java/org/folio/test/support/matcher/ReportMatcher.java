@@ -13,6 +13,9 @@ import org.folio.rest.jaxrs.model.CashDrawerReconciliationReport;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportSources;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats;
+import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReport;
+import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportEntry;
+import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportStats;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
 import org.hamcrest.Matcher;
@@ -62,7 +65,8 @@ public class ReportMatcher {
         : contains(cashDrawerReconciliationReport.getReportData().stream()
         .map(ReportMatcher::cashDrawerReconciliationReportEntryMatcher)
         .collect(Collectors.toList()))),
-      hasJsonPath("reportStats", reportStatsMatcher(cashDrawerReconciliationReport.getReportStats())));
+      hasJsonPath("reportStats", cashDrawerReconciliationReportStatsMatcher(
+        cashDrawerReconciliationReport.getReportStats())));
   }
 
   public static Matcher<Response> cashDrawerReconciliationReportEntryMatcher(
@@ -84,7 +88,9 @@ public class ReportMatcher {
     ));
   }
 
-  public static Matcher<Response> reportStatsMatcher(CashDrawerReconciliationReportStats stats) {
+  public static Matcher<Response> cashDrawerReconciliationReportStatsMatcher(
+    CashDrawerReconciliationReportStats stats) {
+
     return allOf(
       hasJsonPath("bySource",
         contains(reportTotalsEntryMatcherList(stats.getBySource()))),
@@ -94,6 +100,91 @@ public class ReportMatcher {
         contains(reportTotalsEntryMatcherList(stats.getByFeeFineType()))),
       hasJsonPath("byFeeFineOwner",
         contains(reportTotalsEntryMatcherList(stats.getByFeeFineOwner())))
+    );
+  }
+
+  public static Matcher<ValidatableResponse> financialTransactionsDetailReportMatcher(
+    FinancialTransactionsDetailReport financialTransactionsDetailReport) {
+
+    return allOf(
+      hasJsonPath("reportData", financialTransactionsDetailReport.getReportData().isEmpty()
+        ? is(List.of())
+        : contains(financialTransactionsDetailReport.getReportData().stream()
+        .map(ReportMatcher::financialTransactionsDetailReportEntryMatcher)
+        .collect(Collectors.toList()))),
+      hasJsonPath("reportStats", financialTransactionsDetailReportStatsMatcher(
+        financialTransactionsDetailReport.getReportStats()))
+    );
+  }
+
+  public static Matcher<Response> financialTransactionsDetailReportEntryMatcher(
+    FinancialTransactionsDetailReportEntry entry) {
+
+    return allOf(List.of(
+      hasJsonPath("feeFineOwner", is(entry.getFeeFineOwner())),
+      hasJsonPath("feeFineType", is(entry.getFeeFineType())),
+      hasJsonPath("billedAmount", is(entry.getBilledAmount())),
+      hasJsonPath("dateBilled", is(entry.getDateBilled())),
+      hasJsonPath("feeFineCreatedAt", is(entry.getFeeFineCreatedAt())),
+      hasJsonPath("feeFineSource", is(entry.getFeeFineSource())),
+      hasJsonPath("feeFineId", is(entry.getFeeFineId())),
+      hasJsonPath("action", is(entry.getAction())),
+      hasJsonPath("actionAmount", is(entry.getActionAmount())),
+      hasJsonPath("actionDate", is(entry.getActionDate())),
+      hasJsonPath("actionCreatedAt", is(entry.getActionCreatedAt())),
+      hasJsonPath("actionSource", is(entry.getActionSource())),
+      hasJsonPath("actionStatus", is(entry.getActionStatus())),
+      hasJsonPath("actionAdditionalStaffInfo", is(entry.getActionAdditionalStaffInfo())),
+      hasJsonPath("actionAdditionalPatronInfo", is(entry.getActionAdditionalPatronInfo())),
+      hasJsonPath("paymentMethod", is(entry.getPaymentMethod())),
+      hasJsonPath("transactionInfo", is(entry.getTransactionInfo())),
+      hasJsonPath("waiveReason", is(entry.getWaiveReason())),
+      hasJsonPath("refundReason", is(entry.getRefundReason())),
+      hasJsonPath("transferAccount", is(entry.getTransferAccount())),
+      hasJsonPath("patronId", is(entry.getPatronId())),
+      hasJsonPath("patronName", is(entry.getPatronName())),
+      hasJsonPath("patronBarcode", is(entry.getPatronBarcode())),
+      hasJsonPath("patronGroup", is(entry.getPatronGroup())),
+      hasJsonPath("patronEmail", is(entry.getPatronEmail())),
+      hasJsonPath("instance", is(entry.getInstance())),
+      hasJsonPath("contributors", is(entry.getContributors())),
+      hasJsonPath("itemBarcode", is(entry.getItemBarcode())),
+      hasJsonPath("callNumber", is(entry.getCallNumber())),
+      hasJsonPath("effectiveLocation", is(entry.getEffectiveLocation())),
+      hasJsonPath("loanDate", is(entry.getLoanDate())),
+      hasJsonPath("dueDate", is(entry.getDueDate())),
+      hasJsonPath("returnDate", is(entry.getReturnDate())),
+      hasJsonPath("loanPolicyId", is(entry.getLoanPolicyId())),
+      hasJsonPath("loanPolicyName", is(entry.getLoanPolicyName())),
+      hasJsonPath("overdueFinePolicyId", is(entry.getOverdueFinePolicyId())),
+      hasJsonPath("overdueFinePolicyName", is(entry.getOverdueFinePolicyName())),
+      hasJsonPath("lostItemPolicyId", is(entry.getLostItemPolicyId())),
+      hasJsonPath("lostItemPolicyName", is(entry.getLostItemPolicyName())),
+      hasJsonPath("loanId", is(entry.getLoanId())),
+      hasJsonPath("holdingsRecordId", is(entry.getHoldingsRecordId())),
+      hasJsonPath("instanceId", is(entry.getInstanceId())),
+      hasJsonPath("itemId", is(entry.getItemId()))
+    ));
+  }
+
+  public static Matcher<Response> financialTransactionsDetailReportStatsMatcher(
+    FinancialTransactionsDetailReportStats stats) {
+
+    return allOf(
+      hasJsonPath("byFeeFineOwner",
+        contains(reportTotalsEntryMatcherList(stats.getByFeeFineOwner()))),
+      hasJsonPath("byFeeFineType",
+        contains(reportTotalsEntryMatcherList(stats.getByFeeFineType()))),
+      hasJsonPath("byAction",
+        contains(reportTotalsEntryMatcherList(stats.getByAction()))),
+      hasJsonPath("byPaymentMethod",
+        contains(reportTotalsEntryMatcherList(stats.getByPaymentMethod()))),
+      hasJsonPath("byWaiveReason",
+        contains(reportTotalsEntryMatcherList(stats.getByWaiveReason()))),
+      hasJsonPath("byRefundReason",
+        contains(reportTotalsEntryMatcherList(stats.getByRefundReason()))),
+      hasJsonPath("byTransferAccount",
+        contains(reportTotalsEntryMatcherList(stats.getByTransferAccount())))
     );
   }
 
