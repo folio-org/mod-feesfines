@@ -172,11 +172,12 @@ public class RefundReportService {
   }
 
   private RefundReportContext processAccount(RefundReportContext ctx, String accountId) {
-
     AccountContextData accountData = ctx.accounts.get(accountId);
-    List<Feefineaction> accountFeeFineActions = accountData.actions;
 
-    accountFeeFineActions.forEach(action -> processAccountAction(ctx, accountId, action));
+    if (accountData != null) {
+      accountData.actions.forEach(action -> processAccountAction(ctx, accountId, action));
+    }
+
     ctx.markAccountProcessed(accountId);
 
     return ctx;
