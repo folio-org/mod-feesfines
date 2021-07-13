@@ -44,6 +44,8 @@ import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
+import org.folio.rest.service.report.context.HasUserInfo;
+import org.folio.rest.service.report.utils.LookupHelper;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -78,6 +80,8 @@ public class RefundReportService {
   private final FeeFineActionRepository feeFineActionRepository;
   private final AccountRepository accountRepository;
 
+  private final LookupHelper lookupHelper;
+
   private DateTimeZone timeZone;
   private DateTimeFormatter dateTimeFormatter;
   private Currency currency;
@@ -89,6 +93,8 @@ public class RefundReportService {
     userGroupsClient = new UserGroupsClient(context.owner(), headers);
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
     accountRepository = new AccountRepository(context, headers);
+
+    lookupHelper = new LookupHelper(headers, context);
   }
 
   public Future<RefundReport> buildReport(DateTime startDate, DateTime endDate,
@@ -167,8 +173,8 @@ public class RefundReportService {
     return lookupAccount(ctx, refundAction)
       .compose(r -> lookupItemForAccount(ctx, accountId))
       .compose(r -> lookupInstanceForAccount(ctx, accountId))
-      .compose(r -> lookupUserForAccount(ctx, accountId))
-      .compose(r -> lookupUserGroupForUser(ctx, accountId))
+      .compose(r -> lookupHelper.lookupUserForAccount(ctx, ctx.getAccountById(accountId)))
+      .compose(r -> lookupHelper.lookupUserGroupForUser(ctx, accountId))
       .compose(r -> lookupFeeFineActionsForAccount(ctx, accountId))
       .map(actions -> processAccount(ctx, accountId, actions));
   }
@@ -380,58 +386,6 @@ public class RefundReportService {
       });
   }
 
-  private Future<RefundReportContext> lookupUserForAccount(RefundReportContext ctx,
-    String accountId) {
-
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
-
-    String userId = account.getUserId();
-    if (!isUuid(userId)) {
-      log.error("User ID {} is not a valid UUID - account {}", userId, accountId);
-      return succeededFuture(ctx);
-    }
-
-    if (ctx.users.containsKey(userId)) {
-      return succeededFuture(ctx);
-    }
-    else {
-      return usersClient.fetchUserById(userId)
-        .compose(user -> addUserToContext(ctx, user, accountId, userId))
-        .otherwise(ctx);
-    }
-  }
-
-  private Future<RefundReportContext> addUserToContext(RefundReportContext ctx, User user,
-    String accountId, String userId) {
-
-    if (user == null) {
-      log.error("User not found - account {}, user {}", accountId, userId);
-      return succeededFuture(ctx);
-    } else {
-      ctx.users.put(userId, user);
-    }
-
-    return succeededFuture(ctx);
-  }
-
-  private Future<RefundReportContext> lookupUserGroupForUser(RefundReportContext ctx,
-    String accountId) {
-
-    User user = ctx.getUserByAccountId(accountId);
-
-    if (user == null || ctx.getUserGroupByAccountId(accountId) != null) {
-      return succeededFuture(ctx);
-    }
-
-    return userGroupsClient.fetchUserGroupById(user.getPatronGroup())
-      .map(userGroup -> ctx.userGroups.put(userGroup.getId(), userGroup))
-      .map(ctx)
-      .otherwise(ctx);
-  }
-
   private Future<List<Feefineaction>> lookupFeeFineActionsForAccount(RefundReportContext ctx,
     String accountId) {
 
@@ -550,7 +504,8 @@ public class RefundReportService {
 
   @With
   @AllArgsConstructor
-  private static class RefundReportContext {
+  @Getter
+  private static class RefundReportContext implements HasUserInfo {
     final DateTimeZone timeZone;
     final Map<String, RefundData> refunds;
     final Map<String, AccountContextData> accounts;
@@ -591,7 +546,7 @@ public class RefundReportService {
       return null;
     }
 
-    User getUserByAccountId(String accountId) {
+    public User getUserByAccountId(String accountId) {
       Account account = getAccountById(accountId);
 
       if (account != null && isUuid(account.getUserId())) {
@@ -601,7 +556,7 @@ public class RefundReportService {
       return null;
     }
 
-    UserGroup getUserGroupByAccountId(String accountId) {
+    public UserGroup getUserGroupByAccountId(String accountId) {
       User user = getUserByAccountId(accountId);
 
       if (user != null && isUuid(user.getPatronGroup())) {

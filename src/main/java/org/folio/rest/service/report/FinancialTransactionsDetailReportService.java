@@ -53,7 +53,9 @@ import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.repository.LostItemFeePolicyRepository;
 import org.folio.rest.repository.OverdueFinePolicyRepository;
 import org.folio.rest.service.LocationService;
+import org.folio.rest.service.report.context.HasUserInfo;
 import org.folio.rest.service.report.parameters.FinancialTransactionsDetailReportParameters;
+import org.folio.rest.service.report.utils.LookupHelper;
 import org.joda.time.DateTimeZone;
 
 import io.vertx.core.Future;
@@ -86,22 +88,24 @@ public class FinancialTransactionsDetailReportService extends
 
   private final InventoryClient inventoryClient;
   private final CirculationStorageClient circulationStorageClient;
-  private final UsersClient usersClient;
   private final UserGroupsClient userGroupsClient;
   private final FeeFineActionRepository feeFineActionRepository;
   private final LostItemFeePolicyRepository lostItemFeePolicyRepository;
   private final OverdueFinePolicyRepository overdueFinePolicyRepository;
+
+  private final LookupHelper lookupHelper;
 
   public FinancialTransactionsDetailReportService(Map<String, String> headers, io.vertx.core.Context context) {
     super(headers, context);
 
     inventoryClient = new InventoryClient(context.owner(), headers);
     circulationStorageClient = new CirculationStorageClient(context.owner(), headers);
-    usersClient = new UsersClient(context.owner(), headers);
     userGroupsClient = new UserGroupsClient(context.owner(), headers);
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
     lostItemFeePolicyRepository = new LostItemFeePolicyRepository(context, headers);
     overdueFinePolicyRepository = new OverdueFinePolicyRepository(context, headers);
+
+    lookupHelper = new LookupHelper(headers, context);
   }
 
   @Override
@@ -148,8 +152,8 @@ public class FinancialTransactionsDetailReportService extends
 
     return lookupFeeFineActionsForAccount(ctx, accountId)
       .compose(r -> lookupServicePointsForAllActionsInAccount(ctx, accountId))
-      .compose(r -> lookupUserForAccount(ctx, account))
-      .compose(r -> lookupUserGroupForUser(ctx, accountId))
+      .compose(r -> lookupHelper.lookupUserForAccount(ctx, account))
+      .compose(r -> lookupHelper.lookupUserGroupForUser(ctx, accountId))
       .compose(r -> lookupItemForAccount(ctx, accountId))
       .compose(r -> lookupInstanceForAccount(ctx, accountId))
       .compose(r -> lookupLocationForAccount(ctx, accountId))
@@ -465,38 +469,6 @@ public class FinancialTransactionsDetailReportService extends
     return succeededFuture(ctx);
   }
 
-  private Future<Context> lookupUserForAccount(Context ctx, Account account) {
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
-
-    String userId = account.getUserId();
-    if (!isUuid(userId)) {
-      log.error("User ID {} is not a valid UUID - account {}", userId, account.getId());
-      return succeededFuture(ctx);
-    }
-
-    if (ctx.users.containsKey(userId)) {
-      return succeededFuture(ctx);
-    } else {
-      return usersClient.fetchUserById(userId)
-        .compose(user -> addUserToContext(ctx, user, account.getId(), userId))
-        .otherwise(ctx);
-    }
-  }
-
-  private Future<Context> addUserToContext(Context ctx, User user,
-    String accountId, String userId) {
-
-    if (user == null) {
-      log.error("User not found - account {}, user {}", accountId, userId);
-    } else {
-      ctx.users.put(user.getId(), user);
-    }
-
-    return succeededFuture(ctx);
-  }
-
   private Future<Context> lookupUserGroupForUser(Context ctx, String accountId) {
     User user = ctx.getUserByAccountId(accountId);
 
@@ -680,7 +652,8 @@ public class FinancialTransactionsDetailReportService extends
 
   @With
   @AllArgsConstructor
-  private static class Context {
+  @Getter
+  private static class Context implements HasUserInfo {
     final DateTimeZone timeZone;
     final Map<Feefineaction, Account> actionsToAccounts;
     final Map<String, AccountContextData> accountContexts;
@@ -741,7 +714,7 @@ public class FinancialTransactionsDetailReportService extends
       return null;
     }
 
-    User getUserByAccountId(String accountId) {
+    public User getUserByAccountId(String accountId) {
       Account account = getAccountById(accountId);
 
       if (account != null && isUuid(account.getUserId())) {
@@ -751,7 +724,7 @@ public class FinancialTransactionsDetailReportService extends
       return null;
     }
 
-    UserGroup getUserGroupByAccountId(String accountId) {
+    public UserGroup getUserGroupByAccountId(String accountId) {
       User user = getUserByAccountId(accountId);
 
       if (user != null && isUuid(user.getPatronGroup())) {
