@@ -2,6 +2,7 @@ package org.folio.rest.service.action;
 
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -46,14 +47,14 @@ public class CancelActionService extends ActionService {
       .withSource(request.getUserName())
       .withAccountId(account.getId())
       .withUserId(account.getUserId())
-      .withBalance(remainingAmountAfterAction.toDouble())
+      .withBalance(remainingAmountAfterAction)
       .withTypeAction(reasonForAction)
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date());
 
     account.getPaymentStatus().setName(reasonForAction);
     account.getStatus().setName(CLOSED.getValue());
-    account.setRemaining(0.0);
+    account.setRemaining(new MonetaryValue(BigDecimal.ZERO));
 
     return feeFineAction;
   }

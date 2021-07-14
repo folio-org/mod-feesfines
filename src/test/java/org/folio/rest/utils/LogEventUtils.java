@@ -3,6 +3,10 @@ package org.folio.rest.utils;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.vertx.core.json.JsonObject;
 import org.folio.test.support.OkapiDeployment;
@@ -11,7 +15,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class LogEventUtils {
-  private LogEventUtils(){}
+  private LogEventUtils() {
+  }
 
   public static List<JsonObject> fetchPublishedLogRecords(OkapiDeployment okapiDeployment) {
     return okapiDeployment

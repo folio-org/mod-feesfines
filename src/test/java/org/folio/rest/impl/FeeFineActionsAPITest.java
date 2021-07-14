@@ -34,6 +34,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Map;
@@ -42,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Campus;
 import org.folio.rest.jaxrs.model.Feefine;
@@ -190,7 +192,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("feeFineId", account.getFeeFineId())
       .put("feeFineOwner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
-      .put("amount", charge.getAmountAction());
+      .put("amount", charge.getAmountAction().toDouble());
 
     checkResult(expectedChargeContext);
     assertThatPublishedLogRecordsCountIsEqualTo(2);
@@ -229,7 +231,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("feeFineId", account.getFeeFineId())
       .put("feeFineOwner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
-      .put("amount", action.getAmountAction());
+      .put("amount", action.getAmountAction().toDouble());
 
     postAction(action);
     checkResult(expectedActionContext);
@@ -248,8 +250,8 @@ public class FeeFineActionsAPITest extends ApiTests {
     final String feeFineType = "damaged book";
     final String typeAction = "damaged book";
     final boolean notify = false;
-    final double amountAction = 100;
-    final double balance = 100;
+    final MonetaryValue amountAction = new MonetaryValue(100.0);
+    final MonetaryValue balance = new MonetaryValue(100.0);
     final String dateAction = "2019-12-23T14:25:59.550+00:00";
     final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
       amountAction, balance, accountId, user.getId());
@@ -286,7 +288,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("action", "Billed")
       .put("feeFineId", feeFineId)
       .put("type", feeFineType)
-      .put("amount", amountAction);
+      .put("amount", amountAction.getAmount().doubleValue());
 
     assertThatPublishedLogRecordsCountIsEqualTo(1);
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
@@ -303,8 +305,8 @@ public class FeeFineActionsAPITest extends ApiTests {
     final String typeAction = "Staff info only";
     final String expectedTypeAction = "Staff information only added";
     final boolean notify = false;
-    final double amountAction = 100;
-    final double balance = 100;
+    final MonetaryValue amountAction = new MonetaryValue(100.0);
+    final MonetaryValue balance = new MonetaryValue(100.0);
     final String dateAction = "2019-12-23T14:25:59.550+00:00";
     final String feeFineActionJson = createFeeFineActionJson(dateAction, typeAction, notify,
       amountAction, balance, accountId, user.getId());
@@ -341,7 +343,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("action", expectedTypeAction)
       .put("feeFineId", feeFineId)
       .put("type", feeFineType)
-      .put("amount", amountAction);
+      .put("amount", amountAction.getAmount().doubleValue());
 
     assertThatPublishedLogRecordsCountIsEqualTo(1);
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
@@ -381,15 +383,16 @@ public class FeeFineActionsAPITest extends ApiTests {
   }
 
   private String createFeeFineActionJson(String dateAction, String typeAction, boolean notify,
-    double amountAction, double balance, String accountId, String userId) {
+    MonetaryValue amountAction, MonetaryValue balance, String accountId, String userId) {
 
     return new JsonObject()
       .put("dateAction", dateAction)
       .put("typeAction", typeAction)
       .put("comments", "STAFF : staff comment \n PATRON : patron comment")
+      .put("comments", "STAFF : staff comment \n PATRON : patron comment")
       .put("notify", notify)
-      .put("amountAction", amountAction)
-      .put("balance", balance)
+      .put("amountAction", amountAction.getAmount().doubleValue())
+      .put("balance", balance.getAmount().doubleValue())
       .put("transactionInformation", "-")
       .put("createdAt", "Test")
       .put("source", "ADMINISTRATOR, DIKU")
@@ -451,8 +454,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withNotify(notify)
       .withTypeAction("Paid partially")
       .withDateAction(new Date())
-      .withAmountAction(Double.valueOf(ACTION_AMOUNT))
-      .withBalance(Double.valueOf(ACCOUNT_REMAINING))
+      .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
+      .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
       .withPaymentMethod("Cash")
       .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
   }
@@ -464,8 +467,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withNotify(notify)
       .withTypeAction("Overdue fine")
       .withDateAction(new Date())
-      .withAmountAction(Double.valueOf(ACTION_AMOUNT))
-      .withBalance(Double.valueOf(ACCOUNT_REMAINING))
+      .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
+      .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
       .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }
 
@@ -499,8 +502,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withFeeFineType(feefine.getFeeFineType())
       .withMaterialType("book")
       .withMaterialTypeId(randomId())
-      .withAmount(Double.valueOf(ACCOUNT_AMOUNT))
-      .withRemaining(Double.valueOf(ACCOUNT_REMAINING));
+      .withAmount(new MonetaryValue(new BigDecimal(ACCOUNT_AMOUNT)))
+      .withRemaining(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)));
   }
 
   private static Owner createOwner() {

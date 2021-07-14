@@ -11,6 +11,7 @@ import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -114,7 +115,7 @@ public abstract class ActionService {
     final MonetaryValue requestedAmount = context.getRequestedAmount();
 
     Map<String, MonetaryValue> actionableAmounts = accounts.stream()
-      .collect(toMap(Account::getId, account -> new MonetaryValue(account.getRemaining())));
+      .collect(toMap(Account::getId, Account::getRemaining));
 
     Map<String, MonetaryValue> distributedAmounts = amountSplitterStrategy.split(
       requestedAmount, actionableAmounts);
@@ -131,13 +132,13 @@ public abstract class ActionService {
   protected Feefineaction createFeeFineActionAndUpdateAccount(Account account, MonetaryValue amount,
     ActionRequest request) {
 
-    final MonetaryValue remainingAmountAfterAction = new MonetaryValue(account.getRemaining())
+    final MonetaryValue remainingAmountAfterAction = account.getRemaining()
       .subtract(amount);
     boolean isFullAction = remainingAmountAfterAction.isZero();
     String actionType = isFullAction ? action.getFullResult() : action.getPartialResult();
 
     final Feefineaction feeFineAction = new Feefineaction()
-      .withAmountAction(amount.toDouble())
+      .withAmountAction(amount)
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
       .withTransactionInformation(request.getTransactionInfo())
@@ -146,7 +147,7 @@ public abstract class ActionService {
       .withPaymentMethod(request.getPaymentMethod())
       .withAccountId(account.getId())
       .withUserId(account.getUserId())
-      .withBalance(remainingAmountAfterAction.toDouble())
+      .withBalance(remainingAmountAfterAction)
       .withTypeAction(actionType)
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date());
@@ -155,7 +156,7 @@ public abstract class ActionService {
 
     if (isFullAction) {
       account.getStatus().setName(CLOSED.getValue());
-      account.setRemaining(0.0);
+      account.setRemaining(new MonetaryValue(BigDecimal.ZERO));
     } else {
       account.setRemaining(feeFineAction.getBalance());
     }

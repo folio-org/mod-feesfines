@@ -193,7 +193,7 @@ public class RefundReportService {
     if (actionIsOfType(feeFineAction, PAY)) {
       if (feeFineAction.getAmountAction() != null) {
         accountCtx.setPaidAmount(accountCtx.paidAmount.add(
-          new MonetaryValue(feeFineAction.getAmountAction())));
+          feeFineAction.getAmountAction()));
         accountCtx.paymentMethods.add(feeFineAction.getPaymentMethod());
         accountCtx.paymentTransactionInfo.add(feeFineAction.getTransactionInformation());
       } else {
@@ -204,7 +204,7 @@ public class RefundReportService {
     else if (actionIsOfType(feeFineAction, TRANSFER)) {
       if (feeFineAction.getAmountAction() != null) {
         accountCtx.setTransferredAmount(accountCtx.transferredAmount.add(
-          new MonetaryValue(feeFineAction.getAmountAction())));
+          feeFineAction.getAmountAction()));
         accountCtx.transferAccounts.add(feeFineAction.getPaymentMethod());
       } else {
         log.error("Transfer amount is null - fee/fine action {}, account {}", feeFineAction.getId(),
@@ -223,7 +223,7 @@ public class RefundReportService {
       reportEntry
         .withFeeFineId(accountId)
         .withRefundDate(formatDate(feeFineAction.getDateAction(), ctx.timeZone))
-        .withRefundAmount(formatMonetaryValue(feeFineAction.getAmountAction()))
+        .withRefundAmount(feeFineAction.getAmountAction().toString())
         .withRefundAction(feeFineAction.getTypeAction())
         .withRefundReason(feeFineAction.getPaymentMethod())
         .withStaffInfo(getStaffInfoFromComment(feeFineAction))
@@ -247,7 +247,7 @@ public class RefundReportService {
       if (account != null) {
         reportEntry
           .withFeeFineType(account.getFeeFineType())
-          .withBilledAmount(formatMonetaryValue(account.getAmount()))
+          .withBilledAmount(account.getAmount().toString())
           .withDateBilled(formatDate(account.getMetadata().getCreatedDate(), ctx.timeZone))
           .withFeeFineOwner(account.getFeeFineOwner());
       } else {
@@ -513,9 +513,9 @@ public class RefundReportService {
     return item.getBarcode();
   }
 
-  private String formatMonetaryValue(Double value) {
+ /* private String formatMonetaryValue(MonetaryValue value) {
     return new MonetaryValue(value, currency).toString();
-  }
+  }*/
 
   private String formatDate(Date date, DateTimeZone timeZone) {
     return new DateTime(date).withZone(timeZone).toString(dateTimeFormatter);

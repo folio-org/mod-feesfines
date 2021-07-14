@@ -23,7 +23,7 @@
     },
     "maxOverdueFine": {
       "description": "Maximum overdue fine",
-      "type": "number"
+      "javaType": "org.folio.rest.domain.MonetaryValue"
     },
     "forgiveOverdueFine": {
       "description": "A flag to determine forgive overdue fine if item renewed",
@@ -40,7 +40,7 @@
     },
     "maxOverdueRecallFine": {
       "description": "Maximum overdue recall fine",
-      "type": "number"
+      "javaType": "org.folio.rest.domain.MonetaryValue"
     },
     "metadata": {
       "description": "Metadata about creation to overdue fine policy, provided by the server",

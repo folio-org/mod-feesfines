@@ -164,8 +164,8 @@ public class PatronNoticeBuilder {
       .put("owner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
       .put("paymentStatus", paymentStatus)
-      .put("amount", new MonetaryValue(account.getAmount()).toString())
-      .put("remainingAmount", new MonetaryValue(account.getRemaining()).toString());
+      .put("amount", account.getAmount().toString())
+      .put("remainingAmount", account.getRemaining().toString());
 
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
@@ -197,8 +197,8 @@ public class PatronNoticeBuilder {
       .put("type", action.getTypeAction())
       .put("actionDate", actionDate)
       .put("actionDateTime", actionDate)
-      .put("amount", new MonetaryValue(action.getAmountAction()).toString())
-      .put("remainingAmount", new MonetaryValue(action.getBalance()).toString())
+      .put("amount", action.getAmountAction().toString())
+      .put("remainingAmount", action.getBalance().toString())
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
 
     return feeActionContext;

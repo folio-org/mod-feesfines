@@ -1,5 +1,6 @@
 package org.folio.rest.service.action.validation;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,11 +34,11 @@ public class RefundActionValidationService extends ActionValidationService {
 
     // Sum of the refundable amounts of all accounts
     return feeFineActionRepository.findRefundableActionsForAccounts(accountIds)
-      .map(actions -> new MonetaryValue(
+      .map(actions ->
         actions.stream()
-          .mapToDouble(Feefineaction::getAmountAction)
-          .sum()
-      ));
+          .map(Feefineaction::getAmountAction)
+          .reduce(new MonetaryValue(BigDecimal.valueOf(0.0)), MonetaryValue::add)
+      );
   }
 
   @Override

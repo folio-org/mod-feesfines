@@ -5,11 +5,13 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.FeeFineStatus;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BulkCheckActionRequest;
 import org.folio.rest.jaxrs.model.CheckActionRequest;
@@ -25,9 +27,9 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
 
   protected static final String ACCOUNTS_TABLE = "accounts";
   protected static final String ERROR_MESSAGE_ALREADY_CLOSED = "Fee/fine is already closed";
-  protected static final double ACCOUNT_INITIAL_AMOUNT = 9.00;
-  protected static final double ACCOUNT_REMAINING_AMOUNT = 4.55;
-  protected static final double REQUESTED_AMOUNT = 1.23;
+  protected static final MonetaryValue ACCOUNT_INITIAL_AMOUNT = new MonetaryValue(9.00);
+  protected static final MonetaryValue ACCOUNT_REMAINING_AMOUNT = new MonetaryValue(4.55);
+  protected static final MonetaryValue REQUESTED_AMOUNT =new MonetaryValue( 1.23);
   protected static final String ERROR_MESSAGE_MUST_BE_POSITIVE = "Amount must be positive";
   protected static final String ERROR_MESSAGE_INVALID_AMOUNT = "Invalid amount entered";
 
@@ -47,11 +49,9 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
       .body("amount", is(amount));
   }
 
-  protected void actionShouldBeAllowed(boolean bulk, ResourceClient actionCheckClient,
-    String remaining) {
+  protected void actionShouldBeAllowed(boolean bulk, ResourceClient actionCheckClient, String remaining) {
 
-    final var request = createRequest(bulk,
-      REQUESTED_AMOUNT_STRING);
+    final var request = createRequest(bulk, REQUESTED_AMOUNT_STRING);
     final var response = actionCheckClient.attemptCreate(request);
     response
       .then()
@@ -67,20 +67,18 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
     ResourceClient actionCheckClient) {
 
     String expectedErrorMessage = "Requested amount exceeds remaining amount";
-    String amount = String.valueOf(bulk ? ACCOUNT_REMAINING_AMOUNT * 2 + 1 : REQUESTED_AMOUNT + 10);
+    String amount = String.valueOf(bulk ? ACCOUNT_REMAINING_AMOUNT.toDouble() * 2 + 1 : REQUESTED_AMOUNT.toDouble() + 10);
     Object request = buildRequest(bulk, amount);
 
     baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(actionCheckClient,
       expectedErrorMessage, request, amount);
   }
 
-  protected void actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(boolean bulk,
-    ResourceClient actionCheckClient) {
-
+  protected void actionCheckRefundAmountShouldNotBeAllowedWithExceededAmount(boolean bulk, ResourceClient actionCheckClient) {
     String expectedErrorMessage =
       "Refund amount must be greater than zero and less than or equal to Selected amount";
 
-    String amount = String.valueOf(REQUESTED_AMOUNT + 10);
+    String amount = String.valueOf(REQUESTED_AMOUNT.toDouble() + 10);
     Object request = buildRequest(bulk, amount);
 
     baseActionCheckAmountShouldNotBeAllowedWithExceededAmount(
@@ -135,7 +133,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   private void closeAllAccounts() {
     Stream.of(firstAccount, secondAccount)
       .forEach(account -> {
-        account.setRemaining(0.00);
+        account.setRemaining(new MonetaryValue(new BigDecimal("0.00")));
         account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
         accountsClient.update(account.getId(), account);
       });
@@ -143,7 +141,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
 
 
   protected void successfulActionCheckHandlesLongDecimalsCorrectly(ResourceClient client) {
-    firstAccount.setRemaining(1.235987654321); // will be rounded to 1.24
+    firstAccount.setRemaining(new MonetaryValue(new BigDecimal("1.235987654321"))); // will be rounded to 1.24
     accountsClient.update(firstAccount.getId(), firstAccount);
 
     client.attemptCreate(new CheckActionRequest().withAmount("1.004987654321")) // rounded to 1.00
@@ -157,7 +155,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
   }
 
   protected void failedActionCheckReturnsInitialRequestedAmount(ResourceClient client) {
-    firstAccount.setRemaining(0.99);
+    firstAccount.setRemaining(new MonetaryValue(new BigDecimal("0.99")));
     accountsClient.update(firstAccount.getId(), firstAccount);
 
     String requestedAmount = "1.004123456789"; // rounded to 1.00 when compared to account balance
