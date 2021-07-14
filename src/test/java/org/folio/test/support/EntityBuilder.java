@@ -3,6 +3,7 @@ package org.folio.test.support;
 import static java.lang.String.format;
 import static org.folio.test.support.ApiTests.randomId;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -71,8 +72,8 @@ public class EntityBuilder {
       .withFeeFineId(randomId())
       .withFeeFineType(feeFineType)
       .withFeeFineOwner(owner)
-      .withAmount(amount.toDouble())
-      .withRemaining(amount.toDouble())
+      .withAmount(amount)
+      .withRemaining(amount)
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }
@@ -88,8 +89,8 @@ public class EntityBuilder {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(9.00)
-      .withRemaining(4.55)
+      .withAmount(new MonetaryValue(new BigDecimal("9.0")))
+      .withRemaining(new MonetaryValue(new BigDecimal("4.55")))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }
@@ -100,8 +101,8 @@ public class EntityBuilder {
 
   public static Account buildAccount(MonetaryValue amount, MonetaryValue remaining) {
     return buildAccount()
-      .withAmount(amount.toDouble())
-      .withRemaining(remaining.toDouble());
+      .withAmount(amount)
+      .withRemaining(remaining);
   }
 
   public static Feefineaction buildFeeFineAction(String userId, String accountId, String type,
@@ -115,8 +116,8 @@ public class EntityBuilder {
       .withTypeAction(type)
       .withPaymentMethod(paymentMethod)
       .withAccountId(accountId)
-      .withAmountAction(amount.toDouble())
-      .withBalance(balance.toDouble())
+      .withAmountAction(amount)
+      .withBalance(balance)
       .withDateAction(date)
       .withComments(format("STAFF : %s \n PATRON : %s", commentForStaff, commentForPatron))
       .withTransactionInformation(transactionInformation)
@@ -133,8 +134,8 @@ public class EntityBuilder {
       .withTypeAction(type)
       .withPaymentMethod(paymentMethod)
       .withAccountId(accountId)
-      .withAmountAction(amount.toDouble())
-      .withBalance(balance.toDouble())
+      .withAmountAction(amount)
+      .withBalance(balance)
       .withDateAction(date);
   }
 

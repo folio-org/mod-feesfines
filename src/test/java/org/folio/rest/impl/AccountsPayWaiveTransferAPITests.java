@@ -166,7 +166,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
   }
 
   private void return422WhenAccountIsEffectivelyClosed(MonetaryValue remainingAmount) {
-    Account account = createAccount(remainingAmount.add(new MonetaryValue(1.0))).withRemaining(remainingAmount.toDouble());
+    Account account = createAccount(remainingAmount.add(new MonetaryValue(1.0))).withRemaining(remainingAmount);
     account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
     postAccount(account);
 
@@ -324,8 +324,8 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(amount.toDouble())
-      .withRemaining(amount.toDouble())
+      .withAmount(amount)
+      .withRemaining(amount)
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }

@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static io.restassured.config.RestAssuredConfig.*;
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
@@ -17,11 +18,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.restassured.RestAssured;
+import io.restassured.config.JsonConfig;
+import io.restassured.config.RestAssuredConfig;
+import io.restassured.path.json.config.JsonPathConfig;
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.FeeFineStatus;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BulkActionSuccessResponse;
 import org.folio.rest.jaxrs.model.CancelActionRequest;
@@ -73,7 +80,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .log().body()
       .body(FEE_FINE_ACTIONS, hasSize(1))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
-        hasJsonPath("amountAction", is((float) accountToPost.getAmount().doubleValue())),
+        hasJsonPath("amountAction", is(accountToPost.getAmount().getAmount().floatValue())),
         hasJsonPath("balance", is(0.0f)),
         hasJsonPath("typeAction", is("Cancelled as error"))
       )));
@@ -107,7 +114,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .log().body()
       .body(FEE_FINE_ACTIONS, hasSize(1))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
-        hasJsonPath("amountAction", is((float) accountToPost.getAmount().doubleValue())),
+        hasJsonPath("amountAction", is(accountToPost.getAmount().getAmount().floatValue())),
         hasJsonPath("balance", is(0.0f)),
         hasJsonPath("typeAction", is(cancellationReason))
       )));
@@ -159,7 +166,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
     List<Account> accountsToPost = accountIds.stream()
       .map(EntityBuilder::buildAccount)
       .collect(Collectors.toList());
-    accountsToPost.forEach(account -> postAccount(account));
+    accountsToPost.forEach(this::postAccount);
 
     final var cancelActionRequest = createBulkCancelActionRequest(accountIds);
 
@@ -186,13 +193,13 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .body(FEE_FINE_ACTIONS, hasSize(2))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
         hasJsonPath("accountId", is(accountIds.get(0))),
-        hasJsonPath("amountAction", is((float) accountsToPost.get(0).getAmount().doubleValue())),
+        hasJsonPath("amountAction", is(accountsToPost.get(0).getAmount().getAmount().floatValue())),
         hasJsonPath("balance", is(0.0f)),
         hasJsonPath("typeAction", is("Cancelled as error"))
       )))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
         hasJsonPath("accountId", is(accountIds.get(1))),
-        hasJsonPath("amountAction", is((float) accountsToPost.get(1).getAmount().doubleValue())),
+        hasJsonPath("amountAction", is(accountsToPost.get(1).getAmount().getAmount().floatValue())),
         hasJsonPath("balance", is(0.0f)),
         hasJsonPath("typeAction", is("Cancelled as error"))
         )
@@ -200,7 +207,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
 
     fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
       is(either(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(0), cancelActionRequest))
-          .or(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(1), cancelActionRequest)))));
+        .or(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(1), cancelActionRequest)))));
   }
 
   private CancelActionRequest createCancelActionRequest() {

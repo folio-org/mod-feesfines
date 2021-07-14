@@ -18,6 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertEquals;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -86,11 +87,7 @@ public class AccountsAPITest extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON);
-
-    Response byId = accountsClient.getById(accountId);
-    final ResponseBody body = byId.getBody();
-
-    Account accountToPut = accountToPost.withRemaining(4.55);
+    Account accountToPut = accountToPost.withRemaining(new MonetaryValue(new BigDecimal("4.55")));
 
     // put account
     accountsClient.update(accountId, accountToPut)
@@ -106,7 +103,7 @@ public class AccountsAPITest extends ApiTests {
 
     Account accountToDelete = new Account()
       .withId(accountId)
-      .withRemaining(0.00);
+      .withRemaining(new MonetaryValue(new BigDecimal("0.00")));
 
     assertBalanceChangedEventPublished(accountToDelete);
   }
@@ -327,9 +324,8 @@ public class AccountsAPITest extends ApiTests {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(7.77)
-      .withRemaining(3.33)
-      .withAmount2(new MonetaryValue(7.77))
+      .withAmount(new MonetaryValue(new BigDecimal("7.77")))
+      .withRemaining(new MonetaryValue(new BigDecimal("3.33")))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }
@@ -396,7 +392,7 @@ public class AccountsAPITest extends ApiTests {
     assertThat(eventPayload.getString("userId"), is(account.getUserId()));
     assertThat(eventPayload.getString("feeFineId"), is(account.getId()));
     assertThat(eventPayload.getString("feeFineTypeId"), is(account.getFeeFineId()));
-    assertThat(eventPayload.getDouble("balance"), is(account.getRemaining()));
+    assertThat(eventPayload.getString("balance"), is(account.getRemaining().toString()));
     assertThat(eventPayload.getString("loanId"), is(account.getLoanId()));
   }
 }

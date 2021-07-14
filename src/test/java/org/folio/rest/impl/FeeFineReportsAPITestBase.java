@@ -96,10 +96,6 @@ public class FeeFineReportsAPITestBase extends ApiTests {
     createEntity(ServicePath.ACTIONS_PATH, action);
   }
 
-  String formatMonetaryValue(Double value) {
-    return new MonetaryValue(value).toString();
-  }
-
   String formatRefundReportDate(Date date, DateTimeZone timeZone) {
     return new DateTime(date).withZone(timeZone).toString(DATE_TIME_REPORT_FORMATTER);
   }

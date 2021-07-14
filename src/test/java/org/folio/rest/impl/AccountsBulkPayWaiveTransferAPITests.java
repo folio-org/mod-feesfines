@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -184,7 +185,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   private void return422WhenAccountIsEffectivelyClosed(MonetaryValue remainingAmount) {
     Account closedAccount = createAccount(FIRST_ACCOUNT_ID, remainingAmount)
-      .withAmount(remainingAmount.toDouble() + 1)
+      .withAmount(remainingAmount.add(new MonetaryValue(new BigDecimal(1))))
       .withStatus(new Status().withName(FeeFineStatus.CLOSED.getValue()));
 
     postAccount(closedAccount);
@@ -352,8 +353,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(amount.toDouble())
-      .withRemaining(amount.toDouble())
+      .withAmount(amount)
+      .withRemaining(amount)
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }

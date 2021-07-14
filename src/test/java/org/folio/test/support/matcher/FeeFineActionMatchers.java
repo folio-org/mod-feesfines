@@ -58,8 +58,8 @@ public class FeeFineActionMatchers {
   public static Matcher<JsonObject> feeFineAction(Feefineaction feefineaction) {
     return allOf(Arrays.asList(
       hasJsonPath("typeAction", is(feefineaction.getTypeAction())),
-      hasJsonPath("amountAction", is(feefineaction.getAmountAction().floatValue())),
-      hasJsonPath("balance", is(feefineaction.getBalance().floatValue())),
+      hasJsonPath("amountAction", is(feefineaction.getAmountAction().toString())),
+      hasJsonPath("balance", is(feefineaction.getBalance().toString())),
       hasJsonPath("accountId", is(feefineaction.getAccountId())),
       hasJsonPath("userId", is(feefineaction.getUserId())),
       hasJsonPath("id", notNullValue(String.class)),

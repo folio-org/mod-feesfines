@@ -5,11 +5,10 @@ import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.node.DecimalNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.util.StdConverter;
 import io.vertx.core.json.JsonObject;
@@ -32,6 +31,12 @@ public class JsonHelper {
   public static void write(JsonObject target, String property, String value) {
     if (value != null) {
       target.put(property, value);
+    }
+  }
+
+  public static void write(JsonObject target, String property, MonetaryValue value) {
+    if (value != null) {
+      target.put(property, value.getAmount());
     }
   }
 
@@ -75,39 +80,22 @@ public class JsonHelper {
     return target != null && isNoneBlank(key, value);
   }
 
-  public static class MonetaryValueSerializer extends StdSerializer<BigDecimal> {
-
-    protected MonetaryValueSerializer(Class<BigDecimal> t) {
-      super(t);
-    }
-
-    public MonetaryValueSerializer() {
-      this(null);
-    }
+  public static class MonetaryValueSerializer extends JsonSerializer<MonetaryValue> {
 
     @Override
-    public void serialize(BigDecimal value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-      gen.writeNumber(value.setScale(2, RoundingMode.HALF_UP));
+    public void serialize(MonetaryValue value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+      //TODO fix doubleValue
+      gen.writeNumber(value.getAmount().doubleValue());
     }
   }
 
-  public static class MonetaryValueDeserializer extends StdDeserializer<BigDecimal> {
-
-    protected MonetaryValueDeserializer(Class<?> vc) {
-      super(vc);
-    }
-
-    public MonetaryValueDeserializer() {
-      this(null);
-    }
-
+  public static class MonetaryValueDeserializer extends JsonDeserializer<MonetaryValue> {
 
     @Override
-    public BigDecimal deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public MonetaryValue deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
       JsonNode node = p.getCodec().readTree(p);
-      return new BigDecimal(node.get("amount2").toString());
+
+      return new MonetaryValue(node.decimalValue());
     }
   }
-
-
 }

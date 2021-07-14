@@ -20,12 +20,8 @@ import static org.folio.rest.domain.logs.LogEventPayloadField.PAYMENT_METHOD;
 import static org.folio.rest.domain.logs.LogEventPayloadField.SERVICE_POINT_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.SOURCE;
 import static org.folio.rest.domain.logs.LogEventPayloadField.USER_ID;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.anyOf;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.number.IsCloseTo.*;
 
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.MonetaryValue;
@@ -35,12 +31,17 @@ import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.hamcrest.number.BigDecimalCloseTo;
+import org.hamcrest.number.IsCloseTo;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
 
 public class LogEventMatcher {
-  private LogEventMatcher(){}
+  private LogEventMatcher() {
+  }
 
   public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultBulkActionRequest request,
                                                              String action, MonetaryValue amount, MonetaryValue balance) {
@@ -50,15 +51,15 @@ public class LogEventMatcher {
   }
 
   public static Matcher<String> feeFineActionLogEventPayload(Account account, DefaultActionRequest request,
-    String action, MonetaryValue amount, MonetaryValue balance) {
+                                                             String action, MonetaryValue amount, MonetaryValue balance) {
     return feeFineActionLogEventPayload(account.getUserId(), account.getBarcode(), account.getItemId(),
       action, request.getServicePointId(), request.getUserName(), account.getFeeFineId(), account.getFeeFineOwner(),
       account.getLoanId(), amount, balance, request.getPaymentMethod(), request.getComments());
   }
 
   public static Matcher<String> feeFineActionLogEventPayload(String userId, String itemBarcode, String itemId,
-    String action, String servicePointId, String source, String feeFineId,
-    String feeFineOwner, String loanId, MonetaryValue amount, MonetaryValue balance, String paymentMethod, String comments) {
+                                                             String action, String servicePointId, String source, String feeFineId,
+                                                             String feeFineOwner, String loanId, MonetaryValue amount, MonetaryValue balance, String paymentMethod, String comments) {
 
     return allOf(Arrays.asList(
       hasJsonPath(USER_ID.value(), is(userId)),
@@ -90,7 +91,7 @@ public class LogEventMatcher {
   }
 
   public static Matcher<String> cancelledActionLogEventPayload(String userId, String itemId, String servicePointId, String source,
-    String feeFineId, String feeFineOwner, String loanId, double amount, String comments) {
+                                                               String feeFineId, String feeFineOwner, String loanId, MonetaryValue amount, String comments) {
 
     return allOf(Arrays.asList(
       hasJsonPath(USER_ID.value(), is(userId)),
@@ -102,7 +103,7 @@ public class LogEventMatcher {
       hasJsonPath(FEE_FINE_ID.value(), is(feeFineId)),
       hasJsonPath(FEE_FINE_OWNER.value(), is(feeFineOwner)),
       hasJsonPath(LOAN_ID.value(), is(loanId)),
-      hasJsonPath(AMOUNT.value(), is(amount)),
+      hasJsonPath(AMOUNT.value(), is(amount.getAmount().doubleValue())),
       hasJsonPath(BALANCE.value(), is(0.0)),
       hasJsonPath(COMMENTS.value(), is(comments))));
   }

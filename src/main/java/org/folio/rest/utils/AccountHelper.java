@@ -21,7 +21,7 @@ public class AccountHelper {
   }
 
   public static boolean isClosedAndHasZeroRemainingAmount(Account account) {
-    return isClosed(account) && new MonetaryValue(account.getRemaining()).isZero();
+    return isClosed(account) && account.getRemaining().isZero();
   }
 
   public static boolean isClosed(Account account) {

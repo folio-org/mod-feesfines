@@ -34,6 +34,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Map;
@@ -453,8 +454,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withNotify(notify)
       .withTypeAction("Paid partially")
       .withDateAction(new Date())
-      .withAmountAction(Double.valueOf(ACTION_AMOUNT))
-      .withBalance(Double.valueOf(ACCOUNT_REMAINING))
+      .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
+      .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
       .withPaymentMethod("Cash")
       .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
   }
@@ -466,8 +467,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withNotify(notify)
       .withTypeAction("Overdue fine")
       .withDateAction(new Date())
-      .withAmountAction(Double.valueOf(ACTION_AMOUNT))
-      .withBalance(Double.valueOf(ACCOUNT_REMAINING))
+      .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
+      .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
       .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }
 
@@ -501,8 +502,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withFeeFineType(feefine.getFeeFineType())
       .withMaterialType("book")
       .withMaterialTypeId(randomId())
-      .withAmount(Double.valueOf(ACCOUNT_AMOUNT))
-      .withRemaining(Double.valueOf(ACCOUNT_REMAINING));
+      .withAmount(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
+      .withRemaining(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)));
   }
 
   private static Owner createOwner() {

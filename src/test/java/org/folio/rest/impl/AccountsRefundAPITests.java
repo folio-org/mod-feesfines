@@ -829,7 +829,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
   private static DefaultActionRequest createRequest(MonetaryValue amount, String paymentMethod) {
     return new DefaultActionRequest()
-      .withAmount(amount.toString())
+      .withAmount(String.valueOf(amount.toDouble()))
       .withPaymentMethod(paymentMethod)
       .withServicePointId(SERVICE_POINT_ID)
       .withUserName(USER_NAME)

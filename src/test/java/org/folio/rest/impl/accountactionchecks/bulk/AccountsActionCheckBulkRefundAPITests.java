@@ -8,6 +8,7 @@ import static org.folio.rest.utils.ResourceClients.buildAccountCheckRefundClient
 import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.hamcrest.CoreMatchers.is;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,7 +40,7 @@ public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksA
     final Feefineaction feeFineAction = new Feefineaction()
       .withAccountId(firstAccount.getId())
       .withUserId(firstAccount.getUserId())
-      .withAmountAction((REQUESTED_AMOUNT.toDouble() + expectedRemainingAmount.toDouble()) / 2);
+      .withAmountAction((REQUESTED_AMOUNT.add(expectedRemainingAmount).divide(new MonetaryValue(new BigDecimal(2)))));
 
     buildFeeFineActionsClient()
       .post(feeFineAction.withTypeAction(PAY.getPartialResult()))
@@ -113,7 +114,7 @@ public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksA
     final Feefineaction feeFineAction1 = new Feefineaction()
       .withAccountId(firstAccount.getId())
       .withUserId(firstAccount.getUserId())
-      .withAmountAction(5.0)
+      .withAmountAction(new MonetaryValue(new BigDecimal("5.0")))
       .withTypeAction(PAY.getPartialResult());
 
     buildFeeFineActionsClient()
@@ -124,7 +125,7 @@ public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksA
     final Feefineaction feeFineAction2 = new Feefineaction()
       .withAccountId(similarAccountId)
       .withUserId(firstAccount.getUserId())
-      .withAmountAction(2.0)
+      .withAmountAction(new MonetaryValue(new BigDecimal("2.0")))
       .withTypeAction(PAY.getPartialResult());
 
     buildFeeFineActionsClient()

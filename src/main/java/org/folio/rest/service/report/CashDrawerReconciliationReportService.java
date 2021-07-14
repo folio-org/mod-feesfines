@@ -168,7 +168,6 @@ public class CashDrawerReconciliationReportService extends
         .filter(filterByCategory(category, categoryNameFunction))
         .map(Feefineaction::getAmountAction)
         .filter(Objects::nonNull)
-        .map(MonetaryValue::new)
         .reduce(MonetaryValue::add)
         .orElse(new MonetaryValue(ZERO))
         .toString())
@@ -183,7 +182,6 @@ public class CashDrawerReconciliationReportService extends
         .filter(filterByCategories(categories, categoryNameFunction))
         .map(Feefineaction::getAmountAction)
         .filter(Objects::nonNull)
-        .map(MonetaryValue::new)
         .reduce(MonetaryValue::add)
         .orElse(new MonetaryValue(ZERO))
         .toString())
@@ -204,7 +202,7 @@ public class CashDrawerReconciliationReportService extends
     return action -> categories.contains(categoryNameFunction.apply(action));
   }
 
-  private String formatMonetaryValue(Double value) {
-    return new MonetaryValue(value, currency).toString();
+  private String formatMonetaryValue(MonetaryValue value) {
+    return new MonetaryValue(value.getAmount(), currency).toString();
   }
 }

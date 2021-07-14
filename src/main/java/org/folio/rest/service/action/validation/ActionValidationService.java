@@ -96,7 +96,6 @@ public abstract class ActionValidationService {
   protected MonetaryValue calculateTotalRemaining(List<Account> accounts) {
     return accounts.stream()
       .map(Account::getRemaining)
-      .map(MonetaryValue::new)
       .reduce(MonetaryValue::add)
       .orElse(new MonetaryValue(BigDecimal.ZERO));
   }
