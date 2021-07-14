@@ -243,7 +243,7 @@ public class PatronNoticeBuilderTest {
     return new Feefineaction()
       .withTypeAction("Book lost")
       .withDateAction(new Date())
-      .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
+      .withAmountAction(new MonetaryValue(new BigDecimal(ACCOUNT_AMOUNT)))
       .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
       .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }

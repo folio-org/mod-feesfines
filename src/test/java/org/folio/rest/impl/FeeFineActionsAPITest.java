@@ -192,7 +192,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("feeFineId", account.getFeeFineId())
       .put("feeFineOwner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
-      .put("amount", charge.getAmountAction());
+      .put("amount", charge.getAmountAction().toDouble());
 
     checkResult(expectedChargeContext);
     assertThatPublishedLogRecordsCountIsEqualTo(2);
@@ -231,7 +231,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("feeFineId", account.getFeeFineId())
       .put("feeFineOwner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
-      .put("amount", action.getAmountAction());
+      .put("amount", action.getAmountAction().toDouble());
 
     postAction(action);
     checkResult(expectedActionContext);
@@ -502,7 +502,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withFeeFineType(feefine.getFeeFineType())
       .withMaterialType("book")
       .withMaterialTypeId(randomId())
-      .withAmount(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
+      .withAmount(new MonetaryValue(new BigDecimal(ACCOUNT_AMOUNT)))
       .withRemaining(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)));
   }
 

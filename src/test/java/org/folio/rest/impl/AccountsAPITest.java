@@ -392,7 +392,7 @@ public class AccountsAPITest extends ApiTests {
     assertThat(eventPayload.getString("userId"), is(account.getUserId()));
     assertThat(eventPayload.getString("feeFineId"), is(account.getId()));
     assertThat(eventPayload.getString("feeFineTypeId"), is(account.getFeeFineId()));
-    assertThat(eventPayload.getString("balance"), is(account.getRemaining().toString()));
+    assertThat(eventPayload.getDouble("balance"), is(account.getRemaining().toDouble()));
     assertThat(eventPayload.getString("loanId"), is(account.getLoanId()));
   }
 }
