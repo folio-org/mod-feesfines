@@ -88,14 +88,4 @@ public class JsonHelper {
       gen.writeNumber(value.getAmount().doubleValue());
     }
   }
-
-  public static class MonetaryValueDeserializer extends JsonDeserializer<MonetaryValue> {
-
-    @Override
-    public MonetaryValue deserialize(JsonParser p, DeserializationContext ctxt) throws IOException{
-      JsonNode node = p.getCodec().readTree(p);
-
-      return new MonetaryValue(node.decimalValue());
-    }
-  }
 }

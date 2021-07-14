@@ -15,7 +15,6 @@ import java.math.RoundingMode;
 import java.util.Currency;
 
 @JsonSerialize(using = JsonHelper.MonetaryValueSerializer.class)
-//@JsonDeserialize(using = JsonHelper.MonetaryValueDeserializer.class)
 public class MonetaryValue {
   private static final Currency USD = Currency.getInstance("USD");
   private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN;
