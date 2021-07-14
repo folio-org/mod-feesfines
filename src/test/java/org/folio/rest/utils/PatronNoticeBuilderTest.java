@@ -272,7 +272,7 @@ public class PatronNoticeBuilderTest {
       .withFeeFineOwner("Owner")
       .withFeeFineType("Fine type")
       .withMaterialType("book")
-      .withAmount(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
+      .withAmount(new MonetaryValue(new BigDecimal(ACCOUNT_AMOUNT)))
       .withRemaining(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
       .withMetadata(new Metadata().withCreatedDate(new Date()));
   }
