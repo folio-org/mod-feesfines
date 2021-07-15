@@ -51,6 +51,8 @@ import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.repository.LostItemFeePolicyRepository;
 import org.folio.rest.repository.OverdueFinePolicyRepository;
 import org.folio.rest.service.report.context.HasItemInfo;
+import org.folio.rest.service.report.context.HasLoanInfo;
+import org.folio.rest.service.report.context.HasServicePointsInfo;
 import org.folio.rest.service.report.context.HasUserInfo;
 import org.folio.rest.service.report.parameters.FinancialTransactionsDetailReportParameters;
 import org.folio.rest.service.report.utils.LookupHelper;
@@ -147,15 +149,15 @@ public class FinancialTransactionsDetailReportService extends
     String accountId = account.getId();
 
     return lookupHelper.lookupFeeFineActionsForAccount(ctx, accountId)
-      .compose(r -> lookupServicePointsForAllActionsInAccount(ctx, accountId))
+      .compose(r -> lookupHelper.lookupServicePointsForAllActionsInAccount(ctx, accountId))
       .compose(r -> lookupHelper.lookupUserForAccount(ctx, account))
       .compose(r -> lookupHelper.lookupUserGroupForUser(ctx, accountId))
       .compose(r -> lookupHelper.lookupItemForAccount(ctx, accountId))
       .compose(r -> lookupHelper.lookupInstanceForAccount(ctx, accountId))
       .compose(r -> lookupHelper.lookupLocationForAccount(ctx, accountId))
-      .compose(r -> lookupLoanForAccount(ctx, accountId))
-      .compose(r -> lookupOverdueFinePolicyForAccount(ctx, accountId))
-      .compose(r -> lookupLostItemFeePolicyForAccount(ctx, accountId));
+      .compose(r -> lookupHelper.lookupLoanForAccount(ctx, accountId))
+      .compose(r -> lookupHelper.lookupOverdueFinePolicyForAccount(ctx, accountId))
+      .compose(r -> lookupHelper.lookupLostItemFeePolicyForAccount(ctx, accountId));
   }
 
   private FinancialTransactionsDetailReport buildReport(Context ctx) {
@@ -401,135 +403,12 @@ public class FinancialTransactionsDetailReportService extends
     return new MonetaryValue(value, currency).toString();
   }
 
-  private Future<Context> lookupServicePointsForAllActionsInAccount(Context ctx,
-    String accountId) {
-
-    AccountContextData accountCtx = ctx.getAccountContextById(accountId);
-    if (accountCtx == null) {
-      return succeededFuture(ctx);
-    }
-
-    return accountCtx.getActions().stream()
-      .map(Feefineaction::getCreatedAt)
-      .distinct()
-      .reduce(succeededFuture(ctx),
-      (f, a) -> f.compose(result -> lookupServicePointForFeeFineAction(ctx, a)),
-      (a, b) -> succeededFuture(ctx));
-  }
-
-  private Future<Context> lookupServicePointForFeeFineAction(Context ctx,
-    String servicePointId) {
-
-    if (servicePointId == null) {
-      return succeededFuture(ctx);
-    }
-
-    if (!isUuid(servicePointId)) {
-      log.info("Service point ID is not a valid UUID - {}", servicePointId);
-      return succeededFuture(ctx);
-    } else {
-      if (ctx.servicePoints.containsKey(servicePointId)) {
-        return succeededFuture(ctx);
-      } else {
-        return inventoryClient.getServicePointById(servicePointId)
-          .map(sp -> addServicePointToContext(ctx, sp, sp.getId()))
-          .map(ctx)
-          .otherwise(ctx);
-      }
-    }
-  }
-
-  private Future<Context> addServicePointToContext(Context ctx, ServicePoint servicePoint,
-    String servicePointId) {
-
-    if (servicePoint == null) {
-      log.error("Service point not found - service point {}", servicePointId);
-    } else {
-      ctx.servicePoints.put(servicePoint.getId(), servicePoint);
-    }
-
-    return succeededFuture(ctx);
-  }
-
-  private Future<Context> lookupLoanForAccount(Context ctx, String accountId) {
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
-
-    String loanId = account.getLoanId();
-    if (!isUuid(loanId)) {
-      log.info("Loan ID {} is not a valid UUID - account {}", loanId, accountId);
-      return succeededFuture(ctx);
-    }
-
-    return circulationStorageClient.getLoanById(loanId)
-      .map(loan -> ctx.accountContexts.put(accountId,
-        ctx.getAccountContextById(accountId).withLoan(loan)))
-      .compose(actx -> circulationStorageClient.getLoanPolicyById(
-        ctx.getAccountContextById(accountId).loan.getLoanPolicyId()))
-      .map(loanPolicy -> ctx.accountContexts.put(accountId,
-        ctx.getAccountContextById(accountId).withLoanPolicy(loanPolicy)))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find loan for account {}, loan is {}", accountId,
-          loanId);
-        return ctx;
-      });
-  }
-
-  private Future<Context> lookupOverdueFinePolicyForAccount(Context ctx, String accountId) {
-    AccountContextData accountCtx = ctx.getAccountContextById(accountId);
-    if (accountCtx == null || accountCtx.loan == null) {
-      return succeededFuture(ctx);
-    }
-
-    String overdueFinePolicyId = accountCtx.loan.getOverdueFinePolicyId();
-    if (!isUuid(overdueFinePolicyId)) {
-      log.info("Overdue fine policy ID {} is not a valid UUID - account {}", overdueFinePolicyId,
-        accountId);
-      return succeededFuture(ctx);
-    }
-
-    return overdueFinePolicyRepository.getOverdueFinePolicyById(overdueFinePolicyId)
-      .map(policy -> ctx.accountContexts.put(accountId,
-        ctx.getAccountContextById(accountId).withOverdueFinePolicy(policy)))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find overdue fine policy for account {}, overdue fine policy is {}",
-          accountId, overdueFinePolicyId);
-        return ctx;
-      });
-  }
-
-  private Future<Context> lookupLostItemFeePolicyForAccount(Context ctx, String accountId) {
-    AccountContextData accountCtx = ctx.getAccountContextById(accountId);
-    if (accountCtx == null || accountCtx.loan == null) {
-      return succeededFuture(ctx);
-    }
-
-    String lostItemFeePolicyId = accountCtx.loan.getLostItemPolicyId();
-    if (!isUuid(lostItemFeePolicyId)) {
-      log.info("Lost item fee policy ID {} is not a valid UUID - account {}", lostItemFeePolicyId,
-        accountId);
-      return succeededFuture(ctx);
-    }
-
-    return lostItemFeePolicyRepository.getLostItemFeePolicyById(lostItemFeePolicyId)
-      .map(policy -> ctx.accountContexts.put(accountId,
-        ctx.getAccountContextById(accountId).withLostItemFeePolicy(policy)))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find lost item fee policy for account {}, lost item fee policy is {}",
-          accountId, lostItemFeePolicyId);
-        return ctx;
-      });
-  }
-
   @With
   @AllArgsConstructor
   @Getter
-  private static class Context implements HasUserInfo, HasItemInfo {
+  private static class Context implements HasUserInfo, HasItemInfo, HasServicePointsInfo,
+    HasLoanInfo {
+
     final DateTimeZone timeZone;
     final Map<Feefineaction, Account> actionsToAccounts;
     final Map<String, AccountContextData> accountContexts;
@@ -572,11 +451,13 @@ public class FinancialTransactionsDetailReportService extends
       }
     }
 
+    @Override
     public Account getAccountById(String accountId) {
       AccountContextData accountContextData = getAccountContextById(accountId);
       return accountContextData == null ? null : accountContextData.account;
     }
 
+    @Override
     public Item getItemByAccountId(String accountId) {
       Account account = getAccountById(accountId);
 
@@ -590,6 +471,7 @@ public class FinancialTransactionsDetailReportService extends
       return null;
     }
 
+    @Override
     public User getUserByAccountId(String accountId) {
       Account account = getAccountById(accountId);
 
@@ -600,6 +482,7 @@ public class FinancialTransactionsDetailReportService extends
       return null;
     }
 
+    @Override
     public UserGroup getUserGroupByAccountId(String accountId) {
       User user = getUserByAccountId(accountId);
 
@@ -610,11 +493,13 @@ public class FinancialTransactionsDetailReportService extends
       return null;
     }
 
+    @Override
     public Future<Void> updateAccountContextWithInstance(String accountId, Instance instance) {
       accountContexts.put(accountId, getAccountContextById(accountId).withInstance(instance));
       return succeededFuture();
     }
 
+    @Override
     public Future<Void> updateAccountContextWithEffectiveLocation(String accountId,
       Location effectiveLocation) {
 
@@ -623,6 +508,7 @@ public class FinancialTransactionsDetailReportService extends
       return succeededFuture();
     }
 
+    @Override
     public Future<Void> updateAccountContextWithActions(String accountId,
       List<Feefineaction> actions) {
 
@@ -635,8 +521,71 @@ public class FinancialTransactionsDetailReportService extends
       return succeededFuture();
     }
 
+    @Override
     public boolean isAccountContextCreated(String accountId) {
       return getAccountContextById(accountId) != null;
+    }
+
+    @Override
+    public List<Feefineaction> getAccountFeeFineActions(String accountId) {
+      AccountContextData accountCtx = getAccountContextById(accountId);
+      if (accountCtx == null) {
+        return null;
+      }
+
+      return accountCtx.getActions();
+    }
+
+    @Override
+    public Loan getLoanByAccountId(String accountId) {
+      AccountContextData accountContextData = getAccountContextById(accountId);
+      if (accountContextData == null) {
+        return null;
+      }
+
+      return accountContextData.loan;
+    }
+
+    @Override
+    public void updateAccountCtxWithLoan(String accountId, Loan loan) {
+      if (!isAccountContextCreated(accountId)) {
+        return;
+      }
+
+      accountContexts.put(accountId, getAccountContextById(accountId).withLoan(loan));
+    }
+
+    @Override
+    public void updateAccountCtxWithLoanPolicy(String accountId, LoanPolicy loanPolicy) {
+      if (!isAccountContextCreated(accountId)) {
+        return;
+      }
+
+      accountContexts.put(accountId, getAccountContextById(accountId).withLoanPolicy(loanPolicy));
+    }
+
+    @Override
+    public void updateAccountCtxWithOverdueFinePolicy(String accountId,
+      OverdueFinePolicy overdueFinePolicy) {
+
+      if (!isAccountContextCreated(accountId)) {
+        return;
+      }
+
+      accountContexts.put(accountId, getAccountContextById(accountId)
+        .withOverdueFinePolicy(overdueFinePolicy));
+    }
+
+    @Override
+    public void updateAccountCtxWithLostItemFeePolicy(String accountId,
+      LostItemFeePolicy lostItemFeePolicy) {
+
+      if (!isAccountContextCreated(accountId)) {
+        return;
+      }
+
+      accountContexts.put(accountId, getAccountContextById(accountId)
+        .withLostItemFeePolicy(lostItemFeePolicy));
     }
   }
 

@@ -478,6 +478,15 @@ public class RefundReportService {
     public boolean isAccountContextCreated(String accountId) {
       return getAccountContextById(accountId) != null;
     }
+
+    public List<Feefineaction> getAccountFeeFineActions(String accountId) {
+      AccountContextData accountCtx = getAccountContextById(accountId);
+      if (accountCtx == null) {
+        return null;
+      }
+
+      return accountCtx.getActions();
+    }
   }
 
   @With

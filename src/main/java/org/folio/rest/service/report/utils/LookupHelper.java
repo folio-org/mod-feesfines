@@ -23,6 +23,8 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Loan;
+import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
@@ -31,6 +33,8 @@ import org.folio.rest.repository.OverdueFinePolicyRepository;
 import org.folio.rest.service.LocationService;
 import org.folio.rest.service.report.context.HasAccountInfo;
 import org.folio.rest.service.report.context.HasItemInfo;
+import org.folio.rest.service.report.context.HasLoanInfo;
+import org.folio.rest.service.report.context.HasServicePointsInfo;
 import org.folio.rest.service.report.context.HasUserInfo;
 import org.joda.time.DateTime;
 
@@ -197,7 +201,8 @@ public class LookupHelper {
     }
 
     return inventoryClient.getLocationById(effectiveLocationId)
-      .map(effectiveLocation -> ctx.updateAccountContextWithEffectiveLocation(accountId, effectiveLocation))
+      .map(effectiveLocation ->
+        ctx.updateAccountContextWithEffectiveLocation(accountId, effectiveLocation))
       .map(ctx)
       .otherwise(throwable -> {
         log.error("Failed to find location for account {}, effectiveLocationId is {}", accountId,
@@ -237,6 +242,132 @@ public class LookupHelper {
       .map(ctx)
       .otherwise(throwable -> {
         log.error("Failed to find REFUND, PAY, TRANSFER actions for account {}", accountId);
+        return ctx;
+      });
+  }
+
+  public <T extends HasAccountInfo & HasServicePointsInfo> Future<T>
+  lookupServicePointsForAllActionsInAccount(T ctx, String accountId) {
+
+    List<Feefineaction> actions = ctx.getAccountFeeFineActions(accountId);
+    if (actions == null || actions.isEmpty()) {
+      return succeededFuture(ctx);
+    }
+
+    return actions.stream()
+      .map(Feefineaction::getCreatedAt)
+      .distinct()
+      .reduce(succeededFuture(ctx),
+        (f, a) -> f.compose(result -> lookupServicePointForFeeFineAction(ctx, a)),
+        (a, b) -> succeededFuture(ctx));
+  }
+
+  private <T extends HasServicePointsInfo> Future<T> lookupServicePointForFeeFineAction(T ctx,
+    String servicePointId) {
+
+    if (servicePointId == null) {
+      return succeededFuture(ctx);
+    }
+
+    if (!isUuid(servicePointId)) {
+      log.info("Service point ID is not a valid UUID - {}", servicePointId);
+      return succeededFuture(ctx);
+    } else {
+      if (ctx.getServicePoints().containsKey(servicePointId)) {
+        return succeededFuture(ctx);
+      } else {
+        return inventoryClient.getServicePointById(servicePointId)
+          .map(sp -> addServicePointToContext(ctx, sp, sp.getId()))
+          .map(ctx)
+          .otherwise(ctx);
+      }
+    }
+  }
+
+  private <T extends HasServicePointsInfo> Future<T> addServicePointToContext(T ctx,
+    ServicePoint servicePoint, String servicePointId) {
+
+    if (servicePoint == null) {
+      log.error("Service point not found - service point {}", servicePointId);
+    } else {
+      ctx.getServicePoints().put(servicePoint.getId(), servicePoint);
+    }
+
+    return succeededFuture(ctx);
+  }
+
+  public <T extends HasLoanInfo & HasAccountInfo> Future<T> lookupLoanForAccount(T ctx,
+    String accountId) {
+
+    Account account = ctx.getAccountById(accountId);
+    if (account == null) {
+      return succeededFuture(ctx);
+    }
+
+    String loanId = account.getLoanId();
+    if (!isUuid(loanId)) {
+      log.info("Loan ID {} is not a valid UUID - account {}", loanId, accountId);
+      return succeededFuture(ctx);
+    }
+
+    return circulationStorageClient.getLoanById(loanId)
+      .onSuccess(loan -> ctx.updateAccountCtxWithLoan(accountId, loan))
+      .compose(loan -> circulationStorageClient.getLoanPolicyById(loan.getLoanPolicyId()))
+      .onSuccess(loanPolicy -> ctx.updateAccountCtxWithLoanPolicy(accountId, loanPolicy))
+      .map(ctx)
+      .otherwise(throwable -> {
+        log.error("Failed to find loan for account {}, loan is {}", accountId,
+          loanId);
+        return ctx;
+      });
+  }
+
+  public <T extends HasLoanInfo & HasAccountInfo> Future<T> lookupOverdueFinePolicyForAccount(
+    T ctx, String accountId) {
+
+    Loan loan = ctx.getLoanByAccountId(accountId);
+    if (loan == null) {
+      return succeededFuture(ctx);
+    }
+
+    String overdueFinePolicyId = loan.getOverdueFinePolicyId();
+    if (!isUuid(overdueFinePolicyId)) {
+      log.info("Overdue fine policy ID {} is not a valid UUID - account {}", overdueFinePolicyId,
+        accountId);
+      return succeededFuture(ctx);
+    }
+
+    return overdueFinePolicyRepository.getOverdueFinePolicyById(overdueFinePolicyId)
+      .onSuccess(policy -> ctx.updateAccountCtxWithOverdueFinePolicy(accountId, policy))
+      .map(ctx)
+      .otherwise(throwable -> {
+        log.error("Failed to find overdue fine policy for account {}, overdue fine policy is {}",
+          accountId, overdueFinePolicyId);
+        return ctx;
+      });
+  }
+
+  public <T extends HasLoanInfo & HasAccountInfo> Future<T> lookupLostItemFeePolicyForAccount(
+    T ctx, String accountId) {
+
+    Loan loan = ctx.getLoanByAccountId(accountId);
+    if (loan == null) {
+      return succeededFuture(ctx);
+    }
+
+    String lostItemFeePolicyId = loan.getLostItemPolicyId();
+    if (!isUuid(lostItemFeePolicyId)) {
+      log.info("Lost item fee policy ID {} is not a valid UUID - account {}", lostItemFeePolicyId,
+        accountId);
+      return succeededFuture(ctx);
+    }
+
+    return lostItemFeePolicyRepository.getLostItemFeePolicyById(lostItemFeePolicyId)
+      .onSuccess(policy -> ctx.updateAccountCtxWithLostItemFeePolicy(accountId, policy))
+      .map(ctx)
+      .otherwise(throwable -> {
+        log.error("Failed to find lost item fee policy for account {}, lost item fee policy is {}",
+          accountId, lostItemFeePolicyId);
         return ctx;
       });
   }

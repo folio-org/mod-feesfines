@@ -11,4 +11,5 @@ public interface HasAccountInfo {
   Account getAccountById(String accountId);
   Future<Void> updateAccountContextWithActions(String accountId, List<Feefineaction> actions);
   boolean isAccountContextCreated(String accountId);
+  List<Feefineaction> getAccountFeeFineActions(String accountId);
 }
