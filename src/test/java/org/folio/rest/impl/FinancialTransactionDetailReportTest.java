@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.utils.ResourceClients.buildFinancialTransactionsDetailReportClient;
-import static org.folio.test.support.EntityBuilder.buildFinancialTransactionsDetailReportEntry;
 import static org.folio.test.support.EntityBuilder.buildHoldingsRecord;
 import static org.folio.test.support.EntityBuilder.buildInstance;
 import static org.folio.test.support.EntityBuilder.buildItem;
@@ -34,6 +33,7 @@ import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReport;
+import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportEntry;
 import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportStats;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
@@ -319,138 +319,138 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
 
     requestAndCheck(new FinancialTransactionsDetailReport()
       .withReportData(List.of(
-        buildFinancialTransactionsDetailReportEntry(
-          OWNER_1,
-          FEE_FINE_TYPE_1,
-          new MonetaryValue(chargedAmount1).toString(),
-          formatReportDate(parseDateTimeUTC(chargeActionDate1)),
-          CREATED_AT_1,
-          SOURCE_1,
-          account1.getId(),
-          "Payment",
-          new MonetaryValue(paymentAction1.getAmountAction()).toString(),
-          formatReportDate(paymentAction1.getDateAction()),
-          CREATED_AT_1,
-          SOURCE_1,
-          PAID_PARTIALLY,
-          addSuffix(PAYMENT_STAFF_INFO, 1),
-          addSuffix(PAYMENT_PATRON_INFO, 1),
-          PAYMENT_METHOD_1,
-          PAYMENT_TX_INFO,
-          "",
-          "",
-          "",
-          USER_ID_1,
-          getFullName(user1),
-          USER_BARCODE_1,
-          USER_GROUP_1,
-          user1.getPersonal().getEmail(),
-          instance.getTitle(),
-          "Primary contributor, Non-primary contributor",
-          item1.getBarcode(),
-          item1.getEffectiveCallNumberComponents().getCallNumber(),
-          location.getName(),
-          formatReportDate(parseDateTimeTenantTz(LOAN_DATE_1_RAW)),
-          formatReportDate(loan1.getDueDate()),
-          formatReportDate(parseDateTimeTenantTz(RETURN_DATE_1_RAW)),
-          loanPolicy.getId(),
-          loanPolicy.getName(),
-          overdueFinePolicy.getId(),
-          overdueFinePolicy.getName(),
-          lostItemFeePolicy.getId(),
-          lostItemFeePolicy.getName(),
-          loan1.getId(),
-          holdingsRecord.getId(),
-          instance.getId(),
-          item1.getId()),
-        buildFinancialTransactionsDetailReportEntry(
-          OWNER_1,
-          FEE_FINE_TYPE_1,
-          new MonetaryValue(chargedAmount1).toString(),
-          formatReportDate(parseDateTimeUTC(chargeActionDate1)),
-          CREATED_AT_1,
-          SOURCE_1,
-          account1.getId(),
-          "Waive",
-          new MonetaryValue(waiveAction1.getAmountAction()).toString(),
-          formatReportDate(waiveAction1.getDateAction()),
-          CREATED_AT_1,
-          SOURCE_1,
-          WAIVED_PARTIALLY,
-          addSuffix(WAIVE_STAFF_INFO, 1),
-          addSuffix(WAIVE_PATRON_INFO, 1),
-          "",
-          "",
-          WAIVE_REASON_1,
-          "",
-          "",
-          USER_ID_1,
-          getFullName(user1),
-          USER_BARCODE_1,
-          USER_GROUP_1,
-          user1.getPersonal().getEmail(),
-          instance.getTitle(),
-          "Primary contributor, Non-primary contributor",
-          item1.getBarcode(),
-          item1.getEffectiveCallNumberComponents().getCallNumber(),
-          location.getName(),
-          formatReportDate(parseDateTimeTenantTz(LOAN_DATE_1_RAW)),
-          formatReportDate(loan1.getDueDate()),
-          formatReportDate(parseDateTimeTenantTz(RETURN_DATE_1_RAW)),
-          loanPolicy.getId(),
-          loanPolicy.getName(),
-          overdueFinePolicy.getId(),
-          overdueFinePolicy.getName(),
-          lostItemFeePolicy.getId(),
-          lostItemFeePolicy.getName(),
-          loan1.getId(),
-          holdingsRecord.getId(),
-          instance.getId(),
-          item1.getId()),
-        buildFinancialTransactionsDetailReportEntry(
-          OWNER_1,
-          FEE_FINE_TYPE_2,
-          new MonetaryValue(chargedAmount2).toString(),
-          formatReportDate(parseDateTimeUTC(chargeActionDate2)),
-          CREATED_AT_2,
-          SOURCE_2,
-          account2.getId(),
-          "Payment",
-          new MonetaryValue(paymentAction2.getAmountAction()).toString(),
-          formatReportDate(paymentAction2.getDateAction()),
-          CREATED_AT_2,
-          SOURCE_2,
-          PAID_FULLY,
-          addSuffix(PAYMENT_STAFF_INFO, 2),
-          addSuffix(PAYMENT_PATRON_INFO, 2),
-          PAYMENT_METHOD_2,
-          PAYMENT_TX_INFO,
-          "",
-          "",
-          "",
-          USER_ID_2,
-          getFullName(user2),
-          USER_BARCODE_2,
-          USER_GROUP_2,
-          user2.getPersonal().getEmail(),
-          instance.getTitle(),
-          "Primary contributor, Non-primary contributor",
-          item2.getBarcode(),
-          item2.getEffectiveCallNumberComponents().getCallNumber(),
-          location.getName(),
-          formatReportDate(parseDateTimeTenantTz(LOAN_DATE_2_RAW)),
-          formatReportDate(loan2.getDueDate()),
-          formatReportDate(parseDateTimeTenantTz(RETURN_DATE_2_RAW)),
-          loanPolicy.getId(),
-          loanPolicy.getName(),
-          overdueFinePolicy.getId(),
-          overdueFinePolicy.getName(),
-          lostItemFeePolicy.getId(),
-          lostItemFeePolicy.getName(),
-          loan2.getId(),
-          holdingsRecord.getId(),
-          instance.getId(),
-          item2.getId())
+        new FinancialTransactionsDetailReportEntry()
+          .withFeeFineOwner(OWNER_1)
+          .withFeeFineType(FEE_FINE_TYPE_1)
+          .withBilledAmount(new MonetaryValue(chargedAmount1).toString())
+          .withDateBilled(formatReportDate(parseDateTimeUTC(chargeActionDate1)))
+          .withFeeFineCreatedAt(CREATED_AT_1)
+          .withFeeFineSource(SOURCE_1)
+          .withFeeFineId(account1.getId())
+          .withAction("Payment")
+          .withActionAmount(new MonetaryValue(paymentAction1.getAmountAction()).toString())
+          .withActionDate(formatReportDate(paymentAction1.getDateAction()))
+          .withActionCreatedAt(CREATED_AT_1)
+          .withActionSource(SOURCE_1)
+          .withActionStatus(PAID_PARTIALLY)
+          .withActionAdditionalStaffInfo(addSuffix(PAYMENT_STAFF_INFO, 1))
+          .withActionAdditionalPatronInfo(addSuffix(PAYMENT_PATRON_INFO, 1))
+          .withPaymentMethod(PAYMENT_METHOD_1)
+          .withTransactionInfo(PAYMENT_TX_INFO)
+          .withWaiveReason("")
+          .withRefundReason("")
+          .withTransferAccount("")
+          .withPatronId(USER_ID_1)
+          .withPatronName(getFullName(user1))
+          .withPatronBarcode(USER_BARCODE_1)
+          .withPatronGroup(USER_GROUP_1)
+          .withPatronEmail(user1.getPersonal().getEmail())
+          .withInstance(instance.getTitle())
+          .withContributors("Primary contributor, Non-primary contributor")
+          .withItemBarcode(item1.getBarcode())
+          .withCallNumber(item1.getEffectiveCallNumberComponents().getCallNumber())
+          .withEffectiveLocation(location.getName())
+          .withLoanDate(formatReportDate(parseDateTimeTenantTz(LOAN_DATE_1_RAW)))
+          .withDueDate(formatReportDate(loan1.getDueDate()))
+          .withReturnDate(formatReportDate(parseDateTimeTenantTz(RETURN_DATE_1_RAW)))
+          .withLoanPolicyId(loanPolicy.getId())
+          .withLoanPolicyName(loanPolicy.getName())
+          .withOverdueFinePolicyId(overdueFinePolicy.getId())
+          .withOverdueFinePolicyName(overdueFinePolicy.getName())
+          .withLostItemPolicyId(lostItemFeePolicy.getId())
+          .withLostItemPolicyName(lostItemFeePolicy.getName())
+          .withLoanId(loan1.getId())
+          .withHoldingsRecordId(holdingsRecord.getId())
+          .withInstanceId(instance.getId())
+          .withItemId(item1.getId()),
+        new FinancialTransactionsDetailReportEntry()
+          .withFeeFineOwner(OWNER_1)
+          .withFeeFineType(FEE_FINE_TYPE_1)
+          .withBilledAmount(new MonetaryValue(chargedAmount1).toString())
+          .withDateBilled(formatReportDate(parseDateTimeUTC(chargeActionDate1)))
+          .withFeeFineCreatedAt(CREATED_AT_1)
+          .withFeeFineSource(SOURCE_1)
+          .withFeeFineId(account1.getId())
+          .withAction("Waive")
+          .withActionAmount(new MonetaryValue(waiveAction1.getAmountAction()).toString())
+          .withActionDate(formatReportDate(waiveAction1.getDateAction()))
+          .withActionCreatedAt(CREATED_AT_1)
+          .withActionSource(SOURCE_1)
+          .withActionStatus(WAIVED_PARTIALLY)
+          .withActionAdditionalStaffInfo(addSuffix(WAIVE_STAFF_INFO, 1))
+          .withActionAdditionalPatronInfo(addSuffix(WAIVE_PATRON_INFO, 1))
+          .withPaymentMethod("")
+          .withTransactionInfo("")
+          .withWaiveReason(WAIVE_REASON_1)
+          .withRefundReason("")
+          .withTransferAccount("")
+          .withPatronId(USER_ID_1)
+          .withPatronName(getFullName(user1))
+          .withPatronBarcode(USER_BARCODE_1)
+          .withPatronGroup(USER_GROUP_1)
+          .withPatronEmail(user1.getPersonal().getEmail())
+          .withInstance(instance.getTitle())
+          .withContributors("Primary contributor, Non-primary contributor")
+          .withItemBarcode(item1.getBarcode())
+          .withCallNumber(item1.getEffectiveCallNumberComponents().getCallNumber())
+          .withEffectiveLocation(location.getName())
+          .withLoanDate(formatReportDate(parseDateTimeTenantTz(LOAN_DATE_1_RAW)))
+          .withDueDate(formatReportDate(loan1.getDueDate()))
+          .withReturnDate(formatReportDate(parseDateTimeTenantTz(RETURN_DATE_1_RAW)))
+          .withLoanPolicyId(loanPolicy.getId())
+          .withLoanPolicyName(loanPolicy.getName())
+          .withOverdueFinePolicyId(overdueFinePolicy.getId())
+          .withOverdueFinePolicyName(overdueFinePolicy.getName())
+          .withLostItemPolicyId(lostItemFeePolicy.getId())
+          .withLostItemPolicyName(lostItemFeePolicy.getName())
+          .withLoanId(loan1.getId())
+          .withHoldingsRecordId(holdingsRecord.getId())
+          .withInstanceId(instance.getId())
+          .withItemId(item1.getId()),
+        new FinancialTransactionsDetailReportEntry()
+          .withFeeFineOwner(OWNER_1)
+          .withFeeFineType(FEE_FINE_TYPE_2)
+          .withBilledAmount(new MonetaryValue(chargedAmount2).toString())
+          .withDateBilled(formatReportDate(parseDateTimeUTC(chargeActionDate2)))
+          .withFeeFineCreatedAt(CREATED_AT_2)
+          .withFeeFineSource(SOURCE_2)
+          .withFeeFineId(account2.getId())
+          .withAction("Payment")
+          .withActionAmount(new MonetaryValue(paymentAction2.getAmountAction()).toString())
+          .withActionDate(formatReportDate(paymentAction2.getDateAction()))
+          .withActionCreatedAt(CREATED_AT_2)
+          .withActionSource(SOURCE_2)
+          .withActionStatus(PAID_FULLY)
+          .withActionAdditionalStaffInfo(addSuffix(PAYMENT_STAFF_INFO, 2))
+          .withActionAdditionalPatronInfo(addSuffix(PAYMENT_PATRON_INFO, 2))
+          .withPaymentMethod(PAYMENT_METHOD_2)
+          .withTransactionInfo(PAYMENT_TX_INFO)
+          .withWaiveReason("")
+          .withRefundReason("")
+          .withTransferAccount("")
+          .withPatronId(USER_ID_2)
+          .withPatronName(getFullName(user2))
+          .withPatronBarcode(USER_BARCODE_2)
+          .withPatronGroup(USER_GROUP_2)
+          .withPatronEmail(user2.getPersonal().getEmail())
+          .withInstance(instance.getTitle())
+          .withContributors("Primary contributor, Non-primary contributor")
+          .withItemBarcode(item2.getBarcode())
+          .withCallNumber(item2.getEffectiveCallNumberComponents().getCallNumber())
+          .withEffectiveLocation(location.getName())
+          .withLoanDate(formatReportDate(parseDateTimeTenantTz(LOAN_DATE_2_RAW)))
+          .withDueDate(formatReportDate(loan2.getDueDate()))
+          .withReturnDate(formatReportDate(parseDateTimeTenantTz(RETURN_DATE_2_RAW)))
+          .withLoanPolicyId(loanPolicy.getId())
+          .withLoanPolicyName(loanPolicy.getName())
+          .withOverdueFinePolicyId(overdueFinePolicy.getId())
+          .withOverdueFinePolicyName(overdueFinePolicy.getName())
+          .withLostItemPolicyId(lostItemFeePolicy.getId())
+          .withLostItemPolicyName(lostItemFeePolicy.getName())
+          .withLoanId(loan2.getId())
+          .withHoldingsRecordId(holdingsRecord.getId())
+          .withInstanceId(instance.getId())
+          .withItemId(item2.getId())
       ))
       .withReportStats(new FinancialTransactionsDetailReportStats()
         .withByFeeFineOwner(List.of(

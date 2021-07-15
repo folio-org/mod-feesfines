@@ -17,7 +17,6 @@ import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.Contributor;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Feefineaction;
-import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportEntry;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
@@ -310,66 +309,6 @@ public class EntityBuilder {
       .withAdditionalPatronInfo(additionalPatronInfo)
       .withPatronId(patronId)
       .withFeeFineId(feeFineId);
-  }
-
-  public static FinancialTransactionsDetailReportEntry buildFinancialTransactionsDetailReportEntry(
-    String feeFineOwner, String feeFineType, String billedAmount, String dateBilled,
-    String feeFineCreatedAt, String feeFineSource, String feeFineId, String action,
-    String actionAmount, String actionDate, String actionCreatedAt, String actionSource,
-    String actionStatus, String actionAdditionalStaffInfo, String actionAdditionalPatronInfo,
-    String paymentMethod, String transactionInfo, String waiveReason, String refundReason,
-    String transferAccount, String patronId, String patronName, String patronBarcode,
-    String patronGroup, String patronEmail, String instance, String contributors,
-    String itemBarcode, String callNumber, String effectiveLocation, String loanDate,
-    String dueDate, String returnDate, String loanPolicyId, String loanPolicyName,
-    String overdueFinePolicyId, String overdueFinePolicyName, String lostItemPolicyId,
-    String lostItemPolicyName, String loanId, String holdingsRecordId, String instanceId,
-    String itemId) {
-
-    return new FinancialTransactionsDetailReportEntry()
-      .withFeeFineOwner(feeFineOwner)
-      .withFeeFineType(feeFineType)
-      .withBilledAmount(billedAmount)
-      .withDateBilled(dateBilled)
-      .withFeeFineCreatedAt(feeFineCreatedAt)
-      .withFeeFineSource(feeFineSource)
-      .withFeeFineId(feeFineId)
-      .withAction(action)
-      .withActionAmount(actionAmount)
-      .withActionDate(actionDate)
-      .withActionCreatedAt(actionCreatedAt)
-      .withActionSource(actionSource)
-      .withActionStatus(actionStatus)
-      .withActionAdditionalStaffInfo(actionAdditionalStaffInfo)
-      .withActionAdditionalPatronInfo(actionAdditionalPatronInfo)
-      .withPaymentMethod(paymentMethod)
-      .withTransactionInfo(transactionInfo)
-      .withWaiveReason(waiveReason)
-      .withRefundReason(refundReason)
-      .withTransferAccount(transferAccount)
-      .withPatronId(patronId)
-      .withPatronName(patronName)
-      .withPatronBarcode(patronBarcode)
-      .withPatronGroup(patronGroup)
-      .withPatronEmail(patronEmail)
-      .withInstance(instance)
-      .withContributors(contributors)
-      .withItemBarcode(itemBarcode)
-      .withCallNumber(callNumber)
-      .withEffectiveLocation(effectiveLocation)
-      .withLoanDate(loanDate)
-      .withDueDate(dueDate)
-      .withReturnDate(returnDate)
-      .withLoanPolicyId(loanPolicyId)
-      .withLoanPolicyName(loanPolicyName)
-      .withOverdueFinePolicyId(overdueFinePolicyId)
-      .withOverdueFinePolicyName(overdueFinePolicyName)
-      .withLostItemPolicyId(lostItemPolicyId)
-      .withLostItemPolicyName(lostItemPolicyName)
-      .withLoanId(loanId)
-      .withHoldingsRecordId(holdingsRecordId)
-      .withInstanceId(instanceId)
-      .withItemId(itemId);
   }
 
   public static ReportTotalsEntry buildReportTotalsEntry(String name, String totalAmount,
