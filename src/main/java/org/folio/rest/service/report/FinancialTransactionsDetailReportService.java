@@ -328,7 +328,7 @@ public class FinancialTransactionsDetailReportService extends
       action -> ACTION_NAMES.get(action.getTypeAction()), "Action totals");
 
     // Payment method totals
-    calculateTotals(stats.getByPaymentMethod(), actions, Feefineaction::getPaymentMethod,
+    calculateTotals(stats.getByPaymentMethod(), actions, action -> getPaymentMethod(PAY, action),
       "Payment method totals");
 
     // Waive reason totals

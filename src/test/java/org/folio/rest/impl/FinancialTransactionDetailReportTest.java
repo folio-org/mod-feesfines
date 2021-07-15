@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpStatus;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReport;
@@ -83,15 +84,29 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   private static final String FEE_FINE_TYPE_2 = "Fee/fine type 2";
   private static final String PAYMENT_METHOD_1 = "Payment method 1";
   private static final String PAYMENT_METHOD_2 = "Payment method 2";
+  private static final String WAIVE_REASON_1 = "Waive reason 1";
   private static final String PAYMENT_TX_INFO = "Payment transaction information";
   private static final String PAYMENT_STAFF_INFO = "Payment - info for staff";
   private static final String PAYMENT_PATRON_INFO = "Payment - info for patron";
+  private static final String WAIVE_STAFF_INFO = "Waive - info for staff";
+  private static final String WAIVE_PATRON_INFO = "Waive - info for patron";
+
+  // Loan 1
   private static final String LOAN_DATE_1_RAW = "2020-01-01 01:00:00";
   private static final String LOAN_DATE_1 = withTenantTz(LOAN_DATE_1_RAW,
     LOAN_DATE_TIME_REPORT_FORMATTER);
   private static final Date DUE_DATE_1 = parseDateTimeUTC("2020-01-01 12:00:00");
   private static final String RETURN_DATE_1_RAW = "2020-01-01 05:00:00";
   private static final String RETURN_DATE_1 = withTenantTz(RETURN_DATE_1_RAW,
+    LOAN_RETURN_DATE_TIME_REPORT_FORMATTER);
+
+  //Loan 2
+  private static final String LOAN_DATE_2_RAW = "2020-01-02 01:00:00";
+  private static final String LOAN_DATE_2 = withTenantTz(LOAN_DATE_2_RAW,
+    LOAN_DATE_TIME_REPORT_FORMATTER);
+  private static final Date DUE_DATE_2 = parseDateTimeUTC("2020-01-02 12:00:00");
+  private static final String RETURN_DATE_2_RAW = "2020-01-02 05:00:00";
+  private static final String RETURN_DATE_2 = withTenantTz(RETURN_DATE_2_RAW,
     LOAN_RETURN_DATE_TIME_REPORT_FORMATTER);
 
   private static final String FEE_FINE_OWNER_TOTALS = "Fee/fine owner totals";
@@ -107,7 +122,6 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
 
   private final ReportResourceClient reportClient = buildFinancialTransactionsDetailReportClient();
 
-  private UserGroup userGroup;
   private Location location;
   private Instance instance;
   private HoldingsRecord holdingsRecord;
@@ -118,12 +132,11 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   private LoanPolicy loanPolicy;
   private LostItemFeePolicy lostItemFeePolicy;
   private OverdueFinePolicy overdueFinePolicy;
-  private ServicePoint servicePoint1;
-  private ServicePoint servicePoint2;
   private Loan loan1;
+  private Loan loan2;
 
-  private StubMapping user1StubMapping;
-  private StubMapping userGroupStubMapping;
+  private StubMapping userStubMapping1;
+  private StubMapping userGroupStubMapping1;
   private StubMapping itemStubMapping;
   private StubMapping loanStubMapping;
   private StubMapping holdingsStubMapping;
@@ -145,9 +158,9 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     lostItemFeePolicy = buildLostItemFeePolicy("lfp-1" + randomId());
     createLostItemFeePolicy(lostItemFeePolicy);
 
-    servicePoint1 = buildServicePoint(CREATED_AT_ID_1, CREATED_AT_1);
+    ServicePoint servicePoint1 = buildServicePoint(CREATED_AT_ID_1, CREATED_AT_1);
     servicePoint1StubMapping = createStub(ServicePath.SERVICE_POINTS_PATH, servicePoint1, servicePoint1.getId());
-    servicePoint2 = buildServicePoint(CREATED_AT_ID_2, CREATED_AT_2);
+    ServicePoint servicePoint2 = buildServicePoint(CREATED_AT_ID_2, CREATED_AT_2);
     servicePoint2StubMapping = createStub(ServicePath.SERVICE_POINTS_PATH, servicePoint2, servicePoint2.getId());
 
     location = buildLocation("Location");
@@ -160,20 +173,32 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     loan1 = buildLoan(LOAN_DATE_1, DUE_DATE_1, RETURN_DATE_1, item1.getId(), loanPolicy.getId(),
       overdueFinePolicy.getId(), lostItemFeePolicy.getId());
     loanStubMapping = createStub(ServicePath.LOANS_PATH, loan1, loan1.getId());
+    loan2 = buildLoan(LOAN_DATE_2, DUE_DATE_2, RETURN_DATE_2, item2.getId(), loanPolicy.getId(),
+      overdueFinePolicy.getId(), lostItemFeePolicy.getId());
+    loanStubMapping = createStub(ServicePath.LOANS_PATH, loan2, loan2.getId());
 
     itemStubMapping = createStub(ServicePath.ITEMS_PATH, item1, item1.getId());
     createStub(ServicePath.ITEMS_PATH, item2, item2.getId());
     holdingsStubMapping = createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
     instanceStubMapping = createStub(INSTANCES_PATH, instance, instance.getId());
 
-    userGroup = EntityBuilder.buildUserGroup().withGroup(USER_GROUP_1);
-    userGroupStubMapping = createStub(USERS_GROUPS_PATH, userGroup, userGroup.getId());
+    UserGroup userGroup1 = EntityBuilder.buildUserGroup().withGroup(USER_GROUP_1);
+    userGroupStubMapping1 = createStub(USERS_GROUPS_PATH, userGroup1, userGroup1.getId());
 
     user1 = EntityBuilder.buildUser()
       .withId(USER_ID_1)
-      .withPatronGroup(userGroup.getId())
+      .withPatronGroup(userGroup1.getId())
       .withBarcode(USER_BARCODE_1);
-    user1StubMapping = createStub(USERS_PATH, user1, USER_ID_1);
+    userStubMapping1 = createStub(USERS_PATH, user1, USER_ID_1);
+
+    UserGroup userGroup2 = EntityBuilder.buildUserGroup().withGroup(USER_GROUP_2);
+    createStub(USERS_GROUPS_PATH, userGroup2, userGroup2.getId());
+
+    user2 = EntityBuilder.buildUser()
+      .withId(USER_ID_2)
+      .withPatronGroup(userGroup2.getId())
+      .withBarcode(USER_BARCODE_2);
+    createStub(USERS_PATH, user2, USER_ID_2);
 
     createStub(USERS_PATH, EntityBuilder.buildUser().withId(SOURCE_ID_1), SOURCE_ID_1);
     createStub(USERS_PATH, EntityBuilder.buildUser().withId(SOURCE_ID_2), SOURCE_ID_2);
@@ -270,26 +295,40 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
 
   @Test
   public void validReportWhenActionsExist() {
-    String chargeActionDate = withTenantTz("2020-01-01 00:00:01");
-    Account account1 = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, item1.getId(), loan1,
-      OWNER_ID_1, OWNER_1, chargeActionDate, CREATED_AT_ID_1, SOURCE_1);
+    double chargedAmount1 = 10.0;
+    String chargeActionDate1 = withTenantTz("2020-01-01 00:00:01");
+    Account account1 = charge(USER_ID_1, chargedAmount1, FEE_FINE_TYPE_1, item1.getId(), loan1,
+      OWNER_ID_1, OWNER_1, chargeActionDate1, CREATED_AT_ID_1, SOURCE_1);
+
+    double chargedAmount2 = 100.0;
+    String chargeActionDate2 = withTenantTz("2020-01-02 02:00:00");
+    Account account2 = charge(USER_ID_2, chargedAmount2, FEE_FINE_TYPE_2, item2.getId(), loan2,
+      OWNER_ID_1, OWNER_1, chargeActionDate2, CREATED_AT_ID_2, SOURCE_2);
 
     Feefineaction paymentAction1 = createAction(USER_ID_1, 1, account1, withTenantTz("2020-01-01 00:10:00"),
       PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT_ID_1, SOURCE_1);
+
+    Feefineaction waiveAction1 = createAction(USER_ID_1, 1, account1, withTenantTz("2020-01-01 00:20:00"),
+      WAIVED_PARTIALLY, WAIVE_REASON_1, 2.0, 5.0, WAIVE_STAFF_INFO, WAIVE_PATRON_INFO,
+      "", CREATED_AT_ID_1, SOURCE_1);
+
+    Feefineaction paymentAction2 = createAction(USER_ID_2, 2, account2, withTenantTz("2020-01-02 03:00:00"),
+      PAID_FULLY, PAYMENT_METHOD_2, 100.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT_ID_2, SOURCE_2);
 
     requestAndCheck(new FinancialTransactionsDetailReport()
       .withReportData(List.of(
         buildFinancialTransactionsDetailReportEntry(
           OWNER_1,
           FEE_FINE_TYPE_1,
-          "10.00",
-          formatReportDate(parseDateTimeUTC(chargeActionDate)),
+          new MonetaryValue(chargedAmount1).toString(),
+          formatReportDate(parseDateTimeUTC(chargeActionDate1)),
           CREATED_AT_1,
           SOURCE_1,
           account1.getId(),
           "Payment",
-          "3.00",
+          new MonetaryValue(paymentAction1.getAmountAction()).toString(),
           formatReportDate(paymentAction1.getDateAction()),
           CREATED_AT_1,
           SOURCE_1,
@@ -323,23 +362,115 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
           loan1.getId(),
           holdingsRecord.getId(),
           instance.getId(),
-          item1.getId())
+          item1.getId()),
+        buildFinancialTransactionsDetailReportEntry(
+          OWNER_1,
+          FEE_FINE_TYPE_1,
+          new MonetaryValue(chargedAmount1).toString(),
+          formatReportDate(parseDateTimeUTC(chargeActionDate1)),
+          CREATED_AT_1,
+          SOURCE_1,
+          account1.getId(),
+          "Waive",
+          new MonetaryValue(waiveAction1.getAmountAction()).toString(),
+          formatReportDate(waiveAction1.getDateAction()),
+          CREATED_AT_1,
+          SOURCE_1,
+          WAIVED_PARTIALLY,
+          addSuffix(WAIVE_STAFF_INFO, 1),
+          addSuffix(WAIVE_PATRON_INFO, 1),
+          "",
+          "",
+          WAIVE_REASON_1,
+          "",
+          "",
+          USER_ID_1,
+          getFullName(user1),
+          USER_BARCODE_1,
+          USER_GROUP_1,
+          user1.getPersonal().getEmail(),
+          instance.getTitle(),
+          "Primary contributor, Non-primary contributor",
+          item1.getBarcode(),
+          item1.getEffectiveCallNumberComponents().getCallNumber(),
+          location.getName(),
+          formatReportDate(parseDateTimeTenantTz(LOAN_DATE_1_RAW)),
+          formatReportDate(loan1.getDueDate()),
+          formatReportDate(parseDateTimeTenantTz(RETURN_DATE_1_RAW)),
+          loanPolicy.getId(),
+          loanPolicy.getName(),
+          overdueFinePolicy.getId(),
+          overdueFinePolicy.getName(),
+          lostItemFeePolicy.getId(),
+          lostItemFeePolicy.getName(),
+          loan1.getId(),
+          holdingsRecord.getId(),
+          instance.getId(),
+          item1.getId()),
+        buildFinancialTransactionsDetailReportEntry(
+          OWNER_1,
+          FEE_FINE_TYPE_2,
+          new MonetaryValue(chargedAmount2).toString(),
+          formatReportDate(parseDateTimeUTC(chargeActionDate2)),
+          CREATED_AT_2,
+          SOURCE_2,
+          account2.getId(),
+          "Payment",
+          new MonetaryValue(paymentAction2.getAmountAction()).toString(),
+          formatReportDate(paymentAction2.getDateAction()),
+          CREATED_AT_2,
+          SOURCE_2,
+          PAID_FULLY,
+          addSuffix(PAYMENT_STAFF_INFO, 2),
+          addSuffix(PAYMENT_PATRON_INFO, 2),
+          PAYMENT_METHOD_2,
+          PAYMENT_TX_INFO,
+          "",
+          "",
+          "",
+          USER_ID_2,
+          getFullName(user2),
+          USER_BARCODE_2,
+          USER_GROUP_2,
+          user2.getPersonal().getEmail(),
+          instance.getTitle(),
+          "Primary contributor, Non-primary contributor",
+          item2.getBarcode(),
+          item2.getEffectiveCallNumberComponents().getCallNumber(),
+          location.getName(),
+          formatReportDate(parseDateTimeTenantTz(LOAN_DATE_2_RAW)),
+          formatReportDate(loan2.getDueDate()),
+          formatReportDate(parseDateTimeTenantTz(RETURN_DATE_2_RAW)),
+          loanPolicy.getId(),
+          loanPolicy.getName(),
+          overdueFinePolicy.getId(),
+          overdueFinePolicy.getName(),
+          lostItemFeePolicy.getId(),
+          lostItemFeePolicy.getName(),
+          loan2.getId(),
+          holdingsRecord.getId(),
+          instance.getId(),
+          item2.getId())
       ))
       .withReportStats(new FinancialTransactionsDetailReportStats()
         .withByFeeFineOwner(List.of(
-          buildReportTotalsEntry(OWNER_1, "3.00", "1"),
-          buildReportTotalsEntry(FEE_FINE_OWNER_TOTALS, "3.00", "1")))
+          buildReportTotalsEntry(OWNER_1, "105.00", "3"),
+          buildReportTotalsEntry(FEE_FINE_OWNER_TOTALS, "105.00", "3")))
         .withByFeeFineType(List.of(
-          buildReportTotalsEntry(FEE_FINE_TYPE_1, "3.00", "1"),
-          buildReportTotalsEntry(FEE_FINE_TYPE_TOTALS, "3.00", "1")))
+          buildReportTotalsEntry(FEE_FINE_TYPE_1, "5.00", "2"),
+          buildReportTotalsEntry(FEE_FINE_TYPE_2, "100.00", "1"),
+          buildReportTotalsEntry(FEE_FINE_TYPE_TOTALS, "105.00", "3")))
         .withByAction(List.of(
-          buildReportTotalsEntry("Payment", "3.00", "1"),
-          buildReportTotalsEntry(ACTION_TOTALS, "3.00", "1")))
+          buildReportTotalsEntry("Payment", "103.00", "2"),
+          buildReportTotalsEntry("Waive", "2.00", "1"),
+          buildReportTotalsEntry(ACTION_TOTALS, "105.00", "3")))
         .withByPaymentMethod(List.of(
           buildReportTotalsEntry(PAYMENT_METHOD_1, "3.00", "1"),
-          buildReportTotalsEntry(PAYMENT_METHOD_TOTALS, "3.00", "1")))
+          buildReportTotalsEntry(PAYMENT_METHOD_2, "100.00", "1"),
+          buildReportTotalsEntry(PAYMENT_METHOD_TOTALS, "103.00", "2")))
         .withByWaiveReason(List.of(
-          buildReportTotalsEntry(WAIVE_REASON_TOTALS, "0.00", "0")))
+          buildReportTotalsEntry(WAIVE_REASON_1, "2.00", "1"),
+          buildReportTotalsEntry(WAIVE_REASON_TOTALS, "2.00", "1")))
         .withByRefundReason(List.of(
           buildReportTotalsEntry(REFUND_REASON_TOTALS, "0.00", "0")))
         .withByTransferAccount(List.of(
@@ -350,8 +481,8 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   @Test
   public void validResponseWhenStubsAreMissing() {
     validResponseWithStubsMissing(() -> {
-      removeStub(user1StubMapping);
-      removeStub(userGroupStubMapping);
+      removeStub(userStubMapping1);
+      removeStub(userGroupStubMapping1);
       removeStub(itemStubMapping);
       removeStub(loanStubMapping);
       removeStub(holdingsStubMapping);
@@ -365,7 +496,7 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   @Test
   public void validResponseWhenUserGroupStubIsMissing() {
     validResponseWithStubsMissing(() -> {
-      removeStub(userGroupStubMapping);
+      removeStub(userGroupStubMapping1);
     });
   }
 
@@ -412,7 +543,8 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   }
 
   private void requestAndCheck(FinancialTransactionsDetailReport report) {
-    requestAndCheck(report, START_DATE, END_DATE, List.of(CREATED_AT_ID_1), OWNER_ID_1);
+    requestAndCheck(report, START_DATE, END_DATE, List.of(CREATED_AT_ID_1, CREATED_AT_ID_2),
+      OWNER_ID_1);
   }
 
   private void requestAndCheck(FinancialTransactionsDetailReport report,

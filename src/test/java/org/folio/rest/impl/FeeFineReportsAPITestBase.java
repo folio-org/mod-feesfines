@@ -29,6 +29,8 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 public class FeeFineReportsAPITestBase extends ApiTests {
   static final String PAID_PARTIALLY = "Paid partially";
   static final String PAID_FULLY = "Paid fully";
+  static final String WAIVED_PARTIALLY = "Waived partially";
+  static final String WAIVED_FULLY = "Waived fully";
   static final String TRANSFERRED_PARTIALLY = "Transferred partially";
   static final String TRANSFERRED_FULLY = "Transferred fully";
   static final String REFUNDED_PARTIALLY = "Refunded partially";
