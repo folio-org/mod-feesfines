@@ -35,7 +35,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "loanDate": {
       "description": "Date time when the loan began (typically represented according to rfc3339 section-5.6. Has not had the date-time format validation applied as was not supported at point of introduction and would now be a breaking change)",

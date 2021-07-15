@@ -16,7 +16,7 @@
     },
     "loansPolicy": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "properties": {
         "profileId": {
           "type": "string",
@@ -144,7 +144,7 @@
         },
         "pages": {
           "type": "object",
-          "additionalProperties": false,
+          "additionalProperties": true,
           "properties": {
             "alternateCheckoutLoanPeriod": {
               "type": "object",

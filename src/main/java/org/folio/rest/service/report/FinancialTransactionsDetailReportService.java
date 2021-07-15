@@ -10,7 +10,7 @@ import static org.folio.rest.domain.Action.WAIVE;
 import static org.folio.rest.repository.FeeFineActionRepository.ORDER_BY_OWNER_SOURCE_DATE_ASC;
 import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
-import static org.folio.rest.utils.PatronHelper.formatName;
+import static org.folio.rest.utils.PatronHelper.buildFormattedName;
 import static org.folio.rest.utils.PatronHelper.getEmail;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
@@ -212,7 +212,7 @@ public class FinancialTransactionsDetailReportService extends
           User user = ctx.getUserByAccountId(account.getId());
           if (user != null) {
             entry = entry
-              .withPatronName(formatName(user))
+              .withPatronName(buildFormattedName(user))
               .withPatronBarcode(user.getBarcode())
               .withPatronEmail(getEmail(user));
 

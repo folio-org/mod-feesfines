@@ -34,16 +34,16 @@
       "loanDate": "10/10/2020, 10:10 AM",
       "dueDate": "11/10/2020, 11:59 PM",
       "returnDate": "",
-      "loanPolicyId": "aaaaaaa-aaaaa-aaaaaa-aaaaaaa",
+      "loanPolicyId": "3b43297a-ec55-4bc9-849f-79601c755912",
       "loanPolicyName": "Faculty-loan-policy",
-      "overdueFinePolicyId": "aaaaaaa-aaaaa-aaaaaa-aaaaaaa",
+      "overdueFinePolicyId": "221fa305-2595-4f59-97a1-6f0907a32b92",
       "overdueFinePolicyName": "General-overdue-fine-policy",
-      "lostItemPolicyId": "aaaaaaa-aaaaa-aaaaaa-aaaaaaa",
+      "lostItemPolicyId": "b4989141-18b1-4bb6-ba50-6b7f32b76874",
       "lostItemPolicyName": "General-lost-item-fee-policy",
-      "loanId": "aaaaaaa-aaaaa-aaaaaa-aaaaaaa",
+      "loanId": "07bc223f-3b8a-4558-a51a-6d8625374dc9",
       "holdingsRecordId" : "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19",
       "instanceId" : "5bf370e0-8cca-4d9c-82e4-5170ab2a0a39",
-      "itemId": "aaaaaaa-aaaaa-aaaaaa-aaaaaaa"
+      "itemId": "dadde30d-5c40-47b6-b70c-5a30cae13b46"
     }
   ],
   "reportTotals": {

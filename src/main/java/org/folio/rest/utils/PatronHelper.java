@@ -10,14 +10,13 @@ import org.folio.rest.jaxrs.model.User;
 public class PatronHelper {
   private static final Logger log = LogManager.getLogger(PatronHelper.class);
 
-  public static String formatName(User user) {
+  public static String buildFormattedName(User user) {
     StringBuilder builder = new StringBuilder();
     Personal personal = user.getPersonal();
 
     if (personal == null) {
       log.info("Personal info not found - user {}", user.getId());
-    }
-    else {
+    } else {
       builder.append(personal.getLastName());
 
       String firstName = personal.getFirstName();
@@ -39,8 +38,7 @@ public class PatronHelper {
     if (personal == null) {
       log.info("Personal info not found - user {}", user.getId());
       return "";
-    }
-    else {
+    } else {
       return user.getPersonal().getEmail();
     }
   }

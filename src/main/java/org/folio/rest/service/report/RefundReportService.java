@@ -8,7 +8,7 @@ import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
-import static org.folio.rest.utils.PatronHelper.formatName;
+import static org.folio.rest.utils.PatronHelper.buildFormattedName;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
 
@@ -232,7 +232,7 @@ public class RefundReportService {
 
       if (user != null) {
         reportEntry
-          .withPatronName(formatName(user))
+          .withPatronName(buildFormattedName(user))
           .withPatronBarcode(user.getBarcode())
           .withPatronId(user.getId());
       } else {

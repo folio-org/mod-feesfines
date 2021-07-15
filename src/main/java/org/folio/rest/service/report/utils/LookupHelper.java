@@ -85,11 +85,11 @@ public class LookupHelper {
 
     if (ctx.getUsers().containsKey(userId)) {
       return succeededFuture(ctx);
-    } else {
-      return usersClient.fetchUserById(userId)
-        .compose(user -> addUserToContext(ctx, user, account.getId(), userId))
-        .otherwise(ctx);
     }
+
+    return usersClient.fetchUserById(userId)
+      .compose(user -> addUserToContext(ctx, user, account.getId(), userId))
+      .otherwise(ctx);
   }
 
   private <T extends HasUserInfo> Future<T> addUserToContext(T ctx, User user, String accountId,
@@ -128,17 +128,15 @@ public class LookupHelper {
       log.info("Item ID is not a valid UUID - account {}", accountId);
       return succeededFuture(ctx);
     }
-    else {
-      if (ctx.getItems().containsKey(itemId)) {
-        return succeededFuture(ctx);
-      }
-      else {
-        return inventoryClient.getItemById(itemId)
-          .map(item -> addItemToContext(ctx, item, accountId, itemId))
-          .map(ctx)
-          .otherwise(ctx);
-      }
+
+    if (ctx.getItems().containsKey(itemId)) {
+      return succeededFuture(ctx);
     }
+
+    return inventoryClient.getItemById(itemId)
+      .map(item -> addItemToContext(ctx, item, accountId, itemId))
+      .map(ctx)
+      .otherwise(ctx);
   }
 
   private <T extends HasItemInfo> T addItemToContext(T ctx, Item item, String accountId,

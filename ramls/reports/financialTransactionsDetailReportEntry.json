@@ -108,7 +108,6 @@
     "patronId": {
       "type": "string",
       "description": "A globally unique (UUID) identifier for the user",
-      "$ref": "../raml-util/schemas/uuid.schema",
       "default": ""
     },
     "patronName": {

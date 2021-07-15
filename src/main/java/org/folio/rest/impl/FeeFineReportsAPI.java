@@ -149,8 +149,7 @@ public class FeeFineReportsAPI implements FeefineReports {
     }
 
     new FinancialTransactionsDetailReportService(okapiHeaders, vertxContext)
-      .build(new FinancialTransactionsDetailReportParameters(startDate, endDate,
-        entity.getFeeFineOwner(), entity.getCreatedAt()))
+      .build(new FinancialTransactionsDetailReportParameters(startDate, endDate, owner, createdAt))
       .onComplete(result -> handleReportResult(result, asyncResultHandler,
         PostFeefineReportsFinancialTransactionsDetailResponse::respond200WithApplicationJson));
   }
