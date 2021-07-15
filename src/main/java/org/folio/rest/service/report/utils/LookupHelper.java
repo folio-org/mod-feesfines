@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.client.CirculationStorageClient;
-import org.folio.rest.client.ConfigurationClient;
 import org.folio.rest.client.InventoryClient;
 import org.folio.rest.client.UserGroupsClient;
 import org.folio.rest.client.UsersClient;
@@ -26,11 +25,9 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.jaxrs.model.User;
-import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.repository.LostItemFeePolicyRepository;
 import org.folio.rest.repository.OverdueFinePolicyRepository;
-import org.folio.rest.service.LocationService;
 import org.folio.rest.service.report.context.HasAccountInfo;
 import org.folio.rest.service.report.context.HasItemInfo;
 import org.folio.rest.service.report.context.HasLoanInfo;
@@ -44,13 +41,9 @@ import io.vertx.core.Future;
 public class LookupHelper {
   private static final Logger log = LogManager.getLogger(LookupHelper.class);
 
-  private final LocationService locationService;
-
-  private final ConfigurationClient configurationClient;
   private final InventoryClient inventoryClient;
   private final UsersClient usersClient;
   private final UserGroupsClient userGroupsClient;
-  private final AccountRepository accountRepository;
 
   private final FeeFineActionRepository feeFineActionRepository;
   private final CirculationStorageClient circulationStorageClient;
@@ -58,16 +51,12 @@ public class LookupHelper {
   private final OverdueFinePolicyRepository overdueFinePolicyRepository;
 
   public LookupHelper(Map<String, String> headers, Context context) {
-    locationService = new LocationService(context.owner(), headers);
-
-    configurationClient = new ConfigurationClient(context.owner(), headers);
     inventoryClient = new InventoryClient(context.owner(), headers);
     usersClient = new UsersClient(context.owner(), headers);
     userGroupsClient = new UserGroupsClient(context.owner(), headers);
     circulationStorageClient = new CirculationStorageClient(context.owner(), headers);
 
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
-    accountRepository = new AccountRepository(context, headers);
     lostItemFeePolicyRepository = new LostItemFeePolicyRepository(context, headers);
     overdueFinePolicyRepository = new OverdueFinePolicyRepository(context, headers);
   }
@@ -218,7 +207,7 @@ public class LookupHelper {
 
     return feeFineActionRepository.findActionsForAccount(accountId)
       .map(this::sortFeeFineActionsByDate)
-      .map(ffa_list -> ctx.updateAccountContextWithActions(accountId, ffa_list))
+      .map(actions -> ctx.updateAccountContextWithActions(accountId, actions))
       .map(ctx)
       .otherwise(throwable -> {
         log.error("Failed to find actions for account {}", accountId);
@@ -236,7 +225,7 @@ public class LookupHelper {
     return feeFineActionRepository.findActionsOfTypesForAccount(accountId,
       List.of(REFUND, PAY, TRANSFER))
       .map(this::sortFeeFineActionsByDate)
-      .map(ffa_list -> ctx.updateAccountContextWithActions(accountId, ffa_list))
+      .map(actions -> ctx.updateAccountContextWithActions(accountId, actions))
       .map(ctx)
       .otherwise(throwable -> {
         log.error("Failed to find REFUND, PAY, TRANSFER actions for account {}", accountId);
@@ -309,9 +298,9 @@ public class LookupHelper {
     }
 
     return circulationStorageClient.getLoanById(loanId)
-      .onSuccess(loan -> ctx.updateAccountCtxWithLoan(accountId, loan))
+      .onSuccess(loan -> ctx.updateAccountContextWithLoan(accountId, loan))
       .compose(loan -> circulationStorageClient.getLoanPolicyById(loan.getLoanPolicyId()))
-      .onSuccess(loanPolicy -> ctx.updateAccountCtxWithLoanPolicy(accountId, loanPolicy))
+      .onSuccess(loanPolicy -> ctx.updateAccountContextWithLoanPolicy(accountId, loanPolicy))
       .map(ctx)
       .otherwise(throwable -> {
         log.error("Failed to find loan for account {}, loan is {}", accountId,
@@ -336,7 +325,7 @@ public class LookupHelper {
     }
 
     return overdueFinePolicyRepository.getOverdueFinePolicyById(overdueFinePolicyId)
-      .onSuccess(policy -> ctx.updateAccountCtxWithOverdueFinePolicy(accountId, policy))
+      .onSuccess(policy -> ctx.updateAccountContextWithOverdueFinePolicy(accountId, policy))
       .map(ctx)
       .otherwise(throwable -> {
         log.error("Failed to find overdue fine policy for account {}, overdue fine policy is {}",
@@ -361,7 +350,7 @@ public class LookupHelper {
     }
 
     return lostItemFeePolicyRepository.getLostItemFeePolicyById(lostItemFeePolicyId)
-      .onSuccess(policy -> ctx.updateAccountCtxWithLostItemFeePolicy(accountId, policy))
+      .onSuccess(policy -> ctx.updateAccountContextWithLostItemFeePolicy(accountId, policy))
       .map(ctx)
       .otherwise(throwable -> {
         log.error("Failed to find lost item fee policy for account {}, lost item fee policy is {}",

@@ -7,8 +7,8 @@ import org.folio.rest.jaxrs.model.OverdueFinePolicy;
 
 public interface HasLoanInfo {
   Loan getLoanByAccountId(String accountId);
-  void updateAccountCtxWithLoan(String accountId, Loan loan);
-  void updateAccountCtxWithLoanPolicy(String accountId, LoanPolicy loanPolicy);
-  void updateAccountCtxWithOverdueFinePolicy(String accountId, OverdueFinePolicy overdueFinePolicy);
-  void updateAccountCtxWithLostItemFeePolicy(String accountId, LostItemFeePolicy lostItemFeePolicy);
+  void updateAccountContextWithLoan(String accountId, Loan loan);
+  void updateAccountContextWithLoanPolicy(String accountId, LoanPolicy loanPolicy);
+  void updateAccountContextWithOverdueFinePolicy(String accountId, OverdueFinePolicy overdueFinePolicy);
+  void updateAccountContextWithLostItemFeePolicy(String accountId, LostItemFeePolicy lostItemFeePolicy);
 }

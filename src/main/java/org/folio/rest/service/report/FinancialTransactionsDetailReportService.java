@@ -136,9 +136,10 @@ public class FinancialTransactionsDetailReportService extends
   }
 
   private Future<Context> processAllFeeFineActions(Context ctx) {
-    return ctx.actionsToAccounts.keySet().stream().reduce(succeededFuture(ctx),
-      (f, a) -> f.compose(result -> processSingleFeeFineAction(ctx, a)),
-      (a, b) -> succeededFuture(ctx));
+    return ctx.actionsToAccounts.keySet().stream()
+      .reduce(succeededFuture(ctx),
+        (f, a) -> f.compose(result -> processSingleFeeFineAction(ctx, a)),
+        (a, b) -> succeededFuture(ctx));
   }
 
   private Future<Context> processSingleFeeFineAction(Context ctx, Feefineaction feeFineAction) {
@@ -296,8 +297,7 @@ public class FinancialTransactionsDetailReportService extends
   private FinancialTransactionsDetailReportStats buildFinancialTransactionsDetailReportStats(
     Context ctx) {
 
-    FinancialTransactionsDetailReportStats stats =
-      new FinancialTransactionsDetailReportStats();
+    FinancialTransactionsDetailReportStats stats = new FinancialTransactionsDetailReportStats();
 
     List<Feefineaction> actions = new ArrayList<>(ctx.actionsToAccounts.keySet());
 
@@ -382,20 +382,19 @@ public class FinancialTransactionsDetailReportService extends
       if (accountContexts.containsKey(accountId)) {
         return accountContexts.get(accountId);
       }
-      else {
-        Account account = actionsToAccounts.values().stream()
-          .filter(a -> accountId.equals(a.getId()))
-          .findFirst()
-          .orElse(null);
 
-        if (account != null) {
-          AccountContextData accountContext = new AccountContextData().withAccount(account);
-          accountContexts.put(accountId, accountContext);
-          return accountContext;
-        } else {
-          return null;
-        }
+      Account account = actionsToAccounts.values().stream()
+        .filter(a -> accountId.equals(a.getId()))
+        .findFirst()
+        .orElse(null);
+
+      if (account != null) {
+        AccountContextData accountContext = new AccountContextData().withAccount(account);
+        accountContexts.put(accountId, accountContext);
+        return accountContext;
       }
+
+      return null;
     }
 
     @Override
@@ -494,7 +493,7 @@ public class FinancialTransactionsDetailReportService extends
     }
 
     @Override
-    public void updateAccountCtxWithLoan(String accountId, Loan loan) {
+    public void updateAccountContextWithLoan(String accountId, Loan loan) {
       if (!isAccountContextCreated(accountId)) {
         return;
       }
@@ -503,7 +502,7 @@ public class FinancialTransactionsDetailReportService extends
     }
 
     @Override
-    public void updateAccountCtxWithLoanPolicy(String accountId, LoanPolicy loanPolicy) {
+    public void updateAccountContextWithLoanPolicy(String accountId, LoanPolicy loanPolicy) {
       if (!isAccountContextCreated(accountId)) {
         return;
       }
@@ -512,7 +511,7 @@ public class FinancialTransactionsDetailReportService extends
     }
 
     @Override
-    public void updateAccountCtxWithOverdueFinePolicy(String accountId,
+    public void updateAccountContextWithOverdueFinePolicy(String accountId,
       OverdueFinePolicy overdueFinePolicy) {
 
       if (!isAccountContextCreated(accountId)) {
@@ -524,7 +523,7 @@ public class FinancialTransactionsDetailReportService extends
     }
 
     @Override
-    public void updateAccountCtxWithLostItemFeePolicy(String accountId,
+    public void updateAccountContextWithLostItemFeePolicy(String accountId,
       LostItemFeePolicy lostItemFeePolicy) {
 
       if (!isAccountContextCreated(accountId)) {
