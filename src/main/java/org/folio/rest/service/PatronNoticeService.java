@@ -41,6 +41,7 @@ import org.joda.time.format.ISODateTimeFormat;
 public class PatronNoticeService {
   private static final Logger logger = LogManager.getLogger(PatronNoticeService.class);
 
+  private final LocationService locationService;
   private final FeeFineRepository feeFineRepository;
   private final OwnerRepository ownerRepository;
   private final AccountRepository accountRepository;
@@ -54,6 +55,8 @@ public class PatronNoticeService {
 
   public PatronNoticeService(Vertx vertx, Map<String, String> okapiHeaders) {
     PostgresClient pgClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
+
+    locationService = new LocationService(vertx, okapiHeaders);
 
     feeFineRepository = new FeeFineRepository(pgClient);
     ownerRepository = new OwnerRepository(pgClient);
@@ -165,49 +168,13 @@ public class PatronNoticeService {
       return succeededFuture(context);
     }
 
-    return inventoryClient.getLocationById(item.getEffectiveLocationId())
-      .compose(this::fetchInstitution)
-      .compose(this::fetchLibrary)
-      .compose(this::fetchCampus)
+    return locationService.getEffectiveLocation(item.getEffectiveLocationId())
       .map(context::withEffectiveLocation);
   }
 
   private Future<FeeFineNoticeContext> prepareLogEventPayload(FeeFineNoticeContext context) {
     logEventPayload = LogEventPayloadHelper.buildNoticeLogEventPayload(context);
     return succeededFuture(context);
-  }
-
-  private Future<Location> fetchInstitution(Location location) {
-    final String institutionId = location.getInstitutionId();
-
-    if (!isUuid(institutionId)) {
-      return succeededFuture(location);
-    }
-
-    return inventoryClient.getInstitutionById(institutionId)
-      .map(location::withInstitution);
-  }
-
-  private Future<Location> fetchLibrary(Location location) {
-    final String libraryId = location.getLibraryId();
-
-    if (!isUuid(libraryId)) {
-      return succeededFuture(location);
-    }
-
-    return inventoryClient.getLibraryById(libraryId)
-      .map(location::withLibrary);
-  }
-
-  private Future<Location> fetchCampus(Location location) {
-    final String campusId = location.getCampusId();
-
-    if (!isUuid(campusId)) {
-      return succeededFuture(location);
-    }
-
-    return inventoryClient.getCampusById(campusId)
-      .map(location::withCampus);
   }
 
   private Future<FeeFineNoticeContext> refuseWhenEmptyTemplateId(FeeFineNoticeContext ctx) {

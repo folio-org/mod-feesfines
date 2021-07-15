@@ -17,11 +17,14 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportRequest;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportSourcesRequest;
+import org.folio.rest.jaxrs.model.FinancialTransactionsDetailReportRequest;
 import org.folio.rest.jaxrs.model.RefundReportRequest;
 import org.folio.rest.jaxrs.resource.FeefineReports;
 import org.folio.rest.service.report.CashDrawerReconciliationReportService;
+import org.folio.rest.service.report.FinancialTransactionsDetailReportService;
 import org.folio.rest.service.report.RefundReportService;
 import org.folio.rest.service.report.parameters.CashDrawerReconciliationReportParameters;
+import org.folio.rest.service.report.parameters.FinancialTransactionsDetailReportParameters;
 import org.joda.time.DateTime;
 
 import io.vertx.core.AsyncResult;
@@ -119,6 +122,36 @@ public class FeeFineReportsAPI implements FeefineReports {
       .findSources(createdAt)
       .onComplete(result -> handleReportResult(result, asyncResultHandler,
         PostFeefineReportsCashDrawerReconciliationSourcesResponse::respond200WithApplicationJson));
+  }
+
+  @Override
+  public void postFeefineReportsFinancialTransactionsDetail(
+    FinancialTransactionsDetailReportRequest entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    String rawStartDate = entity.getStartDate();
+    String rawEndDate = entity.getEndDate();
+    List<String> createdAt = entity.getCreatedAt();
+    String owner = entity.getFeeFineOwner();
+
+    log.info("Financial transactions detail report requested, parameters: startDate={}, " +
+      "endDate={}, createdAt={}, owner={}", rawStartDate, rawEndDate, createdAt, owner);
+
+    DateTime startDate;
+    DateTime endDate;
+
+    try {
+      startDate = parseDateReportParameter(rawStartDate);
+      endDate = parseDateReportParameter(rawEndDate);
+    } catch (IllegalArgumentException e) {
+      logInvalidDatesAndHandleResult(rawStartDate, rawEndDate, asyncResultHandler);
+      return;
+    }
+
+    new FinancialTransactionsDetailReportService(okapiHeaders, vertxContext)
+      .build(new FinancialTransactionsDetailReportParameters(startDate, endDate, owner, createdAt))
+      .onComplete(result -> handleReportResult(result, asyncResultHandler,
+        PostFeefineReportsFinancialTransactionsDetailResponse::respond200WithApplicationJson));
   }
 
   private <T> void handleReportResult(AsyncResult<T> asyncResult,
