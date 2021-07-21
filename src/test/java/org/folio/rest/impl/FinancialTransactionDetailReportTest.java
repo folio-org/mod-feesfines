@@ -317,6 +317,13 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
       PAID_FULLY, PAYMENT_METHOD_2, 100.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT_ID_2, SOURCE_2);
 
+    Account account3 = charge(USER_ID_1, chargedAmount1, FEE_FINE_TYPE_1, null, null,
+      OWNER_ID_1, OWNER_1, chargeActionDate1, CREATED_AT_ID_1, SOURCE_1);
+
+    Feefineaction paymentAction3 = createAction(USER_ID_1, 3, account3, withTenantTz("2020-01-03 00:10:00"),
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT_ID_1, SOURCE_1);
+
     requestAndCheck(new FinancialTransactionsDetailReport()
       .withReportData(List.of(
         new FinancialTransactionsDetailReportEntry()
@@ -450,24 +457,68 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
           .withLoanId(loan2.getId())
           .withHoldingsRecordId(holdingsRecord.getId())
           .withInstanceId(instance.getId())
-          .withItemId(item2.getId())
+          .withItemId(item2.getId()),
+        new FinancialTransactionsDetailReportEntry()
+          .withFeeFineOwner(OWNER_1)
+          .withFeeFineType(FEE_FINE_TYPE_1)
+          .withBilledAmount(new MonetaryValue(chargedAmount1).toString())
+          .withDateBilled(formatReportDate(parseDateTimeUTC(chargeActionDate1)))
+          .withFeeFineCreatedAt(CREATED_AT_1)
+          .withFeeFineSource(SOURCE_1)
+          .withFeeFineId(account3.getId())
+          .withAction("Payment")
+          .withActionAmount(new MonetaryValue(paymentAction3.getAmountAction()).toString())
+          .withActionDate(formatReportDate(paymentAction3.getDateAction()))
+          .withActionCreatedAt(CREATED_AT_1)
+          .withActionSource(SOURCE_1)
+          .withActionStatus(PAID_PARTIALLY)
+          .withActionAdditionalStaffInfo(addSuffix(PAYMENT_STAFF_INFO, 3))
+          .withActionAdditionalPatronInfo(addSuffix(PAYMENT_PATRON_INFO, 3))
+          .withPaymentMethod(PAYMENT_METHOD_1)
+          .withTransactionInfo(PAYMENT_TX_INFO)
+          .withWaiveReason("")
+          .withRefundReason("")
+          .withTransferAccount("")
+          .withPatronId(USER_ID_1)
+          .withPatronName(getFullName(user1))
+          .withPatronBarcode(USER_BARCODE_1)
+          .withPatronGroup(USER_GROUP_1)
+          .withPatronEmail(user1.getPersonal().getEmail())
+          .withInstance("")
+          .withContributors("")
+          .withItemBarcode("")
+          .withCallNumber("")
+          .withEffectiveLocation("")
+          .withLoanDate("")
+          .withDueDate("")
+          .withReturnDate("")
+          .withLoanPolicyId("")
+          .withLoanPolicyName("")
+          .withOverdueFinePolicyId("")
+          .withOverdueFinePolicyName("")
+          .withLostItemPolicyId("")
+          .withLostItemPolicyName("")
+          .withLoanId("")
+          .withHoldingsRecordId("")
+          .withInstanceId("")
+          .withItemId("")
       ))
       .withReportStats(new FinancialTransactionsDetailReportStats()
         .withByFeeFineOwner(List.of(
-          buildReportTotalsEntry(OWNER_1, "105.00", "3"),
-          buildReportTotalsEntry(FEE_FINE_OWNER_TOTALS, "105.00", "3")))
+          buildReportTotalsEntry(OWNER_1, "108.00", "4"),
+          buildReportTotalsEntry(FEE_FINE_OWNER_TOTALS, "108.00", "4")))
         .withByFeeFineType(List.of(
-          buildReportTotalsEntry(FEE_FINE_TYPE_1, "5.00", "2"),
+          buildReportTotalsEntry(FEE_FINE_TYPE_1, "8.00", "3"),
           buildReportTotalsEntry(FEE_FINE_TYPE_2, "100.00", "1"),
-          buildReportTotalsEntry(FEE_FINE_TYPE_TOTALS, "105.00", "3")))
+          buildReportTotalsEntry(FEE_FINE_TYPE_TOTALS, "108.00", "4")))
         .withByAction(List.of(
-          buildReportTotalsEntry("Payment", "103.00", "2"),
+          buildReportTotalsEntry("Payment", "106.00", "3"),
           buildReportTotalsEntry("Waive", "2.00", "1"),
-          buildReportTotalsEntry(ACTION_TOTALS, "105.00", "3")))
+          buildReportTotalsEntry(ACTION_TOTALS, "108.00", "4")))
         .withByPaymentMethod(List.of(
-          buildReportTotalsEntry(PAYMENT_METHOD_1, "3.00", "1"),
+          buildReportTotalsEntry(PAYMENT_METHOD_1, "6.00", "2"),
           buildReportTotalsEntry(PAYMENT_METHOD_2, "100.00", "1"),
-          buildReportTotalsEntry(PAYMENT_METHOD_TOTALS, "103.00", "2")))
+          buildReportTotalsEntry(PAYMENT_METHOD_TOTALS, "106.00", "3")))
         .withByWaiveReason(List.of(
           buildReportTotalsEntry(WAIVE_REASON_1, "2.00", "1"),
           buildReportTotalsEntry(WAIVE_REASON_TOTALS, "2.00", "1")))

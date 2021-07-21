@@ -83,13 +83,21 @@ public class FeeFineReportsAPITestBase extends ApiTests {
     String itemId, Loan loan, String ownerId, String owner, String chargeActionDate,
     String chargeActionCreatedAt, String chargeActionSource) {
 
-    final var account = EntityBuilder.buildAccount(userID, itemId, feeFineType, amount,
-      ownerId, owner)
-      .withLoanId(loan.getId())
-      .withDueDate(loan.getDueDate())
-      .withReturnedDate(DateTime.parse(loan.getReturnDate(), LOAN_RETURN_DATE_TIME_REPORT_FORMATTER)
-        .withZoneRetainFields(DateTimeZone.UTC)
-        .toDate());
+    Account account = EntityBuilder.buildAccount(userID, itemId, feeFineType, amount,
+      ownerId, owner);
+
+    if (loan != null) {
+      account = account.withLoanId(loan.getId())
+        .withDueDate(loan.getDueDate())
+        .withReturnedDate(DateTime.parse(loan.getReturnDate(), LOAN_RETURN_DATE_TIME_REPORT_FORMATTER)
+          .withZoneRetainFields(DateTimeZone.UTC)
+          .toDate());
+    } else {
+      account = account.withLoanId(null)
+        .withDueDate(null)
+        .withReturnedDate(null);
+    }
+
     createEntity(ACCOUNTS_PATH, account);
 
     createAction(userID, 1, account, chargeActionDate, feeFineType, null, amount, amount,
