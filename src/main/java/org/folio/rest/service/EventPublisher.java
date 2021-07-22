@@ -20,8 +20,10 @@ public class EventPublisher {
   private final Logger logger = LogManager.getLogger(EventPublisher.class);
   private final FeeFinePubSubClient pubSubClient;
   private final String tenantId;
+  private final Map<String, String> okapiHeaders;
 
   public EventPublisher(Vertx vertx, Map<String, String> okapiHeaders) {
+    this.okapiHeaders = okapiHeaders;
     pubSubClient = new FeeFinePubSubClient(vertx, okapiHeaders);
     tenantId = tenantId(okapiHeaders);
   }
@@ -61,6 +63,7 @@ public class EventPublisher {
       .withEventMetadata(new EventMetadata()
         .withPublishedBy(PubSubClientUtils.getModuleId())
         .withTenantId(tenantId)
-        .withEventTTL(1));
+        .withEventTTL(1)
+        .withCreatedBy(okapiHeaders.get("source")));
   }
 }
