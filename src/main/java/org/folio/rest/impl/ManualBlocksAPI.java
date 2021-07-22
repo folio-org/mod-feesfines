@@ -255,6 +255,10 @@ public class ManualBlocksAPI implements Manualblocks {
                           if (deleteReply.succeeded()) {
                             if (deleteReply.result().rowCount() == 1) {
 
+                              String source = okapiHeaders.get("X-Okapi-Source");
+                              JsonObject payload = JsonObject.mapFrom(getByIdReply.result());
+                              payload.getJsonObject("metadata").put("updatedByUserId", source);
+
                               CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
                                 .publishLogEvent(JsonObject.mapFrom(getByIdReply.result()), MANUAL_BLOCK_DELETED));
 
