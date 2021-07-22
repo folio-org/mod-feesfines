@@ -258,9 +258,6 @@ public class ManualBlocksAPI implements Manualblocks {
                               String source = okapiHeaders.get("X-Okapi-Source");
                               JsonObject payload = JsonObject.mapFrom(getByIdReply.result());
                               payload.getJsonObject("metadata").put("updatedByUserId", source);
-                              payload.put("borrowing", false);
-                              payload.put("renewals", false);
-                              payload.put("requests", false);
 
                               CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
                                 .publishLogEvent(JsonObject.mapFrom(payload), MANUAL_BLOCK_DELETED));
