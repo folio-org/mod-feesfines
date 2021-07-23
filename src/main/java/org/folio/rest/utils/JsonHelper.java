@@ -36,7 +36,7 @@ public class JsonHelper {
 
   public static void write(JsonObject target, String property, MonetaryValue value) {
     if (value != null) {
-      target.put(property, value.getAmount());
+      target.put(property, value.toDouble());
     }
   }
 
@@ -78,14 +78,5 @@ public class JsonHelper {
 
   private static boolean argumentsAreValid(JsonObject target, String key, String value) {
     return target != null && isNoneBlank(key, value);
-  }
-
-  public static class MonetaryValueSerializer extends JsonSerializer<MonetaryValue> {
-
-    @Override
-    public void serialize(MonetaryValue value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-      //TODO fix doubleValue
-      gen.writeNumber(value.getAmount().doubleValue());
-    }
   }
 }

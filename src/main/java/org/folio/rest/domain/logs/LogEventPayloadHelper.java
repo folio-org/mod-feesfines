@@ -44,8 +44,7 @@ public class LogEventPayloadHelper {
   private static final String STAFF_INFO_ONLY_ADDED = "Staff information only added";
   private static final String BILLED = "Billed";
 
-  private LogEventPayloadHelper() {
-  }
+  private LogEventPayloadHelper() {}
 
   public static JsonObject buildNoticeLogEventPayload(FeeFineNoticeContext context) {
     JsonObject contextJson = new JsonObject();
@@ -85,13 +84,13 @@ public class LogEventPayloadHelper {
     JsonObject json = new JsonObject();
 
     ofNullable(action).ifPresent(act -> {
-      write(json, AMOUNT.value(), act.getAmountAction().toDouble());
+      write(json, AMOUNT.value(), act.getAmountAction());
       write(json, SOURCE.value(), act.getSource());
       write(json, SERVICE_POINT_ID.value(), act.getCreatedAt());
       write(json, DATE.value(), DateTime.now());
       if (isAction(act)) {
         write(json, ACTION.value(), act.getTypeAction());
-        ofNullable(act.getBalance()).ifPresent(balance -> write(json, BALANCE.value(), balance.toDouble()));
+        ofNullable(act.getBalance()).ifPresent(balance -> write(json, BALANCE.value(), balance));
         write(json, PAYMENT_METHOD.value(), act.getPaymentMethod());
         write(json, COMMENTS.value(), act.getComments());
       } else if (STAFF_INFO_ONLY.equalsIgnoreCase(act.getTypeAction())) {

@@ -67,7 +67,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
   private static final String FIRST_ACCOUNT_ID = randomId();
   private static final String SECOND_ACCOUNT_ID = randomId();
   private static final List<String> FIRST_ACCOUNT_ID_AS_LIST = singletonList(FIRST_ACCOUNT_ID);
-  private static final List<String> TWO_ACCOUNT_IDS = Arrays.asList(FIRST_ACCOUNT_ID, SECOND_ACCOUNT_ID);
+  private static final List<String> TWO_ACCOUNT_IDS = Arrays.asList(FIRST_ACCOUNT_ID,
+    SECOND_ACCOUNT_ID);
 
   private final ResourceClient actionsClient = buildFeeFineActionsClient();
   private final Action action;
@@ -98,7 +99,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
     case TRANSFER:
       return buildAccountBulkTransferClient();
     default:
-      throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
+      throw new IllegalArgumentException(
+        "Failed to get ResourceClient for action: " + action.name());
     }
   }
 
@@ -172,7 +174,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void return422WhenAccountIsClosed() {
-   MonetaryValue remainingAmount = new MonetaryValue(0.0);
+    MonetaryValue remainingAmount = new MonetaryValue(0.0);
     return422WhenAccountIsEffectivelyClosed(remainingAmount);
   }
 
@@ -204,14 +206,14 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
   @Test
   public void longDecimalsAreHandledCorrectlyAndAccountIsClosed() {
     MonetaryValue accountBalanceBeforeAction = new MonetaryValue(1.004987654321);
-    MonetaryValue amount = new MonetaryValue(0.0);
     final Account account = createAccount(FIRST_ACCOUNT_ID, accountBalanceBeforeAction);
     postAccount(account);
 
     String requestedAmountString = "1.004123456789";
     String expectedPaymentStatus = action.getFullResult();
 
-    DefaultBulkActionRequest request = createRequest(requestedAmountString, FIRST_ACCOUNT_ID_AS_LIST);
+    DefaultBulkActionRequest request = createRequest(requestedAmountString,
+      FIRST_ACCOUNT_ID_AS_LIST);
 
     resourceClient.post(toJson(request))
       .then()
@@ -229,12 +231,14 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, amount, "Closed");
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus,
+      MonetaryValue.MONETARY_VALUE_ZERO, "Closed");
   }
 
   @Test
   public void longDecimalsAreHandledCorrectly() {
-    MonetaryValue accountBalanceBeforeAction = new MonetaryValue(1.23987654321); // should be rounded to 1.24
+    MonetaryValue accountBalanceBeforeAction = new MonetaryValue(
+      1.23987654321); // should be rounded to 1.24
     MonetaryValue amount = new MonetaryValue(0.24);
     Account account = createAccount(FIRST_ACCOUNT_ID, accountBalanceBeforeAction);
     postAccount(account);
@@ -242,7 +246,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
     String expectedPaymentStatus = action.getPartialResult();
 
-    DefaultBulkActionRequest request = createRequest(requestedAmountString, FIRST_ACCOUNT_ID_AS_LIST);
+    DefaultBulkActionRequest request = createRequest(requestedAmountString,
+      FIRST_ACCOUNT_ID_AS_LIST);
 
     resourceClient.post(toJson(request))
       .then()
@@ -336,9 +341,9 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
     fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
       is(either(feeFineActionLogEventPayload(account1, request, action.getPartialResult(),
-          expectedActionAmount, expectedRemainingAmount1))
+        expectedActionAmount, expectedRemainingAmount1))
         .or(feeFineActionLogEventPayload(account2, request, action.getFullResult(),
-        expectedActionAmount, expectedRemainingAmount2)))));
+          expectedActionAmount, expectedRemainingAmount2)))));
   }
 
   private Account createAccount(String accountId, MonetaryValue amount) {

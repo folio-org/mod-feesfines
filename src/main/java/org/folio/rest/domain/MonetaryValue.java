@@ -1,25 +1,26 @@
 package org.folio.rest.domain;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.folio.rest.utils.JsonHelper;
-
 import static java.math.BigDecimal.ZERO;
 import static java.util.Objects.requireNonNull;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Currency;
 
-@JsonSerialize(using = JsonHelper.MonetaryValueSerializer.class)
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+@JsonSerialize(using = MonetaryValue.MonetaryValueSerializer.class)
 public class MonetaryValue {
   private static final Currency USD = Currency.getInstance("USD");
   private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN;
+  public static final MonetaryValue MONETARY_VALUE_ZERO = new MonetaryValue(BigDecimal.ZERO);
 
-  @JsonProperty("amount")
   private final BigDecimal amount;
 
   @JsonIgnore
@@ -86,7 +87,9 @@ public class MonetaryValue {
     return new MonetaryValue(amount.subtract(other.getAmount()));
   }
 
-  public MonetaryValue divide(MonetaryValue other){return new MonetaryValue(amount.divide(other.getAmount(),DEFAULT_ROUNDING));}
+  public MonetaryValue divide(MonetaryValue denominator) {
+    return new MonetaryValue(amount.divide(denominator.getAmount(), DEFAULT_ROUNDING));
+  }
 
   public MonetaryValue add(MonetaryValue other) {
     return new MonetaryValue(amount.add(other.getAmount()));
@@ -111,5 +114,16 @@ public class MonetaryValue {
   @Override
   public String toString() {
     return amount.toString();
+  }
+
+  static class MonetaryValueSerializer extends JsonSerializer<MonetaryValue> {
+
+    @Override
+    public void serialize(MonetaryValue value, JsonGenerator gen, SerializerProvider provider)
+      throws
+      IOException {
+      //TODO fix doubleValue
+      gen.writeNumber(value.getAmount().doubleValue());
+    }
   }
 }

@@ -513,10 +513,6 @@ public class RefundReportService {
     return item.getBarcode();
   }
 
- /* private String formatMonetaryValue(MonetaryValue value) {
-    return new MonetaryValue(value, currency).toString();
-  }*/
-
   private String formatDate(Date date, DateTimeZone timeZone) {
     return new DateTime(date).withZone(timeZone).toString(dateTimeFormatter);
   }

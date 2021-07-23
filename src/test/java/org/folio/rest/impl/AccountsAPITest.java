@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.restassured.response.Response;
 import io.restassured.response.ResponseBody;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
@@ -174,8 +175,6 @@ public class AccountsAPITest extends ApiTests {
     final String accountId = randomId();
     final String loanId = UUID.randomUUID().toString();
 
-    MonetaryValue paymentStatus = new MonetaryValue(0.1);
-
     final JsonObject account = createAccountJsonObject(accountId)
       .put("loanId", loanId)
       .put("remaining", 90.00)
@@ -193,7 +192,7 @@ public class AccountsAPITest extends ApiTests {
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
       hasJsonPath("status.name", is("Closed")),
       hasJsonPath("paymentStatus.name", is("Paid partially")),
-      hasJsonPath("remaining", is(paymentStatus.toDouble()))
+      hasJsonPath("remaining", is(0.1))
     ));
     assertThat(getLastFeeFineClosedEvent(), nullValue());
   }
@@ -383,7 +382,8 @@ public class AccountsAPITest extends ApiTests {
     EventMetadata eventMetadata = event.getEventMetadata();
 
     assertEquals(EventType.FEE_FINE_BALANCE_CHANGED.name(), event.getEventType());
-    assertThat(eventMetadata.getPublishedBy(), matchesPattern("mod-feesfines-[0-9]+\\.[0-9]+\\.[0-9]+"));
+    assertThat(eventMetadata.getPublishedBy(),
+      matchesPattern("mod-feesfines-[0-9]+\\.[0-9]+\\.[0-9]+"));
     assertEquals(TENANT_NAME, eventMetadata.getTenantId());
     assertEquals(1, eventMetadata.getEventTTL().intValue());
 

@@ -104,7 +104,6 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON)
-      .log().body()
       .body("status.name", is("Closed"))
       .body("paymentStatus.name", is(cancellationReason))
       .body("remaining", is(0.0f));

@@ -1,18 +1,18 @@
 package org.folio.rest.utils;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.defaultString;
-
 import static org.folio.rest.domain.Action.TRANSFER;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.rest.domain.Action;
@@ -70,14 +70,9 @@ public class FeeFineActionHelper {
       .filter(actionPredicate(TRANSFER))
       .collect(groupingBy(
         Feefineaction::getPaymentMethod,
-        // collectingAndThen(
-        // Stream.of(mapping(Feefineaction::getAmountAction,toSet())).reduce(
-        reducing(new MonetaryValue(BigDecimal.valueOf(0.0)), Feefineaction::getAmountAction, MonetaryValue::add)
-        // BigDecimal::add)
-        //MonetaryValue::new
-        )
-        //)
-      );
+        reducing(new MonetaryValue(BigDecimal.valueOf(0.0)), Feefineaction::getAmountAction,
+          MonetaryValue::add)
+      ));
   }
 
   public static MonetaryValue getTotalAmount(Collection<Feefineaction> feeFineActions) {
@@ -85,16 +80,18 @@ public class FeeFineActionHelper {
   }
 
   public static MonetaryValue getTotalAmount(Collection<Feefineaction> feeFineActions,
-                                             Action action) {
+    Action action) {
 
     return getTotalAmount(feeFineActions, actionPredicate(action));
   }
 
   public static MonetaryValue getTotalAmount(Collection<Feefineaction> feeFineActions,
-                                             Predicate<Feefineaction> filter) {
+    Predicate<Feefineaction> filter) {
 
     return feeFineActions.stream()
-      .filter(filter).map(Feefineaction::getAmountAction).reduce(new MonetaryValue(BigDecimal.valueOf(0.0)), MonetaryValue::add);
+      .filter(filter)
+      .map(Feefineaction::getAmountAction)
+      .reduce(MonetaryValue.MONETARY_VALUE_ZERO, MonetaryValue::add);
   }
 
   public static <K> Map<K, MonetaryValue> getTotalAmounts(
