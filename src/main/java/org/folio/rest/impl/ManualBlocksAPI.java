@@ -255,7 +255,7 @@ public class ManualBlocksAPI implements Manualblocks {
                           if (deleteReply.succeeded()) {
                             if (deleteReply.result().rowCount() == 1) {
 
-                              String source = okapiHeaders.get("X-Okapi-Source");
+                              String source = okapiHeaders.get("x-okapi-user-id");
                               JsonObject payload = JsonObject.mapFrom(getByIdReply.result());
                               payload.getJsonObject("metadata").put("updatedByUserId", source);
 
