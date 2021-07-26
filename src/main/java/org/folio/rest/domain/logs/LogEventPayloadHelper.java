@@ -95,6 +95,7 @@ public class LogEventPayloadHelper {
         write(json, COMMENTS.value(), act.getComments());
       } else if (STAFF_INFO_ONLY.equalsIgnoreCase(act.getTypeAction())) {
         write(json, ACTION.value(), STAFF_INFO_ONLY_ADDED);
+        write(json, COMMENTS.value(), act.getComments());
       } else if (isCharge(act)) {
         write(json, ACTION.value(), BILLED);
       }

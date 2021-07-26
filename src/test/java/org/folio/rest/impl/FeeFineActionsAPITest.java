@@ -79,6 +79,8 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static final String CHARGE_COMMENT_FOR_PATRON = "Charge comment";
   private static final String ACTION_COMMENT_FOR_PATRON = "Action comment";
 
+  private static final String STAFF_INFO = "STAFF : staff comment \n PATRON : patron comment";
+
   private static final String ACCOUNT_AMOUNT = "12.34";
   private static final String ACCOUNT_REMAINING = "5.67";
   private static final String ACTION_AMOUNT = "6.67";
@@ -341,7 +343,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("action", expectedTypeAction)
       .put("feeFineId", feeFineId)
       .put("type", feeFineType)
-      .put("amount", amountAction);
+      .put("amount", amountAction)
+      .put("comments", STAFF_INFO);
 
     assertThatPublishedLogRecordsCountIsEqualTo(1);
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
@@ -386,7 +389,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     return new JsonObject()
       .put("dateAction", dateAction)
       .put("typeAction", typeAction)
-      .put("comments", "STAFF : staff comment \n PATRON : patron comment")
+      .put("comments", STAFF_INFO)
       .put("notify", notify)
       .put("amountAction", amountAction)
       .put("balance", balance)
