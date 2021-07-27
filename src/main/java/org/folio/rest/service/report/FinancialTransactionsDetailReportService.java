@@ -6,7 +6,7 @@ import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
-import static org.folio.rest.repository.FeeFineActionRepository.ORDER_BY_OWNER_SOURCE_DATE_ASC;
+import static org.folio.rest.repository.FeeFineActionRepository.ORDER_BY_ACTION_DATE_ASC;
 import static org.folio.rest.service.report.utils.ReportStatsHelper.calculateTotals;
 import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
@@ -129,7 +129,7 @@ public class FinancialTransactionsDetailReportService extends
 
     return feeFineActionRepository.findFeeFineActionsAndAccounts(actionTypes,
       params.getStartDate(), params.getEndDate(), List.of(params.getFeeFineOwner()),
-      params.getCreatedAt(), null, ORDER_BY_OWNER_SOURCE_DATE_ASC, REPORT_ROWS_LIMIT)
+      params.getCreatedAt(), null, ORDER_BY_ACTION_DATE_ASC, REPORT_ROWS_LIMIT)
       .map(ctx::withActionsToAccounts)
       .compose(this::processAllFeeFineActions)
       .map(this::buildReport);
