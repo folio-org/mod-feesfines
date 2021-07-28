@@ -20,7 +20,7 @@ public abstract class ActionsAPITests extends ApiTests {
     final Response getAccountByIdResponse = accountsClient.getById(accountId);
     getAccountByIdResponse
       .then()
-      .body("remaining", is(amount.toDouble()))
+      .body("remaining", is((float) amount.toDouble()))
       .body("status.name", is(statusName))
       .body("paymentStatus.name", is(expectedPaymentStatus))
       .body("metadata.updatedDate", notNullValue());

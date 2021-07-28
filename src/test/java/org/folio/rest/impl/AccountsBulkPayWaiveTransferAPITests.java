@@ -287,10 +287,10 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
     Matcher<JsonObject> feeFineActionsMatcher = allOf(
       hasItem(
-        feeFineAction(FIRST_ACCOUNT_ID, account1.getUserId(), expectedRemainingAmount1,
+        feeFineAction(FIRST_ACCOUNT_ID, account1.getUserId(), expectedRemainingAmount1.toDouble(),
           expectedActionAmount, expectedPaymentStatus1, request.getTransactionInfo(), request)),
       hasItem(
-        feeFineAction(SECOND_ACCOUNT_ID, account2.getUserId(), expectedRemainingAmount2,
+        feeFineAction(SECOND_ACCOUNT_ID, account2.getUserId(), expectedRemainingAmount2.toDouble(),
           expectedActionAmount, expectedPaymentStatus2, request.getTransactionInfo(), request)));
 
     resourceClient.post(toJson(request))

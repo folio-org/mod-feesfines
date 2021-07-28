@@ -89,8 +89,8 @@ public class EntityBuilder {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(new MonetaryValue(new BigDecimal("9.0")))
-      .withRemaining(new MonetaryValue(new BigDecimal("4.55")))
+      .withAmount(new MonetaryValue(9.0))
+      .withRemaining(new MonetaryValue(4.55))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }

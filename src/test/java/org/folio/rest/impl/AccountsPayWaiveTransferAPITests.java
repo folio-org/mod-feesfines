@@ -282,7 +282,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .then()
       .body(FEE_FINE_ACTIONS, hasSize(1))
       .body(FEE_FINE_ACTIONS, hasItem(
-        feeFineAction(ACCOUNT_ID, account.getUserId(), expectedAccountBalanceAfter, requestedAmount,
+        feeFineAction(ACCOUNT_ID, account.getUserId(), expectedAccountBalanceAfter.toDouble(), requestedAmount,
           expectedPaymentStatus, request.getTransactionInfo(), request))
       );
 

@@ -155,8 +155,8 @@ public class PatronNoticeBuilderTest {
   @Test
   public void useFallbackValuesFromAccountForItemContext() {
     final Account account = new Account()
-      .withAmount(new MonetaryValue(new BigDecimal("10.0")))
-      .withRemaining(new MonetaryValue(new BigDecimal("4.56")))
+      .withAmount(new MonetaryValue(10.0))
+      .withRemaining(new MonetaryValue(4.56))
       .withBarcode("Account-level barcode")
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
@@ -233,8 +233,8 @@ public class PatronNoticeBuilderTest {
     return new Feefineaction()
       .withTypeAction("Paid partially")
       .withDateAction(new Date())
-      .withAmountAction(new MonetaryValue(new BigDecimal("4.45")))
-      .withBalance(new MonetaryValue(new BigDecimal("8.55")))
+      .withAmountAction(new MonetaryValue(4.45))
+      .withBalance(new MonetaryValue(8.55))
       .withPaymentMethod("Cash")
       .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
   }
@@ -243,7 +243,7 @@ public class PatronNoticeBuilderTest {
     return new Feefineaction()
       .withTypeAction("Book lost")
       .withDateAction(new Date())
-      .withAmountAction(new MonetaryValue(new BigDecimal(ACCOUNT_AMOUNT)))
+      .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
       .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
       .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }

@@ -52,7 +52,7 @@ public class AccountEventPublisher {
     write(payload, "userId", account.getUserId());
     write(payload, "feeFineId", account.getId());
     write(payload, "feeFineTypeId", account.getFeeFineId());
-    write(payload, "balance", account.getRemaining().toDouble());
+    write(payload, "balance", account.getRemaining());
     if (UuidUtil.isUuid(account.getLoanId())) {
       write(payload, "loanId", account.getLoanId());
     }

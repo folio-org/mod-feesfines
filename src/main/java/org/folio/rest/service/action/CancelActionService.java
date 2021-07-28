@@ -54,7 +54,7 @@ public class CancelActionService extends ActionService {
 
     account.getPaymentStatus().setName(reasonForAction);
     account.getStatus().setName(CLOSED.getValue());
-    account.setRemaining(new MonetaryValue(BigDecimal.ZERO));
+    account.setRemaining(MonetaryValue.MONETARY_VALUE_ZERO);
 
     return feeFineAction;
   }
