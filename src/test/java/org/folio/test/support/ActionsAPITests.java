@@ -1,18 +1,16 @@
 package org.folio.test.support;
 
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 
-import io.restassured.response.Response;
 import java.util.Date;
 
 import org.folio.rest.domain.MonetaryValue;
-import org.folio.rest.domain.MonetaryValueTest;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.utils.ResourceClient;
+
+import io.restassured.response.Response;
 
 public abstract class ActionsAPITests extends ApiTests {
 

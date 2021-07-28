@@ -25,7 +25,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -115,18 +114,16 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void return422WhenRequestedAmountIsNegative() {
-    MonetaryValue amount = new MonetaryValue(-1.0);
-    testRequestWithNonPositiveAmount(amount);
+    testRequestWithNonPositiveAmount(-1);
   }
 
   @Test
   public void return422WhenRequestedAmountIsZero() {
-    MonetaryValue amount = new MonetaryValue(0.0);
-    testRequestWithNonPositiveAmount(amount);
+    testRequestWithNonPositiveAmount(0);
   }
 
-  private void testRequestWithNonPositiveAmount(MonetaryValue amount) {
-    postAccount(createAccount(FIRST_ACCOUNT_ID, new MonetaryValue(1.0)));
+  private void testRequestWithNonPositiveAmount(double amount) {
+    postAccount(createAccount(FIRST_ACCOUNT_ID, 1.0));
 
     String amountString = String.valueOf(amount);
 
@@ -141,7 +138,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void return422WhenRequestedAmountIsInvalidString() {
-    postAccount(createAccount(FIRST_ACCOUNT_ID, new MonetaryValue(1.0)));
+    postAccount(createAccount(FIRST_ACCOUNT_ID, 1.0));
 
     String invalidAmount = "eleven";
 
@@ -156,7 +153,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void return422WhenRequestedAmountExceedsRemainingAmount() {
-    MonetaryValue amount = new MonetaryValue(1.0);
+    double amount = 1.0;
     postAccount(createAccount(FIRST_ACCOUNT_ID, amount));
     postAccount(createAccount(SECOND_ACCOUNT_ID, amount));
 
@@ -186,8 +183,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
   }
 
   private void return422WhenAccountIsEffectivelyClosed(MonetaryValue remainingAmount) {
-    Account closedAccount = createAccount(FIRST_ACCOUNT_ID, remainingAmount)
-      .withAmount(remainingAmount.add(new MonetaryValue(new BigDecimal(1))))
+    Account closedAccount = createAccount(FIRST_ACCOUNT_ID, remainingAmount.toDouble())
+      .withAmount(remainingAmount.add(new MonetaryValue(1.0)))
       .withStatus(new Status().withName(FeeFineStatus.CLOSED.getValue()));
 
     postAccount(closedAccount);
@@ -205,8 +202,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void longDecimalsAreHandledCorrectlyAndAccountIsClosed() {
-    MonetaryValue accountBalanceBeforeAction = new MonetaryValue(1.004987654321);
-    final Account account = createAccount(FIRST_ACCOUNT_ID, accountBalanceBeforeAction);
+    final Account account = createAccount(FIRST_ACCOUNT_ID, 1.004987654321);
     postAccount(account);
 
     String requestedAmountString = "1.004123456789";
@@ -237,10 +233,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void longDecimalsAreHandledCorrectly() {
-    MonetaryValue accountBalanceBeforeAction = new MonetaryValue(
-      1.23987654321); // should be rounded to 1.24
-    MonetaryValue amount = new MonetaryValue(0.24);
-    Account account = createAccount(FIRST_ACCOUNT_ID, accountBalanceBeforeAction);
+    Account account =
+      createAccount(FIRST_ACCOUNT_ID, 1.23987654321); // should be rounded to 1.24
     postAccount(account);
 
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
@@ -265,17 +259,16 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, amount, "Open");
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus,
+      new MonetaryValue(0.24), "Open");
   }
 
   @Test
   public void paymentCreatesActionsAndUpdatesAccounts() {
-    MonetaryValue remainingAmount1 = new MonetaryValue(2.0);
-    MonetaryValue remainingAmount2 = new MonetaryValue(1.5);
     String requestedAmount = "3.00";
 
-    Account account1 = createAccount(FIRST_ACCOUNT_ID, remainingAmount1);
-    Account account2 = createAccount(SECOND_ACCOUNT_ID, remainingAmount2);
+    Account account1 = createAccount(FIRST_ACCOUNT_ID, 2.0);
+    Account account2 = createAccount(SECOND_ACCOUNT_ID, 1.5);
 
     postAccount(account1);
     postAccount(account2);
@@ -346,7 +339,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
           expectedActionAmount, expectedRemainingAmount2)))));
   }
 
-  private Account createAccount(String accountId, MonetaryValue amount) {
+  private Account createAccount(String accountId, double amount) {
     return new Account()
       .withId(accountId)
       .withOwnerId(randomId())
@@ -358,8 +351,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(amount)
-      .withRemaining(amount)
+      .withAmount(new MonetaryValue(amount))
+      .withRemaining(new MonetaryValue(amount))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }

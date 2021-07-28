@@ -23,9 +23,6 @@ import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import io.restassured.response.Response;
-import io.restassured.response.ResponseBody;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
@@ -88,7 +85,7 @@ public class AccountsAPITest extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON);
-    Account accountToPut = accountToPost.withRemaining(new MonetaryValue(new BigDecimal("4.55")));
+    Account accountToPut = accountToPost.withRemaining(new MonetaryValue(4.55));
 
     // put account
     accountsClient.update(accountId, accountToPut)
