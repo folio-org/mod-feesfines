@@ -15,12 +15,12 @@ import io.restassured.response.Response;
 public abstract class ActionsAPITests extends ApiTests {
 
   public static Account verifyAccountAndGet(ResourceClient accountsClient, String accountId,
-      String expectedPaymentStatus, MonetaryValue amount, String statusName) {
+    String expectedPaymentStatus, MonetaryValue amount, String statusName) {
 
     final Response getAccountByIdResponse = accountsClient.getById(accountId);
     getAccountByIdResponse
       .then()
-      .body("remaining", is((float) amount.toDouble()))
+      .body("remaining", is(amount.toDouble()))
       .body("status.name", is(statusName))
       .body("paymentStatus.name", is(expectedPaymentStatus))
       .body("metadata.updatedDate", notNullValue());

@@ -334,9 +334,9 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
     fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
       is(either(feeFineActionLogEventPayload(account1, request, action.getPartialResult(),
-        expectedActionAmount, expectedRemainingAmount1))
+        expectedActionAmount.toDouble(), expectedRemainingAmount1.toDouble()))
         .or(feeFineActionLogEventPayload(account2, request, action.getFullResult(),
-          expectedActionAmount, expectedRemainingAmount2)))));
+          expectedActionAmount.toDouble(), expectedRemainingAmount2.toDouble())))));
   }
 
   private Account createAccount(String accountId, double amount) {
