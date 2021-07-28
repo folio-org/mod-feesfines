@@ -2,6 +2,7 @@ package org.folio.rest.domain;
 
 import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.runners.Parameterized.Parameters;
 
 import org.apache.http.HttpStatus;
@@ -24,10 +25,18 @@ public class MonetaryValueSerializerTest extends ApiTests {
     return new String[] { "0", "0.0", "0.00", "0.000", "0.005", "0.000000000000001" };
   }
 
+ /* @Parameters
+  public static String[] amountsNotZero() {
+    return new String[] { "1", "0.006", "0.0051", "0.0050000000000001" };
+  }*/
+
   private final String amountForZero;
 
-  public MonetaryValueSerializerTest(String amount) {
+  private final String amountNotZero;
+
+  public MonetaryValueSerializerTest(String amount, String amountNotZero) {
     this.amountForZero = amount;
+    this.amountNotZero = amountNotZero;
   }
 
  /* @Parameters
@@ -56,9 +65,10 @@ public class MonetaryValueSerializerTest extends ApiTests {
       .contentType(JSON)
       .body("amount", is(0.0));
   }
- /* @Test
-  public void monetaryValueShouldBeZero() {
-    Account accountToPost = buildAccount(amountForZero);
+
+  @Test
+  public void monetaryValueShouldNotBeZero() {
+    Account accountToPost = buildAccount(amountNotZero);
 
     // create an account
     accountsClient.create(accountToPost)
@@ -70,9 +80,8 @@ public class MonetaryValueSerializerTest extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON)
-      .body("amount", is(0.0f));
-  }*/
-
+      .body("amount", not(0.0f));
+  }
 
   private Account buildAccount(String amount) {
     return new Account()

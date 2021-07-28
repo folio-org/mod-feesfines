@@ -183,7 +183,7 @@ public class CashDrawerReconciliationReportService extends
         .map(Feefineaction::getAmountAction)
         .filter(Objects::nonNull)
         .reduce(MonetaryValue::add)
-        .orElse(new MonetaryValue(ZERO))
+        .orElse(MonetaryValue.MONETARY_VALUE_ZERO)
         .toString())
       .withTotalCount(String.valueOf(actions.stream()
         .filter(filterByCategories(categories, categoryNameFunction))
