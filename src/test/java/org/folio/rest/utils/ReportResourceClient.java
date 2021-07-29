@@ -55,6 +55,20 @@ public class ReportResourceClient extends ResourceClient {
     return getReport(createCashDrawerReconciliationReportSourcesRequest(createdAt), expectedStatus);
   }
 
+  public Response getFinancialTransactionsDetailReport(String startDate, String endDate,
+    List<String> createdAt, String owner) {
+
+    return getFinancialTransactionsDetailReport(startDate, endDate, createdAt, owner,
+      HttpStatus.HTTP_OK);
+  }
+
+  public Response getFinancialTransactionsDetailReport(String startDate, String endDate,
+    List<String> createdAt, String owner, HttpStatus expectedStatus) {
+
+    return getReport(createFinancialTransactionsDetailReportRequest(startDate, endDate,
+      createdAt, owner), expectedStatus);
+  }
+
   private String createRefundReportRequest(String startDate, String endDate,
     List<String> ownerIds) {
 
@@ -89,6 +103,22 @@ public class ReportResourceClient extends ResourceClient {
   private String createCashDrawerReconciliationReportSourcesRequest(String createdAt) {
     return new JsonObject()
       .put("createdAt", createdAt)
+      .encodePrettily();
+  }
+
+  private String createFinancialTransactionsDetailReportRequest(String startDate, String endDate,
+    List<String> createdAt, String owner) {
+
+    JsonArray createdAtArray = null;
+    if (createdAt != null) {
+      createdAtArray = new JsonArray(createdAt);
+    }
+
+    return new JsonObject()
+      .put("startDate", startDate)
+      .put("endDate", endDate)
+      .put("createdAt", createdAtArray)
+      .put("feeFineOwner", owner)
       .encodePrettily();
   }
 

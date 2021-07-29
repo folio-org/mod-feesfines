@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "loanable": {
+      "type": "boolean"
+    },
+    "loansPolicy": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "profileId": {
+          "type": "string",
+          "description": "Loan profile"
+        },
+        "period": {
+          "type": "object",
+          "$ref": "period.json",
+          "description": "Loan period"
+        },
+        "closedLibraryDueDateManagementId": {
+          "type": "string",
+          "description": "Closed library due date management"
+        },
+        "gracePeriod": {
+          "type": "object",
+          "$ref": "period.json",
+          "description": "Grace period"
+        },
+        "openingTimeOffset": {
+          "type": "object",
+          "$ref": "period.json",
+          "description": "Opening offset time period"
+        },
+        "fixedDueDateScheduleId": {
+          "type": "string",
+          "description": "Fixed due date schedule (due date limit)"
+        },
+        "itemLimit": {
+          "type": "integer",
+          "description": "Number of items allowed",
+          "minimum": 1,
+          "maximum": 9999
+        }
+      }
+    },
+    "renewable": {
+      "type": "boolean",
+      "description": "Is item renewable"
+    },
+    "renewalsPolicy": {
+      "type": "object",
+      "properties": {
+        "unlimited": {
+          "type": "boolean",
+          "description": "Unlimited renewals"
+        },
+        "numberAllowed": {
+          "type": "number",
+          "description": "Number of renewals allowed"
+        },
+        "renewFromId": {
+          "type": "string",
+          "description": "Renew from date"
+        },
+        "differentPeriod": {
+          "type": "boolean",
+          "description": "Renewal period different from original loan"
+        },
+        "period": {
+          "type": "object",
+          "$ref": "period.json",
+          "description": "Alternate loan period for renewals"
+        },
+        "alternateFixedDueDateScheduleId": {
+          "type": "string",
+          "description": "Alternate fixed due date schedule (due date limit) for renewals"
+        }
+      }
+    },
+    "requestManagement": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "recalls": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "alternateGracePeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate grace period for recalled items"
+            },
+            "minimumGuaranteedLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Minimum guaranteed loan period"
+            },
+            "recallReturnInterval": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Recall return interval"
+            },
+            "allowRecallsToExtendOverdueLoans": {
+              "type": "boolean",
+              "description": "Whether recalls are allowed to extend overdue loans",
+              "default": false
+            },
+            "alternateRecallReturnInterval": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate recall return interval for overdue loans"
+            }
+          }
+        },
+        "holds": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "alternateCheckoutLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate loan period at checkout for items with active, pending hold request"
+            },
+            "renewItemsWithRequest": {
+              "type": "boolean",
+              "description": "Allow renewal of items with active, pending hold request"
+            },
+            "alternateRenewalLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate loan period at renewal for items with active, pending hold request"
+            }
+          }
+        },
+        "pages": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "alternateCheckoutLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate loan period at checkout for items with active, pending page request"
+            },
+            "renewItemsWithRequest": {
+              "type": "boolean",
+              "description": "Allow renewal of items with active, pending page request"
+            },
+            "alternateRenewalLoanPeriod": {
+              "type": "object",
+              "$ref": "period.json",
+              "description": "Alternate loan period at renewal for items with active, pending page request"
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": true
+}

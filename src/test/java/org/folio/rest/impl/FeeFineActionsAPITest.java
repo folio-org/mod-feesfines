@@ -10,14 +10,14 @@ import static io.vertx.core.json.JsonObject.mapFrom;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
 import static org.folio.rest.utils.LogEventUtils.fetchPublishedLogRecords;
-import static org.folio.test.support.EntityBuilder.createCampus;
-import static org.folio.test.support.EntityBuilder.createHoldingsRecord;
-import static org.folio.test.support.EntityBuilder.createInstance;
-import static org.folio.test.support.EntityBuilder.createInstitution;
-import static org.folio.test.support.EntityBuilder.createItem;
-import static org.folio.test.support.EntityBuilder.createLibrary;
-import static org.folio.test.support.EntityBuilder.createLocation;
-import static org.folio.test.support.EntityBuilder.createUser;
+import static org.folio.test.support.EntityBuilder.buildCampus;
+import static org.folio.test.support.EntityBuilder.buildHoldingsRecord;
+import static org.folio.test.support.EntityBuilder.buildInstance;
+import static org.folio.test.support.EntityBuilder.buildInstitution;
+import static org.folio.test.support.EntityBuilder.buildItem;
+import static org.folio.test.support.EntityBuilder.buildLibrary;
+import static org.folio.test.support.EntityBuilder.buildLocation;
+import static org.folio.test.support.EntityBuilder.buildUser;
 import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.FEEFINES_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.FEE_FINE_ACTIONS_TABLE;
@@ -81,6 +81,8 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static final String CHARGE_COMMENT_FOR_PATRON = "Charge comment";
   private static final String ACTION_COMMENT_FOR_PATRON = "Action comment";
 
+  private static final String STAFF_INFO = "STAFF : staff comment \n PATRON : patron comment";
+
   private static final String ACCOUNT_AMOUNT = "12.34";
   private static final String ACCOUNT_REMAINING = "5.67";
   private static final String ACTION_AMOUNT = "6.67";
@@ -98,14 +100,14 @@ public class FeeFineActionsAPITest extends ApiTests {
     getOkapi().stubFor(WireMock.post(urlPathMatching("/patron-notice"))
       .willReturn(aResponse().withStatus(200)));
 
-    final Library library = createLibrary();
-    final Campus campus = createCampus();
-    final Institution institution = createInstitution();
-    final Location location = createLocation(library, campus, institution);
-    final Instance instance = createInstance();
-    final HoldingsRecord holdingsRecord = createHoldingsRecord(instance);
-    final Item item = createItem(holdingsRecord, location);
-    final User user = createUser();
+    final Library library = buildLibrary();
+    final Campus campus = buildCampus();
+    final Institution institution = buildInstitution();
+    final Location location = buildLocation(library, campus, institution);
+    final Instance instance = buildInstance();
+    final HoldingsRecord holdingsRecord = buildHoldingsRecord(instance);
+    final Item item = buildItem(holdingsRecord, location);
+    final User user = buildUser();
     final Owner owner = createOwner();
     final Feefine feefine = createFeeFine(owner);
     final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
@@ -246,7 +248,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     final String feeFineId = randomId();
     final String accountId = randomId();
     final String defaultChargeTemplateId = randomId();
-    final User user = createUser();
+    final User user = buildUser();
     final String feeFineType = "damaged book";
     final String typeAction = "damaged book";
     final boolean notify = false;
@@ -300,7 +302,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     final String feeFineId = randomId();
     final String accountId = randomId();
     final String defaultChargeTemplateId = randomId();
-    final User user = createUser();
+    final User user = buildUser();
     final String feeFineType = "damaged book";
     final String typeAction = "Staff info only";
     final String expectedTypeAction = "Staff information only added";
@@ -343,7 +345,9 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("action", expectedTypeAction)
       .put("feeFineId", feeFineId)
       .put("type", feeFineType)
-      .put("amount", amountAction.getAmount().doubleValue());
+      .put("amount", amountAction.getAmount().doubleValue())
+      .put("comments", STAFF_INFO);
+
 
     assertThatPublishedLogRecordsCountIsEqualTo(1);
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
@@ -351,14 +355,14 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   @Test
   public void deleteFeeFineActionByIdOnlyDeletesOneAction() {
-    final Library library = createLibrary();
-    final Campus campus = createCampus();
-    final Institution institution = createInstitution();
-    final Location location = createLocation(library, campus, institution);
-    final Instance instance = createInstance();
-    final HoldingsRecord holdingsRecord = createHoldingsRecord(instance);
-    final Item item = createItem(holdingsRecord, location);
-    final User user = createUser();
+    final Library library = buildLibrary();
+    final Campus campus = buildCampus();
+    final Institution institution = buildInstitution();
+    final Location location = buildLocation(library, campus, institution);
+    final Instance instance = buildInstance();
+    final HoldingsRecord holdingsRecord = buildHoldingsRecord(instance);
+    final Item item = buildItem(holdingsRecord, location);
+    final User user = buildUser();
     final Owner owner = createOwner();
     final Feefine feefine = createFeeFine(owner);
     final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
@@ -389,7 +393,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("dateAction", dateAction)
       .put("typeAction", typeAction)
       .put("comments", "STAFF : staff comment \n PATRON : patron comment")
-      .put("comments", "STAFF : staff comment \n PATRON : patron comment")
+      .put("comments", STAFF_INFO)
       .put("notify", notify)
       .put("amountAction", amountAction.getAmount().doubleValue())
       .put("balance", balance.getAmount().doubleValue())
