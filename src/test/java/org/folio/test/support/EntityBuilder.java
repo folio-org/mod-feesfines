@@ -79,7 +79,7 @@ public class EntityBuilder {
       .withFeeFineType(feeFineType)
       .withFeeFineOwner(owner)
       .withAmount(new MonetaryValue(amount))
-      .withRemaining(amount)
+      .withRemaining(new MonetaryValue(amount))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }

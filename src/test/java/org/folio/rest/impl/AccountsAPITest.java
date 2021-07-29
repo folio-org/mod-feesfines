@@ -196,7 +196,6 @@ public class AccountsAPITest extends ApiTests {
 
   @Test
   public void eventNotPublishedWhenFeeFineIsClosedWithoutLoan() {
-    MonetaryValue remaining = new MonetaryValue(0.0);
     final String accountId = randomId();
 
     final JsonObject account = createAccountJsonObject(accountId)
@@ -208,7 +207,7 @@ public class AccountsAPITest extends ApiTests {
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
       .put("paymentStatus", createNamedObject("Paid fully"))
-      .put("remaining", remaining.toDouble());
+      .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
 

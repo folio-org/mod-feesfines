@@ -689,7 +689,7 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
 
     Feefineaction action = EntityBuilder.buildFeeFineActionWithoutComments(USER_ID_1,
       account.getId(),
-      type, method, amount, balance, parseDateTime(dateTime))
+      type, method, amount, balance, parseDateTimeUTC(dateTime))
       .withTransactionInformation(txInfo);
 
     createEntity(ServicePath.ACTIONS_PATH, action);

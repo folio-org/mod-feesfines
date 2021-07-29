@@ -125,7 +125,7 @@ public class FeeFineReportsAPITestBase extends ApiTests {
 
     Feefineaction action = EntityBuilder.buildFeeFineAction(userId, account.getId(),
       type, method, new MonetaryValue(amount), new MonetaryValue(balance),
-      parseDateTime(dateTime),
+      parseDateTimeUTC(dateTime),
       addSuffix(staffInfo, actionCounter), addSuffix(patronInfo, actionCounter), txInfo, createdAt,
       source);
 
@@ -162,18 +162,36 @@ public class FeeFineReportsAPITestBase extends ApiTests {
     return new DateTime(date).withZone(TENANT_TZ).toString(DATE_TIME_REPORT_FORMATTER);
   }
 
-  static Date parseDateTime(String date) {
+  String formatReportDate(Date date, DateTimeZone timeZone) {
+    return new DateTime(date).withZone(timeZone).toString(DATE_TIME_REPORT_FORMATTER);
+  }
+
+  static Date parseDateTime(String date, DateTimeZone timeZone) {
     if (date == null) {
       return null;
     }
 
     return DateTime.parse(date, DateTimeFormat.forPattern(DATE_TIME_JSON_FORMAT))
-      .withZoneRetainFields(DateTimeZone.UTC)
+      .withZoneRetainFields(timeZone)
       .toDate();
   }
+
+  static Date parseDateTimeUTC(String date) {
+    return parseDateTime(date, DateTimeZone.UTC);
+  }
+
+  static Date parseDateTimeTenantTz(String date) {
+    return parseDateTime(date, TENANT_TZ);
+  }
+
   String addSuffix(String info, int counter) {
     return format("%s %d", info, counter);
   }
+
+  static String withTenantTz(String date) {
+    return withTenantTz(date, DATE_TIME_JSON_FORMATTER);
+  }
+
   static String withTenantTz(String date, DateTimeFormatter formatter) {
     return DateTime.parse(date, DateTimeFormat.forPattern(DATE_TIME_JSON_FORMAT))
       .withZoneRetainFields(TENANT_TZ)

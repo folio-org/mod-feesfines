@@ -774,12 +774,10 @@ public class AccountsRefundAPITests extends ActionsAPITests {
   private void verifyBulkResponse(Response response, MonetaryValue requestedAmount,
     List<Matcher<JsonObject>> expectedFeeFineActions, String... accountIds) {
 
-    System.out.println(response.getBody().prettyPrint());
     response.then()
       .statusCode(SC_CREATED)
       .body("accountIds", hasItems(accountIds))
-      .body("amount", is(requestedAmount.toDouble()))
-    ;
+      .body("amount", is(requestedAmount.toDouble()));
 
     for (Matcher<JsonObject> feeFineAction : expectedFeeFineActions) {
       response.then().body(FEE_FINE_ACTIONS, hasItem(feeFineAction));
