@@ -458,8 +458,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withNotify(notify)
       .withTypeAction("Paid partially")
       .withDateAction(new Date())
-      .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
-      .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
+      .withAmountAction(new MonetaryValue(ACTION_AMOUNT))
+      .withBalance(new MonetaryValue(ACCOUNT_REMAINING))
       .withPaymentMethod("Cash")
       .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
   }
@@ -506,8 +506,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withFeeFineType(feefine.getFeeFineType())
       .withMaterialType("book")
       .withMaterialTypeId(randomId())
-      .withAmount(new MonetaryValue(new BigDecimal(ACCOUNT_AMOUNT)))
-      .withRemaining(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)));
+      .withAmount(new MonetaryValue(ACCOUNT_AMOUNT))
+      .withRemaining(new MonetaryValue(ACCOUNT_REMAINING));
   }
 
   private static Owner createOwner() {

@@ -91,6 +91,10 @@ public class MonetaryValue {
     return new MonetaryValue(amount.divide(denominator.getAmount(), DEFAULT_ROUNDING));
   }
 
+  public MonetaryValue multiply(MonetaryValue multiplier) {
+    return new MonetaryValue(amount.multiply(multiplier.getAmount()));
+  }
+
   public MonetaryValue add(MonetaryValue other) {
     return new MonetaryValue(amount.add(other.getAmount()));
   }

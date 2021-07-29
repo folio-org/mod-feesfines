@@ -197,7 +197,7 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
     requestRefundReport(START_DATE, END_DATE).then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(1))
-      .body("0.0.feeFineId", is(sourceObjects.account.getId()));
+      .body("reportData[0].feeFineId", is(sourceObjects.account.getId()));
   }
 
   @Test
@@ -210,7 +210,7 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
     requestRefundReport(START_DATE, END_DATE).then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(1))
-      .body("0.0.feeFineId", is(sourceObjects.account.getId()));
+      .body("reportData[0].feeFineId", is(sourceObjects.account.getId()));
   }
 
   @Test
@@ -223,7 +223,7 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
     requestRefundReport(START_DATE, END_DATE).then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(1))
-      .body("0.0.feeFineId", is(sourceObjects.account.getId()));
+      .body("reportData[0].feeFineId", is(sourceObjects.account.getId()));
   }
 
   @Test

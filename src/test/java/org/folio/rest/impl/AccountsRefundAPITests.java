@@ -107,7 +107,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(FIRST_ACCOUNT_ID, -5.0, payAmount, CREDIT.getFullResult(),
         REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -0.0, payAmount, REFUND.getFullResult(),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, payAmount, REFUND.getFullResult(),
         REFUNDED_TO_PATRON)
     );
 
@@ -167,7 +167,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(FIRST_ACCOUNT_ID, -1.0, payAmount, CREDIT.getFullResult(),
         REFUND_TO_PATRON),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -2.0, payAmount, REFUND.getFullResult(),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 2.0, payAmount, REFUND.getFullResult(),
         REFUNDED_TO_PATRON)
     );
 
@@ -187,7 +187,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     List<Matcher<JsonObject>> expectedFeeFineActions = Arrays.asList(
       feeFineActionMatcher(FIRST_ACCOUNT_ID, -1.0, transferAmount,
         CREDIT.getFullResult(), REFUND_TO_BURSAR),
-      feeFineActionMatcher(FIRST_ACCOUNT_ID, -2.0, transferAmount,
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 2.0, transferAmount,
         REFUND.getFullResult(), REFUNDED_TO_BURSAR)
     );
 
@@ -464,7 +464,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
   @Test
   public void bulkRefundAmountIsDistributedBetweenAccountsEvenlyRecursively() {
-    final MonetaryValue refundAmount = new MonetaryValue(15.0); // even split is 15/3=5 per account
+    double refundAmount = 15.0; // even split is 15/3=5 per account
 
     // Closed, served third, full payment refund, partial transfer refund
     MonetaryValue initialAmount1 = new MonetaryValue(10.0);
@@ -546,29 +546,16 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
   @Test
   public void bulkRefundFailsWhenRequestedAmountExceedsRefundableAmount() {
-    MonetaryValue initialAmount = new MonetaryValue(10.0);
-    MonetaryValue payAmount = new MonetaryValue(2.0);
-    MonetaryValue transferAmount = new MonetaryValue(3.0);
-    MonetaryValue waiveAmount = new MonetaryValue(4.0);
-
-    MonetaryValue amount = new MonetaryValue(11.0);
-
-    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS);
-    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
+    DefaultBulkActionRequest request = createBulkRequest(11.0, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(10.0, 2.0, 3.0, 4.0, request,
       SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE,
       TWO_ACCOUNT_IDS);
   }
 
   @Test
   public void bulkRefundFailsWhenThereAreNoRefundableActionsForAccount() {
-    MonetaryValue initialAmount = new MonetaryValue(10.0);
-    MonetaryValue payAmount = new MonetaryValue(0.0);
-    MonetaryValue transferAmount = new MonetaryValue(0.0);
-    MonetaryValue waiveAmount = new MonetaryValue(4.0);
-
-    MonetaryValue amount = new MonetaryValue(5.0);
-    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS);
-    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
+    DefaultBulkActionRequest request = createBulkRequest(5.0, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(10.0, 0.0, 0.0, 4.0, request,
       SC_UNPROCESSABLE_ENTITY, ERROR_MESSAGE,
       TWO_ACCOUNT_IDS);
   }
@@ -576,9 +563,8 @@ public class AccountsRefundAPITests extends ActionsAPITests {
   @Test
   public void bulkReturn404WhenAccountDoesNotExist() {
     String errorMessageTemplate = "Fee/fine ID %s not found";
-    MonetaryValue amount = new MonetaryValue(10.0);
 
-    bulkRefundClient.post(toJson(createBulkRequest(amount, TWO_ACCOUNT_IDS)))
+    bulkRefundClient.post(toJson(createBulkRequest(10.0, TWO_ACCOUNT_IDS)))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
       .contentType(ContentType.TEXT)
@@ -590,43 +576,25 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
   @Test
   public void bulkReturn422WhenRequestedAmountIsNegative() {
-    MonetaryValue amount = new MonetaryValue(-1.0);
-    MonetaryValue initialAmount = new MonetaryValue(10.0);
-    MonetaryValue payAmount = new MonetaryValue(0.0);
-    MonetaryValue transferAmount = new MonetaryValue(0.0);
-    MonetaryValue waiveAmount = new MonetaryValue(0.0);
-
-    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS);
-    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
+    DefaultBulkActionRequest request = createBulkRequest(-1.0, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(10.0, 0.0, 0.0, 0.0, request,
       SC_UNPROCESSABLE_ENTITY, "Amount must be positive",
       TWO_ACCOUNT_IDS);
   }
 
   @Test
   public void bulkReturn422WhenRequestedAmountIsZero() {
-    MonetaryValue amount = new MonetaryValue(0.0);
-    MonetaryValue initialAmount = new MonetaryValue(10.0);
-    MonetaryValue payAmount = new MonetaryValue(0.0);
-    MonetaryValue transferAmount = new MonetaryValue(0.0);
-    MonetaryValue waiveAmount = new MonetaryValue(0.0);
-
-    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS);
-    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
+    DefaultBulkActionRequest request = createBulkRequest(0.0, TWO_ACCOUNT_IDS);
+    testBulkRefundFailure(10.0, 0.0, 0.0, 0.0, request,
       SC_UNPROCESSABLE_ENTITY, "Amount must be positive",
       TWO_ACCOUNT_IDS);
   }
 
   @Test
   public void bulkReturn422WhenRequestedAmountIsInvalidString() {
-    MonetaryValue amount = new MonetaryValue(0.0);
-    MonetaryValue initialAmount = new MonetaryValue(10.0);
-    MonetaryValue payAmount = new MonetaryValue(0.0);
-    MonetaryValue transferAmount = new MonetaryValue(0.0);
-    MonetaryValue waiveAmount = new MonetaryValue(0.0);
-
-    DefaultBulkActionRequest request = createBulkRequest(amount, TWO_ACCOUNT_IDS).withAmount(
-      "eleven");
-    testBulkRefundFailure(initialAmount, payAmount, transferAmount, waiveAmount, request,
+    DefaultBulkActionRequest request = createBulkRequest(0.0, TWO_ACCOUNT_IDS)
+      .withAmount("eleven");
+    testBulkRefundFailure(10, 0, 0, 0, request,
       SC_UNPROCESSABLE_ENTITY, "Invalid amount entered",
       TWO_ACCOUNT_IDS);
   }
@@ -676,7 +644,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
   @Test
   public void bulkRefundForTransfersToMultipleTransferAccounts() {
     MonetaryValue initialAmount = new MonetaryValue(10.0);
-    MonetaryValue refundAmount = new MonetaryValue(initialAmount.toDouble() * 2);
+    MonetaryValue refundAmount = initialAmount.multiply(new MonetaryValue(2.0));
 
     MonetaryValue transferToBursar1 = new MonetaryValue(1.0);
     MonetaryValue transferToUniversity1 = new MonetaryValue(2.0);
@@ -724,9 +692,9 @@ public class AccountsRefundAPITests extends ActionsAPITests {
         REFUND.getFullResult(), REFUNDED_TO_UNIVERSITY)
     );
 
-    Response response = bulkRefundClient.post(createBulkRequest(refundAmount, TWO_ACCOUNT_IDS));
+    Response response = bulkRefundClient.post(createBulkRequest(refundAmount.toDouble(), TWO_ACCOUNT_IDS));
 
-    verifyBulkResponse(response, refundAmount, expectedFeeFineActions);
+    verifyBulkResponse(response, refundAmount.toDouble(), expectedFeeFineActions);
     verifyActions(16, expectedFeeFineActions); // 8 transfers + 4 credits + 4 refunds
 
     Account firstAccount = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
@@ -771,13 +739,13 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       .body(FEE_FINE_ACTIONS, hasSize(expectedActionsCount));
   }
 
-  private void verifyBulkResponse(Response response, MonetaryValue requestedAmount,
+  private void verifyBulkResponse(Response response, double requestedAmount,
     List<Matcher<JsonObject>> expectedFeeFineActions, String... accountIds) {
 
     response.then()
       .statusCode(SC_CREATED)
       .body("accountIds", hasItems(accountIds))
-      .body("amount", is(requestedAmount.toDouble()));
+      .body("amount", is(new MonetaryValue(requestedAmount).toString()));
 
     for (Matcher<JsonObject> feeFineAction : expectedFeeFineActions) {
       response.then().body(FEE_FINE_ACTIONS, hasItem(feeFineAction));
@@ -817,9 +785,9 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       .body(FEE_FINE_ACTIONS, hasSize(expectedActionCount));
   }
 
-  private void testBulkRefundFailure(MonetaryValue initialAmount, MonetaryValue payAmount,
-    MonetaryValue transferAmount,
-    MonetaryValue waiveAmount, DefaultBulkActionRequest request, int expectedStatus,
+  private void testBulkRefundFailure(double initialAmount, double payAmount,
+    double transferAmount,
+    double waiveAmount, DefaultBulkActionRequest request, int expectedStatus,
     String errorMessage,
     String... accountIds) {
 
@@ -827,7 +795,8 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
     for (String accountId : accountIds) {
       expectedActionsCount += prepareAccount(
-        accountId, initialAmount, payAmount, transferAmount, waiveAmount);
+        accountId, new MonetaryValue(initialAmount), new MonetaryValue(payAmount),
+        new MonetaryValue(transferAmount), new MonetaryValue(waiveAmount));
     }
 
     bulkRefundClient.post(request)
@@ -891,11 +860,11 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       .withComments(COMMENTS);
   }
 
-  private static DefaultBulkActionRequest createBulkRequest(MonetaryValue amount,
+  private static DefaultBulkActionRequest createBulkRequest(double amount,
     String... accountIds) {
     return new DefaultBulkActionRequest()
       .withAccountIds(Arrays.asList(accountIds))
-      .withAmount(amount.toString())
+      .withAmount(new MonetaryValue(amount).toString())
       .withPaymentMethod(REFUND_REASON)
       .withServicePointId(SERVICE_POINT_ID)
       .withUserName(USER_NAME)

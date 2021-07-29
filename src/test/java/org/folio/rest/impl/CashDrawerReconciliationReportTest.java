@@ -148,7 +148,7 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
       .then()
       .statusCode(HttpStatus.SC_OK)
       .body("reportData", iterableWithSize(1))
-      .body("0.0.feeFineId", is(sourceObjects.getLeft().getId()));
+      .body("reportData[0].feeFineId", is(sourceObjects.getLeft().getId()));
   }
 
   @Test

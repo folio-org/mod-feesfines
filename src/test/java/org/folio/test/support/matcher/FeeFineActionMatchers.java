@@ -44,7 +44,7 @@ public class FeeFineActionMatchers {
     return allOf(Arrays.asList(
       hasJsonPath("typeAction", is(actionType)),
       hasJsonPath("amountAction", is((float) amount.toDouble())),
-      hasJsonPath("balance", is(balance)),
+      hasJsonPath("balance", is((float) balance)),
       hasJsonPath("transactionInformation", is(transactionInfo)),
       hasJsonPath("accountId", is(accountId)),
       hasJsonPath("userId", is(userId)),

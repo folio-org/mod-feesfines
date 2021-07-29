@@ -171,18 +171,17 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void return422WhenAccountIsClosed() {
-    MonetaryValue remainingAmount = new MonetaryValue(0.0);
-    return422WhenAccountIsEffectivelyClosed(remainingAmount);
+    return422WhenAccountIsEffectivelyClosed(0.0);
   }
 
   @Test
   public void return422WhenAccountIsEffectivelyClosed() {
     // will be rounded to 0.00 (2 decimal places) when compared to zero
-    MonetaryValue remainingAmount = new MonetaryValue(0.004987654321);
-    return422WhenAccountIsEffectivelyClosed(remainingAmount);
+    return422WhenAccountIsEffectivelyClosed(0.004987654321);
   }
 
-  private void return422WhenAccountIsEffectivelyClosed(MonetaryValue remainingAmount) {
+  private void return422WhenAccountIsEffectivelyClosed(double remainingAmountDouble) {
+    MonetaryValue remainingAmount = new MonetaryValue(remainingAmountDouble);
     Account closedAccount = createAccount(FIRST_ACCOUNT_ID, remainingAmount.toDouble())
       .withAmount(remainingAmount.add(new MonetaryValue(1.0)))
       .withStatus(new Status().withName(FeeFineStatus.CLOSED.getValue()));
