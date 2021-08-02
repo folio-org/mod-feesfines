@@ -8,11 +8,11 @@ import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
+import static org.folio.rest.utils.PatronHelper.buildFormattedName;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,23 +27,23 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.client.ConfigurationClient;
-import org.folio.rest.client.InventoryClient;
-import org.folio.rest.client.UserGroupsClient;
-import org.folio.rest.client.UsersClient;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.LocaleSettings;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Personal;
+import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.RefundReport;
 import org.folio.rest.jaxrs.model.RefundReportEntry;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
 import org.folio.rest.repository.AccountRepository;
 import org.folio.rest.repository.FeeFineActionRepository;
+import org.folio.rest.service.report.context.HasItemInfo;
+import org.folio.rest.service.report.context.HasUserInfo;
+import org.folio.rest.service.report.utils.LookupHelper;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -72,11 +72,10 @@ public class RefundReportService {
       Currency.getInstance(Locale.US).getCurrencyCode());
 
   private final ConfigurationClient configurationClient;
-  private final InventoryClient inventoryClient;
-  private final UsersClient usersClient;
-  private final UserGroupsClient userGroupsClient;
   private final FeeFineActionRepository feeFineActionRepository;
   private final AccountRepository accountRepository;
+
+  private final LookupHelper lookupHelper;
 
   private DateTimeZone timeZone;
   private DateTimeFormatter dateTimeFormatter;
@@ -84,11 +83,10 @@ public class RefundReportService {
 
   public RefundReportService(Map<String, String> headers, Context context) {
     configurationClient = new ConfigurationClient(context.owner(), headers);
-    inventoryClient = new InventoryClient(context.owner(), headers);
-    usersClient = new UsersClient(context.owner(), headers);
-    userGroupsClient = new UserGroupsClient(context.owner(), headers);
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
     accountRepository = new AccountRepository(context, headers);
+
+    lookupHelper = new LookupHelper(headers, context);
   }
 
   public Future<RefundReport> buildReport(DateTime startDate, DateTime endDate,
@@ -165,18 +163,21 @@ public class RefundReportService {
     }
 
     return lookupAccount(ctx, refundAction)
-      .compose(r -> lookupItemForAccount(ctx, accountId))
-      .compose(r -> lookupInstanceForAccount(ctx, accountId))
-      .compose(r -> lookupUserForAccount(ctx, accountId))
-      .compose(r -> lookupUserGroupForUser(ctx, accountId))
-      .compose(r -> lookupFeeFineActionsForAccount(ctx, accountId))
-      .map(actions -> processAccount(ctx, accountId, actions));
+      .compose(r -> lookupHelper.lookupItemForAccount(ctx, accountId))
+      .compose(r -> lookupHelper.lookupInstanceForAccount(ctx, accountId))
+      .compose(r -> lookupHelper.lookupUserForAccount(ctx, ctx.getAccountById(accountId)))
+      .compose(r -> lookupHelper.lookupUserGroupForUser(ctx, accountId))
+      .compose(r -> lookupHelper.lookupRefundPayTransferFeeFineActionsForAccount(ctx, accountId))
+      .map(actions -> processAccount(ctx, accountId));
   }
 
-  private RefundReportContext processAccount(RefundReportContext ctx,
-    String accountId, List<Feefineaction> accountFeeFineActions) {
+  private RefundReportContext processAccount(RefundReportContext ctx, String accountId) {
+    AccountContextData accountData = ctx.accounts.get(accountId);
 
-    accountFeeFineActions.forEach(action -> processAccountAction(ctx, accountId, action));
+    if (accountData != null) {
+      accountData.actions.forEach(action -> processAccountAction(ctx, accountId, action));
+    }
+
     ctx.markAccountProcessed(accountId);
 
     return ctx;
@@ -231,7 +232,7 @@ public class RefundReportService {
 
       if (user != null) {
         reportEntry
-          .withPatronName(formatName(user))
+          .withPatronName(buildFormattedName(user))
           .withPatronBarcode(user.getBarcode())
           .withPatronId(user.getId());
       } else {
@@ -309,168 +310,6 @@ public class RefundReportService {
       key -> new AccountContextData().withAccount(account));
   }
 
-  private Future<RefundReportContext> lookupItemForAccount(RefundReportContext ctx,
-    String accountId) {
-
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
-
-    String itemId = account.getItemId();
-    if (!isUuid(itemId)) {
-      log.info("Item ID is not a valid UUID - account {}", accountId);
-      return succeededFuture(ctx);
-    }
-    else {
-      if (ctx.items.containsKey(itemId)) {
-        return succeededFuture(ctx);
-      }
-      else {
-        return inventoryClient.getItemById(itemId)
-          .map(item -> addItemToContext(ctx, item, accountId, itemId))
-          .map(ctx)
-          .otherwise(ctx);
-      }
-    }
-  }
-
-  private RefundReportContext addItemToContext(RefundReportContext ctx, Item item,
-    String accountId, String itemId) {
-
-    if (item == null) {
-      log.info("Item not found - account {}, item {}", accountId, itemId);
-    } else {
-      ctx.items.put(itemId, item);
-    }
-
-    return ctx;
-  }
-
-  private Future<RefundReportContext> lookupInstanceForAccount(RefundReportContext ctx,
-    String accountId) {
-
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
-
-    Item item = ctx.getItemByAccountId(accountId);
-    if (item == null) {
-      return succeededFuture(ctx);
-    }
-
-    String holdingsRecordId = item.getHoldingsRecordId();
-    if (!isUuid(holdingsRecordId)) {
-      log.info("Holdings record ID {} is not a valid UUID - account {}", holdingsRecordId,
-        accountId);
-      return succeededFuture(ctx);
-    }
-
-    return inventoryClient.getHoldingById(holdingsRecordId)
-      .map(HoldingsRecord::getInstanceId)
-      .compose(inventoryClient::getInstanceById)
-      .map(instance -> ctx.accounts.put(accountId, ctx.accounts.get(accountId)
-        .withInstance(instance.getTitle())))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find instance for account {}, holdingsRecord is {}", accountId,
-          holdingsRecordId);
-        return ctx;
-      });
-  }
-
-  private Future<RefundReportContext> lookupUserForAccount(RefundReportContext ctx,
-    String accountId) {
-
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
-
-    String userId = account.getUserId();
-    if (!isUuid(userId)) {
-      log.error("User ID {} is not a valid UUID - account {}", userId, accountId);
-      return succeededFuture(ctx);
-    }
-
-    if (ctx.users.containsKey(userId)) {
-      return succeededFuture(ctx);
-    }
-    else {
-      return usersClient.fetchUserById(userId)
-        .compose(user -> addUserToContext(ctx, user, accountId, userId))
-        .otherwise(ctx);
-    }
-  }
-
-  private Future<RefundReportContext> addUserToContext(RefundReportContext ctx, User user,
-    String accountId, String userId) {
-
-    if (user == null) {
-      log.error("User not found - account {}, user {}", accountId, userId);
-      return succeededFuture(ctx);
-    } else {
-      ctx.users.put(userId, user);
-    }
-
-    return succeededFuture(ctx);
-  }
-
-  private Future<RefundReportContext> lookupUserGroupForUser(RefundReportContext ctx,
-    String accountId) {
-
-    User user = ctx.getUserByAccountId(accountId);
-
-    if (user == null || ctx.getUserGroupByAccountId(accountId) != null) {
-      return succeededFuture(ctx);
-    }
-
-    return userGroupsClient.fetchUserGroupById(user.getPatronGroup())
-      .map(userGroup -> ctx.userGroups.put(userGroup.getId(), userGroup))
-      .map(ctx)
-      .otherwise(ctx);
-  }
-
-  private Future<List<Feefineaction>> lookupFeeFineActionsForAccount(RefundReportContext ctx,
-    String accountId) {
-
-    AccountContextData accountContextData = ctx.getAccountContextById(accountId);
-    if (accountContextData == null) {
-      return succeededFuture(new ArrayList<>());
-    }
-
-    return feeFineActionRepository.findActionsOfTypesForAccount(accountId,
-      List.of(REFUND, PAY, TRANSFER))
-      .map(this::sortFeeFineActionsByDate)
-      .map(ctx.accounts.get(accountId)::withActions)
-      .map(AccountContextData::getActions);
-  }
-
-  private List<Feefineaction> sortFeeFineActionsByDate(List<Feefineaction> feeFineActions) {
-    return feeFineActions.stream()
-      .sorted(actionDateComparator())
-      .collect(Collectors.toList());
-  }
-
-  private Comparator<Feefineaction> actionDateComparator() {
-    return (left, right) -> {
-      if (left == null || right == null) {
-        return 0;
-      }
-
-      Date leftDate = left.getDateAction();
-      Date rightDate = right.getDateAction();
-
-      if (leftDate == null || rightDate == null || leftDate.equals(rightDate)) {
-        return 0;
-      } else {
-        return new DateTime(leftDate)
-          .isAfter(new DateTime(rightDate)) ? 1 : -1;
-      }
-    };
-  }
-
   private void setUpLocale(LocaleSettings localeSettings) {
     timeZone = localeSettings.getDateTimeZone();
     dateTimeFormatter = DateTimeFormat.forPattern(DateTimeFormat.patternForStyle("SS",
@@ -546,33 +385,10 @@ public class RefundReportService {
     withTransferInfo(reportEntry, accountCtx);
   }
 
-  private static String formatName(User user) {
-    StringBuilder builder = new StringBuilder();
-    Personal personal = user.getPersonal();
-
-    if (personal == null) {
-      log.info("Personal info not found - user {}", user.getId());
-    }
-    else {
-      builder.append(personal.getLastName());
-
-      String firstName = personal.getFirstName();
-      if (firstName != null && !firstName.isBlank()) {
-        builder.append(format(", %s", firstName));
-      }
-
-      String middleName = personal.getMiddleName();
-      if (middleName != null && !middleName.isBlank()) {
-        builder.append(format(" %s", middleName));
-      }
-    }
-
-    return builder.toString();
-  }
-
   @With
   @AllArgsConstructor
-  private static class RefundReportContext {
+  @Getter
+  private static class RefundReportContext implements HasUserInfo, HasItemInfo {
     final DateTimeZone timeZone;
     final Map<String, RefundData> refunds;
     final Map<String, AccountContextData> accounts;
@@ -595,12 +411,12 @@ public class RefundReportService {
       return accounts.computeIfAbsent(accountId, key -> null);
     }
 
-    Account getAccountById(String accountId) {
+    public Account getAccountById(String accountId) {
       AccountContextData accountContextData = getAccountContextById(accountId);
       return accountContextData == null ? null : accountContextData.account;
     }
 
-    Item getItemByAccountId(String accountId) {
+    public Item getItemByAccountId(String accountId) {
       Account account = getAccountById(accountId);
 
       if (account != null) {
@@ -613,7 +429,7 @@ public class RefundReportService {
       return null;
     }
 
-    User getUserByAccountId(String accountId) {
+    public User getUserByAccountId(String accountId) {
       Account account = getAccountById(accountId);
 
       if (account != null && isUuid(account.getUserId())) {
@@ -623,7 +439,7 @@ public class RefundReportService {
       return null;
     }
 
-    UserGroup getUserGroupByAccountId(String accountId) {
+    public UserGroup getUserGroupByAccountId(String accountId) {
       User user = getUserByAccountId(accountId);
 
       if (user != null && isUuid(user.getPatronGroup())) {
@@ -636,6 +452,40 @@ public class RefundReportService {
     void markAccountProcessed(String accountId) {
       processedAccounts.add(accountId);
       accounts.remove(accountId);
+    }
+
+    public Future<Void> updateAccountContextWithInstance(String accountId, Instance instance) {
+      accounts.put(accountId, getAccountContextById(accountId).withInstance(instance.getTitle()));
+      return succeededFuture();
+    }
+
+    public Future<Void> updateAccountContextWithEffectiveLocation(String accountId,
+      Location location) {
+
+      return succeededFuture();
+    }
+
+    public Future<Void> updateAccountContextWithActions(String accountId, List<Feefineaction> actions) {
+      AccountContextData accountContextData = getAccountContextById(accountId);
+      if (accountContextData == null) {
+        return succeededFuture();
+      }
+
+      accounts.put(accountId, accountContextData.withActions(actions));
+      return succeededFuture();
+    }
+
+    public boolean isAccountContextCreated(String accountId) {
+      return getAccountContextById(accountId) != null;
+    }
+
+    public List<Feefineaction> getAccountFeeFineActions(String accountId) {
+      AccountContextData accountCtx = getAccountContextById(accountId);
+      if (accountCtx == null) {
+        return null;
+      }
+
+      return accountCtx.getActions();
     }
   }
 
