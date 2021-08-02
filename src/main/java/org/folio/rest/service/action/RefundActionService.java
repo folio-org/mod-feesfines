@@ -132,14 +132,14 @@ public class RefundActionService extends ActionService {
     boolean isFullAction, String refundRecipient, ActionContext context) {
 
     String actionType = action.getResult(isFullAction);
-    Double balance = calculateFeeFineActionBalance(account, action, amount);
+    MonetaryValue balance = calculateFeeFineActionBalance(account, action, amount);
     String transactionInfo = buildRefundTransactionInfo(action, refundRecipient);
     ActionRequest request = context.getRequest();
 
     return new Feefineaction()
       .withTypeAction(actionType)
       .withAmountAction(amount.toDouble())
-      .withBalance(balance)
+      .withBalance(balance.toDouble())
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
       .withTransactionInformation(transactionInfo)
@@ -174,15 +174,13 @@ public class RefundActionService extends ActionService {
     }
   }
 
-  private static Double calculateFeeFineActionBalance(Account account,
+  private static MonetaryValue calculateFeeFineActionBalance(Account account,
     Action action, MonetaryValue refundAmount) {
 
     MonetaryValue remainingAmount = new MonetaryValue(account.getRemaining());
 
-    MonetaryValue feeFineActionBalance = action == CREDIT
-      ? remainingAmount.subtract(refundAmount)
-      : remainingAmount.add(refundAmount);
-
-    return feeFineActionBalance.toDouble();
+    return action == REFUND
+      ? remainingAmount.add(refundAmount)
+      : remainingAmount;
   }
 }
