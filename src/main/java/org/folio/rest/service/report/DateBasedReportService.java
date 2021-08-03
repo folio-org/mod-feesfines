@@ -75,6 +75,10 @@ public abstract class DateBasedReportService<T, P> {
   }
 
   String formatDate(Date date) {
+    if (date == null) {
+      return "";
+    }
+
     return new DateTime(date).withZone(timeZone).toString(dateTimeFormatter);
   }
 
