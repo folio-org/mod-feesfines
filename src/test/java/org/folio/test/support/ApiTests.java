@@ -176,7 +176,7 @@ public class ApiTests {
 
   protected static <T> T get(CompletableFuture<T> future) {
     try {
-      return future.get(20, TimeUnit.SECONDS);
+      return future.get(60, TimeUnit.SECONDS);
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
