@@ -610,6 +610,78 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount);
   }
 
+  @Test
+  public void previouslyRefundedAmountIsConsideredWhenRepeatedlyRefundingSameAccount() {
+    double initialAmount = 11.0;
+    double payAmount = 6.0;
+    double transferAmount = 5.0;
+    double waiveAmount = 0.0;
+    double refundAmount = 4.0;
+
+    prepareAccount(FIRST_ACCOUNT_ID, initialAmount, payAmount, transferAmount, waiveAmount);
+
+    // first refund attempt for 4.0
+
+    List<Matcher<JsonObject>> expectedFeeFineActions1 = Arrays.asList(
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 0.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 4.0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
+    );
+
+    Response response1 = refundClient.post(createRefundRequest(refundAmount));
+    verifyResponse(response1, refundAmount, 2);
+    verifyActions(4, expectedFeeFineActions1);
+
+    Account accountAfterRefund1 = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
+      REFUND.getPartialResult(), 4.0, CLOSED.getValue());
+
+    verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund1);
+
+    // second refund attempt for 4.0
+
+    List<Matcher<JsonObject>> expectedFeeFineActions2 = Arrays.asList(
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 4.0, refundAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 8.0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
+    );
+
+    Response response2 = refundClient.post(createRefundRequest(refundAmount));
+    verifyResponse(response2, refundAmount, 2);
+    verifyActions(6, expectedFeeFineActions2);
+
+    Account accountAfterRefund2 = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
+      REFUND.getPartialResult(), 8.0, CLOSED.getValue());
+
+    verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund2);
+
+    // third refund attempt for 4.0, but only 3.0 is refundable: (6.0 paid) + (5.0 transferred) - (2*4.0 refunded)
+
+    DefaultActionRequest invalidRefundRequest = createRefundRequest(refundAmount);
+
+    refundClient.post(invalidRefundRequest)
+      .then()
+      .statusCode(422)
+      .body("accountId", is(FIRST_ACCOUNT_ID))
+      .body("amount", is(invalidRefundRequest.getAmount()))
+      .body("errorMessage", is(ERROR_MESSAGE));
+
+    // fourth refund attempt for 3.0
+
+    double newRefundAmount = 3.0;
+
+    List<Matcher<JsonObject>> expectedFeeFineActions4 = Arrays.asList(
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 8.0, newRefundAmount, CREDIT.getPartialResult(), REFUND_TO_PATRON),
+      feeFineActionMatcher(FIRST_ACCOUNT_ID, 11.0, newRefundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
+    );
+
+    Response response4 = refundClient.post(createRefundRequest(3.0));
+    verifyResponse(response4, newRefundAmount, 2);
+    verifyActions(8, expectedFeeFineActions4);
+
+    Account accountAfterRefund4 = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
+      REFUND.getPartialResult(), 11.0, CLOSED.getValue());
+
+    verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund4);
+  }
+
   private void testSingleAccountRefundSuccess(double initialAmount, double payAmount, double transferAmount,
     double waiveAmount, double requestedAmount, FeeFineStatus expectedStatus,
     String expectedPaymentStatus, List<Matcher<JsonObject>> expectedFeeFineActions) {
