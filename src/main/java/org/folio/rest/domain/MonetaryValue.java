@@ -1,6 +1,5 @@
 package org.folio.rest.domain;
 
-import static java.math.BigDecimal.ZERO;
 import static java.util.Objects.requireNonNull;
 
 import java.math.BigDecimal;
@@ -10,6 +9,7 @@ import java.util.Currency;
 public class MonetaryValue {
   private static final Currency USD = Currency.getInstance("USD");
   private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN;
+  public static final MonetaryValue ZERO = new MonetaryValue(BigDecimal.ZERO);
 
   private final BigDecimal amount;
   private final Currency currency;
@@ -51,15 +51,15 @@ public class MonetaryValue {
   }
 
   public boolean isZero() {
-    return ZERO.compareTo(amount) == 0;
+    return BigDecimal.ZERO.compareTo(amount) == 0;
   }
 
   public boolean isPositive() {
-    return ZERO.compareTo(amount) < 0;
+    return BigDecimal.ZERO.compareTo(amount) < 0;
   }
 
   public boolean isNegative() {
-    return ZERO.compareTo(amount) > 0;
+    return BigDecimal.ZERO.compareTo(amount) > 0;
   }
 
   public boolean isGreaterThan(MonetaryValue other) {

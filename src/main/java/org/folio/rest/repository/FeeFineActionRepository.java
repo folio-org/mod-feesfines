@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.folio.rest.domain.Action;
@@ -109,16 +110,28 @@ public class FeeFineActionRepository {
   }
 
   public Future<List<Feefineaction>> findRefundableActionsForAccounts(Collection<String> accountIds) {
-    if (accountIds == null || accountIds.isEmpty()) {
-      return failedFuture(new IllegalArgumentException("List of account IDs is empty or null"));
+    return findActionsForAccounts(accountIds, List.of(PAY, TRANSFER));
+  }
+
+  public Future<List<Feefineaction>> findActionsForAccounts(Collection<String> accountIds,
+    Collection<Action> actions) {
+
+    if (accountIds == null || accountIds.isEmpty() || actions == null || actions.isEmpty()) {
+      return failedFuture(
+        new IllegalArgumentException("List of account IDs or actions is empty or null"));
     }
+
+    List<String> actionResults = actions.stream()
+      .map(action -> List.of(action.getPartialResult(), action.getFullResult()))
+      .flatMap(Collection::stream)
+      .filter(Objects::nonNull)
+      .collect(toList());
 
     GroupedCriterias accountIdsCriterias = buildGroupedCriterias(
       buildEqualsCriteriaList(ACCOUNT_ID_FIELD, accountIds), "OR");
 
     GroupedCriterias typeCriterias = buildGroupedCriterias(
-      buildEqualsCriteriaList(TYPE_FIELD, List.of(PAY.getPartialResult(), PAY.getFullResult(),
-        TRANSFER.getPartialResult(), TRANSFER.getFullResult())), "OR");
+      buildEqualsCriteriaList(TYPE_FIELD, actionResults), "OR");
 
     Criterion criterion = new Criterion()
       .addGroupOfCriterias(typeCriterias)
