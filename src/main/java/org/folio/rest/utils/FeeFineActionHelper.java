@@ -88,15 +88,19 @@ public class FeeFineActionHelper {
   }
 
   public static MonetaryValue getTotalAmount(Collection<Feefineaction> feeFineActions,
+    Collection<Action> actions) {
+
+    return getTotalAmount(feeFineActions, actionsPredicate(actions));
+  }
+
+  public static MonetaryValue getTotalAmount(Collection<Feefineaction> feeFineActions,
     Predicate<Feefineaction> filter) {
 
     return feeFineActions.stream()
       .filter(filter)
-      .collect(
-        collectingAndThen(
-          summingDouble(Feefineaction::getAmountAction),
-          MonetaryValue::new
-        ));
+      .map(Feefineaction::getAmountAction)
+      .map(MonetaryValue::new)
+      .reduce(MonetaryValue.ZERO, MonetaryValue::add);
   }
 
   public static <K> Map<K, MonetaryValue> getTotalAmounts(
@@ -111,6 +115,12 @@ public class FeeFineActionHelper {
   }
 
   public static Predicate<Feefineaction> actionPredicate(Action action) {
-    return ffa -> action.isActionForResult(ffa.getTypeAction());
+    return actionsPredicate(List.of(action));
   }
+
+  public static Predicate<Feefineaction> actionsPredicate(Collection<Action> actions) {
+    return ffa -> actions.stream()
+      .anyMatch(action -> action.isActionForResult(ffa.getTypeAction()));
+  }
+
 }
