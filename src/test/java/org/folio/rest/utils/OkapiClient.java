@@ -2,9 +2,11 @@ package org.folio.rest.utils;
 
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.folio.rest.RestVerticle.OKAPI_USERID_HEADER;
 import static org.folio.test.support.ApiTests.OKAPI_TOKEN;
 import static org.folio.test.support.ApiTests.OKAPI_URL_HEADER;
 import static org.folio.test.support.ApiTests.TENANT_NAME;
+import static org.folio.test.support.ApiTests.X_OKAPI_USER_ID;
 
 import javax.ws.rs.core.MediaType;
 
@@ -57,6 +59,7 @@ public class OkapiClient {
       .contentType(MediaType.APPLICATION_JSON)
       .header(new Header(OKAPI_HEADER_TENANT, TENANT_NAME))
       .header(new Header(OKAPI_URL_HEADER, okapiUrl))
-      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN));
+      .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN))
+      .header(new Header(OKAPI_USERID_HEADER, X_OKAPI_USER_ID));
   }
 }
