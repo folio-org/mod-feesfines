@@ -467,7 +467,7 @@
     <url>https://github.com/folio-org/mod-feesfines</url>
     <connection>scm:git:git://github.com:folio-org/mod-feesfines.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-feesfines.git</developerConnection>
-    <tag>v16.1.0</tag>
+    <tag>v16.1.1</tag>
   </scm>
 
   <repositories>

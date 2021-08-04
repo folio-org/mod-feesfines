@@ -1,3 +1,6 @@
+## 16.1.1 2021-08-04
+* Increase remaining balance after refund (MODFEE-203)
+
 ## 16.1.0 2021-06-14
 * Refund lost item processing fees transferred to more than one account to their corresponding transfer accounts (MODFEE-138)
 * Fix performance issues with large dataset of fees/fines (MODFEE-175)
