@@ -156,7 +156,7 @@ public abstract class ActionService {
 
     if (isFullAction) {
       account.getStatus().setName(CLOSED.getValue());
-      account.setRemaining(MonetaryValue.MONETARY_VALUE_ZERO);
+      account.setRemaining(MonetaryValue.ZERO);
     } else {
       account.setRemaining(feeFineAction.getBalance());
     }

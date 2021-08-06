@@ -201,7 +201,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, MonetaryValue.MONETARY_VALUE_ZERO, "Closed");
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, MonetaryValue.ZERO, "Closed");
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request, action.getFullResult(), 1.0,

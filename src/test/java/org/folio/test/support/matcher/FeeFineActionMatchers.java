@@ -38,8 +38,7 @@ public class FeeFineActionMatchers {
 
   public static Matcher<JsonObject> feeFineAction(String accountId, String userId, double balance,
     MonetaryValue amount, String actionType, String transactionInfo, String userName,
-    String comments,
-    boolean notifyPatron, String createdAt, String paymentMethod) {
+    String comments, boolean notifyPatron, String createdAt, String paymentMethod) {
 
     return allOf(Arrays.asList(
       hasJsonPath("typeAction", is(actionType)),

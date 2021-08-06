@@ -227,7 +227,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       )));
 
     verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus,
-      MonetaryValue.MONETARY_VALUE_ZERO, "Closed");
+      MonetaryValue.ZERO, "Closed");
   }
 
   @Test

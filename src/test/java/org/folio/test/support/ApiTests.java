@@ -67,6 +67,7 @@ public class ApiTests {
   public static final String TENANT_NAME = "test_tenant";
   public static final String OKAPI_URL_HEADER = "x-okapi-url";
   public static final String USER_ID = "69d9169d-06da-4622-9c18-2868bd46b60f";
+  public static final String X_OKAPI_USER_ID = "94e5465a-67af-8799-4g87-1326cf12a22b";
   public static final String OKAPI_TOKEN = generateOkapiToken();
   public static final String MODULE_NAME = "mod-feesfines";
 
@@ -177,7 +178,7 @@ public class ApiTests {
 
   protected static <T> T get(CompletableFuture<T> future) {
     try {
-      return future.get(20, TimeUnit.SECONDS);
+      return future.get(60, TimeUnit.SECONDS);
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }

@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.folio.rest.domain.Action.TRANSFER;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -70,8 +69,7 @@ public class FeeFineActionHelper {
       .filter(actionPredicate(TRANSFER))
       .collect(groupingBy(
         Feefineaction::getPaymentMethod,
-        reducing(new MonetaryValue(BigDecimal.valueOf(0.0)), Feefineaction::getAmountAction,
-          MonetaryValue::add)
+        reducing(MonetaryValue.ZERO, Feefineaction::getAmountAction, MonetaryValue::add)
       ));
   }
 
@@ -86,12 +84,18 @@ public class FeeFineActionHelper {
   }
 
   public static MonetaryValue getTotalAmount(Collection<Feefineaction> feeFineActions,
+    Collection<Action> actions) {
+
+    return getTotalAmount(feeFineActions, actionsPredicate(actions));
+  }
+
+  public static MonetaryValue getTotalAmount(Collection<Feefineaction> feeFineActions,
     Predicate<Feefineaction> filter) {
 
     return feeFineActions.stream()
       .filter(filter)
       .map(Feefineaction::getAmountAction)
-      .reduce(MonetaryValue.MONETARY_VALUE_ZERO, MonetaryValue::add);
+      .reduce(MonetaryValue.ZERO, MonetaryValue::add);
   }
 
   public static <K> Map<K, MonetaryValue> getTotalAmounts(
@@ -106,6 +110,12 @@ public class FeeFineActionHelper {
   }
 
   public static Predicate<Feefineaction> actionPredicate(Action action) {
-    return ffa -> action.isActionForResult(ffa.getTypeAction());
+    return actionsPredicate(List.of(action));
   }
+
+  public static Predicate<Feefineaction> actionsPredicate(Collection<Action> actions) {
+    return ffa -> actions.stream()
+      .anyMatch(action -> action.isActionForResult(ffa.getTypeAction()));
+  }
+
 }

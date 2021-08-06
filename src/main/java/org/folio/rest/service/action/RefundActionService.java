@@ -179,8 +179,8 @@ public class RefundActionService extends ActionService {
 
     MonetaryValue remainingAmount = account.getRemaining();
 
-    return action == CREDIT
-      ? remainingAmount.subtract(refundAmount)
-      : remainingAmount.add(refundAmount);
+    return action == REFUND
+      ? remainingAmount.add(refundAmount)
+      : remainingAmount;
   }
 }
