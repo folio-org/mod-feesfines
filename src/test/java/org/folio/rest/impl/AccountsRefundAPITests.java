@@ -11,6 +11,7 @@ import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
+import static org.folio.rest.utils.JsonHelper.write;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkRefundClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
@@ -51,6 +52,7 @@ import org.folio.test.support.ActionsAPITests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.util.PomUtils;
+import org.folio.util.UuidUtil;
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
@@ -899,19 +901,21 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
   private void verifyThatFeeFineBalanceChangedEventsWereSent(Account... accounts) {
     for (Account account : accounts) {
-      verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
-        .put("userId", account.getUserId())
-        .put("feeFineId", account.getId())
-        .put("feeFineTypeId", account.getFeeFineId())
-        .put("balance", account.getRemaining())
-        .put("loanId", account.getLoanId()));
+      JsonObject payload = new JsonObject();
+      write(payload, "userId", account.getUserId());
+      write(payload, "feeFineId", account.getId());
+      write(payload, "feeFineTypeId", account.getFeeFineId());
+      write(payload, "balance", account.getRemaining());
+      write(payload, "loanId", account.getLoanId());
+
+      verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, payload);
     }
   }
 
   private void verifyThatEventWasSent(EventType eventType, JsonObject eventPayload) {
     Event event = new Event()
       .withEventType(eventType.name())
-      .withEventPayload(eventPayload.encode())
+      .withEventPayload(eventPayload.toString())
       .withEventMetadata(new EventMetadata()
         .withPublishedBy(PomUtils.getModuleId())
         .withTenantId(TENANT_NAME)

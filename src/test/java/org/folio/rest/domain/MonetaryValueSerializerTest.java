@@ -31,7 +31,7 @@ public class MonetaryValueSerializerTest extends ApiTests {
   }
 
   @Test
-  @Parameters({"0", "0.0", "0.00", "0.000", "0.005", "0.000000000000001"})
+  @Parameters({"0", "0.0", "0.00", "0.000"})
   public void monetaryValueShouldBeZero(String amount) {
     Account accountToPost = buildAccount(amount);
 
@@ -85,7 +85,7 @@ public class MonetaryValueSerializerTest extends ApiTests {
   }
 
   @Test
-  @Parameters({ "-1", "0", "0.00", "0.000", "0.005", "0.000999999" })
+  @Parameters({ "-1", "-0.00000001" })
   public void monetaryValueIsNotPositive(String amount) {
     Account accountToPost = buildAccount(amount);
 
@@ -121,7 +121,7 @@ public class MonetaryValueSerializerTest extends ApiTests {
   }
 
   @Test
-  @Parameters({ "1", "0", "0.00", "0.000", "0.005", "-0.005", "0.000000000001", "-0.000000000001" })
+  @Parameters({ "1", "0", "0.00", "0.000", "0.005", "0.000000000001" })
   public void monetaryValueIsNotNegative(String amount) {
     Account accountToPost = buildAccount(amount);
 

@@ -8,7 +8,6 @@ import java.math.RoundingMode;
 import java.util.Currency;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -21,8 +20,7 @@ public class MonetaryValue {
   public static final MonetaryValue ZERO = new MonetaryValue(BigDecimal.ZERO);
 
   private final BigDecimal amount;
-
-  @JsonIgnore
+  private final BigDecimal originalAmount;
   private final Currency currency;
 
   @JsonCreator
@@ -52,10 +50,15 @@ public class MonetaryValue {
     requireNonNull(rounding);
     this.currency = currency;
     this.amount = amount.setScale(currency.getDefaultFractionDigits(), rounding);
+    this.originalAmount = amount;
   }
 
   public BigDecimal getAmount() {
     return amount;
+  }
+
+  public BigDecimal getOriginalAmount() {
+    return originalAmount;
   }
 
   public Currency getCurrency() {
@@ -119,13 +122,23 @@ public class MonetaryValue {
     return amount.toString();
   }
 
+  public String toStringOriginalAmount() {
+    BigDecimal strippedTrailingZerosAmount = originalAmount.stripTrailingZeros();
+
+    if (strippedTrailingZerosAmount.scale() <= 0) {
+      return strippedTrailingZerosAmount.setScale(1, DEFAULT_ROUNDING).toPlainString();
+    }
+
+    return strippedTrailingZerosAmount.toPlainString();
+  }
+
   static class MonetaryValueSerializer extends JsonSerializer<MonetaryValue> {
 
     @Override
     public void serialize(MonetaryValue value, JsonGenerator gen, SerializerProvider provider)
-      throws
-      IOException {
-      gen.writeNumber(value.getAmount().doubleValue());
+      throws IOException {
+
+      gen.writeNumber(value.toStringOriginalAmount());
     }
   }
 }
