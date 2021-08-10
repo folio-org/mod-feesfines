@@ -37,7 +37,7 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   static final String REFUNDED_FULLY = "Refunded fully";
 
   static final String DATE_TIME_JSON_FORMAT = "yyyy-MM-dd HH:mm:ss";
-  static final String LOAN_DATE_TIME_JSON_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+  static final String LOAN_DATE_TIME_JSON_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
   static final String LOAN_RETURN_DATE_TIME_JSON_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
   static final DateTimeFormatter DATE_TIME_JSON_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_JSON_FORMAT);
   static final DateTimeFormatter DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern("M/d/yy, h:mm a");

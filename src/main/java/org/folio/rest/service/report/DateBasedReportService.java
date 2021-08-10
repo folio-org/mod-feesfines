@@ -42,7 +42,7 @@ public abstract class DateBasedReportService<T, P> {
     timeZone = localeSettings.getDateTimeZone();
     dateTimeFormatter = DateTimeFormat.forPattern(DateTimeFormat.patternForStyle("SS",
       Locale.forLanguageTag(localeSettings.getLocale())));
-    loanDateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    loanDateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     currency = Currency.getInstance(localeSettings.getCurrency());
   }
 
