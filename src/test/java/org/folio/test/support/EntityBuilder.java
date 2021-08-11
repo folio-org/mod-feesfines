@@ -3,12 +3,14 @@ package org.folio.test.support;
 import static java.lang.String.format;
 import static org.folio.test.support.ApiTests.randomId;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BlockTemplate;
 import org.folio.rest.jaxrs.model.Campus;
@@ -64,7 +66,7 @@ public class EntityBuilder {
   }
 
   public static Account buildAccount(String userId, String itemId, String feeFineType,
-    Double amount, String ownerId, String owner) {
+    double amount, String ownerId, String owner) {
 
     return new Account()
       .withId(randomId())
@@ -76,8 +78,8 @@ public class EntityBuilder {
       .withFeeFineId(randomId())
       .withFeeFineType(feeFineType)
       .withFeeFineOwner(owner)
-      .withAmount(amount)
-      .withRemaining(amount)
+      .withAmount(new MonetaryValue(amount))
+      .withRemaining(new MonetaryValue(amount))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }
@@ -93,8 +95,8 @@ public class EntityBuilder {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(9.00)
-      .withRemaining(4.55)
+      .withAmount(new MonetaryValue(9.0))
+      .withRemaining(new MonetaryValue(4.55))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }
@@ -103,16 +105,16 @@ public class EntityBuilder {
     return buildAccount().withId(accountId);
   }
 
-  public static Account buildAccount(double amount, double remaining) {
+  public static Account buildAccount(MonetaryValue amount, MonetaryValue remaining) {
     return buildAccount()
       .withAmount(amount)
       .withRemaining(remaining);
   }
 
   public static Feefineaction buildFeeFineAction(String userId, String accountId, String type,
-    String paymentMethod, Double amount, Double balance, Date date,
-    String commentForStaff, String commentForPatron, String transactionInformation,
-    String createdAt, String source) {
+      String paymentMethod, MonetaryValue amount, MonetaryValue balance, Date date,
+      String commentForStaff, String commentForPatron, String transactionInformation,
+      String createdAt, String source) {
 
     return new Feefineaction()
       .withId(randomId())
@@ -130,7 +132,7 @@ public class EntityBuilder {
   }
 
   public static Feefineaction buildFeeFineActionWithoutComments(String userId, String accountId, String type,
-    String paymentMethod, Double amount, Double balance, Date date) {
+    String paymentMethod, MonetaryValue amount, MonetaryValue balance, Date date) {
 
     return new Feefineaction()
       .withId(randomId())

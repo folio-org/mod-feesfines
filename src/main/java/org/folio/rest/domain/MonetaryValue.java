@@ -2,18 +2,28 @@ package org.folio.rest.domain;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Currency;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+@JsonSerialize(using = MonetaryValue.MonetaryValueSerializer.class)
 public class MonetaryValue {
   private static final Currency USD = Currency.getInstance("USD");
   private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_EVEN;
   public static final MonetaryValue ZERO = new MonetaryValue(BigDecimal.ZERO);
 
   private final BigDecimal amount;
+  private final BigDecimal originalAmount;
   private final Currency currency;
 
+  @JsonCreator
   public MonetaryValue(BigDecimal amount) {
     this(amount, USD);
   }
@@ -40,10 +50,15 @@ public class MonetaryValue {
     requireNonNull(rounding);
     this.currency = currency;
     this.amount = amount.setScale(currency.getDefaultFractionDigits(), rounding);
+    this.originalAmount = amount;
   }
 
   public BigDecimal getAmount() {
     return amount;
+  }
+
+  public BigDecimal getOriginalAmount() {
+    return originalAmount;
   }
 
   public Currency getCurrency() {
@@ -74,6 +89,14 @@ public class MonetaryValue {
     return new MonetaryValue(amount.subtract(other.getAmount()));
   }
 
+  public MonetaryValue divide(MonetaryValue denominator) {
+    return new MonetaryValue(amount.divide(denominator.getAmount(), DEFAULT_ROUNDING));
+  }
+
+  public MonetaryValue multiply(MonetaryValue multiplier) {
+    return new MonetaryValue(amount.multiply(multiplier.getAmount()));
+  }
+
   public MonetaryValue add(MonetaryValue other) {
     return new MonetaryValue(amount.add(other.getAmount()));
   }
@@ -97,5 +120,25 @@ public class MonetaryValue {
   @Override
   public String toString() {
     return amount.toString();
+  }
+
+  String toStringOriginalAmount() {
+    BigDecimal strippedTrailingZerosAmount = originalAmount.stripTrailingZeros();
+
+    if (strippedTrailingZerosAmount.scale() <= 0) {
+      return strippedTrailingZerosAmount.setScale(1, DEFAULT_ROUNDING).toPlainString();
+    }
+
+    return strippedTrailingZerosAmount.toPlainString();
+  }
+
+  static class MonetaryValueSerializer extends JsonSerializer<MonetaryValue> {
+
+    @Override
+    public void serialize(MonetaryValue value, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
+
+      gen.writeNumber(value.toStringOriginalAmount());
+    }
   }
 }

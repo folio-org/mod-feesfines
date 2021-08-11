@@ -8,7 +8,6 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.FeeFineStatus;
-import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.tools.utils.MetadataUtil;
@@ -21,7 +20,7 @@ public class AccountHelper {
   }
 
   public static boolean isClosedAndHasZeroRemainingAmount(Account account) {
-    return isClosed(account) && new MonetaryValue(account.getRemaining()).isZero();
+    return isClosed(account) && account.getRemaining().isZero();
   }
 
   public static boolean isClosed(Account account) {

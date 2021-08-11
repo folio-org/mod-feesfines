@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import org.apache.http.HttpStatus;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Campus;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -168,10 +169,14 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
   @Test
   public void shouldReturn422WhenRequestIsNotValid() {
     refundReportsClient.getFeeFineRefundReport(null, "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReport("not-a-date", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReport("2020-01-01", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReport("not-a-date", "not-a-date", HTTP_UNPROCESSABLE_ENTITY);
-    refundReportsClient.getFeeFineRefundReport("12 Apr 2021", "2020-01-01", HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReport("not-a-date", "2020-01-01",
+      HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReport("2020-01-01", "not-a-date",
+      HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReport("not-a-date", "not-a-date",
+      HTTP_UNPROCESSABLE_ENTITY);
+    refundReportsClient.getFeeFineRefundReport("12 Apr 2021", "2020-01-01",
+      HTTP_UNPROCESSABLE_ENTITY);
   }
 
   @Test
@@ -259,7 +264,8 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
   public void validReportWhenEndDateIsNull() {
     ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
-    requestAndCheckWithSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)), null,
+    requestAndCheckWithSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)),
+      null,
       START_DATE, null);
   }
 
@@ -267,7 +273,8 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
   public void validReportWhenStartDateAndEndDateAreNull() {
     ReportSourceObjects sourceObjects = createMinimumViableReportData();
 
-    requestAndCheckWithSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)), null,
+    requestAndCheckWithSpecificDates(List.of(createResponseForMinimumViableData(sourceObjects)),
+      null,
       null, null);
   }
 
@@ -308,8 +315,9 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
       REFUND_TX_INFO);
 
     requestAndCheck(List.of(
-      buildRefundReportEntry(account, refundAction,
-        "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+      buildRefundReportEntry(account, refundAction, "3.00",
+        PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00",
+        "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
         item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER)
     ));
@@ -342,10 +350,12 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
     Account account = charge(10.0, "ff-type", item1.getId());
 
     createAction(1, account, "2020-01-01 12:00:00", PAID_FULLY, PAYMENT_METHOD,
-      10.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
+      10.0, 0.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO);
 
-    Feefineaction refundAction = createActionWithNullComments(account, "2020-01-03 12:00:00",
-      REFUNDED_FULLY, REFUND_REASON, 5.2, 4.8, REFUND_TX_INFO);
+    Feefineaction refundAction = createActionWithNullComments(account, "2020-01-03 12:00:00"
+      , REFUNDED_FULLY, REFUND_REASON, new MonetaryValue(5.2), new MonetaryValue(4.8),
+      REFUND_TX_INFO);
 
     requestAndCheck(List.of(
       buildRefundReportEntry(account, refundAction,
@@ -366,7 +376,7 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
       PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
 
     Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
-      REFUNDED_FULLY, REFUND_REASON, 5.2, 4.8, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUNDED_FULLY, REFUND_REASON, 5.8, 4.8, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 
     requestAndCheck(List.of(
@@ -407,10 +417,12 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
       3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
 
     createAction(1, account, "2020-01-02 12:00:00",
-      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.5, 8.5, "", "", TRANSFER_TX_INFO);
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.5, 8.5, "",
+      "", TRANSFER_TX_INFO);
 
     Feefineaction refundAction = createAction(1, account, "2020-01-03 12:00:00",
-      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 8.5, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 8.5, REFUND_STAFF_INFO,
+      REFUND_PATRON_INFO,
       REFUNDED_TO_PATRON_TX_INFO);
 
     requestAndCheck(List.of(
@@ -452,13 +464,15 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
 
     createAction(2, account1, "2020-01-02 12:00:00",
       PAID_PARTIALLY, PAYMENT_METHOD,
-      3.2, 3.7, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO + "-different-info");
+      3.2, 3.7, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO + "-different-info");
 
     createAction(1, account1, "2020-01-03 12:00:00",
       TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 2.0, 5.7, "", "", TRANSFER_TX_INFO);
 
     Feefineaction refundAction1 = createAction(1, account1, "2020-01-04 12:00:00",
-      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 5.7, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 5.7,
+      REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 
     createAction(2, account1, "2020-01-05 12:00:00",
@@ -478,8 +492,8 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
       REFUNDED_FULLY, REFUND_REASON, 17.0, 3.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 
-    Account account3 = charge(USER_ID_2, 20.0, "ff-type-3", item2.getId(), OWNER_ID_1);
-
+    Account account3 = charge(USER_ID_2, 20.0, "ff-type-3", item2.getId(),
+      OWNER_ID_1);
     createAction(USER_ID_2, 1, account3, "2020-01-08 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       17.0, 3.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
 
@@ -510,10 +524,12 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
   @Test
   public void shouldFormReportOnlyForSpecificOwner() {
     Account account1 = charge(USER_ID_1, 10.0, "ff-type-1", item1.getId(), OWNER_ID_1);
+
     createAction(1, account1, "2020-01-01 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       3.1, 6.9, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
     createAction(2, account1, "2020-01-02 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
-      3.2, 3.7, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO + "-different-info");
+      3.2, 3.7, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO + "-different-info");
     createAction(1, account1, "2020-01-03 12:00:00",
       TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 2.0, 5.7, "", "", TRANSFER_TX_INFO);
     Feefineaction refundAction1 = createAction(1, account1, "2020-01-04 12:00:00",
@@ -549,15 +565,16 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
         "12.00", MULTIPLE, SEE_FEE_FINE_PAGE, "2.00", TRANSFER_ACCOUNT,
         addSuffix(REFUND_STAFF_INFO, 2), addSuffix(REFUND_PATRON_INFO, 2),
         item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER),
-      buildRefundReportEntry(user2, account3, refundAction4,
-        "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
+      buildRefundReportEntry(user2, account3, refundAction4, "17.00", PAYMENT_METHOD,
+        PAYMENT_TX_INFO, "0.00", "",
         addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
         item2.getBarcode(), instance.getTitle(), FEE_FINE_OWNER));
 
-    List<RefundReportEntry> refundReportEntriesForSecondOwner = List.of(buildRefundReportEntry(account2, refundAction3,
-      "17.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
-      addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
-      item2.getBarcode(), instance.getTitle(), FEE_FINE_OWNER));
+    List<RefundReportEntry> refundReportEntriesForSecondOwner = List.of(
+      buildRefundReportEntry(account2, refundAction3, "17.00", PAYMENT_METHOD,
+        PAYMENT_TX_INFO, "0.00", "",
+        addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+        item2.getBarcode(), instance.getTitle(), FEE_FINE_OWNER));
 
     requestAndCheck(refundReportEntriesForFirstOwner, List.of(OWNER_ID_1));
     requestAndCheck(refundReportEntriesForSecondOwner, List.of(OWNER_ID_2));
@@ -583,7 +600,7 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
 
     // Create transfer action with the same date to check it is sorted correctly
     createAction(1, account, "2020-01-01 12:00:00",
-      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.0, 4.5, "", "", TRANSFER_TX_INFO);
+      TRANSFERRED_PARTIALLY, TRANSFER_ACCOUNT, 1.0, 4.0, "", "", TRANSFER_TX_INFO);
 
     // Create transfer action with null date to check that it is sorted correctly
     createAction(1, account, null,
@@ -629,7 +646,7 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
         refundReportEntryMatcher(reportEntries.get(index))));
   }
 
-  private Account charge(Double amount, String feeFineType, String itemId) {
+  private Account charge(double amount, String feeFineType, String itemId) {
     return charge(USER_ID_1, amount, feeFineType, itemId, randomId());
   }
 
@@ -637,11 +654,13 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
     Account account = charge(10.0, "ff-type", item1.getId());
 
     Feefineaction payment = createAction(1, account, "2020-01-01 12:00:00",
-      PAID_PARTIALLY, PAYMENT_METHOD, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAID_PARTIALLY, PAYMENT_METHOD, 3.0, 7.0, PAYMENT_STAFF_INFO,
+      PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO);
 
     Feefineaction refund = createAction(1, account, "2020-01-02 12:00:00",
-      REFUNDED_PARTIALLY, REFUND_REASON, 2.0, 7.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
+      REFUNDED_PARTIALLY, REFUND_REASON, 2.0, 7.0, REFUND_STAFF_INFO,
+      REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 
     return new ReportSourceObjects()
@@ -653,12 +672,12 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
   private RefundReportEntry createResponseForMinimumViableData(ReportSourceObjects sourceObjects) {
     return buildRefundReportEntry(sourceObjects.account, sourceObjects.refundAction,
       "3.00", PAYMENT_METHOD, PAYMENT_TX_INFO, "0.00", "",
-      addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1), item1.getBarcode(),
-      instance.getTitle(), FEE_FINE_OWNER);
+      addSuffix(REFUND_STAFF_INFO, 1), addSuffix(REFUND_PATRON_INFO, 1),
+      item1.getBarcode(), instance.getTitle(), FEE_FINE_OWNER);
   }
 
   private Feefineaction createAction(int actionCounter, Account account, String dateTime,
-    String type, String method, Double amount, Double balance, String staffInfo,
+    String type, String method, double amount, double balance, String staffInfo,
     String patronInfo, String txInfo) {
 
     return createAction(USER_ID_1, actionCounter, account, dateTime, type, method, amount, balance,
@@ -666,9 +685,10 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
   }
 
   private Feefineaction createActionWithNullComments(Account account, String dateTime,
-    String type, String method, Double amount, Double balance, String txInfo) {
+    String type, String method, MonetaryValue amount, MonetaryValue balance, String txInfo) {
 
-    Feefineaction action = EntityBuilder.buildFeeFineActionWithoutComments(USER_ID_1, account.getId(),
+    Feefineaction action = EntityBuilder.buildFeeFineActionWithoutComments(USER_ID_1,
+      account.getId(),
       type, method, amount, balance, parseDateTimeUTC(dateTime))
       .withTransactionInformation(txInfo);
 
@@ -702,16 +722,16 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
       .withPatronId(user.getId())
       .withPatronGroup(userGroup.getGroup())
       .withFeeFineType(account.getFeeFineType())
-      .withBilledAmount(formatMonetaryValue(account.getAmount()))
-      .withDateBilled(formatReportDate(account.getMetadata().getCreatedDate(), TENANT_TZ))
+      .withBilledAmount(account.getAmount().toString())
+      .withDateBilled(formatRefundReportDate(account.getMetadata().getCreatedDate(), TENANT_TZ))
       .withPaidAmount(paidAmount)
       .withPaymentMethod(paymentMethod)
       .withTransactionInfo(transactionInfo)
       .withTransferredAmount(transferredAmount)
       .withTransferAccount(transferAccount)
       .withFeeFineId(account.getId())
-      .withRefundDate(formatReportDate(refundAction.getDateAction(), TENANT_TZ))
-      .withRefundAmount(formatMonetaryValue(refundAction.getAmountAction()))
+      .withRefundDate(formatRefundReportDate(refundAction.getDateAction(), TENANT_TZ))
+      .withRefundAmount(refundAction.getAmountAction().toString())
       .withRefundAction(refundAction.getTypeAction())
       .withRefundReason(refundAction.getPaymentMethod())
       .withStaffInfo(staffInfo)

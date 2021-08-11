@@ -138,8 +138,8 @@ public class RefundActionService extends ActionService {
 
     return new Feefineaction()
       .withTypeAction(actionType)
-      .withAmountAction(amount.toDouble())
-      .withBalance(balance.toDouble())
+      .withAmountAction(amount)
+      .withBalance(balance)
       .withComments(request.getComments())
       .withNotify(request.getNotifyPatron())
       .withTransactionInformation(transactionInfo)
@@ -177,7 +177,7 @@ public class RefundActionService extends ActionService {
   private static MonetaryValue calculateFeeFineActionBalance(Account account,
     Action action, MonetaryValue refundAmount) {
 
-    MonetaryValue remainingAmount = new MonetaryValue(account.getRemaining());
+    MonetaryValue remainingAmount = account.getRemaining();
 
     return action == REFUND
       ? remainingAmount.add(refundAmount)

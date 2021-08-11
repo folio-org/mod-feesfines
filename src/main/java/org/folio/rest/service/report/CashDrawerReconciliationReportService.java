@@ -9,7 +9,9 @@ import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,6 +23,7 @@ import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportSources;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportStats;
 import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.jaxrs.model.ReportTotalsEntry;
 import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.service.report.parameters.CashDrawerReconciliationReportParameters;
 
@@ -30,7 +33,8 @@ import io.vertx.core.Future;
 public class CashDrawerReconciliationReportService extends
   DateBasedReportService<CashDrawerReconciliationReport, CashDrawerReconciliationReportParameters> {
 
-  private static final Logger log = LogManager.getLogger(CashDrawerReconciliationReportService.class);
+  private static final Logger log = LogManager.getLogger(
+    CashDrawerReconciliationReportService.class);
 
   private static final int REPORT_ROWS_LIMIT = 1_000_000;
   private static final String EMPTY_VALUE = "-";
@@ -149,7 +153,57 @@ public class CashDrawerReconciliationReportService extends
     return stats;
   }
 
-  private String formatMonetaryValue(Double value) {
-    return new MonetaryValue(value, currency).toString();
+  private void calculateTotals(List<ReportTotalsEntry> totalsEntries, List<Feefineaction> actions,
+    Function<Feefineaction, String> categoryNameFunction, String totalsCategoryName) {
+
+    List<String> categories = actions.stream()
+      .map(categoryNameFunction)
+      .filter(Objects::nonNull)
+      .distinct()
+      .collect(Collectors.toList());
+
+    // Calculate categories
+    categories.forEach(category -> totalsEntries.add(new ReportTotalsEntry()
+      .withName(category)
+      .withTotalAmount(actions.stream()
+        .filter(filterByCategory(category, categoryNameFunction))
+        .map(Feefineaction::getAmountAction)
+        .filter(Objects::nonNull)
+        .reduce(MonetaryValue::add)
+        .orElse(MonetaryValue.ZERO)
+        .toString())
+      .withTotalCount(String.valueOf(actions.stream()
+        .filter(filterByCategory(category, categoryNameFunction))
+        .count()))));
+
+    // Calculate total
+    totalsEntries.add(new ReportTotalsEntry()
+      .withName(totalsCategoryName)
+      .withTotalAmount(actions.stream()
+        .filter(filterByCategories(categories, categoryNameFunction))
+        .map(Feefineaction::getAmountAction)
+        .filter(Objects::nonNull)
+        .reduce(MonetaryValue::add)
+        .orElse(MonetaryValue.ZERO)
+        .toString())
+      .withTotalCount(String.valueOf(actions.stream()
+        .filter(filterByCategories(categories, categoryNameFunction))
+        .count())));
+  }
+
+  private Predicate<Feefineaction> filterByCategory(String category,
+    Function<Feefineaction, String> categoryNameFunction) {
+
+    return action -> category.equals(categoryNameFunction.apply(action));
+  }
+
+  private Predicate<Feefineaction> filterByCategories(List<String> categories,
+    Function<Feefineaction, String> categoryNameFunction) {
+
+    return action -> categories.contains(categoryNameFunction.apply(action));
+  }
+
+  private String formatMonetaryValue(MonetaryValue value) {
+    return new MonetaryValue(value.getAmount(), currency).toString();
   }
 }

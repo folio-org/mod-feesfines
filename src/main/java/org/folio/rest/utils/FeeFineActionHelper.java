@@ -1,19 +1,17 @@
 package org.folio.rest.utils;
 
-import static org.apache.commons.lang3.StringUtils.defaultString;
-
-import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.summingDouble;
+import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.folio.rest.domain.Action.TRANSFER;
 
 import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.rest.domain.Action;
@@ -24,7 +22,7 @@ public class FeeFineActionHelper {
   public static final String PATRON_COMMENTS_KEY = "PATRON";
   public static final String STAFF_COMMENTS_KEY = "STAFF";
 
-    private FeeFineActionHelper() {
+  private FeeFineActionHelper() {
     throw new UnsupportedOperationException("Do not instantiate");
   }
 
@@ -71,10 +69,8 @@ public class FeeFineActionHelper {
       .filter(actionPredicate(TRANSFER))
       .collect(groupingBy(
         Feefineaction::getPaymentMethod,
-        collectingAndThen(
-          summingDouble(Feefineaction::getAmountAction),
-          MonetaryValue::new
-        )));
+        reducing(MonetaryValue.ZERO, Feefineaction::getAmountAction, MonetaryValue::add)
+      ));
   }
 
   public static MonetaryValue getTotalAmount(Collection<Feefineaction> feeFineActions) {
@@ -99,7 +95,6 @@ public class FeeFineActionHelper {
     return feeFineActions.stream()
       .filter(filter)
       .map(Feefineaction::getAmountAction)
-      .map(MonetaryValue::new)
       .reduce(MonetaryValue.ZERO, MonetaryValue::add);
   }
 

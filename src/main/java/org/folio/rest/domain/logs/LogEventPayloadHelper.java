@@ -90,7 +90,7 @@ public class LogEventPayloadHelper {
       write(json, DATE.value(), DateTime.now());
       if (isAction(act)) {
         write(json, ACTION.value(), act.getTypeAction());
-        write(json, BALANCE.value(), act.getBalance());
+        ofNullable(act.getBalance()).ifPresent(balance -> write(json, BALANCE.value(), balance));
         write(json, PAYMENT_METHOD.value(), act.getPaymentMethod());
         write(json, COMMENTS.value(), act.getComments());
       } else if (STAFF_INFO_ONLY.equalsIgnoreCase(act.getTypeAction())) {

@@ -179,7 +179,7 @@ public class FinancialTransactionsDetailReportService extends
 
       entry = entry
         .withAction(ACTION_NAMES.get(feeFineAction.getTypeAction()))
-        .withActionAmount(formatMonetaryValue(feeFineAction.getAmountAction()))
+        .withActionAmount(feeFineAction.getAmountAction().toString())
         .withActionDate(formatDate(feeFineAction.getDateAction()))
         .withActionCreatedAt(createdAt)
         .withActionSource(feeFineAction.getSource())
@@ -200,7 +200,7 @@ public class FinancialTransactionsDetailReportService extends
           entry = entry
             .withFeeFineOwner(account.getFeeFineOwner())
             .withFeeFineType(account.getFeeFineType())
-            .withBilledAmount(formatMonetaryValue(account.getAmount()))
+            .withBilledAmount(account.getAmount().toString())
             .withFeeFineId(account.getId())
             .withPatronId(account.getUserId())
             .withDueDate(formatDate(account.getDueDate()))

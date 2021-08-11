@@ -39,10 +39,14 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   static final String DATE_TIME_JSON_FORMAT = "yyyy-MM-dd HH:mm:ss";
   static final String LOAN_DATE_TIME_JSON_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
   static final String LOAN_RETURN_DATE_TIME_JSON_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
-  static final DateTimeFormatter DATE_TIME_JSON_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_JSON_FORMAT);
-  static final DateTimeFormatter DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern("M/d/yy, h:mm a");
-  static final DateTimeFormatter LOAN_DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern(LOAN_DATE_TIME_JSON_FORMAT);
-  static final DateTimeFormatter LOAN_RETURN_DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern(LOAN_RETURN_DATE_TIME_JSON_FORMAT);
+  static final DateTimeFormatter DATE_TIME_JSON_FORMATTER = DateTimeFormat.forPattern(
+    DATE_TIME_JSON_FORMAT);
+  static final DateTimeFormatter DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern(
+    "M/d/yy, h:mm a");
+  static final DateTimeFormatter LOAN_DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern(
+    LOAN_DATE_TIME_JSON_FORMAT);
+  static final DateTimeFormatter LOAN_RETURN_DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern(
+    LOAN_RETURN_DATE_TIME_JSON_FORMAT);
   static final DateTimeZone TENANT_TZ = DateTimeZone.forID("America/New_York");
 
   private StubMapping localeSettingsStubMapping;
@@ -63,13 +67,13 @@ public class FeeFineReportsAPITestBase extends ApiTests {
     removeStub(localeSettingsStubMapping);
   }
 
-  Account charge(String userID, Double amount, String feeFineType,
+  Account charge(String userID, double amount, String feeFineType,
     String itemId, String ownerId) {
 
     return charge(userID, amount, feeFineType, itemId, ownerId, "owner");
   }
 
-  Account charge(String userID, Double amount, String feeFineType,
+  Account charge(String userID, double amount, String feeFineType,
     String itemId, String ownerId, String owner) {
 
     final var account = EntityBuilder.buildAccount(userID, itemId, feeFineType, amount,
@@ -89,9 +93,10 @@ public class FeeFineReportsAPITestBase extends ApiTests {
     if (loan != null) {
       account = account.withLoanId(loan.getId())
         .withDueDate(loan.getDueDate())
-        .withReturnedDate(DateTime.parse(loan.getReturnDate(), LOAN_RETURN_DATE_TIME_REPORT_FORMATTER)
-          .withZoneRetainFields(DateTimeZone.UTC)
-          .toDate());
+        .withReturnedDate(
+          DateTime.parse(loan.getReturnDate(), LOAN_RETURN_DATE_TIME_REPORT_FORMATTER)
+            .withZoneRetainFields(DateTimeZone.UTC)
+            .toDate());
     } else {
       account = account.withLoanId(null)
         .withDueDate(null)
@@ -107,7 +112,7 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   }
 
   Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
-    String type, String method, Double amount, Double balance, String staffInfo,
+    String type, String method, double amount, double balance, String staffInfo,
     String patronInfo, String txInfo) {
 
     return createAction(userId, actionCounter, account, dateTime, type, method, amount, balance,
@@ -115,11 +120,12 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   }
 
   Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
-    String type, String method, Double amount, Double balance, String staffInfo,
+    String type, String method, double amount, double balance, String staffInfo,
     String patronInfo, String txInfo, String createdAt, String source) {
 
     Feefineaction action = EntityBuilder.buildFeeFineAction(userId, account.getId(),
-      type, method, amount, balance, parseDateTimeUTC(dateTime),
+      type, method, new MonetaryValue(amount), new MonetaryValue(balance),
+      parseDateTimeUTC(dateTime),
       addSuffix(staffInfo, actionCounter), addSuffix(patronInfo, actionCounter), txInfo, createdAt,
       source);
 
@@ -130,6 +136,10 @@ public class FeeFineReportsAPITestBase extends ApiTests {
 
   void createActionEntity(Feefineaction action) {
     createEntity(ServicePath.ACTIONS_PATH, action);
+  }
+
+  String formatRefundReportDate(Date date, DateTimeZone timeZone) {
+    return new DateTime(date).withZone(timeZone).toString(DATE_TIME_REPORT_FORMATTER);
   }
 
   void createOverdueFinePolicy(OverdueFinePolicy overdueFinePolicy) {
@@ -146,10 +156,6 @@ public class FeeFineReportsAPITestBase extends ApiTests {
 
   void deleteLostItemFeePolicy(LostItemFeePolicy lostItemFeePolicy) {
     deleteEntity(ServicePath.LOST_ITEM_FEE_POLICIES_PATH, lostItemFeePolicy.getId());
-  }
-
-  String formatMonetaryValue(Double value) {
-    return new MonetaryValue(value).toString();
   }
 
   String formatReportDate(Date date) {

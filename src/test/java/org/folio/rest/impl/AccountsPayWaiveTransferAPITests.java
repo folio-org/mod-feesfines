@@ -30,6 +30,7 @@ import org.awaitility.Awaitility;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
@@ -48,7 +49,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
-
 
 @RunWith(value = Parameterized.class)
 public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
@@ -84,7 +84,8 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
     case TRANSFER:
       return buildAccountTransferClient(ACCOUNT_ID);
     default:
-      throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
+      throw new IllegalArgumentException(
+        "Failed to get ResourceClient for action: " + action.name());
     }
   }
 
@@ -99,12 +100,12 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void return422WhenRequestedAmountIsNegative() {
-    testRequestWithNonPositiveAmount(-1);
+    testRequestWithNonPositiveAmount(-1.0);
   }
 
   @Test
   public void return422WhenRequestedAmountIsZero() {
-    testRequestWithNonPositiveAmount(0);
+    testRequestWithNonPositiveAmount(0.0);
   }
 
   private void testRequestWithNonPositiveAmount(double amount) {
@@ -144,17 +145,19 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void return422WhenAccountIsClosed() {
-    return422WhenAccountIsEffectivelyClosed(0.00);
+    return422WhenAccountIsEffectivelyClosed(new MonetaryValue(0.0));
   }
 
   @Test
   public void return422WhenAccountIsEffectivelyClosed() {
     // will be rounded to 0.00 (2 decimal places) when compared to zero
-    return422WhenAccountIsEffectivelyClosed(0.004987654321);
+    return422WhenAccountIsEffectivelyClosed(new MonetaryValue(0.004987654321));
   }
 
-  private void return422WhenAccountIsEffectivelyClosed(double remainingAmount) {
-    Account account = createAccount(remainingAmount + 1).withRemaining(remainingAmount);
+  private void return422WhenAccountIsEffectivelyClosed(MonetaryValue remainingAmount) {
+    Account account = createAccount(
+      remainingAmount.add(new MonetaryValue(1.0)).toDouble()).withRemaining(
+      remainingAmount);
     account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
     postAccount(account);
 
@@ -174,8 +177,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void longDecimalsAreHandledCorrectlyAndAccountIsClosed() {
-    double accountBalanceBeforeAction = 1.004987654321;
-    final Account account = createAccount(accountBalanceBeforeAction);
+    final Account account = createAccount(1.004987654321);
     postAccount(account);
 
     String requestedAmountString = "1.004123456789";
@@ -199,16 +201,16 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, 0.0, "Closed");
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, MonetaryValue.ZERO, "Closed");
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
-      is(feeFineActionLogEventPayload(account, request, action.getFullResult(), 1.0, 0.0)));
+      is(feeFineActionLogEventPayload(account, request, action.getFullResult(), 1.0,
+        0.0)));
   }
 
   @Test
   public void longDecimalsAreHandledCorrectly() {
-    double accountBalanceBeforeAction = 1.23987654321; // should be rounded to 1.24
-    final Account account = createAccount(accountBalanceBeforeAction);
+    final Account account = createAccount(1.23987654321); // should be rounded to 1.24
     postAccount(account);
 
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
@@ -232,10 +234,12 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, 0.24, "Open");
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, new MonetaryValue(0.24),
+      "Open");
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
-      is(feeFineActionLogEventPayload(account, request, action.getPartialResult(), 1.0, 0.24)));
+      is(feeFineActionLogEventPayload(account, request, action.getPartialResult(),
+        1.0,0.24)));
   }
 
   @Test
@@ -249,14 +253,18 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
   }
 
   private void paymentCreatesActionAndUpdatesAccount(boolean terminalAction) {
-    double accountBalanceBefore = 3.45;
-    double requestedAmount = terminalAction ? accountBalanceBefore : accountBalanceBefore - 1.0;
-    double expectedAccountBalanceAfter = accountBalanceBefore - requestedAmount;
+    MonetaryValue accountBalanceBefore = new MonetaryValue(3.45);
+    MonetaryValue requestedAmount = terminalAction ?
+      accountBalanceBefore :
+      accountBalanceBefore.subtract(new MonetaryValue(1.0));
+    MonetaryValue expectedAccountBalanceAfter = accountBalanceBefore.subtract(requestedAmount);
 
-    final Account account = createAccount(accountBalanceBefore);
+    final Account account = createAccount(accountBalanceBefore.toDouble());
     postAccount(account);
 
-    String expectedPaymentStatus = terminalAction ? action.getFullResult() : action.getPartialResult();
+    String expectedPaymentStatus = terminalAction ?
+      action.getFullResult() :
+      action.getPartialResult();
     String expectedAccountStatus = terminalAction ? "Closed" : "Open";
     String requestedAmountString = String.valueOf(requestedAmount);
 
@@ -274,8 +282,8 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .then()
       .body(FEE_FINE_ACTIONS, hasSize(1))
       .body(FEE_FINE_ACTIONS, hasItem(
-        feeFineAction(ACCOUNT_ID, account.getUserId(), expectedAccountBalanceAfter, requestedAmount,
-        expectedPaymentStatus, request.getTransactionInfo(), request))
+        feeFineAction(ACCOUNT_ID, account.getUserId(), expectedAccountBalanceAfter.toDouble(), requestedAmount,
+          expectedPaymentStatus, request.getTransactionInfo(), request))
       );
 
     verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus,
@@ -297,7 +305,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request,
         terminalAction ? action.getFullResult() : action.getPartialResult(),
-        requestedAmount, expectedAccountBalanceAfter)));
+        requestedAmount.toDouble(), expectedAccountBalanceAfter.toDouble())));
   }
 
   private Account createAccount(double amount) {
@@ -312,8 +320,8 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(amount)
-      .withRemaining(amount)
+      .withAmount(new MonetaryValue(amount))
+      .withRemaining(new MonetaryValue(amount))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }
