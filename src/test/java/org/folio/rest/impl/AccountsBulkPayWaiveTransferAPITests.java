@@ -34,6 +34,7 @@ import org.awaitility.Awaitility;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.model.Event;
@@ -65,7 +66,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
   private static final String FIRST_ACCOUNT_ID = randomId();
   private static final String SECOND_ACCOUNT_ID = randomId();
   private static final List<String> FIRST_ACCOUNT_ID_AS_LIST = singletonList(FIRST_ACCOUNT_ID);
-  private static final List<String> TWO_ACCOUNT_IDS = Arrays.asList(FIRST_ACCOUNT_ID, SECOND_ACCOUNT_ID);
+  private static final List<String> TWO_ACCOUNT_IDS = Arrays.asList(FIRST_ACCOUNT_ID,
+    SECOND_ACCOUNT_ID);
 
   private final ResourceClient actionsClient = buildFeeFineActionsClient();
   private final Action action;
@@ -96,7 +98,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
     case TRANSFER:
       return buildAccountBulkTransferClient();
     default:
-      throw new IllegalArgumentException("Failed to get ResourceClient for action: " + action.name());
+      throw new IllegalArgumentException(
+        "Failed to get ResourceClient for action: " + action.name());
     }
   }
 
@@ -150,8 +153,9 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void return422WhenRequestedAmountExceedsRemainingAmount() {
-    postAccount(createAccount(FIRST_ACCOUNT_ID, 1.0));
-    postAccount(createAccount(SECOND_ACCOUNT_ID, 1.0));
+    double amount = 1.0;
+    postAccount(createAccount(FIRST_ACCOUNT_ID, amount));
+    postAccount(createAccount(SECOND_ACCOUNT_ID, amount));
 
     String requestedAmount = "3.0";
 
@@ -167,7 +171,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void return422WhenAccountIsClosed() {
-    return422WhenAccountIsEffectivelyClosed(0.00);
+    return422WhenAccountIsEffectivelyClosed(0.0);
   }
 
   @Test
@@ -176,9 +180,10 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
     return422WhenAccountIsEffectivelyClosed(0.004987654321);
   }
 
-  private void return422WhenAccountIsEffectivelyClosed(double remainingAmount) {
-    Account closedAccount = createAccount(FIRST_ACCOUNT_ID, remainingAmount)
-      .withAmount(remainingAmount + 1)
+  private void return422WhenAccountIsEffectivelyClosed(double remainingAmountDouble) {
+    MonetaryValue remainingAmount = new MonetaryValue(remainingAmountDouble);
+    Account closedAccount = createAccount(FIRST_ACCOUNT_ID, remainingAmount.toDouble())
+      .withAmount(remainingAmount.add(new MonetaryValue(1.0)))
       .withStatus(new Status().withName(FeeFineStatus.CLOSED.getValue()));
 
     postAccount(closedAccount);
@@ -196,14 +201,14 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
   @Test
   public void longDecimalsAreHandledCorrectlyAndAccountIsClosed() {
-    double accountBalanceBeforeAction = 1.004987654321;
-    final Account account = createAccount(FIRST_ACCOUNT_ID, accountBalanceBeforeAction);
+    final Account account = createAccount(FIRST_ACCOUNT_ID, 1.004987654321);
     postAccount(account);
 
     String requestedAmountString = "1.004123456789";
     String expectedPaymentStatus = action.getFullResult();
 
-    DefaultBulkActionRequest request = createRequest(requestedAmountString, FIRST_ACCOUNT_ID_AS_LIST);
+    DefaultBulkActionRequest request = createRequest(requestedAmountString,
+      FIRST_ACCOUNT_ID_AS_LIST);
 
     resourceClient.post(toJson(request))
       .then()
@@ -221,19 +226,21 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, 0.0, "Closed");
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus,
+      MonetaryValue.ZERO, "Closed");
   }
 
   @Test
   public void longDecimalsAreHandledCorrectly() {
-    double accountBalanceBeforeAction = 1.23987654321; // should be rounded to 1.24
-    Account account = createAccount(FIRST_ACCOUNT_ID, accountBalanceBeforeAction);
+    Account account =
+      createAccount(FIRST_ACCOUNT_ID, 1.23987654321); // should be rounded to 1.24
     postAccount(account);
 
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
     String expectedPaymentStatus = action.getPartialResult();
 
-    DefaultBulkActionRequest request = createRequest(requestedAmountString, FIRST_ACCOUNT_ID_AS_LIST);
+    DefaultBulkActionRequest request = createRequest(requestedAmountString,
+      FIRST_ACCOUNT_ID_AS_LIST);
 
     resourceClient.post(toJson(request))
       .then()
@@ -251,26 +258,25 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus, 0.24, "Open");
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, expectedPaymentStatus,
+      new MonetaryValue(0.24), "Open");
   }
 
   @Test
   public void paymentCreatesActionsAndUpdatesAccounts() {
-    double remainingAmount1 = 2.0;
-    double remainingAmount2 = 1.5;
     String requestedAmount = "3.00";
 
-    Account account1 = createAccount(FIRST_ACCOUNT_ID, remainingAmount1);
-    Account account2 = createAccount(SECOND_ACCOUNT_ID, remainingAmount2);
+    Account account1 = createAccount(FIRST_ACCOUNT_ID, 2.0);
+    Account account2 = createAccount(SECOND_ACCOUNT_ID, 1.5);
 
     postAccount(account1);
     postAccount(account2);
 
     DefaultBulkActionRequest request = createRequest(requestedAmount, TWO_ACCOUNT_IDS);
 
-    double expectedActionAmount = 1.5;
-    double expectedRemainingAmount1 = 0.5;
-    double expectedRemainingAmount2 = 0.0;
+    MonetaryValue expectedActionAmount = new MonetaryValue(1.5);
+    MonetaryValue expectedRemainingAmount1 = new MonetaryValue(0.5);
+    MonetaryValue expectedRemainingAmount2 = new MonetaryValue(0.0);
 
     String expectedPaymentStatus1 = action.getPartialResult();
     String expectedPaymentStatus2 = action.getFullResult();
@@ -280,10 +286,10 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
     Matcher<JsonObject> feeFineActionsMatcher = allOf(
       hasItem(
-        feeFineAction(FIRST_ACCOUNT_ID, account1.getUserId(), expectedRemainingAmount1,
+        feeFineAction(FIRST_ACCOUNT_ID, account1.getUserId(), expectedRemainingAmount1.toDouble(),
           expectedActionAmount, expectedPaymentStatus1, request.getTransactionInfo(), request)),
       hasItem(
-        feeFineAction(SECOND_ACCOUNT_ID, account2.getUserId(), expectedRemainingAmount2,
+        feeFineAction(SECOND_ACCOUNT_ID, account2.getUserId(), expectedRemainingAmount2.toDouble(),
           expectedActionAmount, expectedPaymentStatus2, request.getTransactionInfo(), request)));
 
     resourceClient.post(toJson(request))
@@ -309,14 +315,14 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       .put("userId", account1.getUserId())
       .put("feeFineId", account1.getId())
       .put("feeFineTypeId", account1.getFeeFineId())
-      .put("balance", expectedRemainingAmount1)
+      .put("balance", expectedRemainingAmount1.toDouble())
       .put("loanId", account1.getLoanId()));
 
     verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
       .put("userId", account2.getUserId())
       .put("feeFineId", account2.getId())
       .put("feeFineTypeId", account2.getFeeFineId())
-      .put("balance", expectedRemainingAmount2)
+      .put("balance", expectedRemainingAmount2.toDouble())
       .put("loanId", account2.getLoanId()));
 
     verifyThatEventWasSent(EventType.LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
@@ -327,9 +333,9 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
     fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
       is(either(feeFineActionLogEventPayload(account1, request, action.getPartialResult(),
-          expectedActionAmount, expectedRemainingAmount1))
+        expectedActionAmount.toDouble(), expectedRemainingAmount1.toDouble()))
         .or(feeFineActionLogEventPayload(account2, request, action.getFullResult(),
-        expectedActionAmount, expectedRemainingAmount2)))));
+          expectedActionAmount.toDouble(), expectedRemainingAmount2.toDouble())))));
   }
 
   private Account createAccount(String accountId, double amount) {
@@ -344,8 +350,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(amount)
-      .withRemaining(amount)
+      .withAmount(new MonetaryValue(amount))
+      .withRemaining(new MonetaryValue(amount))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }

@@ -14,7 +14,7 @@
     },
     "value":{
       "description": "Not implemented yet",
-      "type":"number"
+      "javaType": "org.folio.rest.domain.MonetaryValue"
     },
     "interval":{
       "description": "Not implemented yet",

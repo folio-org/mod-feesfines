@@ -1,8 +1,8 @@
 package org.folio.rest.service.report;
 
-import static java.math.BigDecimal.ZERO;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.repository.FeeFineActionRepository.ORDER_BY_OWNER_SOURCE_DATE_ASC;
+import static org.folio.rest.service.report.utils.ReportStatsHelper.calculateTotals;
 import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
 
@@ -33,7 +33,8 @@ import io.vertx.core.Future;
 public class CashDrawerReconciliationReportService extends
   DateBasedReportService<CashDrawerReconciliationReport, CashDrawerReconciliationReportParameters> {
 
-  private static final Logger log = LogManager.getLogger(CashDrawerReconciliationReportService.class);
+  private static final Logger log = LogManager.getLogger(
+    CashDrawerReconciliationReportService.class);
 
   private static final int REPORT_ROWS_LIMIT = 1_000_000;
   private static final String EMPTY_VALUE = "-";
@@ -168,9 +169,8 @@ public class CashDrawerReconciliationReportService extends
         .filter(filterByCategory(category, categoryNameFunction))
         .map(Feefineaction::getAmountAction)
         .filter(Objects::nonNull)
-        .map(MonetaryValue::new)
         .reduce(MonetaryValue::add)
-        .orElse(new MonetaryValue(ZERO))
+        .orElse(MonetaryValue.ZERO)
         .toString())
       .withTotalCount(String.valueOf(actions.stream()
         .filter(filterByCategory(category, categoryNameFunction))
@@ -183,9 +183,8 @@ public class CashDrawerReconciliationReportService extends
         .filter(filterByCategories(categories, categoryNameFunction))
         .map(Feefineaction::getAmountAction)
         .filter(Objects::nonNull)
-        .map(MonetaryValue::new)
         .reduce(MonetaryValue::add)
-        .orElse(new MonetaryValue(ZERO))
+        .orElse(MonetaryValue.ZERO)
         .toString())
       .withTotalCount(String.valueOf(actions.stream()
         .filter(filterByCategories(categories, categoryNameFunction))
@@ -204,7 +203,7 @@ public class CashDrawerReconciliationReportService extends
     return action -> categories.contains(categoryNameFunction.apply(action));
   }
 
-  private String formatMonetaryValue(Double value) {
-    return new MonetaryValue(value, currency).toString();
+  private String formatMonetaryValue(MonetaryValue value) {
+    return new MonetaryValue(value.getAmount(), currency).toString();
   }
 }

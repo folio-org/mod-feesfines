@@ -1,5 +1,10 @@
 package org.folio.rest.service.action.validation;
 
+import static org.folio.rest.domain.Action.PAY;
+import static org.folio.rest.domain.Action.REFUND;
+import static org.folio.rest.domain.Action.TRANSFER;
+import static org.folio.rest.utils.FeeFineActionHelper.getTotalAmount;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,25 +31,25 @@ public class RefundActionValidationService extends ActionValidationService {
     // doing nothing as closed fee/fine can also be refunded
   }
 
-  private Future<MonetaryValue> getRefundableAmount(List<Account> accounts) {
+  private Future<MonetaryValue> getRefundableAmountForAccounts(List<Account> accounts) {
     List<String> accountIds = accounts.stream()
       .map(Account::getId)
       .collect(Collectors.toList());
 
-    // Sum of the refundable amounts of all accounts
-    return feeFineActionRepository.findRefundableActionsForAccounts(accountIds)
-      .map(actions -> new MonetaryValue(
-        actions.stream()
-          .mapToDouble(Feefineaction::getAmountAction)
-          .sum()
-      ));
+    return feeFineActionRepository.findActionsForAccounts(accountIds, List.of(PAY, TRANSFER, REFUND))
+      .map(this::getRefundableAmountForFeeFineActions);
+  }
+
+  private MonetaryValue getRefundableAmountForFeeFineActions(List<Feefineaction> feeFineActions) {
+    return getTotalAmount(feeFineActions, List.of(PAY, TRANSFER))
+      .subtract(getTotalAmount(feeFineActions, REFUND));
   }
 
   @Override
   protected Future<Void> validateAmountMaximum(List<Account> accounts,
     MonetaryValue requestedAmount) {
 
-    return getRefundableAmount(accounts)
+    return getRefundableAmountForAccounts(accounts)
       .map(refundableAmount -> {
         if (requestedAmount.isGreaterThan(refundableAmount)) {
           throw new FailedValidationException(
@@ -58,7 +63,7 @@ public class RefundActionValidationService extends ActionValidationService {
   protected Future<MonetaryValue> calculateRemainingBalance(List<Account> accounts,
     MonetaryValue requestedAmount) {
 
-    return getRefundableAmount(accounts)
+    return getRefundableAmountForAccounts(accounts)
       .map(refundableAmount -> refundableAmount.subtract(requestedAmount));
   }
 

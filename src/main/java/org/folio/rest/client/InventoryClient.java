@@ -25,6 +25,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.ServicePoint;
 
 public class InventoryClient extends OkapiClient {
 
@@ -139,4 +140,7 @@ public class InventoryClient extends OkapiClient {
     return getById("/location-units/libraries", id, Library.class);
   }
 
+  public Future<ServicePoint> getServicePointById(String id) {
+    return getById("/service-points", id, ServicePoint.class);
+  }
 }

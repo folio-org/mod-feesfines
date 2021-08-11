@@ -73,12 +73,14 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .log().body()
       .body(FEE_FINE_ACTIONS, hasSize(1))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
-        hasJsonPath("amountAction", is((float) accountToPost.getAmount().doubleValue())),
+        hasJsonPath("amountAction",
+          is((float) accountToPost.getAmount().toDouble())),
         hasJsonPath("balance", is(0.0f)),
         hasJsonPath("typeAction", is("Cancelled as error"))
       )));
 
-    assertThat(fetchLogEventPayloads(getOkapi()).get(0), is(LogEventMatcher.cancelledActionLogEventPayload(accountToPost, cancelActionRequest)));
+    assertThat(fetchLogEventPayloads(getOkapi()).get(0),
+      is(LogEventMatcher.cancelledActionLogEventPayload(accountToPost, cancelActionRequest)));
   }
 
   @Test
@@ -106,7 +108,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .log().body()
       .body(FEE_FINE_ACTIONS, hasSize(1))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
-        hasJsonPath("amountAction", is((float) accountToPost.getAmount().doubleValue())),
+        hasJsonPath("amountAction", is((float) accountToPost.getAmount().toDouble())),
         hasJsonPath("balance", is(0.0f)),
         hasJsonPath("typeAction", is(cancellationReason))
       )));
@@ -158,7 +160,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
     List<Account> accountsToPost = accountIds.stream()
       .map(EntityBuilder::buildAccount)
       .collect(Collectors.toList());
-    accountsToPost.forEach(account -> postAccount(account));
+    accountsToPost.forEach(this::postAccount);
 
     final var cancelActionRequest = createBulkCancelActionRequest(accountIds);
 
@@ -185,21 +187,24 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .body(FEE_FINE_ACTIONS, hasSize(2))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
         hasJsonPath("accountId", is(accountIds.get(0))),
-        hasJsonPath("amountAction", is((float) accountsToPost.get(0).getAmount().doubleValue())),
+        hasJsonPath("amountAction", is(
+          (float) accountsToPost.get(0).getAmount().toDouble())),
         hasJsonPath("balance", is(0.0f)),
         hasJsonPath("typeAction", is("Cancelled as error"))
       )))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
         hasJsonPath("accountId", is(accountIds.get(1))),
-        hasJsonPath("amountAction", is((float) accountsToPost.get(1).getAmount().doubleValue())),
+        hasJsonPath("amountAction", is(accountsToPost.get(1).getAmount().getAmount().floatValue())),
         hasJsonPath("balance", is(0.0f)),
         hasJsonPath("typeAction", is("Cancelled as error"))
         )
       ));
 
     fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
-      is(either(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(0), cancelActionRequest))
-          .or(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(1), cancelActionRequest)))));
+      is(either(
+        LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(0), cancelActionRequest))
+        .or(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(1),
+          cancelActionRequest)))));
   }
 
   private CancelActionRequest createCancelActionRequest() {

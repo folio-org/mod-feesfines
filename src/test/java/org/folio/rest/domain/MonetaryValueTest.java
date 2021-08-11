@@ -108,4 +108,58 @@ public class MonetaryValueTest {
     assertEquals(expectedResult, new MonetaryValue(source).toString());
   }
 
+  @Test
+  public void fromDouble() {
+    MonetaryValue a = new MonetaryValue(1.11123d);
+    a.add(MonetaryValue.ZERO);
+  }
+
+  @Test
+  @Parameters({
+    "0, 0.0",
+    "0.0, 0.0",
+    "0.00, 0.0",
+    "0.000, 0.0",
+
+    "-0, 0.0",
+    "-0.0, 0.0",
+    "-0.00, 0.0",
+    "-0.000, 0.0",
+
+    "1, 1.0",
+    "0.1, 0.1",
+    "0.01, 0.01",
+    "0.001, 0.001",
+
+    "-1, -1.0",
+    "-0.1, -0.1",
+    "-0.01, -0.01",
+    "-0.001, -0.001",
+
+    "0.005, 0.005",
+    "0.0051, 0.0051",
+    "0.0050000000001, 0.0050000000001",
+
+    "-0.005, -0.005",
+    "-0.0051, -0.0051",
+    "-0.0050000000001, -0.0050000000001",
+
+    "0.015, 0.015",
+    "0.0149, 0.0149",
+    "0.0150000000001, 0.0150000000001",
+
+    "-0.015, -0.015",
+    "-0.0149, -0.0149",
+    "-0.0150000000001, -0.0150000000001",
+
+    "10, 10.0",
+    "10.0, 10.0",
+    "10.00, 10.0",
+    "100, 100.0",
+    "100.0, 100.0",
+    "100.00, 100.0",
+  })
+  public void toStringOriginalAmount(String source, String expectedResult) {
+    assertEquals(expectedResult, new MonetaryValue(source).toStringOriginalAmount());
+  }
 }

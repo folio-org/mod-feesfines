@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.domain.FeeFineNoticeContext;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Campus;
 import org.folio.rest.jaxrs.model.Context;
@@ -153,8 +155,8 @@ public class PatronNoticeBuilderTest {
   @Test
   public void useFallbackValuesFromAccountForItemContext() {
     final Account account = new Account()
-      .withAmount(10.0)
-      .withRemaining(4.56)
+      .withAmount(new MonetaryValue(10.0))
+      .withRemaining(new MonetaryValue(4.56))
       .withBarcode("Account-level barcode")
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
@@ -231,8 +233,8 @@ public class PatronNoticeBuilderTest {
     return new Feefineaction()
       .withTypeAction("Paid partially")
       .withDateAction(new Date())
-      .withAmountAction(4.45)
-      .withBalance(8.55)
+      .withAmountAction(new MonetaryValue(4.45))
+      .withBalance(new MonetaryValue(8.55))
       .withPaymentMethod("Cash")
       .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
   }
@@ -241,8 +243,8 @@ public class PatronNoticeBuilderTest {
     return new Feefineaction()
       .withTypeAction("Book lost")
       .withDateAction(new Date())
-      .withAmountAction(Double.valueOf(ACTION_AMOUNT))
-      .withBalance(Double.valueOf(ACCOUNT_REMAINING))
+      .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
+      .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
       .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
   }
 
@@ -270,8 +272,8 @@ public class PatronNoticeBuilderTest {
       .withFeeFineOwner("Owner")
       .withFeeFineType("Fine type")
       .withMaterialType("book")
-      .withAmount(Double.valueOf(ACCOUNT_AMOUNT))
-      .withRemaining(Double.valueOf(ACCOUNT_REMAINING))
+      .withAmount(new MonetaryValue(new BigDecimal(ACCOUNT_AMOUNT)))
+      .withRemaining(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
       .withMetadata(new Metadata().withCreatedDate(new Date()));
   }
 

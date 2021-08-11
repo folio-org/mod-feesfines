@@ -9,9 +9,11 @@ import static org.folio.rest.domain.Action.TRANSFER;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.folio.rest.domain.Action;
@@ -109,16 +111,28 @@ public class FeeFineActionRepository {
   }
 
   public Future<List<Feefineaction>> findRefundableActionsForAccounts(Collection<String> accountIds) {
-    if (accountIds == null || accountIds.isEmpty()) {
-      return failedFuture(new IllegalArgumentException("List of account IDs is empty or null"));
+    return findActionsForAccounts(accountIds, List.of(PAY, TRANSFER));
+  }
+
+  public Future<List<Feefineaction>> findActionsForAccounts(Collection<String> accountIds,
+    Collection<Action> actions) {
+
+    if (accountIds == null || accountIds.isEmpty() || actions == null || actions.isEmpty()) {
+      return failedFuture(
+        new IllegalArgumentException("List of account IDs or actions is empty or null"));
     }
+
+    List<String> actionResults = actions.stream()
+      .map(action -> List.of(action.getPartialResult(), action.getFullResult()))
+      .flatMap(Collection::stream)
+      .filter(Objects::nonNull)
+      .collect(toList());
 
     GroupedCriterias accountIdsCriterias = buildGroupedCriterias(
       buildEqualsCriteriaList(ACCOUNT_ID_FIELD, accountIds), "OR");
 
     GroupedCriterias typeCriterias = buildGroupedCriterias(
-      buildEqualsCriteriaList(TYPE_FIELD, List.of(PAY.getPartialResult(), PAY.getFullResult(),
-        TRANSFER.getPartialResult(), TRANSFER.getFullResult())), "OR");
+      buildEqualsCriteriaList(TYPE_FIELD, actionResults), "OR");
 
     Criterion criterion = new Criterion()
       .addGroupOfCriterias(typeCriterias)
@@ -151,15 +165,24 @@ public class FeeFineActionRepository {
   }
 
   public Future<Map<Feefineaction, Account>> findFeeFineActionsAndAccounts(
-    Action typeAction, String startDate, String endDate, List<String> ownerIds, String createdAt,
+    Action actionType, String startDate, String endDate, List<String> ownerIds, String createdAt,
     List<String> sources, String orderBy, int limit) {
+
+    List<String> paymentActionTypes = List.of(actionType.getFullResult(),
+      actionType.getPartialResult());
+
+    return findFeeFineActionsAndAccounts(paymentActionTypes, startDate, endDate,
+      ownerIds, Collections.singletonList(createdAt), sources, orderBy, limit);
+  }
+
+  public Future<Map<Feefineaction, Account>> findFeeFineActionsAndAccounts(
+    List<String> actionTypes, String startDate, String endDate, List<String> ownerIds,
+    List<String> createdAt, List<String> sources, String orderBy, int limit) {
 
     Tuple params = Tuple.of(limit);
     List<String> conditions = new ArrayList<>();
 
-    params.addString(typeAction.getFullResult());
-    params.addString(typeAction.getPartialResult());
-    conditions.add(format("%s.jsonb->>'%s' IN ($2, $3)", ACTIONS_TABLE_ALIAS, TYPE_FIELD));
+    addFilterByListToConditions(conditions, ACTIONS_TABLE_ALIAS, TYPE_FIELD, actionTypes);
 
     if (startDate != null) {
       params.addString(startDate);
@@ -171,12 +194,8 @@ public class FeeFineActionRepository {
       conditions.add(format("%s.jsonb->>'%s' < $%d", ACTIONS_TABLE_ALIAS, DATE_FIELD,
         params.size()));
     }
-    if (createdAt != null) {
-      params.addString(createdAt);
-      conditions.add(format("%s.jsonb->>'%s' = $%d", ACTIONS_TABLE_ALIAS, CREATED_AT_FIELD,
-        params.size()));
-    }
 
+    addFilterByListToConditions(conditions, ACTIONS_TABLE_ALIAS, CREATED_AT_FIELD, createdAt);
     addFilterByListToConditions(conditions, ACCOUNTS_TABLE_ALIAS, OWNER_ID_FIELD, ownerIds);
     addFilterByListToConditions(conditions, ACTIONS_TABLE_ALIAS, SOURCE_FIELD, sources);
 
@@ -227,12 +246,13 @@ public class FeeFineActionRepository {
   private void addFilterByListToConditions(List<String> conditions, String tableName,
     String fieldName, List<String> valueList) {
 
-    if (valueList == null || valueList.isEmpty()) {
+    if (valueList == null || valueList.isEmpty() || valueList.stream().allMatch(Objects::isNull)) {
       return;
     }
 
     conditions.add(format("%s.jsonb->>'%s' IN (%s)", tableName, fieldName,
       valueList.stream()
+        .filter(Objects::nonNull)
         .map(value -> format("'%s'", value))
         .collect(Collectors.joining(", "))));
   }

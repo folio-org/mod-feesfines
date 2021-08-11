@@ -14,6 +14,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
@@ -119,5 +120,10 @@ public class ManualBlocksAPITests extends ApiTests {
 
     assertThat(payloadType.value(), equalTo(eventPayload.getString(LOG_EVENT_TYPE)));
     assertTrue(EqualsBuilder.reflectionEquals(manualBlockActual, manualBlockExpected, Collections.singletonList("metadata")));
+
+    // special case for x-okapi-user-id header
+    if (payloadType == MANUAL_BLOCK_DELETED) {
+      assertNotNull(manualBlockActual.getMetadata().getUpdatedByUserId());
+    }
   }
 }

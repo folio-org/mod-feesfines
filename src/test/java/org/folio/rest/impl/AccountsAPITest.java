@@ -18,6 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertEquals;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
@@ -83,8 +85,7 @@ public class AccountsAPITest extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON);
-
-    Account accountToPut = accountToPost.withRemaining(4.55);
+    Account accountToPut = accountToPost.withRemaining(new MonetaryValue(4.55));
 
     // put account
     accountsClient.update(accountId, accountToPut)
@@ -100,7 +101,7 @@ public class AccountsAPITest extends ApiTests {
 
     Account accountToDelete = new Account()
       .withId(accountId)
-      .withRemaining(0.00);
+      .withRemaining(new MonetaryValue(new BigDecimal("0.00")));
 
     assertBalanceChangedEventPublished(accountToDelete);
   }
@@ -196,6 +197,7 @@ public class AccountsAPITest extends ApiTests {
   @Test
   public void eventNotPublishedWhenFeeFineIsClosedWithoutLoan() {
     final String accountId = randomId();
+
     final JsonObject account = createAccountJsonObject(accountId)
       .put("remaining", 90.00)
       .put("status", createNamedObject("Open"));
@@ -240,6 +242,7 @@ public class AccountsAPITest extends ApiTests {
 
   @Test
   public void canForwardPubSubFailureOnFeeFineClose() {
+    final MonetaryValue remaining = new MonetaryValue(0.0);
     final String expectedError = "Pub-sub unavailable";
     getOkapi().stubFor(WireMock.post(urlPathEqualTo("/pubsub/publish"))
       .willReturn(aResponse().withStatus(500).withBody(expectedError)));
@@ -255,7 +258,7 @@ public class AccountsAPITest extends ApiTests {
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
       .put("paymentStatus", createNamedObject("Paid fully"))
-      .put("remaining", 0.0);
+      .put("remaining", remaining.toDouble());
 
     accountsClient.attemptUpdate(accountId, updatedAccount)
       .then()
@@ -315,8 +318,8 @@ public class AccountsAPITest extends ApiTests {
       .withFeeFineId(randomId())
       .withFeeFineType("book lost")
       .withFeeFineOwner("owner")
-      .withAmount(7.77)
-      .withRemaining(3.33)
+      .withAmount(new MonetaryValue(new BigDecimal("7.77")))
+      .withRemaining(new MonetaryValue(new BigDecimal("3.33")))
       .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
       .withStatus(new Status().withName("Open"));
   }
@@ -374,7 +377,8 @@ public class AccountsAPITest extends ApiTests {
     EventMetadata eventMetadata = event.getEventMetadata();
 
     assertEquals(EventType.FEE_FINE_BALANCE_CHANGED.name(), event.getEventType());
-    assertThat(eventMetadata.getPublishedBy(), matchesPattern("mod-feesfines-[0-9]+\\.[0-9]+\\.[0-9]+"));
+    assertThat(eventMetadata.getPublishedBy(),
+      matchesPattern("mod-feesfines-[0-9]+\\.[0-9]+\\.[0-9]+"));
     assertEquals(TENANT_NAME, eventMetadata.getTenantId());
     assertEquals(1, eventMetadata.getEventTTL().intValue());
 
@@ -383,7 +387,7 @@ public class AccountsAPITest extends ApiTests {
     assertThat(eventPayload.getString("userId"), is(account.getUserId()));
     assertThat(eventPayload.getString("feeFineId"), is(account.getId()));
     assertThat(eventPayload.getString("feeFineTypeId"), is(account.getFeeFineId()));
-    assertThat(eventPayload.getDouble("balance"), is(account.getRemaining()));
+    assertThat(eventPayload.getDouble("balance"), is(account.getRemaining().toDouble()));
     assertThat(eventPayload.getString("loanId"), is(account.getLoanId()));
   }
 }
