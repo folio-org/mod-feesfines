@@ -21,7 +21,7 @@ public class JsonHelper {
   }
 
   public static void write(JsonObject target, String property, MonetaryValue value) {
-    if (value != null) {
+    if (value != null && value.getAmount() != null) {
       target.put(property, value.toDouble());
     }
   }

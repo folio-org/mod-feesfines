@@ -122,7 +122,7 @@ public class MonetaryValue {
     return amount.toString();
   }
 
-  public String toStringOriginalAmount() {
+  String toStringOriginalAmount() {
     BigDecimal strippedTrailingZerosAmount = originalAmount.stripTrailingZeros();
 
     if (strippedTrailingZerosAmount.scale() <= 0) {

@@ -915,7 +915,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
   private void verifyThatEventWasSent(EventType eventType, JsonObject eventPayload) {
     Event event = new Event()
       .withEventType(eventType.name())
-      .withEventPayload(eventPayload.toString())
+      .withEventPayload(eventPayload.encode())
       .withEventMetadata(new EventMetadata()
         .withPublishedBy(PomUtils.getModuleId())
         .withTenantId(TENANT_NAME)
