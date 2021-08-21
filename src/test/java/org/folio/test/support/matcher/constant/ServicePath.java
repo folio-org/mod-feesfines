@@ -15,6 +15,11 @@ public class ServicePath {
   public static final String USERS_PATH = "/users";
   public static final String USERS_GROUPS_PATH = "/groups";
   public static final String CONFIGURATION_ENTRIES = "/configurations/entries";
+  public static final String LOAN_POLICIES_PATH = "/loan-policy-storage/loan-policies";
+  public static final String LOST_ITEM_FEE_POLICIES_PATH = "/lost-item-fees-policies";
+  public static final String OVERDUE_FINE_POLICIES_PATH = "/overdue-fines-policies";
+  public static final String LOANS_PATH = "/loan-storage/loans";
+  public static final String SERVICE_POINTS_PATH = "/service-points";
 
   private ServicePath() {
     throw new UnsupportedOperationException("Do not instantiate");

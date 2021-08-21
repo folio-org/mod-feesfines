@@ -2,9 +2,11 @@ package org.folio.rest.utils;
 
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 
-import io.vertx.core.json.JsonObject;
+import org.folio.rest.domain.MonetaryValue;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
+
+import io.vertx.core.json.JsonObject;
 
 public class JsonHelper {
 
@@ -18,8 +20,14 @@ public class JsonHelper {
     }
   }
 
+  public static void write(JsonObject target, String property, MonetaryValue value) {
+    if (value != null && value.getAmount() != null) {
+      target.put(property, value.toDouble());
+    }
+  }
+
   public static void write(JsonObject target, String property, JsonObject value) {
-    if(value != null) {
+    if (value != null) {
       target.put(property, value);
     }
   }
@@ -31,13 +39,13 @@ public class JsonHelper {
   }
 
   public static void write(JsonObject to, String propertyName, DateTime value) {
-    if(value != null) {
+    if (value != null) {
       write(to, propertyName, value.toString(ISODateTimeFormat.dateTime()));
     }
   }
 
   public static void write(JsonObject to, String propertyName, Boolean value) {
-    if(value != null) {
+    if (value != null) {
       to.put(propertyName, value);
     }
   }

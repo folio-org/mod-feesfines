@@ -7,6 +7,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 
 import java.util.Arrays;
 
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -15,10 +16,11 @@ import org.hamcrest.Matcher;
 import io.vertx.core.json.JsonObject;
 
 public class FeeFineActionMatchers {
-  private FeeFineActionMatchers(){}
+  private FeeFineActionMatchers() {
+  }
 
   public static Matcher<JsonObject> feeFineAction(String accountId, String userId, double balance,
-    double amount, String actionType, String transactionInfo, DefaultActionRequest request) {
+    MonetaryValue amount, String actionType, String transactionInfo, DefaultActionRequest request) {
 
     return feeFineAction(accountId, userId, balance, amount, actionType, transactionInfo,
       request.getUserName(), request.getComments(), request.getNotifyPatron(),
@@ -26,7 +28,8 @@ public class FeeFineActionMatchers {
   }
 
   public static Matcher<JsonObject> feeFineAction(String accountId, String userId, double balance,
-    double amount, String actionType, String transactionInfo, DefaultBulkActionRequest request) {
+    MonetaryValue amount, String actionType, String transactionInfo,
+    DefaultBulkActionRequest request) {
 
     return feeFineAction(accountId, userId, balance, amount, actionType, transactionInfo,
       request.getUserName(), request.getComments(), request.getNotifyPatron(),
@@ -34,12 +37,12 @@ public class FeeFineActionMatchers {
   }
 
   public static Matcher<JsonObject> feeFineAction(String accountId, String userId, double balance,
-    double amount, String actionType, String transactionInfo, String userName, String comments,
-    boolean notifyPatron, String createdAt, String paymentMethod) {
+    MonetaryValue amount, String actionType, String transactionInfo, String userName,
+    String comments, boolean notifyPatron, String createdAt, String paymentMethod) {
 
     return allOf(Arrays.asList(
       hasJsonPath("typeAction", is(actionType)),
-      hasJsonPath("amountAction", is((float) amount)),
+      hasJsonPath("amountAction", is((float) amount.toDouble())),
       hasJsonPath("balance", is((float) balance)),
       hasJsonPath("transactionInformation", is(transactionInfo)),
       hasJsonPath("accountId", is(accountId)),
@@ -57,8 +60,8 @@ public class FeeFineActionMatchers {
   public static Matcher<JsonObject> feeFineAction(Feefineaction feefineaction) {
     return allOf(Arrays.asList(
       hasJsonPath("typeAction", is(feefineaction.getTypeAction())),
-      hasJsonPath("amountAction", is(feefineaction.getAmountAction().floatValue())),
-      hasJsonPath("balance", is(feefineaction.getBalance().floatValue())),
+      hasJsonPath("amountAction", is((float) feefineaction.getAmountAction().toDouble())),
+      hasJsonPath("balance", is((float) feefineaction.getBalance().toDouble())),
       hasJsonPath("accountId", is(feefineaction.getAccountId())),
       hasJsonPath("userId", is(feefineaction.getUserId())),
       hasJsonPath("id", notNullValue(String.class)),
