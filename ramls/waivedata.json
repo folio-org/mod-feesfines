@@ -19,11 +19,11 @@
     },
     "accountId": {
       "description": "ID of the User fine/fee account",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "id": {
       "description": "Waive reason id, UUID",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     }
   },
   "additionalProperties": false,
