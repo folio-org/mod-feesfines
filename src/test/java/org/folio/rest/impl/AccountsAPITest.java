@@ -52,9 +52,6 @@ public class AccountsAPITest extends ApiTests {
 
   @Before
   public void setUp() {
-    getOkapi().stubFor(WireMock.get(WireMock.urlPathMatching("/inventory/items.*"))
-      .willReturn(aResponse().withBodyFile("items.json")));
-
     getOkapi().stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
       .willReturn(aResponse().withBodyFile("holdings.json")));
 
