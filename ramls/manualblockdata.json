@@ -43,7 +43,7 @@
     },
     "userId": {
       "description": "ID of the user",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "metadata" : {
       "description": "Metadata about creation to patron block, provided by the server",
@@ -52,7 +52,7 @@
     },
     "id": {
       "description": "Patron block id, UUID",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     }
   },
   "additionalProperties": false,
