@@ -20,7 +20,7 @@
         "properties": {
           "value": {
             "description": "ID of the service-point",
-            "type": "string"
+            "$ref": "raml-util/schemas/uuid.schema"
           },
           "label": {
             "description": "Service-point name label",
@@ -34,11 +34,11 @@
     },
     "defaultChargeNoticeId": {
       "description": "ID of the fee/fine charge template",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "defaultActionNoticeId": {
       "description": "ID of the fee/fine action template",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
     },
     "metadata" : {
       "description": "Metadata about creation to owner, provided by the server",
@@ -47,7 +47,7 @@
     },
     "id": {
       "description": "Owner id, UUID",
-      "type": "string"
+      "$ref": "raml-util/schemas/uuid.schema"
      }
     },
   "additionalProperties": false
