@@ -38,10 +38,12 @@ import static org.folio.test.support.matcher.constant.ServicePath.ITEMS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LIBRARIES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LOCATIONS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.OWNERS_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.PATRON_NOTICE_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 import java.math.BigDecimal;
@@ -72,6 +74,7 @@ import org.folio.rest.service.LogEventPublisher.LogEventPayloadType;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.test.support.matcher.constant.ServicePath;
+import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -221,6 +224,26 @@ public class FeeFineActionsAPITest extends ApiTests {
     assertThatNoticeErrorEventWasPublished(charge, expectedErrorMessage);
 
     verifySentNoticesCount(1);
+  }
+
+  @Test
+  public void noticeIsSentWithTemplateFromOwnerWhenItIsNotSetInFeeFineType() {
+    deleteEntity(FEEFINES_PATH, feefine.getId());
+    createEntity(FEEFINES_PATH, feefine.withActionNoticeId(null).withChargeNoticeId(null));
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 1);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 0);
+    verifySentNoticesCount(1);
+
+    List<LoggedRequest> sentNotices = getSentNotices();
+    assertThat(sentNotices, hasSize(1));
+
+    String templateId = new JsonObject(sentNotices.get(0).getBodyAsString())
+      .getString("templateId");
+
+    assertThat(templateId, is(owner.getDefaultChargeNoticeId()));
   }
 
   @Test
@@ -754,11 +777,13 @@ public class FeeFineActionsAPITest extends ApiTests {
   }
 
   private static void verifySentNoticesCount(int expectedEventCount) {
-    List<LoggedRequest> patronNoticeRequests = okapiDeployment
-      .findRequestsMatching(postRequestedFor(urlPathMatching("/patron-notice")).build())
-      .getRequests();
+    assertThat(getSentNotices(), hasSize(expectedEventCount));
+  }
 
-    assertThat(patronNoticeRequests, hasSize(expectedEventCount));
+  private static List<LoggedRequest> getSentNotices() {
+    return okapiDeployment
+      .findRequestsMatching(postRequestedFor(urlPathMatching(PATRON_NOTICE_PATH)).build())
+      .getRequests();
   }
 
   private static String buildNotFoundErrorMessage(String objectType, String id) {

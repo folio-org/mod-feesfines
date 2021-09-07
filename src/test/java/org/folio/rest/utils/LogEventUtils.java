@@ -23,8 +23,7 @@ public class LogEventUtils {
     return okapiDeployment
       .findRequestsMatching(postRequestedFor(urlPathMatching("/pubsub/publish")).build())
       .getRequests().stream()
-      .map(LoggedRequest::getBody)
-      .map(String::new)
+      .map(LoggedRequest::getBodyAsString)
       .map(JsonObject::new)
       .filter(json -> "LOG_RECORD".equals(json.getString("eventType")))
       .collect(toList());
