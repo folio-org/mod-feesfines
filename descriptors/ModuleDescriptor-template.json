@@ -7,20 +7,16 @@
       "version": "1.0"
     },
     {
-      "id": "inventory",
-      "version": "10.2"
-    },
-    {
       "id": "holdings-storage",
-      "version": "4.2"
+      "version": "4.2 5.0"
     },
     {
       "id": "item-storage",
-      "version": "8.4"
+      "version": "8.4 9.0"
     },
     {
       "id": "instance-storage",
-      "version": "7.4"
+      "version": "7.4 8.0"
     },
     {
       "id": "locations",
