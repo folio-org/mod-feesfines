@@ -229,8 +229,7 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   @Test
   public void noticeIsSentWithTemplateFromOwnerWhenItIsNotSetInFeeFineType() {
-    deleteEntity(FEEFINES_PATH, feefine.getId());
-    createEntity(FEEFINES_PATH, feefine.withActionNoticeId(null).withChargeNoticeId(null));
+    replaceEntity(FEEFINES_PATH, feefine.withActionNoticeId(null).withChargeNoticeId(null));
 
     postAction(charge);
 
@@ -245,6 +244,18 @@ public class FeeFineActionsAPITest extends ApiTests {
       .getString("templateId");
 
     assertThat(templateId, is(owner.getDefaultChargeNoticeId()));
+  }
+
+  @Test
+  public void noticeIsNotSentWhenTemplateIsNotSet() {
+    replaceEntity(FEEFINES_PATH, feefine.withActionNoticeId(null).withChargeNoticeId(null));
+    replaceEntity(OWNERS_PATH, owner.withDefaultActionNoticeId(null).withDefaultChargeNoticeId(null));
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 0);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 0);
+    verifyPatronNoticeRequestCount(0);
   }
 
   @Test
@@ -265,13 +276,11 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   @Test
   public void itemAndRelatedRecordsAreNotFetchedWhenAccountIsNotLinkedToItem() {
-    deleteEntity(ACCOUNTS_PATH, account.getId());
-
     account.withHoldingsRecordId(null)
       .withInstanceId(null)
       .withItemId(null);
 
-    createEntity(ACCOUNTS_PATH, account);
+    replaceEntity(ACCOUNTS_PATH, account);
 
     postAction(charge);
 
@@ -290,33 +299,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   @Test
   public void postActionWithPatronNotice() {
-    final Library library = buildLibrary();
-    final Campus campus = buildCampus();
-    final Institution institution = buildInstitution();
-    final Location location = buildLocation(library, campus, institution);
-    final Instance instance = buildInstance();
-    final HoldingsRecord holdingsRecord = buildHoldingsRecord(instance);
-    final Item item = buildItem(holdingsRecord, location);
-    final User user = buildUser();
-    final Owner owner = createOwner();
-    final Feefine feefine = createFeeFine(owner);
-    final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
-    final Feefineaction charge = createCharge(user, account, true);
-    final Feefineaction action = createAction(user, account, true);
-
-    createEntity(OWNERS_PATH, owner);
-    createEntity(FEEFINES_PATH, feefine);
-    createEntity(ACCOUNTS_PATH, account);
-
-    createStub(USERS_PATH, user, user.getId());
-    createStub(ITEMS_PATH, item, item.getId());
-    createStub(LOCATIONS_PATH, location, location.getId());
-    createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
-    createStub(INSTANCES_PATH, instance, instance.getId());
-    createStub(LIBRARIES_PATH, library, getIdFromProperties(library.getAdditionalProperties()));
-    createStub(CAMPUSES_PATH, campus, getIdFromProperties(campus.getAdditionalProperties()));
-    createStub(INSTITUTIONS_PATH, institution, getIdFromProperties(institution.getAdditionalProperties()));
-
     postAction(charge);
 
     final String accountCreationDate = getAccountCreationDate(account);
@@ -545,17 +527,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   @Test
   public void deleteFeeFineActionByIdOnlyDeletesOneAction() {
-    final Library library = buildLibrary();
-    final Campus campus = buildCampus();
-    final Institution institution = buildInstitution();
-    final Location location = buildLocation(library, campus, institution);
-    final Instance instance = buildInstance();
-    final HoldingsRecord holdingsRecord = buildHoldingsRecord(instance);
-    final Item item = buildItem(holdingsRecord, location);
-    final User user = buildUser();
-    final Owner owner = createOwner();
-    final Feefine feefine = createFeeFine(owner);
-    final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
     final Feefineaction charge = createCharge(user, account, true);
     final Feefineaction firstAction = createAction(user, account, true);
     final Feefineaction secondAction = createAction(user, account, true);
