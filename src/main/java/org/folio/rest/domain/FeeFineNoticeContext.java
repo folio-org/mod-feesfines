@@ -1,6 +1,10 @@
 package org.folio.rest.domain;
 
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static java.util.Optional.ofNullable;
+import static java.util.function.Predicate.not;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
@@ -34,7 +38,9 @@ public class FeeFineNoticeContext {
   private Instance instance;
   private HoldingsRecord holdingsRecord;
   private Location effectiveLocation;
+
   private JsonObject logEventPayload;
+  private List<Throwable> errors = new ArrayList<>();
 
   public String getTemplateId() {
     if (action != null) {
@@ -53,11 +59,21 @@ public class FeeFineNoticeContext {
   }
 
   private String getChargeNoticeTemplateId() {
-    return defaultIfBlank(feefine.getChargeNoticeId(), owner.getDefaultChargeNoticeId());
+    return ofNullable(feefine)
+      .map(Feefine::getChargeNoticeId)
+      .filter(not(String::isEmpty))
+      .orElseGet(() -> ofNullable(owner)
+        .map(Owner::getDefaultChargeNoticeId)
+        .orElse(null));
   }
 
   private String getActionNoticeTemplateId() {
-    return defaultIfBlank(feefine.getActionNoticeId(), owner.getDefaultActionNoticeId());
+    return ofNullable(feefine)
+      .map(Feefine::getActionNoticeId)
+      .filter(not(String::isEmpty))
+      .orElseGet(() -> ofNullable(owner)
+        .map(Owner::getDefaultActionNoticeId)
+        .orElse(null));
   }
 
   public String getUserId() {

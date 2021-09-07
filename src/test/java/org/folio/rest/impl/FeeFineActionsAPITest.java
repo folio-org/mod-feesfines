@@ -2,13 +2,18 @@ package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
+import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE_ERROR;
+import static org.folio.rest.utils.LogEventUtils.fetchFirstLogRecordEventPayload;
 import static org.folio.rest.utils.LogEventUtils.fetchPublishedLogRecords;
 import static org.folio.test.support.EntityBuilder.buildCampus;
 import static org.folio.test.support.EntityBuilder.buildHoldingsRecord;
@@ -18,16 +23,21 @@ import static org.folio.test.support.EntityBuilder.buildItem;
 import static org.folio.test.support.EntityBuilder.buildLibrary;
 import static org.folio.test.support.EntityBuilder.buildLocation;
 import static org.folio.test.support.EntityBuilder.buildUser;
+import static org.folio.test.support.matcher.LogEventMatcher.noticeErrorLogRecord;
 import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.FEEFINES_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.FEE_FINE_ACTIONS_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.OWNERS_TABLE;
+import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.CAMPUSES_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.FEEFINES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTITUTIONS_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.ITEMS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LIBRARIES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LOCATIONS_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.OWNERS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
@@ -37,6 +47,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +68,7 @@ import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.User;
-import org.folio.rest.service.LogEventPublisher;
+import org.folio.rest.service.LogEventPublisher.LogEventPayloadType;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.test.support.matcher.constant.ServicePath;
@@ -67,6 +78,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -87,12 +100,152 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static final String ACCOUNT_REMAINING = "5.67";
   private static final String ACTION_AMOUNT = "6.67";
 
+  private Feefineaction action;
+  private Feefineaction charge;
+  private Account account;
+  private Feefine feefine;
+  private Owner owner;
+  private User user;
+  private Item item;
+  private Instance instance;
+  private HoldingsRecord holdingsRecord;
+  private Location location;
+  private Institution institution;
+  private Campus campus;
+  private Library library;
+
+  private StubMapping userStub;
+  private StubMapping itemStub;
+  private StubMapping instanceStub;
+  private StubMapping holdingsStub;
+  private StubMapping locationStub;
+  private StubMapping institutionStub;
+  private StubMapping campusStub;
+  private StubMapping libraryStub;
+
   @Before
   public void setUp() {
     removeAllFromTable(FEEFINES_TABLE);
     removeAllFromTable(ACCOUNTS_TABLE);
     removeAllFromTable(FEE_FINE_ACTIONS_TABLE);
     removeAllFromTable(OWNERS_TABLE);
+
+    getOkapi().stubFor(WireMock.post(urlPathMatching("/patron-notice"))
+      .willReturn(aResponse().withStatus(200)));
+
+    initEntitiesAndStubs();
+  }
+
+  private void initEntitiesAndStubs() {
+    institution = buildInstitution();
+    campus = buildCampus();
+    library = buildLibrary();
+    location = buildLocation(library, campus, institution);
+    instance = buildInstance();
+    holdingsRecord = buildHoldingsRecord(instance);
+    item = buildItem(holdingsRecord, location);
+    user = buildUser();
+    owner = createOwner();
+    feefine = createFeeFine(owner);
+    account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
+    action = createAction(user, account, true);
+    charge = createCharge(user, account, true);
+
+    createEntity(OWNERS_PATH, owner);
+    createEntity(FEEFINES_PATH, feefine);
+    createEntity(ACCOUNTS_PATH, account);
+
+    userStub = createStub(USERS_PATH, user, user.getId());
+    itemStub = createStub(ITEMS_PATH, item, item.getId());
+    instanceStub = createStub(INSTANCES_PATH, instance, instance.getId());
+    holdingsStub = createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
+    locationStub = createStub(LOCATIONS_PATH, location, location.getId());
+    institutionStub = createStub(INSTITUTIONS_PATH, institution, getIdFromProperties(institution.getAdditionalProperties()));
+    campusStub = createStub(CAMPUSES_PATH, campus, getIdFromProperties(campus.getAdditionalProperties()));
+    libraryStub = createStub(LIBRARIES_PATH, library, getIdFromProperties(library.getAdditionalProperties()));
+  }
+
+  @Test
+  public void noticeIsNotSentWhenAccountDoesNotExist() {
+    deleteEntity(ACCOUNTS_PATH, account.getId());
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 0);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
+
+    assertThatNoticeErrorEventWasPublished(charge,
+      buildNotFoundErrorMessage("Account", charge.getAccountId()));
+
+    verifySentNoticesCount(0);
+  }
+
+  @Test
+  public void noticeIsNotSentWhenFeeFineDoesNotExist() {
+    deleteEntity(FEEFINES_PATH, feefine.getId());
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 0);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
+
+    assertThatNoticeErrorEventWasPublished(charge,
+      buildNotFoundErrorMessage("Feefine", feefine.getId()));
+
+    verifySentNoticesCount(0);
+  }
+
+  @Test
+  public void noticeIsSentWhenFailedToFetchNonEssentialData() {
+    removeStub(userStub);
+    removeStub(itemStub);
+    removeStub(instanceStub);
+    removeStub(holdingsStub);
+    removeStub(locationStub);
+    removeStub(institutionStub);
+    removeStub(campusStub);
+    removeStub(libraryStub);
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 1);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
+
+    String expectedErrorMessage = "Following errors may result in missing token values: " +
+      "\"" + buildNotFoundErrorMessage("User", user.getId()) + "\", " +
+      "\"" + buildNotFoundErrorMessage("Item", item.getId()) + "\", " +
+      "\"" + buildNotFoundErrorMessage("HoldingsRecord", holdingsRecord.getId()) + "\", " +
+      "\"" + buildNotFoundErrorMessage("Instance", instance.getId()) + "\", " +
+      "\"Invalid Location ID: null\"";
+
+    assertThatNoticeErrorEventWasPublished(charge, expectedErrorMessage);
+
+    verifySentNoticesCount(1);
+  }
+
+  @Test
+  public void itemAndRelatedRecordsAreNotFetchedWhenAccountIsNotLinkedToItem() {
+    deleteEntity(ACCOUNTS_PATH, account.getId());
+
+    account.withHoldingsRecordId(null)
+      .withInstanceId(null)
+      .withItemId(null);
+
+    createEntity(ACCOUNTS_PATH, account);
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 1);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 0);
+    verifySentNoticesCount(1);
+
+    verify(exactly(0), getRequestedFor(urlPathMatching(ITEMS_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(HOLDINGS_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(INSTANCES_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(LOCATIONS_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(INSTITUTIONS_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(CAMPUSES_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(LIBRARIES_PATH + "/*")));
   }
 
   @Test
@@ -114,12 +267,12 @@ public class FeeFineActionsAPITest extends ApiTests {
     final Feefineaction charge = createCharge(user, account, true);
     final Feefineaction action = createAction(user, account, true);
 
-    createEntity(ServicePath.OWNERS_PATH, owner);
-    createEntity(ServicePath.FEEFINES_PATH, feefine);
-    createEntity(ServicePath.ACCOUNTS_PATH, account);
+    createEntity(OWNERS_PATH, owner);
+    createEntity(FEEFINES_PATH, feefine);
+    createEntity(ACCOUNTS_PATH, account);
 
     createStub(USERS_PATH, user, user.getId());
-    createStub(ServicePath.ITEMS_PATH, item, item.getId());
+    createStub(ITEMS_PATH, item, item.getId());
     createStub(LOCATIONS_PATH, location, location.getId());
     createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
     createStub(INSTANCES_PATH, instance, instance.getId());
@@ -461,11 +614,14 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withAmountAction(new MonetaryValue(ACTION_AMOUNT))
       .withBalance(new MonetaryValue(ACCOUNT_REMAINING))
       .withPaymentMethod("Cash")
-      .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
+      .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON)
+      .withSource("System")
+      .withCreatedAt(randomId());
   }
 
   private static Feefineaction createCharge(User user, Account account, boolean notify) {
     return new Feefineaction()
+      .withId(randomId())
       .withUserId(user.getId())
       .withAccountId(account.getId())
       .withNotify(notify)
@@ -473,7 +629,9 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withDateAction(new Date())
       .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
       .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
-      .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
+      .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON)
+      .withSource("System")
+      .withCreatedAt(randomId());
   }
 
   private static Feefine createFeeFine(Owner owner) {
@@ -531,7 +689,7 @@ public class FeeFineActionsAPITest extends ApiTests {
   }
 
   private String getAccountCreationDate(Account account) {
-    String getAccountResponse = getById(ServicePath.ACCOUNTS_PATH, account.getId())
+    String getAccountResponse = getById(ACCOUNTS_PATH, account.getId())
       .getBody().prettyPrint();
 
     final String creationDateFromMetadata = new JsonObject(getAccountResponse)
@@ -555,7 +713,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .until(() -> fetchPublishedLogRecords(getOkapi()).size() == count);
   }
 
-  private JsonObject extractLastLogRecordPayloadOfType(LogEventPublisher.LogEventPayloadType type) {
+  private JsonObject extractLastLogRecordPayloadOfType(LogEventPayloadType type) {
     return fetchPublishedLogRecords(getOkapi()).stream()
       .map(json -> json.getString("eventPayload"))
       .filter(s -> s.contains(type.value()))
@@ -578,6 +736,33 @@ public class FeeFineActionsAPITest extends ApiTests {
         assertThat(jsonAsString, hasJsonPath(entry.getKey(), equalTo(entry.getValue())));
       }
     });
+  }
+
+  private static void assertThatNoticeErrorEventWasPublished(Feefineaction action,
+    String errorMessage) {
+
+    assertThat(fetchFirstLogRecordEventPayload(okapiDeployment, NOTICE_ERROR),
+      noticeErrorLogRecord(action, errorMessage));
+  }
+
+  private static void verifyPublishedLogRecordsCount(LogEventPayloadType logRecordType,
+    int expectedEventCount) {
+
+    Awaitility.await()
+      .atMost(3, TimeUnit.SECONDS)
+      .until(() -> fetchPublishedLogRecords(okapiDeployment, logRecordType), hasSize(expectedEventCount));
+  }
+
+  private static void verifySentNoticesCount(int expectedEventCount) {
+    List<LoggedRequest> patronNoticeRequests = okapiDeployment
+      .findRequestsMatching(postRequestedFor(urlPathMatching("/patron-notice")).build())
+      .getRequests();
+
+    assertThat(patronNoticeRequests, hasSize(expectedEventCount));
+  }
+
+  private static String buildNotFoundErrorMessage(String objectType, String id) {
+    return String.format("Failed to find %s %s", objectType, id);
   }
 }
 

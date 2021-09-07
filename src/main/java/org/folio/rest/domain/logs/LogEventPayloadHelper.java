@@ -1,7 +1,6 @@
 package org.folio.rest.domain.logs;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.folio.rest.domain.logs.LogEventPayloadField.ACCOUNT_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.ACTION;
@@ -10,6 +9,7 @@ import static org.folio.rest.domain.logs.LogEventPayloadField.AUTOMATED;
 import static org.folio.rest.domain.logs.LogEventPayloadField.BALANCE;
 import static org.folio.rest.domain.logs.LogEventPayloadField.COMMENTS;
 import static org.folio.rest.domain.logs.LogEventPayloadField.DATE;
+import static org.folio.rest.domain.logs.LogEventPayloadField.ERROR_MESSAGE;
 import static org.folio.rest.domain.logs.LogEventPayloadField.FEE_FINE_ID;
 import static org.folio.rest.domain.logs.LogEventPayloadField.FEE_FINE_OWNER;
 import static org.folio.rest.domain.logs.LogEventPayloadField.HOLDINGS_RECORD_ID;
@@ -55,10 +55,14 @@ public class LogEventPayloadHelper {
       write(contextJson, USER_BARCODE.value(), user.getBarcode());
     });
 
-    ofNullable(nonNull(context.getAction()) ? context.getAction() : context.getCharge()).ifPresent(action -> {
+    ofNullable(context.getPrimaryAction()).ifPresent(action -> {
       write(contextJson, SOURCE.value(), action.getSource());
       write(itemJson, SERVICE_POINT_ID.value(), action.getCreatedAt());
       write(itemJson, TRIGGERING_EVENT.value(), action.getTypeAction());
+
+      if (!contextJson.containsKey(USER_ID.value())) {
+        write(contextJson, USER_ID.value(), action.getUserId());
+      }
     });
 
     ofNullable(context.getAccount()).ifPresent(account -> {
@@ -78,6 +82,28 @@ public class LogEventPayloadHelper {
     contextJson.put(ITEMS.value(), new JsonArray().add(itemJson));
 
     return contextJson;
+  }
+
+  public static JsonObject buildNoticeErrorLogEventPayload(Throwable throwable, Feefineaction action) {
+    JsonObject logEventPayload = new JsonObject();
+    JsonObject itemJson = new JsonObject();
+
+    if (action != null) {
+      write(logEventPayload, USER_ID.value(), action.getUserId());
+      write(logEventPayload, SOURCE.value(), action.getSource());
+      write(itemJson, SERVICE_POINT_ID.value(), action.getCreatedAt());
+      write(itemJson, TRIGGERING_EVENT.value(), action.getTypeAction());
+    }
+
+    logEventPayload.put(ITEMS.value(), new JsonArray().add(itemJson));
+
+    setErrorMessage(logEventPayload, throwable.getMessage());
+
+    return logEventPayload;
+  }
+
+  public static void setErrorMessage(JsonObject logEventPayload, String errorMessage) {
+    write(logEventPayload, ERROR_MESSAGE.value(), errorMessage);
   }
 
   public static Future<JsonObject> buildFeeFineLogEventPayload(Feefineaction action, Account account, Feefine feefine) {

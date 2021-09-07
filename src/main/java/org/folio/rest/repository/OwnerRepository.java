@@ -20,17 +20,10 @@ public class OwnerRepository {
     this.pgClient = pgClient;
   }
 
-  public Future<FeeFineNoticeContext> loadOwner(FeeFineNoticeContext context) {
-    Optional<String> optionalOwnerId = Optional.ofNullable(context)
-        .map(FeeFineNoticeContext::getFeefine)
-        .map(Feefine::getOwnerId);
-
-    if (!optionalOwnerId.isPresent()) {
-      return Future.failedFuture(new IllegalArgumentException("Owner id is not present"));
-    }
-
+  public Future<Owner> getById(String id) {
     Promise<Owner> promise = Promise.promise();
-    pgClient.getById(OWNERS_TABLE, optionalOwnerId.get(), Owner.class, promise);
-    return promise.future().map(context::withOwner);
+    pgClient.getById(OWNERS_TABLE, id, Owner.class, promise);
+    return promise.future();
   }
+
 }

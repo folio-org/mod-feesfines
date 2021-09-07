@@ -134,7 +134,7 @@ public class OkapiClientTest {
     okapiClient.getById(USERS_URL, USER_ID, User.class)
       .onSuccess(r -> context.fail("should have failed"))
       .onFailure(failure -> {
-        context.assertEquals("Failed to get User by ID. Response status code: 404", failure.getMessage());
+        context.assertEquals("Failed to find User " + USER_ID, failure.getMessage());
         async.complete();
       });
   }

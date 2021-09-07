@@ -21,11 +21,13 @@ import io.vertx.ext.web.client.WebClient;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+
+import org.folio.rest.exception.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OkapiClient {
-  private static final Logger log = LoggerFactory.getLogger(OkapiClient.class);
+  protected static final Logger log = LoggerFactory.getLogger(OkapiClient.class);
   private static final String OKAPI_URL_HEADER = "x-okapi-url";
   protected static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -71,10 +73,10 @@ public class OkapiClient {
 
     return promise.future().compose(response -> {
       if (response.statusCode() != 200) {
-        final String errorMessage = format("Failed to get %s by ID. Response status code: %s",
-          objectType.getSimpleName(), response.statusCode());
+        final String errorMessage = format("Failed to get %s by ID %s. Response status code: %s",
+          objectType.getSimpleName(), id, response.statusCode());
         log.error(errorMessage);
-        return failedFuture(errorMessage);
+        return failedFuture(new EntityNotFoundException(objectType, id));
       }
       try {
         T object = objectMapper.readValue(response.bodyAsString(), objectType);

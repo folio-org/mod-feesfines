@@ -20,18 +20,6 @@ public class FeeFineRepository {
     this.pgClient = pgClient;
   }
 
-  public Future<FeeFineNoticeContext> loadFeefine(FeeFineNoticeContext context) {
-    Optional<String> optionalFeeFineId = Optional.ofNullable(context)
-      .map(FeeFineNoticeContext::getAccount)
-      .map(Account::getFeeFineId);
-
-    if (!optionalFeeFineId.isPresent()) {
-      return Future.failedFuture(new IllegalArgumentException("Fee fine id is not present"));
-    }
-
-    return getById(optionalFeeFineId.get()).map(context::withFeefine);
-  }
-
   public Future<Feefine> getById(String id) {
     Promise<Feefine> promise = Promise.promise();
     pgClient.getById(FEEFINES_TABLE, id, Feefine.class, promise);

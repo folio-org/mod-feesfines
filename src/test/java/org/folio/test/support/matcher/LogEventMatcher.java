@@ -22,6 +22,7 @@ import static org.folio.rest.domain.logs.LogEventPayloadField.SOURCE;
 import static org.folio.rest.domain.logs.LogEventPayloadField.USER_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
@@ -35,7 +36,10 @@ import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
+import org.folio.rest.jaxrs.model.Feefineaction;
 import org.hamcrest.Matcher;
+
+import io.vertx.core.json.JsonObject;
 
 public class LogEventMatcher {
   private LogEventMatcher() {
@@ -172,4 +176,30 @@ public class LogEventMatcher {
       is(REFUND.getFullResult()),
       is(REFUND.getPartialResult())));
   }
+
+  public static Matcher<String> noticeErrorLogRecord(Feefineaction action,
+    String errorMessage) {
+
+    return allOf(Arrays.asList(
+        hasJsonPath("logEventType", is("NOTICE_ERROR")),
+        hasJsonPath("payload", is(noticeErrorEventPayload(action, errorMessage)))
+      )
+    );
+  }
+
+  public static Matcher<String> noticeErrorEventPayload(Feefineaction action,
+    String errorMessage) {
+
+    return allOf(Arrays.asList(
+      hasJsonPath("userId", is(action.getUserId())),
+      hasJsonPath("source", is(action.getSource())),
+      hasJsonPath("errorMessage", is(errorMessage)),
+      hasJsonPath("date", notNullValue(String.class)),
+      hasJsonPath("items", hasItem(allOf(
+        hasJsonPath("servicePointId", is(action.getCreatedAt())),
+        hasJsonPath("triggeringEvent", is(action.getTypeAction()))
+      )))
+    ));
+  }
+
 }

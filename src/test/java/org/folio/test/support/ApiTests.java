@@ -235,7 +235,7 @@ public class ApiTests {
       aResponse().withBody(mapFrom(returnObject).encodePrettily()));
   }
 
-  private StubMapping createStub(String url, ResponseDefinitionBuilder responseBuilder) {
+  protected StubMapping createStub(String url, ResponseDefinitionBuilder responseBuilder) {
     return createStub(urlPathEqualTo(url), responseBuilder);
   }
 
