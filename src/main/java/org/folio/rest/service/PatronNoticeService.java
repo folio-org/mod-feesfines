@@ -136,7 +136,7 @@ public class PatronNoticeService {
   }
 
   public Future<FeeFineNoticeContext> fetchOwner(FeeFineNoticeContext context) {
-    if (context.getTemplateId() != null) {
+    if (context.isTemplateSet()) {
       // template is set in fee/fine type, no need to fetch the owner
       return succeededFuture(context);
     }
@@ -152,9 +152,9 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> sendNoticeWhenTemplateIsSet(FeeFineNoticeContext context) {
-    if (context.getTemplateId() == null) {
+    if (!context.isTemplateSet()) {
       logger.info("Patron notice template is not set, doing nothing");
-      return succeededFuture();
+      return succeededFuture(context);
     }
 
     return succeededFuture(context)
@@ -314,8 +314,10 @@ public class PatronNoticeService {
   }
 
   private void handleSuccess(FeeFineNoticeContext context) {
-    logger.info("Patron notice was successfully sent");
-    publishLogEvent(context, NOTICE);
+    if (context.isTemplateSet()) {
+      logger.info("Patron notice was successfully sent");
+      publishLogEvent(context, NOTICE);
+    }
   }
 
   private void handleFailure(Throwable throwable, Feefineaction action) {

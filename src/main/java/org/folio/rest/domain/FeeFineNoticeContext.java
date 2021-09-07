@@ -84,4 +84,8 @@ public class FeeFineNoticeContext {
     return getPrimaryAction().getAccountId();
   }
 
+  public boolean isTemplateSet() {
+    return getTemplateId() != null;
+  }
+
 }
