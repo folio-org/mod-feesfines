@@ -74,7 +74,6 @@ import org.folio.rest.service.LogEventPublisher.LogEventPayloadType;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.test.support.matcher.constant.ServicePath;
-import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -125,6 +124,7 @@ public class FeeFineActionsAPITest extends ApiTests {
   private StubMapping institutionStub;
   private StubMapping campusStub;
   private StubMapping libraryStub;
+  private StubMapping patronNoticeStub;
 
   @Before
   public void setUp() {
@@ -132,9 +132,6 @@ public class FeeFineActionsAPITest extends ApiTests {
     removeAllFromTable(ACCOUNTS_TABLE);
     removeAllFromTable(FEE_FINE_ACTIONS_TABLE);
     removeAllFromTable(OWNERS_TABLE);
-
-    getOkapi().stubFor(WireMock.post(urlPathMatching("/patron-notice"))
-      .willReturn(aResponse().withStatus(200)));
 
     initEntitiesAndStubs();
   }
@@ -166,6 +163,10 @@ public class FeeFineActionsAPITest extends ApiTests {
     institutionStub = createStub(INSTITUTIONS_PATH, institution, getIdFromProperties(institution.getAdditionalProperties()));
     campusStub = createStub(CAMPUSES_PATH, campus, getIdFromProperties(campus.getAdditionalProperties()));
     libraryStub = createStub(LIBRARIES_PATH, library, getIdFromProperties(library.getAdditionalProperties()));
+
+    patronNoticeStub = getOkapi()
+      .stubFor(WireMock.post(urlPathMatching(PATRON_NOTICE_PATH))
+        .willReturn(aResponse().withStatus(200)));
   }
 
   @Test
@@ -180,7 +181,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     assertThatNoticeErrorEventWasPublished(charge,
       buildNotFoundErrorMessage("Account", charge.getAccountId()));
 
-    verifySentNoticesCount(0);
+    verifyPatronNoticeRequestCount(0);
   }
 
   @Test
@@ -195,7 +196,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     assertThatNoticeErrorEventWasPublished(charge,
       buildNotFoundErrorMessage("Feefine", feefine.getId()));
 
-    verifySentNoticesCount(0);
+    verifyPatronNoticeRequestCount(0);
   }
 
   @Test
@@ -223,7 +224,7 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     assertThatNoticeErrorEventWasPublished(charge, expectedErrorMessage);
 
-    verifySentNoticesCount(1);
+    verifyPatronNoticeRequestCount(1);
   }
 
   @Test
@@ -235,15 +236,31 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     verifyPublishedLogRecordsCount(NOTICE, 1);
     verifyPublishedLogRecordsCount(NOTICE_ERROR, 0);
-    verifySentNoticesCount(1);
+    verifyPatronNoticeRequestCount(1);
 
-    List<LoggedRequest> sentNotices = getSentNotices();
+    List<LoggedRequest> sentNotices = getPatronNoticeRequests();
     assertThat(sentNotices, hasSize(1));
 
     String templateId = new JsonObject(sentNotices.get(0).getBodyAsString())
       .getString("templateId");
 
     assertThat(templateId, is(owner.getDefaultChargeNoticeId()));
+  }
+
+  @Test
+  public void noticeIsNotSentWhenPatronNoticeRequestFails() {
+    removeStub(patronNoticeStub);
+
+    getOkapi().stubFor(WireMock.post(urlPathMatching(PATRON_NOTICE_PATH))
+      .willReturn(aResponse().withStatus(500).withBody("Server error")));
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 0);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
+    verifyPatronNoticeRequestCount(1);
+
+    assertThatNoticeErrorEventWasPublished(charge, "Failed to send patron notice: [500] Server error");
   }
 
   @Test
@@ -260,7 +277,7 @@ public class FeeFineActionsAPITest extends ApiTests {
 
     verifyPublishedLogRecordsCount(NOTICE, 1);
     verifyPublishedLogRecordsCount(NOTICE_ERROR, 0);
-    verifySentNoticesCount(1);
+    verifyPatronNoticeRequestCount(1);
 
     verify(exactly(0), getRequestedFor(urlPathMatching(ITEMS_PATH + "/*")));
     verify(exactly(0), getRequestedFor(urlPathMatching(HOLDINGS_PATH + "/*")));
@@ -273,9 +290,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   @Test
   public void postActionWithPatronNotice() {
-    getOkapi().stubFor(WireMock.post(urlPathMatching("/patron-notice"))
-      .willReturn(aResponse().withStatus(200)));
-
     final Library library = buildLibrary();
     final Campus campus = buildCampus();
     final Institution institution = buildInstitution();
@@ -776,11 +790,11 @@ public class FeeFineActionsAPITest extends ApiTests {
       .until(() -> fetchPublishedLogRecords(okapiDeployment, logRecordType), hasSize(expectedEventCount));
   }
 
-  private static void verifySentNoticesCount(int expectedEventCount) {
-    assertThat(getSentNotices(), hasSize(expectedEventCount));
+  private static void verifyPatronNoticeRequestCount(int expectedEventCount) {
+    assertThat(getPatronNoticeRequests(), hasSize(expectedEventCount));
   }
 
-  private static List<LoggedRequest> getSentNotices() {
+  private static List<LoggedRequest> getPatronNoticeRequests() {
     return okapiDeployment
       .findRequestsMatching(postRequestedFor(urlPathMatching(PATRON_NOTICE_PATH)).build())
       .getRequests();
