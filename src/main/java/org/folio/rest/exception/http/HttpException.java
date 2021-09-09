@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class HttpException extends RuntimeException {
-  private final HttpMethod httpMethod;
+  private final transient HttpMethod httpMethod;
   private final String url;
   private final int responseStatus;
   private final String responseBody;
