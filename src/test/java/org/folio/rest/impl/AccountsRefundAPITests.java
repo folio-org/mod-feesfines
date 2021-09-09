@@ -52,7 +52,6 @@ import org.folio.test.support.ActionsAPITests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.util.PomUtils;
-import org.folio.util.UuidUtil;
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;

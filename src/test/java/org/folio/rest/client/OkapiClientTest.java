@@ -129,12 +129,13 @@ public class OkapiClientTest {
   @Test
   public void getByIdShouldFailWhenRemoteCallFailed(TestContext context) {
     Async async = context.async();
-    createStub(USERS_URL, USER_ID, HttpStatus.SC_NOT_FOUND, USER);
+    createStub(USERS_URL, USER_ID, HttpStatus.SC_NOT_FOUND, "User not found");
 
     okapiClient.getById(USERS_URL, USER_ID, User.class)
       .onSuccess(r -> context.fail("should have failed"))
       .onFailure(failure -> {
-        context.assertEquals("Failed to get User by ID. Response status code: 404", failure.getMessage());
+        String expectedErrorMessage = "Failed to fetch User " + USER_ID + ": [404] User not found";
+        context.assertEquals(expectedErrorMessage, failure.getMessage());
         async.complete();
       });
   }

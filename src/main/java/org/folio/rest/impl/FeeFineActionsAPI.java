@@ -145,32 +145,29 @@ public class FeeFineActionsAPI implements Feefineactions {
     Promise<Response> postCompleted = Promise.promise();
     PgUtil.post(FEEFINEACTIONS_TABLE, entity, okapiHeaders, vertxContext,
       PostFeefineactionsResponse.class, postCompleted);
+
     postCompleted.future()
-      .compose(response -> publishLogEvent(entity, okapiHeaders, vertxContext, response))
-      .map(response -> sendPatronNoticeIfNeedBe(entity, okapiHeaders, vertxContext, response))
+      .onSuccess(r -> publishLogEvent(entity, okapiHeaders, vertxContext))
+      .onSuccess(r -> sendPatronNoticeIfNeedBe(entity, okapiHeaders, vertxContext))
       .onComplete(asyncResultHandler);
   }
 
-  private Response sendPatronNoticeIfNeedBe(Feefineaction entity, Map<String, String> okapiHeaders,
-    Context vertxContext, Response response) {
+  private void sendPatronNoticeIfNeedBe(Feefineaction action, Map<String, String> okapiHeaders,
+    Context vertxContext) {
 
-    if (isTrue(entity.getNotify())) {
+    if (isTrue(action.getNotify())) {
       new PatronNoticeService(vertxContext.owner(), okapiHeaders)
-        .sendPatronNotice(entity);
+        .sendPatronNotice(action);
     }
-    return response;
   }
 
-  private Future<Response> publishLogEvent(Feefineaction entity, Map<String, String> okapiHeaders,
-    Context vertxContext, Response response) {
-    return new LogEventService(vertxContext.owner(), okapiHeaders)
-        .createFeeFineLogEventPayload(entity)
-        .compose(eventPayload -> {
-              new LogEventPublisher(vertxContext, okapiHeaders)
-                  .publishLogEvent(eventPayload, FEE_FINE);
-              return Future.succeededFuture();
-            })
-        .map(v -> response);
+  private void publishLogEvent(Feefineaction entity, Map<String, String> okapiHeaders,
+    Context vertxContext) {
+
+    new LogEventService(vertxContext.owner(), okapiHeaders)
+      .createFeeFineLogEventPayload(entity)
+      .onSuccess(eventPayload -> new LogEventPublisher(vertxContext, okapiHeaders)
+        .publishLogEvent(eventPayload, FEE_FINE));
   }
 
   @Validate

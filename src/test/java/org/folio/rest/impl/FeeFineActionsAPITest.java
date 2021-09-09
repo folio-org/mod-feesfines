@@ -2,13 +2,18 @@ package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
+import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE_ERROR;
+import static org.folio.rest.utils.LogEventUtils.fetchFirstLogRecordEventPayload;
 import static org.folio.rest.utils.LogEventUtils.fetchPublishedLogRecords;
 import static org.folio.test.support.EntityBuilder.buildCampus;
 import static org.folio.test.support.EntityBuilder.buildHoldingsRecord;
@@ -18,25 +23,33 @@ import static org.folio.test.support.EntityBuilder.buildItem;
 import static org.folio.test.support.EntityBuilder.buildLibrary;
 import static org.folio.test.support.EntityBuilder.buildLocation;
 import static org.folio.test.support.EntityBuilder.buildUser;
+import static org.folio.test.support.matcher.LogEventMatcher.noticeErrorLogRecord;
 import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.FEEFINES_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.FEE_FINE_ACTIONS_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.OWNERS_TABLE;
+import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.CAMPUSES_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.FEEFINES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTITUTIONS_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.ITEMS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LIBRARIES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LOCATIONS_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.OWNERS_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.PATRON_NOTICE_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +70,7 @@ import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.User;
-import org.folio.rest.service.LogEventPublisher;
+import org.folio.rest.service.LogEventPublisher.LogEventPayloadType;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.test.support.matcher.constant.ServicePath;
@@ -67,6 +80,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.ResponseDefinition;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -87,46 +103,204 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static final String ACCOUNT_REMAINING = "5.67";
   private static final String ACTION_AMOUNT = "6.67";
 
+  private Feefineaction action;
+  private Feefineaction charge;
+  private Account account;
+  private Feefine feefine;
+  private Owner owner;
+  private User user;
+  private Item item;
+  private Instance instance;
+  private HoldingsRecord holdingsRecord;
+  private Location location;
+  private Institution institution;
+  private Campus campus;
+  private Library library;
+
+  private StubMapping userStub;
+  private StubMapping itemStub;
+  private StubMapping instanceStub;
+  private StubMapping holdingsStub;
+  private StubMapping locationStub;
+  private StubMapping institutionStub;
+  private StubMapping campusStub;
+  private StubMapping libraryStub;
+  private StubMapping patronNoticeStub;
+
   @Before
   public void setUp() {
     removeAllFromTable(FEEFINES_TABLE);
     removeAllFromTable(ACCOUNTS_TABLE);
     removeAllFromTable(FEE_FINE_ACTIONS_TABLE);
     removeAllFromTable(OWNERS_TABLE);
+
+    initEntitiesAndStubs();
+  }
+
+  private void initEntitiesAndStubs() {
+    institution = buildInstitution();
+    campus = buildCampus();
+    library = buildLibrary();
+    location = buildLocation(library, campus, institution);
+    instance = buildInstance();
+    holdingsRecord = buildHoldingsRecord(instance);
+    item = buildItem(holdingsRecord, location);
+    user = buildUser();
+    owner = createOwner();
+    feefine = createFeeFine(owner);
+    account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
+    action = createAction(user, account, true);
+    charge = createCharge(user, account, true);
+
+    createEntity(OWNERS_PATH, owner);
+    createEntity(FEEFINES_PATH, feefine);
+    createEntity(ACCOUNTS_PATH, account);
+
+    userStub = createStub(USERS_PATH, user, user.getId());
+    itemStub = createStub(ITEMS_PATH, item, item.getId());
+    instanceStub = createStub(INSTANCES_PATH, instance, instance.getId());
+    holdingsStub = createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
+    locationStub = createStub(LOCATIONS_PATH, location, location.getId());
+    institutionStub = createStub(INSTITUTIONS_PATH, institution, getIdFromProperties(institution.getAdditionalProperties()));
+    campusStub = createStub(CAMPUSES_PATH, campus, getIdFromProperties(campus.getAdditionalProperties()));
+    libraryStub = createStub(LIBRARIES_PATH, library, getIdFromProperties(library.getAdditionalProperties()));
+
+    patronNoticeStub = getOkapi()
+      .stubFor(WireMock.post(urlPathMatching(PATRON_NOTICE_PATH))
+        .willReturn(aResponse().withStatus(200)));
+  }
+
+  @Test
+  public void noticeIsNotSentWhenAccountDoesNotExist() {
+    deleteEntity(ACCOUNTS_PATH, account.getId());
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 0);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
+
+    assertThatNoticeErrorEventWasPublished(charge,
+      "Failed to find Account " + charge.getAccountId());
+
+    verifyPatronNoticeRequestCount(0);
+  }
+
+  @Test
+  public void noticeIsNotSentWhenFeeFineDoesNotExist() {
+    deleteEntity(FEEFINES_PATH, feefine.getId());
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 0);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
+
+    assertThatNoticeErrorEventWasPublished(charge,
+      "Failed to find Feefine " + feefine.getId());
+
+    verifyPatronNoticeRequestCount(0);
+  }
+
+  @Test
+  public void noticeIsSentWhenFailedToFetchNonEssentialData() {
+    ResponseDefinition notFoundResponse = aResponse().withStatus(404).withBody("Not found").build();
+    userStub.setResponse(notFoundResponse);
+    itemStub.setResponse(notFoundResponse);
+    instanceStub.setResponse(notFoundResponse);
+    holdingsStub.setResponse(notFoundResponse);
+    locationStub.setResponse(notFoundResponse);
+    institutionStub.setResponse(notFoundResponse);
+    campusStub.setResponse(notFoundResponse);
+    libraryStub.setResponse(notFoundResponse);
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 1);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
+
+    String expectedErrorMessage = "Following errors may result in missing token values: " +
+      "\"Failed to fetch User " + user.getId() + ": [404] Not found\", " +
+      "\"Failed to fetch Item " + item.getId() + ": [404] Not found\", " +
+      "\"Failed to fetch HoldingsRecord " + holdingsRecord.getId() + ": [404] Not found\", " +
+      "\"Failed to fetch Instance " + instance.getId() + ": [404] Not found\", " +
+      "\"Invalid Location ID: null\"";
+
+    assertThatNoticeErrorEventWasPublished(charge, expectedErrorMessage);
+
+    verifyPatronNoticeRequestCount(1);
+  }
+
+  @Test
+  public void noticeIsSentWithTemplateFromOwnerWhenItIsNotSetInFeeFineType() {
+    replaceEntity(FEEFINES_PATH, feefine.withActionNoticeId(null).withChargeNoticeId(null));
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 1);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 0);
+    verifyPatronNoticeRequestCount(1);
+
+    List<LoggedRequest> sentNotices = getPatronNoticeRequests();
+    assertThat(sentNotices, hasSize(1));
+
+    String templateId = new JsonObject(sentNotices.get(0).getBodyAsString())
+      .getString("templateId");
+
+    assertThat(templateId, is(owner.getDefaultChargeNoticeId()));
+  }
+
+  @Test
+  public void noticeIsNotSentWhenTemplateIsNotSet() {
+    replaceEntity(FEEFINES_PATH, feefine.withActionNoticeId(null).withChargeNoticeId(null));
+    replaceEntity(OWNERS_PATH, owner.withDefaultActionNoticeId(null).withDefaultChargeNoticeId(null));
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 0);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 0);
+    verifyPatronNoticeRequestCount(0);
+  }
+
+  @Test
+  public void noticeIsNotSentWhenPatronNoticeRequestFails() {
+    removeStub(patronNoticeStub);
+
+    getOkapi().stubFor(WireMock.post(urlPathMatching(PATRON_NOTICE_PATH))
+      .willReturn(aResponse().withStatus(500).withBody("Server error")));
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 0);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
+    verifyPatronNoticeRequestCount(1);
+
+    assertThatNoticeErrorEventWasPublished(charge, "Failed to send patron notice: [500] Server error");
+  }
+
+  @Test
+  public void itemAndRelatedRecordsAreNotFetchedWhenAccountIsNotLinkedToItem() {
+    account.withHoldingsRecordId(null)
+      .withInstanceId(null)
+      .withItemId(null);
+
+    replaceEntity(ACCOUNTS_PATH, account);
+
+    postAction(charge);
+
+    verifyPublishedLogRecordsCount(NOTICE, 1);
+    verifyPublishedLogRecordsCount(NOTICE_ERROR, 0);
+    verifyPatronNoticeRequestCount(1);
+
+    verify(exactly(0), getRequestedFor(urlPathMatching(ITEMS_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(HOLDINGS_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(INSTANCES_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(LOCATIONS_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(INSTITUTIONS_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(CAMPUSES_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(LIBRARIES_PATH + "/*")));
   }
 
   @Test
   public void postActionWithPatronNotice() {
-    getOkapi().stubFor(WireMock.post(urlPathMatching("/patron-notice"))
-      .willReturn(aResponse().withStatus(200)));
-
-    final Library library = buildLibrary();
-    final Campus campus = buildCampus();
-    final Institution institution = buildInstitution();
-    final Location location = buildLocation(library, campus, institution);
-    final Instance instance = buildInstance();
-    final HoldingsRecord holdingsRecord = buildHoldingsRecord(instance);
-    final Item item = buildItem(holdingsRecord, location);
-    final User user = buildUser();
-    final Owner owner = createOwner();
-    final Feefine feefine = createFeeFine(owner);
-    final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
-    final Feefineaction charge = createCharge(user, account, true);
-    final Feefineaction action = createAction(user, account, true);
-
-    createEntity(ServicePath.OWNERS_PATH, owner);
-    createEntity(ServicePath.FEEFINES_PATH, feefine);
-    createEntity(ServicePath.ACCOUNTS_PATH, account);
-
-    createStub(USERS_PATH, user, user.getId());
-    createStub(ServicePath.ITEMS_PATH, item, item.getId());
-    createStub(LOCATIONS_PATH, location, location.getId());
-    createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
-    createStub(INSTANCES_PATH, instance, instance.getId());
-    createStub(LIBRARIES_PATH, library, getIdFromProperties(library.getAdditionalProperties()));
-    createStub(CAMPUSES_PATH, campus, getIdFromProperties(campus.getAdditionalProperties()));
-    createStub(INSTITUTIONS_PATH, institution, getIdFromProperties(institution.getAdditionalProperties()));
-
     postAction(charge);
 
     final String accountCreationDate = getAccountCreationDate(account);
@@ -355,17 +529,6 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   @Test
   public void deleteFeeFineActionByIdOnlyDeletesOneAction() {
-    final Library library = buildLibrary();
-    final Campus campus = buildCampus();
-    final Institution institution = buildInstitution();
-    final Location location = buildLocation(library, campus, institution);
-    final Instance instance = buildInstance();
-    final HoldingsRecord holdingsRecord = buildHoldingsRecord(instance);
-    final Item item = buildItem(holdingsRecord, location);
-    final User user = buildUser();
-    final Owner owner = createOwner();
-    final Feefine feefine = createFeeFine(owner);
-    final Account account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
     final Feefineaction charge = createCharge(user, account, true);
     final Feefineaction firstAction = createAction(user, account, true);
     final Feefineaction secondAction = createAction(user, account, true);
@@ -461,11 +624,14 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withAmountAction(new MonetaryValue(ACTION_AMOUNT))
       .withBalance(new MonetaryValue(ACCOUNT_REMAINING))
       .withPaymentMethod("Cash")
-      .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON);
+      .withComments("STAFF : staff comment \n PATRON : " + ACTION_COMMENT_FOR_PATRON)
+      .withSource("System")
+      .withCreatedAt(randomId());
   }
 
   private static Feefineaction createCharge(User user, Account account, boolean notify) {
     return new Feefineaction()
+      .withId(randomId())
       .withUserId(user.getId())
       .withAccountId(account.getId())
       .withNotify(notify)
@@ -473,7 +639,9 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withDateAction(new Date())
       .withAmountAction(new MonetaryValue(new BigDecimal(ACTION_AMOUNT)))
       .withBalance(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
-      .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON);
+      .withComments("STAFF : staff comment \n PATRON : " + CHARGE_COMMENT_FOR_PATRON)
+      .withSource("System")
+      .withCreatedAt(randomId());
   }
 
   private static Feefine createFeeFine(Owner owner) {
@@ -531,7 +699,7 @@ public class FeeFineActionsAPITest extends ApiTests {
   }
 
   private String getAccountCreationDate(Account account) {
-    String getAccountResponse = getById(ServicePath.ACCOUNTS_PATH, account.getId())
+    String getAccountResponse = getById(ACCOUNTS_PATH, account.getId())
       .getBody().prettyPrint();
 
     final String creationDateFromMetadata = new JsonObject(getAccountResponse)
@@ -555,7 +723,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .until(() -> fetchPublishedLogRecords(getOkapi()).size() == count);
   }
 
-  private JsonObject extractLastLogRecordPayloadOfType(LogEventPublisher.LogEventPayloadType type) {
+  private JsonObject extractLastLogRecordPayloadOfType(LogEventPayloadType type) {
     return fetchPublishedLogRecords(getOkapi()).stream()
       .map(json -> json.getString("eventPayload"))
       .filter(s -> s.contains(type.value()))
@@ -579,5 +747,31 @@ public class FeeFineActionsAPITest extends ApiTests {
       }
     });
   }
+
+  private static void assertThatNoticeErrorEventWasPublished(Feefineaction action,
+    String errorMessage) {
+
+    assertThat(fetchFirstLogRecordEventPayload(okapiDeployment, NOTICE_ERROR),
+      noticeErrorLogRecord(action, errorMessage));
+  }
+
+  private static void verifyPublishedLogRecordsCount(LogEventPayloadType logRecordType,
+    int expectedEventCount) {
+
+    Awaitility.await()
+      .atMost(3, TimeUnit.SECONDS)
+      .until(() -> fetchPublishedLogRecords(okapiDeployment, logRecordType), hasSize(expectedEventCount));
+  }
+
+  private static void verifyPatronNoticeRequestCount(int expectedEventCount) {
+    assertThat(getPatronNoticeRequests(), hasSize(expectedEventCount));
+  }
+
+  private static List<LoggedRequest> getPatronNoticeRequests() {
+    return okapiDeployment
+      .findRequestsMatching(postRequestedFor(urlPathMatching(PATRON_NOTICE_PATH)).build())
+      .getRequests();
+  }
+
 }
 
