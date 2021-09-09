@@ -2,6 +2,7 @@ package org.folio.rest.client;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static io.vertx.core.http.HttpMethod.GET;
 import static java.lang.String.format;
 
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.LocaleSettings;
-import org.folio.rest.exception.EntityNotFoundException;
+import org.folio.rest.exception.http.HttpException;
 import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.util.StringUtil;
@@ -50,7 +51,7 @@ public class ConfigurationClient extends OkapiClient {
           "Failed to find locale configuration. Response: %d %s", responseStatus,
           response.bodyAsString());
         log.error(errorMessage);
-        return failedFuture(new EntityNotFoundException(errorMessage));
+        return failedFuture(new HttpException(GET, url, response));
       } else {
         try {
           KvConfigurations kvConfigurations = objectMapper.readValue(response.bodyAsString(),

@@ -80,6 +80,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
@@ -179,7 +180,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
 
     assertThatNoticeErrorEventWasPublished(charge,
-      buildNotFoundErrorMessage("Account", charge.getAccountId()));
+      "Failed to find Account " + charge.getAccountId());
 
     verifyPatronNoticeRequestCount(0);
   }
@@ -194,21 +195,22 @@ public class FeeFineActionsAPITest extends ApiTests {
     verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
 
     assertThatNoticeErrorEventWasPublished(charge,
-      buildNotFoundErrorMessage("Feefine", feefine.getId()));
+      "Failed to find Feefine " + feefine.getId());
 
     verifyPatronNoticeRequestCount(0);
   }
 
   @Test
   public void noticeIsSentWhenFailedToFetchNonEssentialData() {
-    removeStub(userStub);
-    removeStub(itemStub);
-    removeStub(instanceStub);
-    removeStub(holdingsStub);
-    removeStub(locationStub);
-    removeStub(institutionStub);
-    removeStub(campusStub);
-    removeStub(libraryStub);
+    ResponseDefinition notFoundResponse = aResponse().withStatus(404).withBody("Not found").build();
+    userStub.setResponse(notFoundResponse);
+    itemStub.setResponse(notFoundResponse);
+    instanceStub.setResponse(notFoundResponse);
+    holdingsStub.setResponse(notFoundResponse);
+    locationStub.setResponse(notFoundResponse);
+    institutionStub.setResponse(notFoundResponse);
+    campusStub.setResponse(notFoundResponse);
+    libraryStub.setResponse(notFoundResponse);
 
     postAction(charge);
 
@@ -216,10 +218,10 @@ public class FeeFineActionsAPITest extends ApiTests {
     verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
 
     String expectedErrorMessage = "Following errors may result in missing token values: " +
-      "\"" + buildNotFoundErrorMessage("User", user.getId()) + "\", " +
-      "\"" + buildNotFoundErrorMessage("Item", item.getId()) + "\", " +
-      "\"" + buildNotFoundErrorMessage("HoldingsRecord", holdingsRecord.getId()) + "\", " +
-      "\"" + buildNotFoundErrorMessage("Instance", instance.getId()) + "\", " +
+      "\"Failed to fetch User " + user.getId() + ": [404] Not found\", " +
+      "\"Failed to fetch Item " + item.getId() + ": [404] Not found\", " +
+      "\"Failed to fetch HoldingsRecord " + holdingsRecord.getId() + ": [404] Not found\", " +
+      "\"Failed to fetch Instance " + instance.getId() + ": [404] Not found\", " +
       "\"Invalid Location ID: null\"";
 
     assertThatNoticeErrorEventWasPublished(charge, expectedErrorMessage);
@@ -771,8 +773,5 @@ public class FeeFineActionsAPITest extends ApiTests {
       .getRequests();
   }
 
-  private static String buildNotFoundErrorMessage(String objectType, String id) {
-    return String.format("Failed to find %s %s", objectType, id);
-  }
 }
 

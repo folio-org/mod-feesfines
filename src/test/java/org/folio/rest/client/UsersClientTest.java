@@ -83,7 +83,7 @@ public class UsersClientTest extends ApiTests {
     String responseBody = "User not found";
     mockUsersResponse(HttpStatus.SC_NOT_FOUND, responseBody);
 
-    String expectedFailureMessage = "Failed to find User " + USER_ID;
+    String expectedFailureMessage = "Failed to fetch User " + USER_ID + ": [404] User not found";
 
     usersClient.fetchUserById(USER_ID)
       .onSuccess(user -> context.fail("Should have failed"))

@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
-import org.folio.rest.exception.EntityNotFoundException;
+import org.folio.rest.exception.http.HttpGetByIdException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,11 +72,12 @@ public class OkapiClient {
     okapiGetAbs(url).send(promise);
 
     return promise.future().compose(response -> {
-      if (response.statusCode() != 200) {
+      int responseStatus = response.statusCode();
+      if (responseStatus != 200) {
         final String errorMessage = format("Failed to get %s by ID %s. Response status code: %s",
-          objectType.getSimpleName(), id, response.statusCode());
+          objectType.getSimpleName(), id, responseStatus);
         log.error(errorMessage);
-        return failedFuture(new EntityNotFoundException(objectType, id));
+        return failedFuture(new HttpGetByIdException(url, response, objectType, id));
       }
       try {
         T object = objectMapper.readValue(response.bodyAsString(), objectType);
