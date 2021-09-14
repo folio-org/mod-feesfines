@@ -14,12 +14,15 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +36,7 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
+import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.hamcrest.Matcher;
@@ -49,6 +53,7 @@ import io.vertx.core.json.JsonObject;
 public class AccountsAPITest extends ApiTests {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String FEEFINE_CLOSED_EVENT_NAME = "LOAN_RELATED_FEE_FINE_CLOSED";
+  private static final String CONTRIBUTORS_FIELD_NAME = "contributors";
 
   @Before
   public void setUp() {
@@ -60,7 +65,12 @@ public class AccountsAPITest extends ApiTests {
 
   @Test
   public void testAllMethodsAndEventPublishing() {
-    Account accountToPost = buildAccount();
+    List<ContributorData> contributorsToPost = List.of(
+      new ContributorData().withName("contributor name 1"),
+      new ContributorData().withName("contributor name 2")
+    );
+    Account accountToPost = buildAccount()
+      .withContributors(contributorsToPost);
     String accountId = accountToPost.getId();
 
     // create an account
@@ -77,12 +87,25 @@ public class AccountsAPITest extends ApiTests {
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON);
 
+    Matcher<JsonObject> contributorsAfterPostMatcher = allOf(
+      hasItem(hasJsonPath("name", is(contributorsToPost.get(0).getName()))),
+      hasItem(hasJsonPath("name", is(contributorsToPost.get(1).getName())))
+    );
+
     // get individual account by id
     accountsClient.getById(accountId)
       .then()
       .statusCode(HttpStatus.SC_OK)
-      .contentType(JSON);
-    Account accountToPut = accountToPost.withRemaining(new MonetaryValue(4.55));
+      .contentType(JSON)
+      .body(CONTRIBUTORS_FIELD_NAME, hasSize(2))
+      .body(CONTRIBUTORS_FIELD_NAME, contributorsAfterPostMatcher);
+
+    List<ContributorData> contributorsToPut = List.of(
+      new ContributorData().withName("contributor name 3")
+    );
+    Account accountToPut = accountToPost
+      .withRemaining(new MonetaryValue(4.55))
+      .withContributors(contributorsToPut);
 
     // put account
     accountsClient.update(accountId, accountToPut)
@@ -90,6 +113,17 @@ public class AccountsAPITest extends ApiTests {
       .statusCode(HttpStatus.SC_NO_CONTENT);
 
     assertBalanceChangedEventPublished(accountToPut);
+
+    Matcher<JsonObject> contributorsAfterPutMatcher = allOf(
+      hasItem(hasJsonPath("name", is(contributorsToPut.get(0).getName())))
+    );
+
+    accountsClient.getById(accountId)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .contentType(JSON)
+      .body(CONTRIBUTORS_FIELD_NAME, hasSize(1))
+      .body(CONTRIBUTORS_FIELD_NAME, contributorsAfterPutMatcher);
 
     // delete account
     accountsClient.delete(accountId)
