@@ -6,11 +6,13 @@
   "properties": {
     "amount": {
       "description": "Amount of the fine/fee",
-      "javaType": "org.folio.rest.domain.MonetaryValue"
+      "javaType": "org.folio.rest.domain.MonetaryValue",
+      "type": "number"
     },
     "remaining": {
       "description": "Remaining of the fine/fee",
-      "javaType": "org.folio.rest.domain.MonetaryValue"
+      "javaType": "org.folio.rest.domain.MonetaryValue",
+      "type": "number"
     },
     "dateCreated": {
       "description": "Date and time the account of the fine/fee was created",
