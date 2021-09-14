@@ -20,6 +20,7 @@ public class ServicePath {
   public static final String OVERDUE_FINE_POLICIES_PATH = "/overdue-fines-policies";
   public static final String LOANS_PATH = "/loan-storage/loans";
   public static final String SERVICE_POINTS_PATH = "/service-points";
+  public static final String PATRON_NOTICE_PATH = "/patron-notice";
 
   private ServicePath() {
     throw new UnsupportedOperationException("Do not instantiate");

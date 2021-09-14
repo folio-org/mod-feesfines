@@ -23,7 +23,8 @@ public enum LogEventPayloadField {
   BALANCE("balance"),
   PAYMENT_METHOD("paymentMethod"),
   COMMENTS("comments"),
-  ITEMS("items");
+  ITEMS("items"),
+  ERROR_MESSAGE("errorMessage");
 
   private final String value;
 
