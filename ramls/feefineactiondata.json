@@ -23,11 +23,13 @@
     },
     "amountAction": {
       "description": "Amount of activity",
-      "javaType": "org.folio.rest.domain.MonetaryValue"
+      "javaType": "org.folio.rest.domain.MonetaryValue",
+      "type": "number"
     },
     "balance": {
       "description": "Calculated amount of remaining balance based on original fee/fine and what has been paid/waived/tranferred/refunded",
-      "javaType": "org.folio.rest.domain.MonetaryValue"
+      "javaType": "org.folio.rest.domain.MonetaryValue",
+      "type": "number"
     },
     "transactionInformation": {
       "description": "Number or other transaction id related to payment",
