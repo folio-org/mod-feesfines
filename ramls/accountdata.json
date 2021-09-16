@@ -143,6 +143,24 @@
       "description": "Holdings record field: holdingsRecord.instanceId",
       "$ref": "raml-util/schemas/uuid.schema",
       "readonly": true
+    },
+    "contributors": {
+      "type": "array",
+      "description": "List of contributors",
+      "minItems": 0,
+      "items": {
+        "javaType": "org.folio.rest.jaxrs.model.ContributorData",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Personal name, corporate name, meeting name"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ]
+      }
     }
   },
   "additionalProperties": false,
