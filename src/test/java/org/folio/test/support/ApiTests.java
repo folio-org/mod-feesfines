@@ -213,6 +213,18 @@ public class ApiTests {
       .statusCode(HttpStatus.SC_NO_CONTENT);
   }
 
+  protected <T> void replaceEntity(String path, Object entity) {
+    JsonObject entityJson = mapFrom(entity);
+
+    RestAssured.given()
+      .spec(getRequestSpecification())
+      .body(entityJson.encodePrettily())
+      .when()
+      .put(format("%s/%s", path, entityJson.getString("id")))
+      .then()
+      .statusCode(HttpStatus.SC_NO_CONTENT);
+  }
+
   protected RequestSpecification getRequestSpecification() {
     return RestAssured.given()
       .baseUri(getOkapiUrl())
@@ -235,7 +247,7 @@ public class ApiTests {
       aResponse().withBody(mapFrom(returnObject).encodePrettily()));
   }
 
-  private StubMapping createStub(String url, ResponseDefinitionBuilder responseBuilder) {
+  protected StubMapping createStub(String url, ResponseDefinitionBuilder responseBuilder) {
     return createStub(urlPathEqualTo(url), responseBuilder);
   }
 

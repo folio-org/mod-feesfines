@@ -2,14 +2,17 @@ package org.folio.rest.client;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.HttpStatus.HTTP_OK;
+
+import java.util.Map;
+
+import org.folio.rest.jaxrs.model.PatronNotice;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
-import java.util.Map;
-import org.folio.rest.jaxrs.model.PatronNotice;
 
 public class PatronNoticeClient extends OkapiClient {
 
@@ -21,8 +24,15 @@ public class PatronNoticeClient extends OkapiClient {
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
     okapiPostAbs("/patron-notice").sendJson(notice, promise);
 
-    return promise.future().compose(response -> response.statusCode() == 200 ?
-      succeededFuture() :
-      failedFuture("Failed to post patron notice. Returned status code: " + response.statusCode()));
+    return promise.future()
+      .compose(this::interpretResponse);
   }
+
+  private Future<Void> interpretResponse(HttpResponse<Buffer> response) {
+    return response.statusCode() == HTTP_OK.toInt()
+      ? succeededFuture()
+      : failedFuture(String.format("Failed to send patron notice: [%d] %s",
+      response.statusCode(), response.bodyAsString()));
+  }
+
 }
