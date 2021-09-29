@@ -1,3 +1,16 @@
+## 16.2.0 2021-09-29
+* Use BigDecimal to represent monetary values (MODFEE-29)
+* Add schema-level validation for all UUIDs (MODFEE-98)
+* Create endpoint to return data for Financial Transactions Detail Report (MODFEE-179)
+* Extend fee/fine record with contributors info (MODFEE-198)
+* Log patron notice processing errors to Circulation Log (MODFEE-200)
+* Fix incorrect Due Date in Financial Transactions Report (MODFEE-201)
+* Fix missing staff comment in Circulation Log records (MODFEE-202)
+* Add refunded amount to fee/fine balance (MODFEE-203)
+* Capture user details in Circulation Log record created upon manual block deletion (MODFEE-204)
+* Fix incorrect date formatting in Financial Transactions Report (MODFEE-206)
+* Fix missing `type` property in JSON-schemas for fields representing monetary values (MODFEE-210)
+
 ## 16.1.0 2021-06-14
 * Refund lost item processing fees transferred to more than one account to their corresponding transfer accounts (MODFEE-138)
 * Fix performance issues with large dataset of fees/fines (MODFEE-175)
