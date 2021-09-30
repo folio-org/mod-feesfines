@@ -91,10 +91,12 @@
       "tableName":"manualblocks",
       "fromModuleVersion":"15.10.0",
       "withMetadata":true,
-      "index" : [
+      "likeIndex" : [
         {
           "fieldName" : "userId",
-          "tOps" : "ADD"
+          "tOps" : "ADD",
+          "sqlExpression" : "jsonb->>'userId'",
+          "sqlExpressionQuery": "$"
         }
       ]
     },
