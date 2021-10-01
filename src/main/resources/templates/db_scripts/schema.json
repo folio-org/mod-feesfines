@@ -95,7 +95,7 @@
         {
           "fieldName" : "userId",
           "tOps" : "ADD",
-          "sqlExpression" : "jsonb->>'userId'",
+          "sqlExpression" : "(jsonb->>'userId')",
           "sqlExpressionQuery": "$"
         }
       ]
