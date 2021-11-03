@@ -114,9 +114,8 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       feeFineActionMatcher(FIRST_ACCOUNT_ID, 5.0, payAmount, REFUND.getFullResult(), REFUNDED_TO_PATRON)
     );
 
-    testSingleAccountRefundSuccess(initialAmount, payAmount,
-      transferAmount, waiveAmount, refundAmount, CLOSED, REFUND.getFullResult(),
-      expectedFeeFineActions);
+    testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount,
+      refundAmount, REFUND.getFullResult(), expectedFeeFineActions);
   }
 
   @Test
@@ -133,7 +132,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      CLOSED, REFUND.getFullResult(), expectedFeeFineActions);
+      REFUND.getFullResult(), expectedFeeFineActions);
   }
 
   @Test
@@ -152,7 +151,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      CLOSED, REFUND.getFullResult(), expectedFeeFineActions);
+      REFUND.getFullResult(), expectedFeeFineActions);
   }
 
   @Test
@@ -169,7 +168,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      OPEN, REFUND.getFullResult(), expectedFeeFineActions);
+      REFUND.getFullResult(), expectedFeeFineActions);
   }
 
   @Test
@@ -186,7 +185,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      OPEN, REFUND.getFullResult(), expectedFeeFineActions);
+      REFUND.getFullResult(), expectedFeeFineActions);
   }
 
   @Test
@@ -205,7 +204,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      OPEN, REFUND.getFullResult(), expectedFeeFineActions);
+      REFUND.getFullResult(), expectedFeeFineActions);
   }
 
   @Test
@@ -222,7 +221,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      CLOSED, REFUND.getPartialResult(), expectedFeeFineActions);
+      REFUND.getPartialResult(), expectedFeeFineActions);
 
     List<String> payloads = fetchLogEventPayloads(getOkapi());
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfClosedAccountWithPaymentPayloads())));
@@ -243,7 +242,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      CLOSED, REFUND.getPartialResult(), expectedFeeFineActions);
+      REFUND.getPartialResult(), expectedFeeFineActions);
 
     List<String> payloads = fetchLogEventPayloads(getOkapi());
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfClosedAccountWithTransferPayloads())));
@@ -268,7 +267,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      CLOSED, REFUND.getPartialResult(), expectedFeeFineActions);
+      REFUND.getPartialResult(), expectedFeeFineActions);
 
     List<String> payloads = fetchLogEventPayloads(getOkapi());
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfClosedAccountWithPaymentAndTransferPayloads())));
@@ -289,7 +288,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      OPEN, REFUND.getPartialResult(), expectedFeeFineActions);
+      REFUND.getPartialResult(), expectedFeeFineActions);
 
     List<String> payloads = fetchLogEventPayloads(getOkapi());
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfOpenAccountWithPaymentPayloads())));
@@ -310,8 +309,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount,
-      refundAmount,
-      OPEN, REFUND.getPartialResult(), expectedFeeFineActions);
+      refundAmount, REFUND.getPartialResult(), expectedFeeFineActions);
 
     List<String> payloads = fetchLogEventPayloads(getOkapi());
     payloads.forEach(
@@ -337,7 +335,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     );
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
-      OPEN, REFUND.getPartialResult(), expectedFeeFineActions);
+      REFUND.getPartialResult(), expectedFeeFineActions);
 
     List<String> payloads = fetchLogEventPayloads(getOkapi());
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfOpenAccountWithPaymentAndTransferPayloads())));
@@ -487,7 +485,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     verifyActions(18, expectedFeeFineActions); // 6 payments/transfer actions + 12 refund actions
 
     Account firstAccount = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      REFUND.getPartialResult(), expectedRemainingAmount1, CLOSED.getValue());
+      REFUND.getPartialResult(), expectedRemainingAmount1, OPEN.getValue());
 
     Account secondAccount = verifyAccountAndGet(accountsClient, SECOND_ACCOUNT_ID,
       REFUND.getFullResult(), expectedRemainingAmount2, OPEN.getValue());
@@ -591,7 +589,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
     verifyResponse(response, refundAmount, expectedFeeFineActions.size());
     verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, REFUND.getFullResult(),
-      new MonetaryValue(10.0), CLOSED.getValue());
+      new MonetaryValue(10.0), OPEN.getValue());
     verifyActions(8, expectedFeeFineActions); // 4 transfers + 2 credits + 2 refunds
   }
 
@@ -648,10 +646,10 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     verifyActions(16, expectedFeeFineActions); // 8 transfers + 4 credits + 4 refunds
 
     Account firstAccount = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      REFUND.getFullResult(), new MonetaryValue(10.0), CLOSED.getValue());
+      REFUND.getFullResult(), new MonetaryValue(10.0), OPEN.getValue());
 
     Account secondAccount = verifyAccountAndGet(accountsClient, SECOND_ACCOUNT_ID,
-      REFUND.getFullResult(), new MonetaryValue(10.0), CLOSED.getValue());
+      REFUND.getFullResult(), new MonetaryValue(10.0), OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(firstAccount, secondAccount);
   }
@@ -678,7 +676,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     verifyActions(4, expectedFeeFineActions1);
 
     Account accountAfterRefund1 = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      REFUND.getPartialResult(), new MonetaryValue(4.0), CLOSED.getValue());
+      REFUND.getPartialResult(), new MonetaryValue(4.0), OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund1);
 
@@ -694,7 +692,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     verifyActions(6, expectedFeeFineActions2);
 
     Account accountAfterRefund2 = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      REFUND.getPartialResult(), new MonetaryValue(8.0), CLOSED.getValue());
+      REFUND.getPartialResult(), new MonetaryValue(8.0), OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund2);
 
@@ -723,14 +721,13 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     verifyActions(8, expectedFeeFineActions4);
 
     Account accountAfterRefund4 = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      REFUND.getPartialResult(), new MonetaryValue(11.0), CLOSED.getValue());
+      REFUND.getPartialResult(), new MonetaryValue(11.0), OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund4);
   }
 
   private void testSingleAccountRefundSuccess(MonetaryValue initialAmount, MonetaryValue payAmount,
-    MonetaryValue transferAmount,
-    MonetaryValue waiveAmount, MonetaryValue requestedAmount, FeeFineStatus expectedStatus,
+    MonetaryValue transferAmount, MonetaryValue waiveAmount, MonetaryValue requestedAmount,
     String expectedPaymentStatus, List<Matcher<JsonObject>> expectedFeeFineActions) {
 
     MonetaryValue expectedRemainingAmount = initialAmount.subtract(payAmount)
@@ -748,7 +745,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     verifyActions(totalExpectedActionsCount, expectedFeeFineActions);
 
     Account accountAfterRefund = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      expectedPaymentStatus, expectedRemainingAmount, expectedStatus.getValue());
+      expectedPaymentStatus, expectedRemainingAmount, OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund);
   }
