@@ -1,3 +1,6 @@
+## 17.0.1 2021-11-05
+* Refund re-opens a closed fee/fine (MODFEE-229)
+
 ## 17.0.0 2021-09-29
 * Use BigDecimal to represent monetary values (MODFEE-29)
 * Add schema-level validation for all UUIDs (MODFEE-98)
