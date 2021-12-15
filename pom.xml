@@ -25,6 +25,7 @@
     <postgres.port>5433</postgres.port>
     <sonar.exclusions>**/impl/**</sonar.exclusions>
     <junit.jupiter.version>5.5.1</junit.jupiter.version>
+    <log4j2.version>2.16.0</log4j2.version>
   </properties>
 
   <dependencyManagement>
@@ -50,6 +51,16 @@
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4j2.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${log4j2.version}</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
