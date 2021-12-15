@@ -17,7 +17,7 @@
     <powermock.version>2.0.7</powermock.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <raml-module-builder.version>33.0.0</raml-module-builder.version>
+    <raml-module-builder.version>33.0.4</raml-module-builder.version>
     <vertx.version>4.1.0.CR1</vertx.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
@@ -25,7 +25,6 @@
     <postgres.port>5433</postgres.port>
     <sonar.exclusions>**/impl/**</sonar.exclusions>
     <junit.jupiter.version>5.5.1</junit.jupiter.version>
-    <log4j2.version>2.16.0</log4j2.version>
   </properties>
 
   <dependencyManagement>
@@ -51,16 +50,6 @@
   </dependencyManagement>
 
   <dependencies>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <version>${log4j2.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <version>${log4j2.version}</version>
-    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
