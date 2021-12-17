@@ -1,3 +1,6 @@
+## 17.0.2 2021-12-17
+* Upgrade to RMB 33.0.4 and Log4j 2.16.0 (MODFEE-232)
+
 ## 17.0.1 2021-11-05
 * Refund re-opens a closed fee/fine (MODFEE-229)
 
