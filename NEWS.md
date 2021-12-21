@@ -1,3 +1,6 @@
+## 16.1.2 2021-12-21
+* Upgrade to RMB 33.0.4 and Log4j 2.16.0 (MODFEE-233)
+
 ## 16.1.1 2021-08-04
 * Increase remaining balance after refund (MODFEE-203)
 
