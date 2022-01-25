@@ -62,7 +62,7 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
     JsonObject error = new JsonObject()
       .put("message", "must not be null")
       .put("type", "1")
-      .put("code", "-1")
+      .put("code", "javax.validation.constraints.NotNull.message")
       .put("parameters", new JsonArray(Collections.singletonList(parameters)));
 
     String errors = new JsonObject()
@@ -104,7 +104,7 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
     JsonObject error = new JsonObject()
       .put("message", "must match \"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$\"")
       .put("type", "1")
-      .put("code", "-1")
+      .put("code", "javax.validation.constraints.Pattern.message")
       .put("parameters", new JsonArray(Collections.singletonList(parameters)));
 
     String errors = new JsonObject()
