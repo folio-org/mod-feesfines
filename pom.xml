@@ -24,7 +24,7 @@
     <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->
     <postgres.port>5433</postgres.port>
     <sonar.exclusions>**/impl/**</sonar.exclusions>
-    <junit.jupiter.version>5.5.1</junit.jupiter.version>
+    <junit.jupiter.version>5.6.0</junit.jupiter.version>
   </properties>
 
   <dependencyManagement>
