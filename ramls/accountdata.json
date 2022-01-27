@@ -19,6 +19,11 @@
       "type": "string",
       "format": "date-time"
     },
+    "dateClosed": {
+      "description": "Date and time the account of the fine/fee was closed",
+      "type": "string",
+      "format": "date-time"
+    },
     "dateUpdated": {
       "description": "Date and time the account of the fine/fee was updated",
       "type": "string",
