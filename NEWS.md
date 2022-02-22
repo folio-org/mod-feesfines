@@ -1,3 +1,8 @@
+## 17.1.0 2022-02-22
+Reopen a fee/fine on refund (MODFEE-229)
+Upgrade to RMB 33.0.4 and Log4j 2.16.0 (MODFEE-232)
+Upgrade to RMB 33.2.4 (MODFEE-236)
+
 ## 17.0.0 2021-09-29
 * Use BigDecimal to represent monetary values (MODFEE-29)
 * Add schema-level validation for all UUIDs (MODFEE-98)
