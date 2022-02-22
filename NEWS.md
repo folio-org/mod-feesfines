@@ -1,3 +1,8 @@
+## 17.1.0 2022-02-22
+Refund changes status of account to Open (MODFEE-229)
+Added log4j dependencies (version 2.16.0), Upgrated RMB and vertx versions (MODFEE-232)
+Update RMB to v33.2.4 (MODFEE-236)
+
 ## 17.0.0 2021-09-29
 * Use BigDecimal to represent monetary values (MODFEE-29)
 * Add schema-level validation for all UUIDs (MODFEE-98)
