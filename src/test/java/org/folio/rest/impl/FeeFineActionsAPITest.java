@@ -10,6 +10,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.vertx.core.json.JsonObject.mapFrom;
+import static org.folio.rest.jaxrs.model.Account.PaymentStatus.OUTSTANDING;
+import static org.folio.rest.jaxrs.model.Account.PaymentStatus.PAID_FULLY;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE_ERROR;
@@ -68,7 +70,6 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Owner;
-import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.service.LogEventPublisher.LogEventPayloadType;
 import org.folio.test.support.ApiTests;
@@ -340,7 +341,7 @@ public class FeeFineActionsAPITest extends ApiTests {
         .put("feeCharge", new JsonObject()
           .put("owner", account.getFeeFineOwner())
           .put("type", account.getFeeFineType())
-          .put("paymentStatus", account.getPaymentStatus().getName())
+          .put("paymentStatus", account.getPaymentStatus())
           .put("amount", ACCOUNT_AMOUNT)
           .put("remainingAmount", ACCOUNT_REMAINING)
           .put("chargeDate", accountCreationDate)
@@ -446,6 +447,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
+      .put("paymentStatus", OUTSTANDING)
       .put("remaining", 10.0)
       .put("amount", 10.0));
 
@@ -500,6 +502,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("itemId", randomId())
       .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
+      .put("paymentStatus", OUTSTANDING)
       .put("ownerId", ownerId)
       .put("remaining", 10.0)
       .put("amount", 10.0));
@@ -670,7 +673,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
       .withLocation("Account-level location")
-      .withPaymentStatus(new PaymentStatus().withName("Paid fully"))
+      .withPaymentStatus(PAID_FULLY)
       .withFeeFineType(feefine.getFeeFineType())
       .withMaterialType("book")
       .withMaterialTypeId(randomId())

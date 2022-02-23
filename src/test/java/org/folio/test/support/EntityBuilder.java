@@ -1,6 +1,7 @@
 package org.folio.test.support;
 
 import static java.lang.String.format;
+import static org.folio.rest.jaxrs.model.Account.PaymentStatus.OUTSTANDING;
 import static org.folio.test.support.ApiTests.randomId;
 
 import java.math.BigDecimal;
@@ -32,7 +33,6 @@ import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.ManualBlockTemplate;
 import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
-import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
 import org.folio.rest.jaxrs.model.ServicePoint;
@@ -80,7 +80,7 @@ public class EntityBuilder {
       .withFeeFineOwner(owner)
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue(amount))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(OUTSTANDING)
       .withStatus(new Status().withName("Open"));
   }
 
@@ -97,7 +97,7 @@ public class EntityBuilder {
       .withFeeFineOwner("owner")
       .withAmount(new MonetaryValue(9.0))
       .withRemaining(new MonetaryValue(4.55))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(OUTSTANDING)
       .withStatus(new Status().withName("Open"));
   }
 

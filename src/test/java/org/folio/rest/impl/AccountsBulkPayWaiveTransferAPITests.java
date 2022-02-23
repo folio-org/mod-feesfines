@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
+import static org.folio.rest.jaxrs.model.Account.PaymentStatus.OUTSTANDING;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkTransferClient;
@@ -39,7 +40,6 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
-import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
@@ -352,7 +352,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       .withFeeFineOwner("owner")
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue(amount))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(OUTSTANDING)
       .withStatus(new Status().withName("Open"));
   }
 

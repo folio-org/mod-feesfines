@@ -158,7 +158,7 @@ public class PatronNoticeBuilder {
     }
 
     String paymentStatus = account.getPaymentStatus() == null ?
-      null : account.getPaymentStatus().getName();
+      null : account.getPaymentStatus().value();
 
     feeChargeContext
       .put("owner", account.getFeeFineOwner())

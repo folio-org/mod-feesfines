@@ -151,7 +151,7 @@ public abstract class ActionService {
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date());
 
-    account.getPaymentStatus().setName(actionType);
+    account.setPaymentStatus(Account.PaymentStatus.fromValue(actionType));
 
     if (isFullAction) {
       account.getStatus().setName(CLOSED.getValue());

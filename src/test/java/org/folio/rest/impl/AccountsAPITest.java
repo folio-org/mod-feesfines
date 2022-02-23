@@ -8,13 +8,16 @@ import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static io.vertx.core.json.Json.decodeValue;
 import static io.vertx.core.json.JsonObject.mapFrom;
+import static org.folio.rest.jaxrs.model.Account.PaymentStatus.OUTSTANDING;
+import static org.folio.rest.jaxrs.model.Account.PaymentStatus.PAID_FULLY;
+import static org.folio.rest.jaxrs.model.Account.PaymentStatus.PAID_PARTIALLY;
 import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
@@ -32,11 +35,10 @@ import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
-import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
-import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.hamcrest.Matcher;
@@ -151,7 +153,7 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", PAID_FULLY)
       .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
@@ -188,7 +190,7 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", PAID_FULLY)
       .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
@@ -212,14 +214,14 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid partially"))
+      .put("paymentStatus", PAID_PARTIALLY)
       .put("remaining", 0.1);
 
     accountsClient.update(accountId, updatedAccount);
 
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
       hasJsonPath("status.name", is("Closed")),
-      hasJsonPath("paymentStatus.name", is("Paid partially")),
+      hasJsonPath("paymentStatus", is(PAID_PARTIALLY.value())),
       hasJsonPath("remaining", is(0.1))
     ));
     assertThat(getLastFeeFineClosedEvent(), nullValue());
@@ -237,7 +239,7 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", PAID_FULLY)
       .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
@@ -258,14 +260,14 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Open"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", PAID_FULLY)
       .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
 
     assertThat(accountsClient.getById(accountId).getBody().asString(), allOf(
       hasJsonPath("status.name", is("Open")),
-      hasJsonPath("paymentStatus.name", is("Paid fully")),
+      hasJsonPath("paymentStatus", is(PAID_FULLY.value())),
       hasJsonPath("remaining", is(0.0))
     ));
     assertThat(getLastFeeFineClosedEvent(), nullValue());
@@ -288,7 +290,7 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", PAID_FULLY)
       .put("remaining", remaining.toDouble());
 
     accountsClient.attemptUpdate(accountId, updatedAccount)
@@ -351,7 +353,7 @@ public class AccountsAPITest extends ApiTests {
       .withFeeFineOwner("owner")
       .withAmount(new MonetaryValue(new BigDecimal("7.77")))
       .withRemaining(new MonetaryValue(new BigDecimal("3.33")))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(OUTSTANDING)
       .withStatus(new Status().withName("Open"));
   }
 

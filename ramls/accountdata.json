@@ -38,17 +38,9 @@
       ]
     },
     "paymentStatus": {
-      "description": "Overall status of the payment/waive/transfer/refund/cancel",
-      "type": "object",
-      "properties": {
-        "name": {
-          "description": "Name of the status (values used are Outstanding, Paid partially, Paid fully, Waived partially, Waived fully, Transferred partially, Transferred fully, Refunded partially, Refunded fully, Cancelled as error)",
-          "type": "string"
-        }
-      },
-      "required": [
-        "name"
-      ]
+      "description": "Overall status of the payment/waive/transfer/refund/credit/cancel",
+      "type": "string",
+      "enum": ["Outstanding", "Paid partially", "Paid fully", "Waived partially", "Waived fully", "Transferred partially", "Transferred fully", "Refunded partially", "Refunded fully", "Credited fully", "Credited partially", "Cancelled item returned", "Cancelled as error"]
     },
     "feeFineType": {
       "description": "Fee/fine that is up to the desecration of the user",
@@ -170,6 +162,7 @@
     "userId",
     "feeFineId",
     "ownerId",
+    "paymentStatus",
     "id"
    ]
 }

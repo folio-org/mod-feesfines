@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
+import static org.folio.rest.jaxrs.model.Account.PaymentStatus.CANCELLED_AS_ERROR;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCancelClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountCancelClient;
@@ -65,7 +66,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON)
       .body("status.name", is("Closed"))
-      .body("paymentStatus.name", is("Cancelled as error"))
+      .body("paymentStatus", is(CANCELLED_AS_ERROR.value()))
       .body("remaining", is(0.0f));
 
     actionsClient.getAll()
@@ -76,7 +77,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
         hasJsonPath("amountAction",
           is((float) accountToPost.getAmount().toDouble())),
         hasJsonPath("balance", is(0.0f)),
-        hasJsonPath("typeAction", is("Cancelled as error"))
+        hasJsonPath("typeAction", is(CANCELLED_AS_ERROR.value()))
       )));
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
@@ -100,7 +101,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON)
       .body("status.name", is("Closed"))
-      .body("paymentStatus.name", is(cancellationReason))
+      .body("paymentStatus", is(cancellationReason))
       .body("remaining", is(0.0f));
 
     actionsClient.getAll()
@@ -178,7 +179,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .statusCode(HttpStatus.SC_OK)
       .contentType(JSON)
       .body("status.name", is("Closed"))
-      .body("paymentStatus.name", is("Cancelled as error"))
+      .body("paymentStatus", is(CANCELLED_AS_ERROR.value()))
       .body("remaining", is(0.0f)));
 
     actionsClient.getAll()
@@ -190,13 +191,13 @@ public class AccountsCancelActionAPITests extends ApiTests {
         hasJsonPath("amountAction", is(
           (float) accountsToPost.get(0).getAmount().toDouble())),
         hasJsonPath("balance", is(0.0f)),
-        hasJsonPath("typeAction", is("Cancelled as error"))
+        hasJsonPath("typeAction", is(CANCELLED_AS_ERROR.value()))
       )))
       .body(FEE_FINE_ACTIONS, hasItem(allOf(
         hasJsonPath("accountId", is(accountIds.get(1))),
         hasJsonPath("amountAction", is(accountsToPost.get(1).getAmount().getAmount().floatValue())),
         hasJsonPath("balance", is(0.0f)),
-        hasJsonPath("typeAction", is("Cancelled as error"))
+        hasJsonPath("typeAction", is(CANCELLED_AS_ERROR.value()))
         )
       ));
 
