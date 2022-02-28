@@ -1,5 +1,8 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.jaxrs.resource.Feefines.PostFeefinesResponse.respond422WithApplicationJson;
+import static org.folio.rest.utils.ErrorHelper.createErrors;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +15,8 @@ import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.CQL2PgJSONException;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.domain.AutomaticFeeFineType;
+import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.FeefinedataCollection;
 import org.folio.rest.jaxrs.model.FeefinesGetOrder;
@@ -42,6 +47,7 @@ public class FeeFinesAPI implements Feefines {
     private static final String FEEFINE_ID_FIELD = "'id'";
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Logger logger = LogManager.getLogger(FeeFinesAPI.class);
+    private static final String VALIDATION_ERROR_MSG = "Attempt to delete/update an automatic fee/fine type";
 
     private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(FEEFINES_TABLE + ".jsonb");
@@ -123,6 +129,7 @@ public class FeeFinesAPI implements Feefines {
         }
         try {
             vertxContext.runOnContext(v -> {
+                validateAutomaticFeeFineId(entity.getId(), asyncResultHandler);
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
                 PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
 
@@ -229,6 +236,7 @@ public class FeeFinesAPI implements Feefines {
             Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
+                validateAutomaticFeeFineId(feefineId, asyncResultHandler);
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 Criteria idCrit = new Criteria();
@@ -295,6 +303,7 @@ public class FeeFinesAPI implements Feefines {
             }
 
             vertxContext.runOnContext(v -> {
+                validateAutomaticFeeFineId(feefineId, asyncResultHandler);
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 Criteria idCrit = new Criteria();
@@ -349,6 +358,14 @@ public class FeeFinesAPI implements Feefines {
             asyncResultHandler.handle(Future.succeededFuture(
                     PutFeefinesByFeefineIdResponse.respond500WithTextPlain(
                             messages.getMessage(lang, MessageConsts.InternalServerError))));
+        }
+    }
+
+    private void validateAutomaticFeeFineId(String feeFineId, Handler<AsyncResult<Response>> asyncResultHandler) {
+        if (AutomaticFeeFineType.getById(feeFineId) != null) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              respond422WithApplicationJson(createErrors(new Error().withMessage(VALIDATION_ERROR_MSG)))
+            ));
         }
     }
 }
