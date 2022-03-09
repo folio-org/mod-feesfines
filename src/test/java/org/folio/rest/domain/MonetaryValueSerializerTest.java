@@ -1,6 +1,7 @@
 package org.folio.rest.domain;
 
 import static io.restassured.http.ContentType.JSON;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
@@ -148,7 +149,7 @@ public class MonetaryValueSerializerTest extends ApiTests {
       .withFeeFineOwner("owner")
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue("3.33"))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
       .withStatus(new Status().withName("Open"));
   }
 }

@@ -1,6 +1,7 @@
 package org.folio.test.support;
 
 import static java.lang.String.format;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
 import static org.folio.test.support.ApiTests.randomId;
 
 import java.math.BigDecimal;
@@ -80,7 +81,7 @@ public class EntityBuilder {
       .withFeeFineOwner(owner)
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue(amount))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
       .withStatus(new Status().withName("Open"));
   }
 
@@ -97,7 +98,7 @@ public class EntityBuilder {
       .withFeeFineOwner("owner")
       .withAmount(new MonetaryValue(9.0))
       .withRemaining(new MonetaryValue(4.55))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
       .withStatus(new Status().withName("Open"));
   }
 

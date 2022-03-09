@@ -12,6 +12,7 @@ import org.folio.rest.domain.ActionRequest;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.service.action.context.ActionContext;
 import org.folio.rest.service.action.validation.CancelActionValidationService;
 import org.folio.rest.utils.amountsplitter.EchoActionableAmounts;
@@ -52,7 +53,7 @@ public class CancelActionService extends ActionService {
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date());
 
-    account.getPaymentStatus().setName(reasonForAction);
+    account.getPaymentStatus().setName(PaymentStatus.Name.fromValue(reasonForAction));
     account.getStatus().setName(CLOSED.getValue());
     account.setRemaining(MonetaryValue.ZERO);
 
