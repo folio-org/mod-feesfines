@@ -42,7 +42,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "Name of the status (values used are Outstanding, Paid partially, Paid fully, Waived partially, Waived fully, Transferred partially, Transferred fully, Refunded partially, Refunded fully, Cancelled as error)",
+          "description": "Name of the status",
           "enum": ["Outstanding", "Paid partially", "Paid fully", "Waived partially", "Waived fully", "Transferred partially", "Transferred fully", "Refunded partially", "Refunded fully", "Credited fully", "Credited partially", "Cancelled item returned", "Cancelled as error"],
           "type": "string"
         }
