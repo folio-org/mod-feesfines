@@ -2,7 +2,6 @@ package org.folio.rest.service.action;
 
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;

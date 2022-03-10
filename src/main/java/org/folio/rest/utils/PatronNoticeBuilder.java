@@ -13,7 +13,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.domain.FeeFineNoticeContext;
-import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Context;
 import org.folio.rest.jaxrs.model.Contributor;
@@ -237,7 +236,7 @@ public class PatronNoticeBuilder {
 
   private static String getNameFromProperties(Map<String, Object> properties) {
     return (String) Optional.ofNullable(properties.get("name"))
-      .filter(name -> name instanceof String)
+      .filter(String.class::isInstance)
       .orElse(null);
   }
 
