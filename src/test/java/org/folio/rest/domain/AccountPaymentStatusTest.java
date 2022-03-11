@@ -19,10 +19,9 @@ import junitparams.Parameters;
 public class AccountPaymentStatusTest {
 
   @Test
-  @Parameters({"Outstanding", "Paid partially", "Paid fully", "Waived partially",
-               "Waived fully", "Transferred partially", "Transferred fully", "Refunded partially",
-               "Refunded fully", "Credited fully", "Credited partially", "Cancelled item returned",
-               "Cancelled as error"
+  @Parameters({"Outstanding", "Paid partially", "Paid fully", "Waived partially", "Waived fully",
+               "Transferred partially", "Transferred fully", "Refunded partially", "Refunded fully",
+               "Credited fully", "Credited partially", "Cancelled item returned", "Cancelled as error"
   })
   public void paymentStatusIsValid(String status) {
     Account account = buildAccount(status);
