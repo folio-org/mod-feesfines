@@ -22,16 +22,13 @@ class AccountPaymentStatusTest {
   })
 
   void paymentStatusIsValid(String status) {
-    Account account = EntityBuilder.buildAccount().withPaymentStatus(
-      new PaymentStatus().withName(fromValue(status)));
-
-    assertNotNull(account);
-    assertEquals(status, account.getPaymentStatus().getName().value());
+    PaymentStatus paymentStatus = new PaymentStatus().withName(fromValue(status));
+    assertNotNull(paymentStatus);
+    assertEquals(status, paymentStatus.getName().value());
   }
 
   @Test
   void paymentStatusIsNotValid() {
-    assertThrows(IllegalArgumentException.class, () -> EntityBuilder.buildAccount()
-      .withPaymentStatus(new PaymentStatus().withName(fromValue("Invalid status"))));
+    assertThrows(IllegalArgumentException.class, () -> fromValue("Invalid status"));
   }
 }
