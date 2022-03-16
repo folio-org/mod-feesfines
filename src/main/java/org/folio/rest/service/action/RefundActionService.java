@@ -6,6 +6,7 @@ import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.fromValue;
 import static org.folio.rest.utils.FeeFineActionHelper.getTotalAmount;
 import static org.folio.rest.utils.FeeFineActionHelper.getTotalAmounts;
 import static org.folio.rest.utils.FeeFineActionHelper.groupTransferredAmountsByTransferAccount;
@@ -161,7 +162,7 @@ public class RefundActionService extends ActionService {
 
   private static void updateAccountInMemory(Account account, Feefineaction feeFineAction) {
     account.setRemaining(feeFineAction.getBalance());
-    account.getPaymentStatus().setName(feeFineAction.getTypeAction());
+    account.getPaymentStatus().setName(fromValue(feeFineAction.getTypeAction()));
     account.getStatus().setName(OPEN.getValue());
   }
 

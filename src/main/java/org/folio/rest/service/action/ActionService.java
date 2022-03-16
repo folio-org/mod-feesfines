@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.fromValue;
 import static org.folio.rest.persist.PostgresClient.getInstance;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
@@ -151,7 +152,7 @@ public abstract class ActionService {
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date());
 
-    account.getPaymentStatus().setName(actionType);
+    account.getPaymentStatus().setName(fromValue(actionType));
 
     if (isFullAction) {
       account.getStatus().setName(CLOSED.getValue());
