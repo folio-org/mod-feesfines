@@ -95,13 +95,30 @@ public class FeeFinesAPITest extends ApiTests {
 
   @Test
   @Parameters(source = AutomaticFeeFineType.class)
-  public void cannotDeleteAutomaticFeeFineType(AutomaticFeeFineType automaticFeeFineType) {
+  public void cannotChangeAutomaticFeeFineType(AutomaticFeeFineType automaticFeeFineType) {
     var url = REST_PATH + "/" + automaticFeeFineType.getId();
+    var errorMessage = "Attempt to change an automatic fee/fine type";
+
+    client.post(url, createFeefineJson(automaticFeeFineType.getId(), "type", randomId()))
+      .then()
+      .assertThat()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .contentType(ContentType.JSON)
+      .body(is(errorMessage));
+
+    client.put(url, createFeefineJson(automaticFeeFineType.getId(), "type", randomId()))
+      .then()
+      .assertThat()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .contentType(ContentType.JSON)
+      .body(is(errorMessage));
+
     client.delete(url)
       .then()
       .assertThat()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .contentType(ContentType.JSON);
+      .contentType(ContentType.JSON)
+      .body(is(errorMessage));
 
     client.get(url)
       .then()
