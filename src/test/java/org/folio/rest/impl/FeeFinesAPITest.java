@@ -1,15 +1,10 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.domain.AutomaticFeeFineType.OVERDUE_FINE;
-import static org.folio.rest.domain.AutomaticFeeFineType.LOST_ITEM_FEE;
-import static org.folio.rest.domain.AutomaticFeeFineType.LOST_ITEM_PROCESSING_FEE;
-import static org.folio.rest.domain.AutomaticFeeFineType.REPLACEMENT_PROCESSING_FEE;
 import static org.hamcrest.CoreMatchers.is;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.test.support.ApiTests;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -24,13 +19,6 @@ public class FeeFinesAPITest extends ApiTests {
   private static final String REST_PATH = "/feefines";
   private static final String FEEFINES_TABLE = "feefines";
   private static final String OWNERS_TABLE = "owners";
-
-  @Before
-  public void setUp() {
-    removeAllFromTable(FEEFINES_TABLE);
-    removeAllFromTable(OWNERS_TABLE);
-    generateAutomaticFeeFineTypes();
-  }
 
   @Test
   public void canCreateNewFeefine() {
@@ -153,21 +141,5 @@ public class FeeFinesAPITest extends ApiTests {
     client.post("/owners", ownerJson)
       .then()
       .statusCode(HttpStatus.SC_CREATED);
-  }
-
-  private void generateAutomaticFeeFineTypes() {
-    createAutomaticFeeFineType(OVERDUE_FINE.getId(), "Overdue fine");
-    createAutomaticFeeFineType(REPLACEMENT_PROCESSING_FEE.getId(), "Replacement processing fee");
-    createAutomaticFeeFineType(LOST_ITEM_FEE.getId(), "Lost item fee");
-    createAutomaticFeeFineType(LOST_ITEM_PROCESSING_FEE.getId(), "Lost item processing fee");
-  }
-
-  private void createAutomaticFeeFineType(String id, String feeFineType) {
-    String automaticFeeFineTypeJson = new JsonObject()
-      .put("id", id)
-      .put("feeFineType", feeFineType)
-      .put("automatic", true)
-      .encodePrettily();
-    client.post(REST_PATH, automaticFeeFineTypeJson);
   }
 }
