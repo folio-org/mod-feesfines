@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.hamcrest.CoreMatchers.is;
+
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.test.support.ApiTests;
@@ -103,10 +105,20 @@ public class FeeFinesAPITest extends ApiTests {
   @Test
   @Parameters(source = AutomaticFeeFineType.class)
   public void cannotDeleteAutomaticFeeFineType(AutomaticFeeFineType automaticFeeFineType) {
-    client.delete(REST_PATH + "/" + automaticFeeFineType.getId())
+    var url = REST_PATH + "/" + automaticFeeFineType.getId();
+    client.delete(url)
       .then()
+      .assertThat()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(ContentType.JSON);
+
+    client.get(url)
+      .then()
+      .assertThat()
+      .statusCode(HttpStatus.SC_OK)
+      .contentType(ContentType.JSON)
+      .body("id", is(automaticFeeFineType.getId()))
+      .body("automatic", is(true));
   }
 
   private String createFeefineJson(String id, String type, String ownerId) {

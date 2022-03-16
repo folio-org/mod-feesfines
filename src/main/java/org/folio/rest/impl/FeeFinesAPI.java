@@ -234,57 +234,63 @@ public class FeeFinesAPI implements Feefines {
             Map<String, String> okapiHeaders,
             Handler<AsyncResult<Response>> asyncResultHandler,
             Context vertxContext) {
-        try {
-            vertxContext.runOnContext(v -> {
-                validateAutomaticFeeFineId(feefineId, asyncResultHandler);
-                String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
-                Criteria idCrit = new Criteria();
-                idCrit.addField(FEEFINE_ID_FIELD);
-                idCrit.setOperation("=");
-                idCrit.setVal(feefineId);
-                Criterion criterion = new Criterion(idCrit);
+        if (AutomaticFeeFineType.getById(feefineId) != null) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              respond422WithApplicationJson(createErrors(new Error().withMessage(VALIDATION_ERROR_MSG)))
+            ));
+        } else {
+            try {
+                vertxContext.runOnContext(v -> {
+                    String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
-                try {
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
-                            FEEFINES_TABLE, criterion, deleteReply -> {
-                                if (deleteReply.succeeded()) {
-                                    if (deleteReply.result().rowCount() == 1) {
-                                        asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteFeefinesByFeefineIdResponse.respond204()));
-                                    } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(
-                                                DeleteFeefinesByFeefineIdResponse.respond404WithTextPlain("Record Not Found")));
-                                    }
-                                } else {
-                                    logger.error(deleteReply.result());
-                                    String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
-                                    logger.error(error, deleteReply.cause());
-                                    if (error == null) {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteFeefinesByFeefineIdResponse.respond500WithTextPlain(
-                                                messages.getMessage(lang, MessageConsts.InternalServerError))));
-                                    } else {
-                                        asyncResultHandler.handle(Future.succeededFuture(DeleteFeefinesByFeefineIdResponse.respond400WithTextPlain(error)));
-                                    }
-                                }
-                            });
-                } catch (Exception e) {
-                    logger.error(e.getMessage());
-                    asyncResultHandler.handle(
-                            Future.succeededFuture(
-                                    DeleteFeefinesByFeefineIdResponse.respond500WithTextPlain(
-                                            messages.getMessage(lang,
-                                                    MessageConsts.InternalServerError))));
-                }
+                    Criteria idCrit = new Criteria();
+                    idCrit.addField(FEEFINE_ID_FIELD);
+                    idCrit.setOperation("=");
+                    idCrit.setVal(feefineId);
+                    Criterion criterion = new Criterion(idCrit);
 
-            });
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            asyncResultHandler.handle(
-                    Future.succeededFuture(
+                    try {
+                        PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
+                          FEEFINES_TABLE, criterion, deleteReply -> {
+                              if (deleteReply.succeeded()) {
+                                  if (deleteReply.result().rowCount() == 1) {
+                                      asyncResultHandler.handle(Future.succeededFuture(
+                                        DeleteFeefinesByFeefineIdResponse.respond204()));
+                                  } else {
+                                      asyncResultHandler.handle(Future.succeededFuture(
+                                        DeleteFeefinesByFeefineIdResponse.respond404WithTextPlain("Record Not Found")));
+                                  }
+                              } else {
+                                  logger.error(deleteReply.result());
+                                  String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
+                                  logger.error(error, deleteReply.cause());
+                                  if (error == null) {
+                                      asyncResultHandler.handle(Future.succeededFuture(DeleteFeefinesByFeefineIdResponse.respond500WithTextPlain(
+                                        messages.getMessage(lang, MessageConsts.InternalServerError))));
+                                  } else {
+                                      asyncResultHandler.handle(Future.succeededFuture(DeleteFeefinesByFeefineIdResponse.respond400WithTextPlain(error)));
+                                  }
+                              }
+                          });
+                    } catch (Exception e) {
+                        logger.error(e.getMessage());
+                        asyncResultHandler.handle(
+                          Future.succeededFuture(
                             DeleteFeefinesByFeefineIdResponse.respond500WithTextPlain(
-                                    messages.getMessage(lang,
-                                            MessageConsts.InternalServerError))));
+                              messages.getMessage(lang,
+                                MessageConsts.InternalServerError))));
+                    }
+
+                });
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+                asyncResultHandler.handle(
+                  Future.succeededFuture(
+                    DeleteFeefinesByFeefineIdResponse.respond500WithTextPlain(
+                      messages.getMessage(lang,
+                        MessageConsts.InternalServerError))));
+            }
         }
     }
 
