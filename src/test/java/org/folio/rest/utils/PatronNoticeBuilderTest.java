@@ -1,5 +1,6 @@
 package org.folio.rest.utils;
 
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_PARTIALLY;
 import static org.folio.rest.utils.FeeFineActionHelper.parseFeeFineComments;
 import static org.folio.rest.utils.PatronNoticeBuilder.buildNotice;
 import static org.hamcrest.Matchers.allOf;
@@ -134,7 +135,7 @@ public class PatronNoticeBuilderTest {
 
     assertEquals(account.getFeeFineOwner(), chargeContext.getString("owner"));
     assertEquals(account.getFeeFineType(), chargeContext.getString("type"));
-    assertEquals(account.getPaymentStatus().getName(), chargeContext.getString("paymentStatus"));
+    assertEquals(account.getPaymentStatus().getName().value(), chargeContext.getString("paymentStatus"));
     assertEquals(ACCOUNT_AMOUNT, chargeContext.getString("amount"));
     assertEquals(ACCOUNT_REMAINING, chargeContext.getString("remainingAmount"));
     assertEquals(dateToString(account.getMetadata().getCreatedDate()), chargeContext.getString("chargeDate"));
@@ -268,7 +269,7 @@ public class PatronNoticeBuilderTest {
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
       .withLocation("Account-level location")
-      .withPaymentStatus(new PaymentStatus().withName("Partially paid"))
+      .withPaymentStatus(new PaymentStatus().withName(PAID_PARTIALLY))
       .withFeeFineOwner("Owner")
       .withFeeFineType("Fine type")
       .withMaterialType("book")

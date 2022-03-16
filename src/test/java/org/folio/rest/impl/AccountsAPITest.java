@@ -8,6 +8,9 @@ import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static io.vertx.core.json.Json.decodeValue;
 import static io.vertx.core.json.JsonObject.mapFrom;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_FULLY;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_PARTIALLY;
 import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -47,6 +50,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
+import io.restassured.response.Response;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 
@@ -151,12 +155,13 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", createNamedObject(PAID_FULLY.value()))
       .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
 
-    assertThat(accountsClient.getById(accountId), isPaidFully());
+    Response byId = accountsClient.getById(accountId);
+    assertThat(byId, isPaidFully());
 
     final Event event = getLastFeeFineClosedEvent();
     assertThat(event, notNullValue());
@@ -188,7 +193,7 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", createNamedObject(PAID_FULLY.value()))
       .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
@@ -212,14 +217,14 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid partially"))
+      .put("paymentStatus", createNamedObject(PAID_PARTIALLY.value()))
       .put("remaining", 0.1);
 
     accountsClient.update(accountId, updatedAccount);
 
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
       hasJsonPath("status.name", is("Closed")),
-      hasJsonPath("paymentStatus.name", is("Paid partially")),
+      hasJsonPath("paymentStatus.name", is(PAID_PARTIALLY.value())),
       hasJsonPath("remaining", is(0.1))
     ));
     assertThat(getLastFeeFineClosedEvent(), nullValue());
@@ -237,7 +242,7 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", createNamedObject(PAID_FULLY.value()))
       .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
@@ -258,14 +263,14 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Open"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", createNamedObject(PAID_FULLY.value()))
       .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
 
     assertThat(accountsClient.getById(accountId).getBody().asString(), allOf(
       hasJsonPath("status.name", is("Open")),
-      hasJsonPath("paymentStatus.name", is("Paid fully")),
+      hasJsonPath("paymentStatus.name", is(PAID_FULLY.value())),
       hasJsonPath("remaining", is(0.0))
     ));
     assertThat(getLastFeeFineClosedEvent(), nullValue());
@@ -288,7 +293,7 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject updatedAccount = account.copy()
       .put("status", createNamedObject("Closed"))
-      .put("paymentStatus", createNamedObject("Paid fully"))
+      .put("paymentStatus", createNamedObject(PAID_FULLY.value()))
       .put("remaining", remaining.toDouble());
 
     accountsClient.attemptUpdate(accountId, updatedAccount)
@@ -351,7 +356,7 @@ public class AccountsAPITest extends ApiTests {
       .withFeeFineOwner("owner")
       .withAmount(new MonetaryValue(new BigDecimal("7.77")))
       .withRemaining(new MonetaryValue(new BigDecimal("3.33")))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
       .withStatus(new Status().withName("Open"));
   }
 
