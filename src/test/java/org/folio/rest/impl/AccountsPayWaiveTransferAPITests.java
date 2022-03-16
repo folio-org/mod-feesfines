@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
@@ -322,7 +323,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .withFeeFineOwner("owner")
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue(amount))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
       .withStatus(new Status().withName("Open"));
   }
 
