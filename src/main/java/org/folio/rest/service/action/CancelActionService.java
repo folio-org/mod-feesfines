@@ -1,8 +1,8 @@
 package org.folio.rest.service.action;
 
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.fromValue;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -52,7 +52,7 @@ public class CancelActionService extends ActionService {
       .withId(UUID.randomUUID().toString())
       .withDateAction(new Date());
 
-    account.getPaymentStatus().setName(reasonForAction);
+    account.getPaymentStatus().setName(fromValue(reasonForAction));
     account.getStatus().setName(CLOSED.getValue());
     account.setRemaining(MonetaryValue.ZERO);
 
