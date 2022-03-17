@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.hamcrest.CoreMatchers.is;
+
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.test.support.ApiTests;
@@ -16,8 +18,6 @@ import junitparams.Parameters;
 @RunWith(JUnitParamsRunner.class)
 public class FeeFinesAPITest extends ApiTests {
   private static final String REST_PATH = "/feefines";
-  private static final String FEEFINES_TABLE = "feefines";
-  private static final String OWNERS_TABLE = "owners";
 
   @Before
   public void setUp() {
@@ -102,11 +102,38 @@ public class FeeFinesAPITest extends ApiTests {
 
   @Test
   @Parameters(source = AutomaticFeeFineType.class)
-  public void cannotDeleteAutomaticFeeFineType(AutomaticFeeFineType automaticFeeFineType) {
-    client.delete(REST_PATH + "/" + automaticFeeFineType.getId())
+  public void cannotChangeAutomaticFeeFineType(AutomaticFeeFineType automaticFeeFineType) {
+    var url = REST_PATH + "/" + automaticFeeFineType.getId();
+    var errorMessage = "Attempt to change an automatic fee/fine type";
+
+    client.post(REST_PATH, createFeefineJson(automaticFeeFineType.getId(), "type", randomId()))
       .then()
+      .assertThat()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .contentType(ContentType.JSON);
+      .contentType(ContentType.JSON)
+      .body("errors[0].message", is(errorMessage));
+
+    client.put(url, createFeefineJson(automaticFeeFineType.getId(), "type", randomId()))
+      .then()
+      .assertThat()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .contentType(ContentType.JSON)
+      .body("errors[0].message", is(errorMessage));
+
+    client.delete(url)
+      .then()
+      .assertThat()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .contentType(ContentType.JSON)
+      .body("errors[0].message", is(errorMessage));
+
+    client.get(url)
+      .then()
+      .assertThat()
+      .statusCode(HttpStatus.SC_OK)
+      .contentType(ContentType.JSON)
+      .body("id", is(automaticFeeFineType.getId()))
+      .body("automatic", is(true));
   }
 
   private String createFeefineJson(String id, String type, String ownerId) {

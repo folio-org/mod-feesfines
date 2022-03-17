@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.jaxrs.resource.Feefines.PostFeefinesResponse.respond422WithApplicationJson;
 import static org.folio.rest.utils.ErrorHelper.createErrors;
 
@@ -47,7 +48,7 @@ public class FeeFinesAPI implements Feefines {
     private static final String FEEFINE_ID_FIELD = "'id'";
     private static final String OKAPI_HEADER_TENANT = "x-okapi-tenant";
     private final Logger logger = LogManager.getLogger(FeeFinesAPI.class);
-    private static final String VALIDATION_ERROR_MSG = "Attempt to delete/update an automatic fee/fine type";
+    private static final String VALIDATION_ERROR_MSG = "Attempt to change an automatic fee/fine type";
 
     private CQLWrapper getCQL(String query, int limit, int offset) throws CQL2PgJSONException, IOException {
         CQL2PgJSON cql2pgJson = new CQL2PgJSON(FEEFINES_TABLE + ".jsonb");
@@ -129,7 +130,11 @@ public class FeeFinesAPI implements Feefines {
         }
         try {
             vertxContext.runOnContext(v -> {
-                validateAutomaticFeeFineId(entity.getId(), asyncResultHandler);
+                // Automatic fee/fine types can't be created
+                if (refuseToChangeAutomaticFeeFineType(entity.getId(), asyncResultHandler)) {
+                    return;
+                }
+
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
                 PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
 
@@ -236,7 +241,11 @@ public class FeeFinesAPI implements Feefines {
             Context vertxContext) {
         try {
             vertxContext.runOnContext(v -> {
-                validateAutomaticFeeFineId(feefineId, asyncResultHandler);
+                // Automatic fee/fine types can't be deleted
+                if (refuseToChangeAutomaticFeeFineType(feefineId, asyncResultHandler)) {
+                    return;
+                }
+
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 Criteria idCrit = new Criteria();
@@ -302,8 +311,12 @@ public class FeeFinesAPI implements Feefines {
                 asyncResultHandler.handle(Future.succeededFuture(PutFeefinesByFeefineIdResponse.respond400WithTextPlain("feefineId is missing")));
             }
 
+            // Automatic fee/fine types can't be updated
+            if (refuseToChangeAutomaticFeeFineType(feefineId, asyncResultHandler)) {
+                return;
+            }
+
             vertxContext.runOnContext(v -> {
-                validateAutomaticFeeFineId(feefineId, asyncResultHandler);
                 String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
                 Criteria idCrit = new Criteria();
@@ -361,11 +374,14 @@ public class FeeFinesAPI implements Feefines {
         }
     }
 
-    private void validateAutomaticFeeFineId(String feeFineId, Handler<AsyncResult<Response>> asyncResultHandler) {
-        if (AutomaticFeeFineType.getById(feeFineId) != null) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              respond422WithApplicationJson(createErrors(new Error().withMessage(VALIDATION_ERROR_MSG)))
-            ));
+    private boolean refuseToChangeAutomaticFeeFineType(String feeFineId,
+      Handler<AsyncResult<Response>> asyncResultHandler) {
+
+        boolean automatic = AutomaticFeeFineType.getById(feeFineId) != null;
+        if (automatic) {
+            asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(createErrors(
+              new Error().withMessage(VALIDATION_ERROR_MSG)))));
         }
+        return automatic;
     }
 }
