@@ -71,6 +71,8 @@ public class ApiTests {
   public static final String X_OKAPI_USER_ID = "94e5465a-67af-8799-4g87-1326cf12a22b";
   public static final String OKAPI_TOKEN = generateOkapiToken();
   public static final String MODULE_NAME = "mod-feesfines";
+  public static final String FEEFINES_TABLE = "feefines";
+  public static final String OWNERS_TABLE = "owners";
 
   @ClassRule
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
@@ -157,9 +159,9 @@ public class ApiTests {
   protected void removeAllFromTable(String tableName) {
     final CompletableFuture<Void> future = new CompletableFuture<>();
     Criterion criterion = new Criterion();
-    if ("feefines".equals(tableName)) {
+    if (FEEFINES_TABLE.equals(tableName)) {
       for (AutomaticFeeFineType type : AutomaticFeeFineType.values()) {
-        criterion.addCriterion(createCriteria(type), "AND");
+        criterion.addCriterion(createAutomaticFeeFineExclusionCriteria(type), "AND");
       }
     }
     PostgresClient.getInstance(vertx, TENANT_NAME)
@@ -168,7 +170,7 @@ public class ApiTests {
     get(future);
   }
 
-  private Criteria createCriteria(AutomaticFeeFineType automaticFeeFineType){
+  private Criteria createAutomaticFeeFineExclusionCriteria(AutomaticFeeFineType automaticFeeFineType) {
     return new Criteria()
       .addField("id")
       .setOperation("!=")
@@ -211,8 +213,7 @@ public class ApiTests {
         .then()
         .statusCode(HttpStatus.SC_CREATED)
         .contentType(ContentType.JSON);
-    }
-    catch (JsonProcessingException e) {
+    } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
   }

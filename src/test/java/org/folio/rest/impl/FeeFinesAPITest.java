@@ -18,8 +18,6 @@ import junitparams.Parameters;
 @RunWith(JUnitParamsRunner.class)
 public class FeeFinesAPITest extends ApiTests {
   private static final String REST_PATH = "/feefines";
-  private static final String FEEFINES_TABLE = "feefines";
-  private static final String OWNERS_TABLE = "owners";
 
   @Before
   public void setUp() {
