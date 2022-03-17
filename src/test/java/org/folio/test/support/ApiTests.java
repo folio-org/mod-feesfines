@@ -33,9 +33,11 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.rest.impl.TenantRefAPI;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.utils.OkapiClient;
@@ -45,7 +47,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.jupiter.api.BeforeEach;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -155,11 +156,23 @@ public class ApiTests {
 
   protected void removeAllFromTable(String tableName) {
     final CompletableFuture<Void> future = new CompletableFuture<>();
-
+    Criterion criterion = new Criterion();
+    if ("feefines".equals(tableName)) {
+      for (AutomaticFeeFineType type : AutomaticFeeFineType.values()) {
+        criterion.addCriterion(createCriteria(type), "AND");
+      }
+    }
     PostgresClient.getInstance(vertx, TENANT_NAME)
-      .delete(tableName, new Criterion(), result -> future.complete(null));
+      .delete(tableName, criterion, result -> future.complete(null));
 
     get(future);
+  }
+
+  private Criteria createCriteria(AutomaticFeeFineType automaticFeeFineType){
+    return new Criteria()
+      .addField("id")
+      .setOperation("!=")
+      .setVal(automaticFeeFineType.getId());
   }
 
   private static String generateOkapiToken() {

@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.is;
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.test.support.ApiTests;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -17,6 +18,14 @@ import junitparams.Parameters;
 @RunWith(JUnitParamsRunner.class)
 public class FeeFinesAPITest extends ApiTests {
   private static final String REST_PATH = "/feefines";
+  private static final String FEEFINES_TABLE = "feefines";
+  private static final String OWNERS_TABLE = "owners";
+
+  @Before
+  public void setUp() {
+    removeAllFromTable(FEEFINES_TABLE);
+    removeAllFromTable(OWNERS_TABLE);
+  }
 
   @Test
   public void canCreateNewFeefine() {
@@ -99,26 +108,26 @@ public class FeeFinesAPITest extends ApiTests {
     var url = REST_PATH + "/" + automaticFeeFineType.getId();
     var errorMessage = "Attempt to change an automatic fee/fine type";
 
-    client.post(url, createFeefineJson(automaticFeeFineType.getId(), "type", randomId()))
+    client.post(REST_PATH, createFeefineJson(automaticFeeFineType.getId(), "type", randomId()))
       .then()
       .assertThat()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(ContentType.JSON)
-      .body(is(errorMessage));
+      .body("errors[0].message", is(errorMessage));
 
     client.put(url, createFeefineJson(automaticFeeFineType.getId(), "type", randomId()))
       .then()
       .assertThat()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(ContentType.JSON)
-      .body(is(errorMessage));
+      .body("errors[0].message", is(errorMessage));
 
     client.delete(url)
       .then()
       .assertThat()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(ContentType.JSON)
-      .body(is(errorMessage));
+      .body("errors[0].message", is(errorMessage));
 
     client.get(url)
       .then()
