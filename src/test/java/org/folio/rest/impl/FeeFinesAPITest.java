@@ -132,7 +132,7 @@ public class FeeFinesAPITest extends ApiTests {
       .assertThat()
       .statusCode(HttpStatus.SC_OK)
       .contentType(ContentType.JSON)
-      .body(FIELD_ID, is(automaticFeeFineType.getId()))
+      .body("id", is(automaticFeeFineType.getId()))
       .body("automatic", is(true));
   }
 
