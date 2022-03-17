@@ -73,6 +73,7 @@ public class ApiTests {
   public static final String MODULE_NAME = "mod-feesfines";
   public static final String FEEFINES_TABLE = "feefines";
   public static final String OWNERS_TABLE = "owners";
+  public static final String FIELD_ID = "id";
 
   @ClassRule
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
@@ -172,7 +173,7 @@ public class ApiTests {
 
   private Criteria createAutomaticFeeFineExclusionCriteria(AutomaticFeeFineType automaticFeeFineType) {
     return new Criteria()
-      .addField("id")
+      .addField(FIELD_ID)
       .setOperation("!=")
       .setVal(automaticFeeFineType.getId());
   }
