@@ -33,9 +33,11 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.rest.impl.TenantRefAPI;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.utils.OkapiClient;
@@ -45,7 +47,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.jupiter.api.BeforeEach;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -70,6 +71,8 @@ public class ApiTests {
   public static final String X_OKAPI_USER_ID = "94e5465a-67af-8799-4g87-1326cf12a22b";
   public static final String OKAPI_TOKEN = generateOkapiToken();
   public static final String MODULE_NAME = "mod-feesfines";
+  public static final String FEEFINES_TABLE = "feefines";
+  public static final String OWNERS_TABLE = "owners";
 
   @ClassRule
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
@@ -155,11 +158,23 @@ public class ApiTests {
 
   protected void removeAllFromTable(String tableName) {
     final CompletableFuture<Void> future = new CompletableFuture<>();
-
+    Criterion criterion = new Criterion();
+    if (FEEFINES_TABLE.equals(tableName)) {
+      for (AutomaticFeeFineType type : AutomaticFeeFineType.values()) {
+        criterion.addCriterion(createAutomaticFeeFineExclusionCriteria(type), "AND");
+      }
+    }
     PostgresClient.getInstance(vertx, TENANT_NAME)
-      .delete(tableName, new Criterion(), result -> future.complete(null));
+      .delete(tableName, criterion, result -> future.complete(null));
 
     get(future);
+  }
+
+  private Criteria createAutomaticFeeFineExclusionCriteria(AutomaticFeeFineType automaticFeeFineType) {
+    return new Criteria()
+      .addField("id")
+      .setOperation("!=")
+      .setVal(automaticFeeFineType.getId());
   }
 
   private static String generateOkapiToken() {
@@ -198,8 +213,7 @@ public class ApiTests {
         .then()
         .statusCode(HttpStatus.SC_CREATED)
         .contentType(ContentType.JSON);
-    }
-    catch (JsonProcessingException e) {
+    } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
   }
