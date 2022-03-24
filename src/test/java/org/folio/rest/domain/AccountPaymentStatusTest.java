@@ -18,7 +18,8 @@ class AccountPaymentStatusTest {
   @ValueSource(strings = {"Outstanding", "Paid partially", "Paid fully", "Waived partially",
     "Waived fully", "Transferred partially", "Transferred fully", "Refunded partially",
     "Refunded fully", "Credited fully", "Credited partially", "Cancelled item returned",
-    "Cancelled item renewed", "Cancelled item declared lost", "Cancelled as error"
+    "Cancelled item renewed", "Cancelled item declared lost", "Cancelled as error",
+    "Suspended claim returned"
   })
 
   void paymentStatusIsValid(String status) {
