@@ -21,7 +21,6 @@ class AccountPaymentStatusTest {
     "Cancelled item renewed", "Cancelled item declared lost", "Cancelled as error",
     "Suspended claim returned"
   })
-
   void paymentStatusIsValid(String status) {
     PaymentStatus paymentStatus = new PaymentStatus().withName(fromValue(status));
     assertNotNull(paymentStatus);
