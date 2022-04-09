@@ -9,7 +9,6 @@ import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.Action.REFUND;
-import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
 import static org.folio.rest.utils.JsonHelper.write;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
@@ -40,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
-import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
@@ -585,11 +583,13 @@ public class AccountsRefundAPITests extends ActionsAPITests {
         REFUND.getFullResult(), REFUNDED_TO_UNIVERSITY)
     );
 
+    MonetaryValue expectedRemainingAmount = new MonetaryValue(10.0);
+
     Response response = refundClient.post(createRefundRequest(refundAmount));
 
-    verifyResponse(response, refundAmount, expectedFeeFineActions.size());
+    verifyResponse(response, refundAmount, expectedRemainingAmount, expectedFeeFineActions.size());
     verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID, REFUND.getFullResult(),
-      new MonetaryValue(10.0), OPEN.getValue());
+      expectedRemainingAmount, OPEN.getValue());
     verifyActions(8, expectedFeeFineActions); // 4 transfers + 2 credits + 2 refunds
   }
 
@@ -671,12 +671,14 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       feeFineActionMatcher(FIRST_ACCOUNT_ID, 4.0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
     );
 
+    MonetaryValue expectedRemainingAmount1 = new MonetaryValue(4.0);
+
     Response response1 = refundClient.post(createRefundRequest(refundAmount));
-    verifyResponse(response1, refundAmount, 2);
+    verifyResponse(response1, refundAmount, expectedRemainingAmount1, 2);
     verifyActions(4, expectedFeeFineActions1);
 
     Account accountAfterRefund1 = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      REFUND.getPartialResult(), new MonetaryValue(4.0), OPEN.getValue());
+      REFUND.getPartialResult(), expectedRemainingAmount1, OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund1);
 
@@ -687,12 +689,14 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       feeFineActionMatcher(FIRST_ACCOUNT_ID, 8.0, refundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
     );
 
+    MonetaryValue expectedRemainingAmount2 = new MonetaryValue(8.0);
+
     Response response2 = refundClient.post(createRefundRequest(refundAmount));
-    verifyResponse(response2, refundAmount, 2);
+    verifyResponse(response2, refundAmount, expectedRemainingAmount2, 2);
     verifyActions(6, expectedFeeFineActions2);
 
     Account accountAfterRefund2 = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      REFUND.getPartialResult(), new MonetaryValue(8.0), OPEN.getValue());
+      REFUND.getPartialResult(), expectedRemainingAmount2, OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund2);
 
@@ -716,12 +720,14 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       feeFineActionMatcher(FIRST_ACCOUNT_ID, 11.0, newRefundAmount, REFUND.getPartialResult(), REFUNDED_TO_PATRON)
     );
 
+    MonetaryValue expectedRemainingAmount4 = new MonetaryValue(11.0);
+
     Response response4 = refundClient.post(createRefundRequest(new MonetaryValue(3.0)));
-    verifyResponse(response4, newRefundAmount, 2);
+    verifyResponse(response4, newRefundAmount, expectedRemainingAmount4, 2);
     verifyActions(8, expectedFeeFineActions4);
 
     Account accountAfterRefund4 = verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
-      REFUND.getPartialResult(), new MonetaryValue(11.0), OPEN.getValue());
+      REFUND.getPartialResult(), expectedRemainingAmount4, OPEN.getValue());
 
     verifyThatFeeFineBalanceChangedEventsWereSent(accountAfterRefund4);
   }
@@ -740,7 +746,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     int totalExpectedActionsCount = actionsCountBeforeRefund + expectedFeeFineActions.size();
 
     Response response = refundClient.post(createRefundRequest(requestedAmount));
-    verifyResponse(response, requestedAmount, expectedFeeFineActions.size());
+    verifyResponse(response, requestedAmount, expectedRemainingAmount, expectedFeeFineActions.size());
 
     verifyActions(totalExpectedActionsCount, expectedFeeFineActions);
 
@@ -751,11 +757,13 @@ public class AccountsRefundAPITests extends ActionsAPITests {
   }
 
   private void verifyResponse(Response response, MonetaryValue requestedAmount,
-    int expectedActionsCount) {
+    MonetaryValue expectedRemainingAmount, int expectedActionsCount) {
+
     response.then()
       .statusCode(SC_CREATED)
       .body("accountId", is(FIRST_ACCOUNT_ID))
       .body("amount", is(requestedAmount.toString()))
+      .body("remainingAmount", is(expectedRemainingAmount.toString()))
       .body(FEE_FINE_ACTIONS, hasSize(expectedActionsCount));
   }
 
