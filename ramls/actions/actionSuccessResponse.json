@@ -12,6 +12,10 @@
       "type": "string",
       "description": "Action amount"
     },
+    "remainingAmount": {
+      "type": "string",
+      "description": "Remaining fee/fine amount after action"
+    },
     "feefineactions": {
       "type": "array",
       "description": "Fee/fine action records created as a result of an action",
@@ -24,6 +28,7 @@
   "additionalProperties": false,
   "required": [
     "accountId",
-    "amount"
+    "amount",
+    "remainingAmount"
   ]
 }

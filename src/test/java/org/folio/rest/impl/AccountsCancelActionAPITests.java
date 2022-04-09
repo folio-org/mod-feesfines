@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
+import static org.folio.rest.domain.MonetaryValue.ZERO;
 import static org.folio.rest.jaxrs.model.PaymentStatus.Name.CANCELLED_AS_ERROR;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCancelClient;
@@ -60,6 +61,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .body("accountId", is(ACCOUNT_ID))
+      .body("remainingAmount", is(ZERO.toString()))
       .body(FEE_FINE_ACTIONS, hasSize(1));
 
     accountsClient.getById(ACCOUNT_ID)
@@ -95,6 +97,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
     accountCancelClient.attemptCreate(cancelActionRequest)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
+      .body("remainingAmount", is(ZERO.toString()))
       .body("accountId", is(ACCOUNT_ID));
 
     accountsClient.getById(ACCOUNT_ID)
