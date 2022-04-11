@@ -1,3 +1,9 @@
+## v17.2.0 2022-04-11
+* Make paymentStatus property in accountdata.json required and also make it an enum (MODFEE-220)
+* Prevent deleting/updating required FeeFines (MODFEE-243)
+* Add missing account payment status 'Suspended claim returned' to the account json schema (MODFEE-245)
+* Return remaining amount in action response (MODFEE-247)
+
 ## 17.1.0 2022-02-22
 Reopen a fee/fine on refund (MODFEE-229)
 Upgrade to RMB 33.0.4 and Log4j 2.16.0 (MODFEE-232)
