@@ -22,6 +22,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.client.InventoryClient;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.ActionRequest;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.exception.AccountNotFoundValidationException;
 import org.folio.rest.exception.FailedValidationException;
 import org.folio.rest.jaxrs.model.Account;
@@ -481,7 +482,7 @@ public class AccountsAPI implements Accounts {
 
     ActionResultAdapter resultAdapter = action.getActionResultAdapter();
     if (resultAdapter == null) {
-      logger.error("Unprocessable action: " + action.name());
+      logger.error("Unprocessable action: {}", action.name());
       return;
     }
 
@@ -489,8 +490,18 @@ public class AccountsAPI implements Accounts {
 
     if (asyncResult.succeeded()) {
       final ActionContext actionContext = asyncResult.result();
+
+      final String remainingAmount = actionContext.getAccounts()
+        .values()
+        .stream()
+        .findFirst()
+        .map(Account::getRemaining)
+        .map(MonetaryValue::toString)
+        .orElse(null);
+
       ActionSuccessResponse response = new ActionSuccessResponse()
         .withFeefineactions(actionContext.getFeeFineActions())
+        .withRemainingAmount(remainingAmount)
         .withAccountId(accountId);
       if (actionContext.getRequestedAmount() != null) {
         response.withAmount(actionContext.getRequestedAmount().toString());
