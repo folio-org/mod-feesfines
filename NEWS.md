@@ -1,3 +1,8 @@
+## 17.1.1 2022-04-12
+Return remaining amount in response to refund (MODFEE-247)
+Prevent deleting/updating required FeeFines (MODFEE-243)
+Generate aged to lost fees and fines  (MODFEE-239)
+
 ## 17.1.0 2022-02-22
 Reopen a fee/fine on refund (MODFEE-229)
 Upgrade to RMB 33.0.4 and Log4j 2.16.0 (MODFEE-232)
