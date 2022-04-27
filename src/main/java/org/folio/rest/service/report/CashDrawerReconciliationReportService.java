@@ -69,8 +69,8 @@ public class CashDrawerReconciliationReportService extends
       params.getCreatedAt(), params.getSources(), timeZone);
 
     return feeFineActionRepository.findFeeFineActionsAndAccounts(PAY,
-      params.getStartDate(), params.getEndDate(), null, params.getCreatedAt(), params.getSources(),
-      ORDER_BY_OWNER_SOURCE_DATE_ASC, REPORT_ROWS_LIMIT)
+        params.getStartDate(), params.getEndDate(), null, params.getCreatedAt(), params.getSources(),
+        ORDER_BY_OWNER_SOURCE_DATE_ASC, REPORT_ROWS_LIMIT)
       .map(this::buildReport);
   }
 

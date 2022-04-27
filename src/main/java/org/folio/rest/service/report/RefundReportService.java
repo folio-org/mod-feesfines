@@ -149,8 +149,8 @@ public class RefundReportService {
 
   private Future<RefundReportContext> processAllRefundActions(RefundReportContext ctx) {
     return ctx.refunds.values().stream().reduce(succeededFuture(ctx),
-        (f, r) -> f.compose(result -> processSingleRefundAction(ctx, r.refundAction)),
-        (a, b) -> succeededFuture(ctx));
+      (f, r) -> f.compose(result -> processSingleRefundAction(ctx, r.refundAction)),
+      (a, b) -> succeededFuture(ctx));
   }
 
   private Future<RefundReportContext> processSingleRefundAction(RefundReportContext ctx,
@@ -201,8 +201,7 @@ public class RefundReportService {
         log.error("Payment amount is null - fee/fine action {}, account {}", feeFineAction.getId(),
           accountId);
       }
-    }
-    else if (actionIsOfType(feeFineAction, TRANSFER)) {
+    } else if (actionIsOfType(feeFineAction, TRANSFER)) {
       if (feeFineAction.getAmountAction() != null) {
         accountCtx.setTransferredAmount(accountCtx.transferredAmount.add(
           feeFineAction.getAmountAction()));
@@ -211,8 +210,7 @@ public class RefundReportService {
         log.error("Transfer amount is null - fee/fine action {}, account {}", feeFineAction.getId(),
           accountId);
       }
-    }
-    else if (actionIsOfType(feeFineAction, REFUND)) {
+    } else if (actionIsOfType(feeFineAction, REFUND)) {
       RefundData refundData = ctx.refunds.get(feeFineAction.getId());
       RefundReportEntry reportEntry = refundData.reportEntry;
 
@@ -256,7 +254,7 @@ public class RefundReportService {
       }
 
       if (accountCtx != null) {
-        if (isRefundedToPatron(feeFineAction)){
+        if (isRefundedToPatron(feeFineAction)) {
           withPaymentInfo(reportEntry, accountCtx);
         } else if (isRefundedToBursar(feeFineAction)) {
           withTransferInfo(reportEntry, accountCtx);
@@ -368,7 +366,8 @@ public class RefundReportService {
     reportEntry.withPaidAmount(accountCtx.paidAmount.toString())
       .withPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods, MULTIPLE_MESSAGE))
       .withTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo,
-        SEE_FEE_FINE_DETAILS_PAGE_MESSAGE));;
+        SEE_FEE_FINE_DETAILS_PAGE_MESSAGE));
+    ;
   }
 
   private void withTransferInfo(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {

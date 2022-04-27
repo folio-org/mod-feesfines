@@ -187,7 +187,7 @@ public abstract class ActionService {
   private Future<ActionContext> publishLogEvents(ActionContext actionContext) {
     return all(actionContext.getFeeFineActions().stream()
       .map(ffa -> logEventService.createFeeFineLogEventPayload(ffa,
-        actionContext.getAccounts().get(ffa.getAccountId()))
+          actionContext.getAccounts().get(ffa.getAccountId()))
         .compose(eventPayload -> {
           logEventPublisher.publishLogEvent(eventPayload, FEE_FINE);
           return succeededFuture();

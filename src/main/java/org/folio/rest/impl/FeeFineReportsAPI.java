@@ -51,7 +51,7 @@ public class FeeFineReportsAPI implements FeefineReports {
     String rawStartDate = entity.getStartDate();
     String rawEndDate = entity.getEndDate();
 
-    if (rawStartDate == null && rawEndDate != null){
+    if (rawStartDate == null && rawEndDate != null) {
       log.error("startDate is null and endDate is not null");
 
       handleReportResult(
@@ -88,7 +88,7 @@ public class FeeFineReportsAPI implements FeefineReports {
     List<String> sources = entity.getSources();
 
     log.info("Cash drawer reconciliation report requested, parameters: startDate={}, endDate={}, " +
-        "createdAt={}, sources={}", rawStartDate, rawEndDate, createdAt, sources);
+      "createdAt={}, sources={}", rawStartDate, rawEndDate, createdAt, sources);
 
     DateTime startDate;
     DateTime endDate;
@@ -164,8 +164,7 @@ public class FeeFineReportsAPI implements FeefineReports {
     Handler<AsyncResult<Response>> asyncResultHandler, Function<T, Response> responseFunction) {
     if (asyncResult.succeeded()) {
       asyncResultHandler.handle(succeededFuture(responseFunction.apply(asyncResult.result())));
-    }
-    else if (asyncResult.failed()) {
+    } else if (asyncResult.failed()) {
       final Throwable cause = asyncResult.cause();
       if (cause instanceof FailedValidationException) {
         log.error("Report parameters validation failed: " + cause.getLocalizedMessage());

@@ -11,11 +11,13 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.folio.rest.jaxrs.model.Campus;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
@@ -48,10 +50,10 @@ public class InventoryClient extends OkapiClient {
     HttpRequest<Buffer> request = okapiGetAbs("/item-storage/items");
     if (!itemIds.isEmpty()) {
       request.addQueryParam("query", String.format("(id==(%s))",
-        itemIds.stream()
-          .map(id -> String.format("\"%s\"", id))
-          .collect(Collectors.joining(" or "))))
-      .addQueryParam("limit", ITEMS_LIMIT);
+          itemIds.stream()
+            .map(id -> String.format("\"%s\"", id))
+            .collect(Collectors.joining(" or "))))
+        .addQueryParam("limit", ITEMS_LIMIT);
     }
     request.send(promise);
 
@@ -59,13 +61,11 @@ public class InventoryClient extends OkapiClient {
       if (response.statusCode() != 200) {
         return failedFuture("Failed to get items by IDs. Response status code: "
           + response.statusCode());
-      }
-      else {
+      } else {
         try {
           Items items = objectMapper.readValue(response.bodyAsString(), Items.class);
           return succeededFuture(items);
-        }
-        catch (IOException ioException) {
+        } catch (IOException ioException) {
           return failedFuture("Failed to parse response. Response body: "
             + response.bodyAsString());
         }
@@ -85,9 +85,9 @@ public class InventoryClient extends OkapiClient {
     HttpRequest<Buffer> request = okapiGetAbs("/holdings-storage/holdings");
     if (!holdingIds.isEmpty()) {
       request.addQueryParam("query", String.format("(id==(%s))",
-        holdingIds.stream()
-          .map(id -> String.format("\"%s\"", id))
-          .collect(Collectors.joining(" or "))))
+          holdingIds.stream()
+            .map(id -> String.format("\"%s\"", id))
+            .collect(Collectors.joining(" or "))))
         .addQueryParam("limit", HOLDINGS_LIMIT);
     }
     request.putHeader(ACCEPT, APPLICATION_JSON);
@@ -97,14 +97,12 @@ public class InventoryClient extends OkapiClient {
       if (response.statusCode() != 200) {
         return failedFuture("Failed to get holdings by IDs. Response status code: "
           + response.statusCode());
-      }
-      else {
+      } else {
         try {
           HoldingsRecords holdingsRecords = objectMapper.readValue(response.bodyAsString(),
             HoldingsRecords.class);
           return succeededFuture(holdingsRecords);
-        }
-        catch (IOException ioException) {
+        } catch (IOException ioException) {
           return failedFuture("Failed to parse request. Response body: "
             + response.bodyAsString());
         }

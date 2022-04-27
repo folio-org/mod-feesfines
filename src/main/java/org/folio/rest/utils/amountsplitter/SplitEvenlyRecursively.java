@@ -32,7 +32,6 @@ public class SplitEvenlyRecursively implements BulkActionAmountSplitterStrategy 
     BigDecimal amountToDistribute = totalRequestedAmount.getAmount();
     BigDecimal evenlySplitAmount = splitEvenly(amountToDistribute, numberOfAccountsToProcess);
 
-
     for (String key : sortByValue(actionableAmounts).keySet()) {
       if (amountToDistribute.compareTo(BigDecimal.ZERO) <= 0) {
         break;

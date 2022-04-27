@@ -7,6 +7,7 @@ public enum FeeFineStatus {
   CLOSED("Closed");
 
   private final String value;
+
   FeeFineStatus(String statusValue) {
     this.value = statusValue;
   }

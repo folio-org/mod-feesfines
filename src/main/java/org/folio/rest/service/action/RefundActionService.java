@@ -55,14 +55,14 @@ public class RefundActionService extends ActionService {
       distributeRefundAmount(context.getRequestedAmount(), refundableAmountsByAccountId);
 
     return CompositeFuture.all(
-      context.getAccounts()
-        .values()
-        .stream()
-        .map(account -> createFeeFineActionsForAccount(context, account,
-          refundableAmountsByAccountId.get(account.getId()),
-          refundAmountsByAccountId.get(account.getId()),
-          refundableActionsByAccountId.get(account.getId())))
-        .collect(toList()))
+        context.getAccounts()
+          .values()
+          .stream()
+          .map(account -> createFeeFineActionsForAccount(context, account,
+            refundableAmountsByAccountId.get(account.getId()),
+            refundAmountsByAccountId.get(account.getId()),
+            refundableActionsByAccountId.get(account.getId())))
+          .collect(toList()))
       .map(context);
   }
 
@@ -99,10 +99,10 @@ public class RefundActionService extends ActionService {
     boolean isFullRefund, Map<String, MonetaryValue> refundAmountByTransferAccount) {
 
     return CompositeFuture.all(
-      refundAmountByTransferAccount.keySet().stream()
-        .map(transferAccount -> refundTransfer(ctx, account, action,
-          refundAmountByTransferAccount.get(transferAccount), isFullRefund, transferAccount))
-        .collect(toList()))
+        refundAmountByTransferAccount.keySet().stream()
+          .map(transferAccount -> refundTransfer(ctx, account, action,
+            refundAmountByTransferAccount.get(transferAccount), isFullRefund, transferAccount))
+          .collect(toList()))
       .map(ctx);
   }
 
@@ -168,12 +168,12 @@ public class RefundActionService extends ActionService {
 
   private static String buildRefundTransactionInfo(Action action, String targetAccount) {
     switch (action) {
-      case CREDIT:
-        return "Refund to " + targetAccount;
-      case REFUND:
-        return "Refunded to " + targetAccount;
-      default:
-        throw new IllegalArgumentException("Cannot build transaction info for action: " + action);
+    case CREDIT:
+      return "Refund to " + targetAccount;
+    case REFUND:
+      return "Refunded to " + targetAccount;
+    default:
+      throw new IllegalArgumentException("Cannot build transaction info for action: " + action);
     }
   }
 
