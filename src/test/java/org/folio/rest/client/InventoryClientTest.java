@@ -1,0 +1,82 @@
+package org.folio.rest.client;
+
+import java.util.List;
+
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.apache.http.HttpStatus;
+import org.folio.rest.jaxrs.model.HoldingsRecords;
+import org.folio.rest.tools.utils.NetworkUtils;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import io.vertx.core.Vertx;
+import static io.vertx.core.json.JsonObject.mapFrom;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
+import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
+import static org.folio.okapi.common.XOkapiHeaders.URL;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.folio.test.support.ApiTests.OKAPI_TOKEN;
+import static org.folio.test.support.ApiTests.TENANT_NAME;
+
+@RunWith(VertxUnitRunner.class)
+public class InventoryClientTest {
+  public static final String OKAPI_URL_HEADER = "x-okapi-url";
+  public static final int OKAPI_PORT = NetworkUtils.nextFreePort();
+  public static final String OKAPI_URL = "http://localhost:" + OKAPI_PORT;
+  public static final String HOLDINGS_URL = "/holdings-storage/holdings";
+  @Rule
+  public WireMockRule mock = new WireMockRule(OKAPI_PORT);
+
+  private final InventoryClient inventoryClient;
+  {
+    CaseInsensitiveMap<String, String> okapiHeaders = new CaseInsensitiveMap<>();
+    okapiHeaders.put(URL, OKAPI_URL);
+    okapiHeaders.put(TENANT, TENANT_NAME);
+    okapiHeaders.put(TOKEN, OKAPI_TOKEN);
+    inventoryClient = new InventoryClient(Vertx.vertx(), okapiHeaders);
+  }
+
+  @Test
+  public void shouldSucceedWhenGettingEmptyResponse(TestContext context) {
+    Async async = context.async();
+
+    HoldingsRecords emptyHoldingsRecords = new HoldingsRecords().withTotalRecords(0);
+    createStub(HOLDINGS_URL, HttpStatus.SC_OK, emptyHoldingsRecords);
+
+    inventoryClient.getHoldingsById(List.of())
+      .onSuccess(holdingsRecords -> {
+        context.assertEquals(holdingsRecords, holdingsRecords);
+        async.complete();
+      })
+      .onFailure(throwable -> context.fail("Should have succeeded"));
+  }
+
+  private <T> void createStub(String url, int status, T stubObject) {
+    createStub(url, aResponse()
+      .withStatus(status)
+      .withBody(mapFrom(stubObject).encodePrettily()));
+  }
+
+  private void createStub(String url, ResponseDefinitionBuilder responseBuilder) {
+    mock.stubFor(WireMock.get(urlPathEqualTo(url))
+      .withHeader(ACCEPT, matching(APPLICATION_JSON))
+      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
+      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
+      .withHeader(OKAPI_URL_HEADER, matching(OKAPI_URL))
+      .willReturn(responseBuilder));
+  }
+}

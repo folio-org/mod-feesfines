@@ -367,7 +367,6 @@ public class RefundReportService {
       .withPaymentMethod(singleOrDefaultMessage(accountCtx.paymentMethods, MULTIPLE_MESSAGE))
       .withTransactionInfo(singleOrDefaultMessage(accountCtx.paymentTransactionInfo,
         SEE_FEE_FINE_DETAILS_PAGE_MESSAGE));
-    ;
   }
 
   private void withTransferInfo(RefundReportEntry reportEntry, AccountProcessingContext accountCtx) {
