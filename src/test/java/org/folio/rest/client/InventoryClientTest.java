@@ -72,10 +72,48 @@ public class InventoryClientTest {
       .onFailure(throwable -> context.fail("Should have succeeded"));
   }
 
+  @Test
+  public void shouldFailWhenReceivingErrorResponse(TestContext context) {
+    Async async = context.async();
+
+    String holdingsRecordId = UUID.randomUUID().toString();
+    createStub(HOLDINGS_URL, HttpStatus.SC_INTERNAL_SERVER_ERROR, "Internal server error, contact administrator");
+
+    inventoryClient.getHoldingsById(List.of(holdingsRecordId))
+      .onSuccess(throwable -> context.fail("Should have failed"))
+      .onFailure(failure -> {
+        context.assertEquals("Failed to get holdings by IDs. Response status code: 500",
+          failure.getMessage());
+        async.complete();
+      });
+  }
+
+  @Test
+  public void shouldFailWhenReceivingIncorrectJSON(TestContext context) {
+    Async async = context.async();
+
+    String holdingsRecordId = UUID.randomUUID().toString();
+    String incorrectResponse = "{";
+    createStub(HOLDINGS_URL, HttpStatus.SC_OK, incorrectResponse);
+
+    inventoryClient.getHoldingsById(List.of(holdingsRecordId))
+      .onSuccess(throwable -> context.fail("Should have failed"))
+      .onFailure(failure -> {
+        context.assertEquals("Failed to parse request. Response body: {", failure.getMessage());
+        async.complete();
+      });
+  }
+
   private <T> void createStub(String url, int status, T stubObject) {
     createStub(url, aResponse()
       .withStatus(status)
       .withBody(mapFrom(stubObject).encodePrettily()));
+  }
+
+  private void createStub(String url, int status, String responseBody) {
+    createStub(url, aResponse()
+      .withStatus(status)
+      .withBody(responseBody));
   }
 
   private void createStub(String url, ResponseDefinitionBuilder responseBuilder) {
