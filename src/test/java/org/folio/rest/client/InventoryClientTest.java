@@ -1,9 +1,11 @@
 package org.folio.rest.client;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.Rule;
@@ -51,15 +53,20 @@ public class InventoryClientTest {
   }
 
   @Test
-  public void shouldSucceedWhenGettingEmptyResponse(TestContext context) {
+  public void shouldSucceedWhenGettingHoldingsRecords(TestContext context) {
     Async async = context.async();
 
-    HoldingsRecords emptyHoldingsRecords = new HoldingsRecords().withTotalRecords(0);
-    createStub(HOLDINGS_URL, HttpStatus.SC_OK, emptyHoldingsRecords);
+    String holdingsRecordId = UUID.randomUUID().toString();
+    HoldingsRecords holdingsRecords = new HoldingsRecords()
+      .withHoldingsRecords(List.of(new HoldingsRecord().withId(holdingsRecordId)))
+      .withTotalRecords(1);
+    createStub(HOLDINGS_URL, HttpStatus.SC_OK, holdingsRecords);
 
-    inventoryClient.getHoldingsById(List.of())
-      .onSuccess(holdingsRecords -> {
-        context.assertEquals(holdingsRecords, holdingsRecords);
+    inventoryClient.getHoldingsById(List.of(holdingsRecordId))
+      .onSuccess(records -> {
+        context.assertEquals(holdingsRecords.getHoldingsRecords().get(0).getId(),
+          records.getHoldingsRecords().get(0).getId());
+        context.assertEquals(holdingsRecords.getTotalRecords(), records.getTotalRecords());
         async.complete();
       })
       .onFailure(throwable -> context.fail("Should have succeeded"));
