@@ -29,7 +29,7 @@ public class ErrorHelper {
       .isPresent();
   }
 
-  public static Errors createErrors(Error... errors){
+  public static Errors createErrors(Error... errors) {
     return new Errors()
       .withErrors(Arrays.asList(errors));
   }

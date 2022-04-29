@@ -202,7 +202,7 @@ public class PatronNoticeService {
       .compose(this::fetchLocation);
   }
 
-    private Future<FeeFineNoticeContext> fetchItem(FeeFineNoticeContext context) {
+  private Future<FeeFineNoticeContext> fetchItem(FeeFineNoticeContext context) {
     String itemId = ofNullable(context.getAccount())
       .map(Account::getItemId)
       .orElse(null);
@@ -269,8 +269,8 @@ public class PatronNoticeService {
 
   private static <T> Future<T> failWhenNotFound(T entity, Class<?> entityType, String entityId) {
     return entity == null
-    ? failedFuture(new EntityNotFoundException(entityType, entityId))
-    : succeededFuture(entity);
+      ? failedFuture(new EntityNotFoundException(entityType, entityId))
+      : succeededFuture(entity);
   }
 
   private static <T> T captureError(Throwable throwable, FeeFineNoticeContext context) {

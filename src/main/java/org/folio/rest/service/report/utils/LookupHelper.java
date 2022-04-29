@@ -223,7 +223,7 @@ public class LookupHelper {
     }
 
     return feeFineActionRepository.findActionsOfTypesForAccount(accountId,
-      List.of(REFUND, PAY, TRANSFER))
+        List.of(REFUND, PAY, TRANSFER))
       .map(this::sortFeeFineActionsByDate)
       .map(actions -> ctx.updateAccountContextWithActions(accountId, actions))
       .map(ctx)

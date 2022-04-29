@@ -33,6 +33,7 @@ import static org.folio.rest.utils.JsonHelper.write;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
@@ -44,7 +45,8 @@ public class LogEventPayloadHelper {
   private static final String STAFF_INFO_ONLY_ADDED = "Staff information only added";
   private static final String BILLED = "Billed";
 
-  private LogEventPayloadHelper() {}
+  private LogEventPayloadHelper() {
+  }
 
   public static JsonObject buildNoticeLogEventPayload(FeeFineNoticeContext context) {
     JsonObject contextJson = new JsonObject();

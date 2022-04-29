@@ -10,7 +10,10 @@ import io.vertx.core.Future;
 
 public interface HasItemInfo extends HasAccountInfo {
   Map<String, Item> getItems();
+
   Item getItemByAccountId(String accountId);
+
   Future<Void> updateAccountContextWithInstance(String accountId, Instance instance);
+
   Future<Void> updateAccountContextWithEffectiveLocation(String accountId, Location location);
 }

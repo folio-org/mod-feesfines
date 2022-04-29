@@ -203,7 +203,7 @@ public class PatronNoticeBuilder {
     return feeActionContext;
   }
 
-  private static String getCommentsFromFeeFineAction(Feefineaction feefineaction){
+  private static String getCommentsFromFeeFineAction(Feefineaction feefineaction) {
     String comments = Optional.ofNullable(feefineaction.getComments()).orElse(StringUtils.EMPTY);
     return parseFeeFineComments(comments)
       .getOrDefault(PATRON_COMMENTS_KEY, StringUtils.EMPTY);
