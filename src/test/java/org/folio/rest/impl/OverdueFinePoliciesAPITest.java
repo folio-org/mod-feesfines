@@ -19,6 +19,7 @@ import io.vertx.core.json.JsonObject;
 
 public class OverdueFinePoliciesAPITest extends ApiTests {
   private static final String REST_PATH = "/overdue-fines-policies";
+  private static final String NEGATIVE_QUANTITY_MESSAGE = "the values must be greater than or equal to 0";
 
   @Before
   public void setUp() {
@@ -142,8 +143,40 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
       .contentType(ContentType.JSON);
   }
 
+  @Test
+  public void postOverdueFinePolicyWithNegativeQuantity() {
+    JsonObject entityJson = createEntityJson();
+    entityJson.getJsonObject("overdueFine").put("quantity", -1);
+    entityJson.getJsonObject("overdueRecallFine").put("quantity", -2);
+
+    post(entityJson.encodePrettily())
+      .then()
+      .statusCode(HttpStatus.SC_BAD_REQUEST)
+      .body(equalTo(NEGATIVE_QUANTITY_MESSAGE))
+      .contentType(ContentType.TEXT);
+  }
+
+  @Test
+  public void putOverdueFinePolicyWithNegativeQuantity() {
+    JsonObject entity = createEntityJson();
+    post(entity.encodePrettily());
+
+    entity.getJsonObject("overdueFine").put("quantity", "-1");
+    entity.getJsonObject("overdueRecallFine").put("quantity", "-1");
+
+    put(entity.getString("id"), entity.encodePrettily())
+      .then()
+      .statusCode(HttpStatus.SC_BAD_REQUEST)
+      .body(equalTo(NEGATIVE_QUANTITY_MESSAGE))
+      .contentType(ContentType.TEXT);
+  }
+
   private Response post(String body) {
     return client.post(REST_PATH, body);
+  }
+
+  private Response put(String id, String body) {
+    return client.put(REST_PATH + "/" + id, body);
   }
 
   private String createEntity() {

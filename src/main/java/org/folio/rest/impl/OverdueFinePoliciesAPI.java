@@ -1,10 +1,13 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.jaxrs.resource.OverdueFinesPolicies.PostOverdueFinesPoliciesResponse.respond400WithTextPlain;
 import static org.folio.rest.jaxrs.resource.OverdueFinesPolicies.PostOverdueFinesPoliciesResponse.respond422WithApplicationJson;
 import static org.folio.rest.utils.ErrorHelper.createError;
 import static org.folio.rest.utils.ErrorHelper.uniqueNameConstraintViolated;
 
 import java.util.Map;
+import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
@@ -13,6 +16,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.domain.MonetaryValue;
+import org.folio.rest.jaxrs.model.OverdueFine;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinesPoliciesGetOrder;
@@ -24,6 +29,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
   static final String DUPLICATE_ERROR_CODE = "feesfines.policy.overdue.duplicate";
   private static final String DUPLICATE_NAME_MESSAGE =
     "The Overdue fine policy name entered already exists. Please enter a different name.";
+  private static final String NEGATIVE_QUANTITY_MESSAGE = "the values must be greater than or equal to 0";
 
   @Validate
   @Override
@@ -47,6 +53,12 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
+    if (isAnyNegativeQuantity(entity)) {
+      asyncResultHandler.handle(
+        succeededFuture(respond400WithTextPlain(NEGATIVE_QUANTITY_MESSAGE)));
+      return;
+    }
 
     PgUtil.post(TABLE_NAME, entity, okapiHeaders, vertxContext,
       PostOverdueFinesPoliciesResponse.class, r -> {
@@ -93,7 +105,25 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    if (isAnyNegativeQuantity(entity)) {
+      asyncResultHandler.handle(
+        succeededFuture(respond400WithTextPlain(NEGATIVE_QUANTITY_MESSAGE)));
+      return;
+    }
+
     PgUtil.put(TABLE_NAME, entity, overdueFinePolicyId, okapiHeaders, vertxContext,
       PutOverdueFinesPoliciesByOverdueFinePolicyIdResponse.class, asyncResultHandler);
+  }
+
+  private boolean isAnyNegativeQuantity(OverdueFinePolicy entity) {
+    return Optional.ofNullable(entity)
+      .map(OverdueFinePolicy::getOverdueFine)
+      .map(OverdueFine::getQuantity)
+      .map(MonetaryValue::isNegative)
+      .orElseGet(() -> Optional.ofNullable(entity)
+        .map(OverdueFinePolicy::getOverdueRecallFine)
+        .map(OverdueFine::getQuantity)
+        .map(MonetaryValue::isNegative)
+        .orElse(false));
   }
 }
