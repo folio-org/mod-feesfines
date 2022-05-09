@@ -20,7 +20,7 @@ import io.vertx.core.json.JsonObject;
 public class OverdueFinePoliciesAPITest extends ApiTests {
   private static final String REST_PATH = "/overdue-fines-policies";
   private static final String NEGATIVE_QUANTITY_MESSAGE =
-    "the values must be greater than or equal to 0";
+    "The values overdueFine and overdueRecallFine must be greater than or equal to 0 appears.";
 
   @Before
   public void setUp() {
@@ -145,9 +145,20 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
   }
 
   @Test
-  public void postOverdueFinePolicyWithNegativeQuantity() {
+  public void postOverdueFinePolicyWithNegativeOverdueFineQuantity() {
     JsonObject entityJson = createEntityJson();
     entityJson.getJsonObject("overdueFine").put("quantity", -1);
+
+    post(entityJson.encodePrettily())
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body(containsString(NEGATIVE_QUANTITY_MESSAGE))
+      .contentType(ContentType.JSON);
+  }
+
+  @Test
+  public void postOverdueFinePolicyWithNegativeOverdueRecallFineQuantity() {
+    JsonObject entityJson = createEntityJson();
     entityJson.getJsonObject("overdueRecallFine").put("quantity", -2);
 
     post(entityJson.encodePrettily())
@@ -158,11 +169,24 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
   }
 
   @Test
-  public void putOverdueFinePolicyWithNegativeQuantity() {
+  public void putOverdueFinePolicyWithNegativeoOverdueFineQuantity() {
     JsonObject entity = createEntityJson();
     post(entity.encodePrettily());
 
     entity.getJsonObject("overdueFine").put("quantity", "-1");
+
+    put(entity.getString("id"), entity.encodePrettily())
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body(containsString(NEGATIVE_QUANTITY_MESSAGE))
+      .contentType(ContentType.JSON);
+  }
+
+  @Test
+  public void putOverdueFinePolicyWithNegativeOverdueRecallFineQuantity() {
+    JsonObject entity = createEntityJson();
+    post(entity.encodePrettily());
+
     entity.getJsonObject("overdueRecallFine").put("quantity", "-1");
 
     put(entity.getString("id"), entity.encodePrettily())

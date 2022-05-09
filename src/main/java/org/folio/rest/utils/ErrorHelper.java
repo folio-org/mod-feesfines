@@ -41,4 +41,11 @@ public class ErrorHelper {
 
     return createErrors(error);
   }
+
+  public static Errors createError(String message) {
+    Error error = new Error()
+      .withMessage(message);
+
+    return createErrors(error);
+  }
 }

@@ -14,7 +14,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
-import org.folio.HttpStatus;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.OverdueFine;
@@ -30,7 +29,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
   private static final String DUPLICATE_NAME_MESSAGE =
     "The Overdue fine policy name entered already exists. Please enter a different name.";
   private static final String NEGATIVE_QUANTITY_MESSAGE =
-    "the values must be greater than or equal to 0";
+    "The values overdueFine and overdueRecallFine must be greater than or equal to 0 appears.";
 
   @Validate
   @Override
@@ -55,10 +54,9 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    if (isAnyNegativeQuantity(entity)) {
+    if (containsNegativeQuantity(entity)) {
       asyncResultHandler.handle(
-        succeededFuture(respond422WithApplicationJson(createError(NEGATIVE_QUANTITY_MESSAGE,
-          HttpStatus.HTTP_UNPROCESSABLE_ENTITY.name()))));
+        succeededFuture(respond422WithApplicationJson(createError(NEGATIVE_QUANTITY_MESSAGE))));
       return;
     }
 
@@ -107,10 +105,9 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    if (isAnyNegativeQuantity(entity)) {
+    if (containsNegativeQuantity(entity)) {
       asyncResultHandler.handle(
-        succeededFuture(respond422WithApplicationJson(createError(NEGATIVE_QUANTITY_MESSAGE,
-          HttpStatus.HTTP_UNPROCESSABLE_ENTITY.name()))));
+        succeededFuture(respond422WithApplicationJson(createError(NEGATIVE_QUANTITY_MESSAGE))));
       return;
     }
 
@@ -118,15 +115,15 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
       PutOverdueFinesPoliciesByOverdueFinePolicyIdResponse.class, asyncResultHandler);
   }
 
-  private boolean isAnyNegativeQuantity(OverdueFinePolicy entity) {
-    return Optional.ofNullable(entity)
-      .map(OverdueFinePolicy::getOverdueFine)
+  private boolean containsNegativeQuantity(OverdueFinePolicy entity) {
+    return hasNegativeQuantity(entity.getOverdueFine())
+      || hasNegativeQuantity(entity.getOverdueRecallFine());
+  }
+
+  private boolean hasNegativeQuantity(OverdueFine overdueFine) {
+    return Optional.ofNullable(overdueFine)
       .map(OverdueFine::getQuantity)
       .map(MonetaryValue::isNegative)
-      .orElseGet(() -> Optional.ofNullable(entity)
-        .map(OverdueFinePolicy::getOverdueRecallFine)
-        .map(OverdueFine::getQuantity)
-        .map(MonetaryValue::isNegative)
-        .orElse(false));
+      .orElse(false);
   }
 }
