@@ -1,7 +1,6 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.jaxrs.resource.OverdueFinesPolicies.PostOverdueFinesPoliciesResponse.respond400WithTextPlain;
 import static org.folio.rest.jaxrs.resource.OverdueFinesPolicies.PostOverdueFinesPoliciesResponse.respond422WithApplicationJson;
 import static org.folio.rest.utils.ErrorHelper.createError;
 import static org.folio.rest.utils.ErrorHelper.uniqueNameConstraintViolated;
@@ -15,6 +14,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
+import org.folio.HttpStatus;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.OverdueFine;
@@ -29,7 +29,8 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
   static final String DUPLICATE_ERROR_CODE = "feesfines.policy.overdue.duplicate";
   private static final String DUPLICATE_NAME_MESSAGE =
     "The Overdue fine policy name entered already exists. Please enter a different name.";
-  private static final String NEGATIVE_QUANTITY_MESSAGE = "the values must be greater than or equal to 0";
+  private static final String NEGATIVE_QUANTITY_MESSAGE =
+    "the values must be greater than or equal to 0";
 
   @Validate
   @Override
@@ -56,7 +57,8 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
 
     if (isAnyNegativeQuantity(entity)) {
       asyncResultHandler.handle(
-        succeededFuture(respond400WithTextPlain(NEGATIVE_QUANTITY_MESSAGE)));
+        succeededFuture(respond422WithApplicationJson(createError(NEGATIVE_QUANTITY_MESSAGE,
+          HttpStatus.HTTP_UNPROCESSABLE_ENTITY.name()))));
       return;
     }
 
@@ -107,7 +109,8 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
 
     if (isAnyNegativeQuantity(entity)) {
       asyncResultHandler.handle(
-        succeededFuture(respond400WithTextPlain(NEGATIVE_QUANTITY_MESSAGE)));
+        succeededFuture(respond422WithApplicationJson(createError(NEGATIVE_QUANTITY_MESSAGE,
+          HttpStatus.HTTP_UNPROCESSABLE_ENTITY.name()))));
       return;
     }
 
