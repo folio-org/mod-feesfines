@@ -14,6 +14,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.OverdueFine;
@@ -28,8 +29,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
   static final String DUPLICATE_ERROR_CODE = "feesfines.policy.overdue.duplicate";
   private static final String DUPLICATE_NAME_MESSAGE =
     "The Overdue fine policy name entered already exists. Please enter a different name.";
-  private static final String NEGATIVE_QUANTITY_MESSAGE =
-    "The values overdueFine and overdueRecallFine must be greater than or equal to 0 appears.";
+  private static final String NEGATIVE_QUANTITY_MESSAGE = "Quantity must not be negative.";
 
   @Validate
   @Override
@@ -55,8 +55,10 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
     Context vertxContext) {
 
     if (containsNegativeQuantity(entity)) {
+      ImmutablePair<String, String> errorInformation = getErrorInformation(entity);
       asyncResultHandler.handle(
-        succeededFuture(respond422WithApplicationJson(createError(NEGATIVE_QUANTITY_MESSAGE))));
+        succeededFuture(respond422WithApplicationJson(createError(
+          NEGATIVE_QUANTITY_MESSAGE, errorInformation.getLeft(), errorInformation.getRight()))));
       return;
     }
 
@@ -106,8 +108,10 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
     Context vertxContext) {
 
     if (containsNegativeQuantity(entity)) {
+      ImmutablePair<String, String> errorInformation = getErrorInformation(entity);
       asyncResultHandler.handle(
-        succeededFuture(respond422WithApplicationJson(createError(NEGATIVE_QUANTITY_MESSAGE))));
+        succeededFuture(respond422WithApplicationJson(createError(
+          NEGATIVE_QUANTITY_MESSAGE, errorInformation.getLeft(), errorInformation.getRight()))));
       return;
     }
 
@@ -125,5 +129,17 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
       .map(OverdueFine::getQuantity)
       .map(MonetaryValue::isNegative)
       .orElse(false);
+  }
+
+  private ImmutablePair<String, String> getErrorInformation(OverdueFinePolicy entity) {
+    return hasNegativeQuantity(entity.getOverdueFine())
+      ? new ImmutablePair<>("overdueFine.quantity",
+          getQuantityValueAsString(entity.getOverdueFine()))
+      : new ImmutablePair<>("overdueRecallFine.quantity",
+          getQuantityValueAsString(entity.getOverdueRecallFine()));
+  }
+
+  private String getQuantityValueAsString(OverdueFine overdueFine) {
+    return overdueFine.getQuantity().toString();
   }
 }

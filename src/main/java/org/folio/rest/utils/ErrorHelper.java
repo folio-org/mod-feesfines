@@ -1,12 +1,14 @@
 package org.folio.rest.utils;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Parameter;
 
 public class ErrorHelper {
   private static final String DUPLICATE_NAME_MSG_TEMPLATE =
@@ -47,5 +49,15 @@ public class ErrorHelper {
       .withMessage(message);
 
     return createErrors(error);
+  }
+
+  public static Errors createError(String message, String key, String value) {
+    return createErrors(new Error()
+      .withMessage(message)
+      .withParameters(List.of(
+        new Parameter()
+          .withKey(key)
+          .withValue(value))
+      ));
   }
 }

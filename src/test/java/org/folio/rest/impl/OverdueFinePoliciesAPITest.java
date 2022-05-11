@@ -1,11 +1,15 @@
 package org.folio.rest.impl;
 
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.folio.test.support.ApiTests;
@@ -19,8 +23,7 @@ import io.vertx.core.json.JsonObject;
 
 public class OverdueFinePoliciesAPITest extends ApiTests {
   private static final String REST_PATH = "/overdue-fines-policies";
-  private static final String NEGATIVE_QUANTITY_MESSAGE =
-    "The values overdueFine and overdueRecallFine must be greater than or equal to 0 appears.";
+  private static final String NEGATIVE_QUANTITY_MESSAGE = "Quantity must not be negative.";
 
   @Before
   public void setUp() {
@@ -147,24 +150,32 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
   @Test
   public void postOverdueFinePolicyWithNegativeOverdueFineQuantity() {
     JsonObject entityJson = createEntityJson();
-    entityJson.getJsonObject("overdueFine").put("quantity", -1);
+    entityJson.getJsonObject("overdueFine").put("quantity", "-1");
 
     post(entityJson.encodePrettily())
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(NEGATIVE_QUANTITY_MESSAGE))
+      .body(allOf(List.of(
+        hasJsonPath("errors[0].message", is(NEGATIVE_QUANTITY_MESSAGE)),
+        hasJsonPath("errors[0].parameters[0].key", is("overdueFine.quantity")),
+        hasJsonPath("errors[0].parameters[0].value", is("-1.00"))
+      )))
       .contentType(ContentType.JSON);
   }
 
   @Test
   public void postOverdueFinePolicyWithNegativeOverdueRecallFineQuantity() {
     JsonObject entityJson = createEntityJson();
-    entityJson.getJsonObject("overdueRecallFine").put("quantity", -2);
+    entityJson.getJsonObject("overdueRecallFine").put("quantity", "-2");
 
     post(entityJson.encodePrettily())
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(NEGATIVE_QUANTITY_MESSAGE))
+      .body(allOf(List.of(
+        hasJsonPath("errors[0].message", is(NEGATIVE_QUANTITY_MESSAGE)),
+        hasJsonPath("errors[0].parameters[0].key", is("overdueRecallFine.quantity")),
+        hasJsonPath("errors[0].parameters[0].value", is("-2.00"))
+      )))
       .contentType(ContentType.JSON);
   }
 
@@ -178,7 +189,11 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
     put(entity.getString("id"), entity.encodePrettily())
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(NEGATIVE_QUANTITY_MESSAGE))
+      .body(allOf(List.of(
+        hasJsonPath("errors[0].message", is(NEGATIVE_QUANTITY_MESSAGE)),
+        hasJsonPath("errors[0].parameters[0].key", is("overdueFine.quantity")),
+        hasJsonPath("errors[0].parameters[0].value", is("-1.00"))
+      )))
       .contentType(ContentType.JSON);
   }
 
@@ -192,7 +207,11 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
     put(entity.getString("id"), entity.encodePrettily())
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(containsString(NEGATIVE_QUANTITY_MESSAGE))
+      .body(allOf(List.of(
+        hasJsonPath("errors[0].message", is(NEGATIVE_QUANTITY_MESSAGE)),
+        hasJsonPath("errors[0].parameters[0].key", is("overdueRecallFine.quantity")),
+        hasJsonPath("errors[0].parameters[0].value", is("-1.00"))
+      )))
       .contentType(ContentType.JSON);
   }
 
