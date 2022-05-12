@@ -23,7 +23,7 @@ import io.vertx.core.json.JsonObject;
 
 public class LostItemFeePoliciesAPITest extends ApiTests {
   private static final String REST_PATH = "/lost-item-fees-policies";
-  private static final String NEGATIVE_VALUE_MESSAGE = "Value must not be negative.";
+  private static final String NEGATIVE_VALUE_MESSAGE = "The value must greater than or equal to 0";
 
   @Before
   public void setUp() {

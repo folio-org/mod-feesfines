@@ -9,13 +9,11 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.LostItemFeesPoliciesGetOrder;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
-import org.folio.rest.jaxrs.model.OverdueFine;
 import org.folio.rest.jaxrs.resource.LostItemFeesPolicies;
 import org.folio.rest.persist.PgUtil;
 
@@ -30,7 +28,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
   static final String DUPLICATE_ERROR_CODE = "feesfines.policy.lost.duplicate";
   private static final String DUPLICATE_NAME_MSG =
     "The Lost item fee policy name entered already exists. Please enter a different name.";
-  private static final String NEGATIVE_VALUE_MESSAGE = "Value must not be negative.";
+  private static final String NEGATIVE_VALUE_MESSAGE = "The value must greater than or equal to 0";
 
   @Validate
   @Override
@@ -55,8 +53,8 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    if (containsNegativeValue(entity)) {
-      handleError(entity, asyncResultHandler);
+    if (shouldRefuseWhenLostItemProcessingFeeNegative(entity)) {
+      refuseWhenLostItemProcessingFeeNegative(entity, asyncResultHandler);
       return;
     }
 
@@ -105,8 +103,8 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    if (containsNegativeValue(entity)) {
-      handleError(entity, asyncResultHandler);
+    if (shouldRefuseWhenLostItemProcessingFeeNegative(entity)) {
+      refuseWhenLostItemProcessingFeeNegative(entity, asyncResultHandler);
       return;
     }
 
@@ -114,24 +112,19 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
       PutLostItemFeesPoliciesByLostItemFeePolicyIdResponse.class, asyncResultHandler);
   }
 
-  private void handleError(LostItemFeePolicy entity,
+  private void refuseWhenLostItemProcessingFeeNegative(LostItemFeePolicy entity,
     Handler<AsyncResult<Response>> asyncResultHandler) {
 
-      ImmutablePair<String, String> errorInformation = new ImmutablePair<>("lostItemProcessingFee",
-        getAmountValueAsString(entity));
       asyncResultHandler.handle(
         succeededFuture(respond422WithApplicationJson(createError(
-          NEGATIVE_VALUE_MESSAGE, errorInformation.getLeft(), errorInformation.getRight()))));
+          NEGATIVE_VALUE_MESSAGE, "lostItemProcessingFee",
+          entity.getLostItemProcessingFee().getAmount().toString()))));
   }
 
-  private boolean containsNegativeValue(LostItemFeePolicy entity) {
+  private boolean shouldRefuseWhenLostItemProcessingFeeNegative(LostItemFeePolicy entity) {
     return Optional.ofNullable(entity)
       .map(LostItemFeePolicy::getLostItemProcessingFee)
       .map(MonetaryValue::isNegative)
       .orElse(false);
-  }
-
-  private String getAmountValueAsString(LostItemFeePolicy entity) {
-    return entity.getLostItemProcessingFee().getAmount().toString();
   }
 }
