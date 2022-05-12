@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.LostItemFeesPoliciesGetOrder;
@@ -15,6 +16,7 @@ import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.resource.LostItemFeesPolicies;
 import org.folio.rest.persist.PgUtil;
 
+import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.jaxrs.resource.LostItemFeesPolicies.PostLostItemFeesPoliciesResponse.respond422WithApplicationJson;
 import static org.folio.rest.utils.ErrorHelper.createError;
 import static org.folio.rest.utils.ErrorHelper.uniqueNameConstraintViolated;
@@ -25,6 +27,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
   static final String DUPLICATE_ERROR_CODE = "feesfines.policy.lost.duplicate";
   private static final String DUPLICATE_NAME_MSG =
     "The Lost item fee policy name entered already exists. Please enter a different name.";
+  private static final String NEGATIVE_VALUE_MESSAGE = "Value must not be negative.";
 
   @Validate
   @Override
@@ -48,6 +51,11 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
+    if (containsNegativeValue(entity)) {
+      handleError(entity, asyncResultHandler);
+      return;
+    }
 
     PgUtil.post(TABLE_NAME, entity, okapiHeaders, vertxContext,
       PostLostItemFeesPoliciesResponse.class, r -> {
@@ -94,7 +102,30 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    if (containsNegativeValue(entity)) {
+      handleError(entity, asyncResultHandler);
+      return;
+    }
+
     PgUtil.put(TABLE_NAME, entity, lostItemFeePolicyId, okapiHeaders, vertxContext,
       PutLostItemFeesPoliciesByLostItemFeePolicyIdResponse.class, asyncResultHandler);
+  }
+
+  private void handleError(LostItemFeePolicy entity,
+    Handler<AsyncResult<Response>> asyncResultHandler) {
+
+      ImmutablePair<String, String> errorInformation = new ImmutablePair<>("lostItemProcessingFee",
+        getAmountValueAsString(entity));
+      asyncResultHandler.handle(
+        succeededFuture(respond422WithApplicationJson(createError(
+          NEGATIVE_VALUE_MESSAGE, errorInformation.getLeft(), errorInformation.getRight()))));
+  }
+
+  private boolean containsNegativeValue(LostItemFeePolicy entity) {
+    return entity.getLostItemProcessingFee().isNegative();
+  }
+
+  private String getAmountValueAsString(LostItemFeePolicy entity) {
+    return entity.getLostItemProcessingFee().getAmount().toString();
   }
 }
