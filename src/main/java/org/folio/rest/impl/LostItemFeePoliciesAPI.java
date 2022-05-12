@@ -5,14 +5,17 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
 import java.util.Map;
+import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.LostItemFeesPoliciesGetOrder;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
+import org.folio.rest.jaxrs.model.OverdueFine;
 import org.folio.rest.jaxrs.resource.LostItemFeesPolicies;
 import org.folio.rest.persist.PgUtil;
 
@@ -122,7 +125,10 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
   }
 
   private boolean containsNegativeValue(LostItemFeePolicy entity) {
-    return entity.getLostItemProcessingFee().isNegative();
+    return Optional.ofNullable(entity)
+      .map(LostItemFeePolicy::getLostItemProcessingFee)
+      .map(MonetaryValue::isNegative)
+      .orElse(false);
   }
 
   private String getAmountValueAsString(LostItemFeePolicy entity) {
