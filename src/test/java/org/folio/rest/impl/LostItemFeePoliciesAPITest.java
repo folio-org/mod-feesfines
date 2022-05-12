@@ -1,11 +1,15 @@
 package org.folio.rest.impl;
 
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.folio.test.support.ApiTests;
@@ -19,6 +23,7 @@ import io.vertx.core.json.JsonObject;
 
 public class LostItemFeePoliciesAPITest extends ApiTests {
   private static final String REST_PATH = "/lost-item-fees-policies";
+  private static final String NEGATIVE_VALUE_MESSAGE = "Value must not be negative.";
 
   @Before
   public void setUp() {
@@ -131,8 +136,46 @@ public class LostItemFeePoliciesAPITest extends ApiTests {
         containsString("password authentication failed for user \\\"test_breaker_mod_feesfines\\\""));
   }
 
+  @Test
+  public void postLostItemFeesPolicyWithNegativeLostItemProcessingFeeValue() {
+    JsonObject entityJson = createEntityJson();
+    entityJson.put("lostItemProcessingFee", "-1");
+
+    post(entityJson.encodePrettily())
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body(allOf(List.of(
+        hasJsonPath("errors[0].message", is(NEGATIVE_VALUE_MESSAGE)),
+        hasJsonPath("errors[0].parameters[0].key", is("lostItemProcessingFee")),
+        hasJsonPath("errors[0].parameters[0].value", is("-1.00"))
+      )))
+      .contentType(ContentType.JSON);
+  }
+
+  @Test
+  public void putLostItemFeesPolicyWithNegativeLostItemProcessingFeeValue() {
+    JsonObject entity = createEntityJson();
+    post(entity.encodePrettily());
+
+    entity.put("lostItemProcessingFee", "-1");
+
+    put(entity.getString("id"), entity.encodePrettily())
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body(allOf(List.of(
+        hasJsonPath("errors[0].message", is(NEGATIVE_VALUE_MESSAGE)),
+        hasJsonPath("errors[0].parameters[0].key", is("lostItemProcessingFee")),
+        hasJsonPath("errors[0].parameters[0].value", is("-1.00"))
+      )))
+      .contentType(ContentType.JSON);
+  }
+
   private Response post(String body) {
     return client.post(REST_PATH, body);
+  }
+
+  private Response put(String id, String body) {
+    return client.put(REST_PATH + "/" + id, body);
   }
 
   private static String createEntity() {
