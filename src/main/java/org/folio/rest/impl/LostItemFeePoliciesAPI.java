@@ -53,7 +53,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    if (shouldRefuseWhenLostItemProcessingFeeIsNegative(entity, asyncResultHandler)) {
+    if (refuseWhenLostItemProcessingFeeIsNegative(entity, asyncResultHandler)) {
       return;
     }
 
@@ -102,7 +102,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    if (shouldRefuseWhenLostItemProcessingFeeIsNegative(entity, asyncResultHandler)) {
+    if (refuseWhenLostItemProcessingFeeIsNegative(entity, asyncResultHandler)) {
       return;
     }
 
@@ -110,21 +110,23 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
       PutLostItemFeesPoliciesByLostItemFeePolicyIdResponse.class, asyncResultHandler);
   }
 
-  private boolean shouldRefuseWhenLostItemProcessingFeeIsNegative(LostItemFeePolicy entity,
+  private boolean refuseWhenLostItemProcessingFeeIsNegative(LostItemFeePolicy entity,
     Handler<AsyncResult<Response>> asyncResultHandler) {
 
-    Optional<Boolean> opt = Optional.of(Optional.ofNullable(entity)
+    boolean lostItemProcessingFeeIsNegative = Optional.of(Optional.ofNullable(entity)
       .map(LostItemFeePolicy::getLostItemProcessingFee)
       .map(MonetaryValue::isNegative)
-      .orElse(false));
+      .orElse(false))
+      .get();
 
-    if (opt.get()) {
+    if (lostItemProcessingFeeIsNegative) {
       asyncResultHandler.handle(
         succeededFuture(respond422WithApplicationJson(createError(
           NEGATIVE_VALUE_MESSAGE, "lostItemProcessingFee",
           entity.getLostItemProcessingFee().getAmount().toString()))));
       return true;
     }
+
     return false;
   }
 }
