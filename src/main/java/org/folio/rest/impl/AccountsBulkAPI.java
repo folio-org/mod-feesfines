@@ -167,12 +167,10 @@ public class AccountsBulkAPI implements AccountsBulk {
           BulkCheckActionResponse response = buildResponse(accountIds, request.getAmount(), false,
             null, errorMessage);
           asyncResultHandler.handle(succeededFuture(resultAdapter.bulkCheck422.apply(response)));
-        }
-        else if (throwable instanceof AccountNotFoundValidationException) {
+        } else if (throwable instanceof AccountNotFoundValidationException) {
           asyncResultHandler.handle(succeededFuture(
             resultAdapter.bulkCheck404.apply(errorMessage)));
-        }
-        else {
+        } else {
           asyncResultHandler.handle(succeededFuture(
             resultAdapter.bulkCheck500.apply(errorMessage)));
         }

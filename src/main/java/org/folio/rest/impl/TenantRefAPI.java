@@ -23,8 +23,8 @@ public class TenantRefAPI extends TenantAPI {
 
   @Override
   public void postTenant(TenantAttributes tenantAttributes,
-                         Map<String, String> headers,
-                         Handler<AsyncResult<Response>> handler, Context context) {
+    Map<String, String> headers,
+    Handler<AsyncResult<Response>> handler, Context context) {
 
     log.info("postTenant");
     log.info("Tenant attributes: {}", JsonObject.mapFrom(tenantAttributes));

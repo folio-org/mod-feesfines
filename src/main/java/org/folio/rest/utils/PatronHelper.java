@@ -10,7 +10,8 @@ import org.folio.rest.jaxrs.model.User;
 public class PatronHelper {
   private static final Logger log = LogManager.getLogger(PatronHelper.class);
 
-  private PatronHelper() { }
+  private PatronHelper() {
+  }
 
   public static String buildFormattedName(User user) {
     StringBuilder builder = new StringBuilder();

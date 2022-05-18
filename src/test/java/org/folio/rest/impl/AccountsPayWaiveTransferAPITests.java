@@ -9,6 +9,8 @@ import static java.lang.String.format;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
+import static org.folio.rest.domain.MonetaryValue.ZERO;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountTransferClient;
@@ -182,6 +184,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
 
     String requestedAmountString = "1.004123456789";
     String expectedPaymentStatus = action.getFullResult();
+    MonetaryValue expectedRemainingAmount = ZERO;
 
     final DefaultActionRequest request = createRequest(requestedAmountString);
 
@@ -190,6 +193,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
       .body("amount", is("1.00"))
+      .body("remainingAmount", is(expectedRemainingAmount.toString()))
       .body("accountId", is(ACCOUNT_ID));
 
     actionsClient.getAll()
@@ -201,7 +205,8 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, MonetaryValue.ZERO, "Closed");
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, expectedRemainingAmount,
+      "Closed");
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request, action.getFullResult(), 1.0,
@@ -215,6 +220,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
 
     String requestedAmountString = "1.004987654321"; // should be rounded to 1.00
     String expectedPaymentStatus = action.getPartialResult();
+    MonetaryValue expectedRemainingAmount = new MonetaryValue(0.24);
 
     final DefaultActionRequest request = createRequest(requestedAmountString);
 
@@ -223,6 +229,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
       .body("amount", is("1.00"))
+      .body("remainingAmount", is(expectedRemainingAmount.toString()))
       .body("accountId", is(ACCOUNT_ID));
 
     actionsClient.getAll()
@@ -234,7 +241,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         hasJsonPath("typeAction", is(expectedPaymentStatus))
       )));
 
-    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, new MonetaryValue(0.24),
+    verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, expectedRemainingAmount,
       "Open");
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),
@@ -275,6 +282,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
       .body("amount", is(requestedAmountString))
+      .body("remainingAmount", is(expectedAccountBalanceAfter.toString()))
       .body("accountId", is(ACCOUNT_ID))
       .body(FEE_FINE_ACTIONS, hasSize(1));
 
@@ -322,7 +330,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .withFeeFineOwner("owner")
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue(amount))
-      .withPaymentStatus(new PaymentStatus().withName("Outstanding"))
+      .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
       .withStatus(new Status().withName("Open"));
   }
 

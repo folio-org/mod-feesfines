@@ -10,6 +10,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.vertx.core.json.JsonObject.mapFrom;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
+import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_PARTIALLY;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE_ERROR;
@@ -446,6 +448,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
+      .put("paymentStatus", new PaymentStatus().withName(OUTSTANDING))
       .put("remaining", 10.0)
       .put("amount", 10.0));
 
@@ -501,6 +504,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
+      .put("paymentStatus", new PaymentStatus().withName(OUTSTANDING))
       .put("remaining", 10.0)
       .put("amount", 10.0));
 
@@ -670,7 +674,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
       .withLocation("Account-level location")
-      .withPaymentStatus(new PaymentStatus().withName("Paid fully"))
+      .withPaymentStatus(new PaymentStatus().withName(PAID_PARTIALLY))
       .withFeeFineType(feefine.getFeeFineType())
       .withMaterialType("book")
       .withMaterialTypeId(randomId())

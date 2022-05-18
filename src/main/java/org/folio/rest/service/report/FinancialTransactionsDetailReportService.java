@@ -128,8 +128,8 @@ public class FinancialTransactionsDetailReportService extends
     Context ctx = new Context();
 
     return feeFineActionRepository.findFeeFineActionsAndAccounts(actionTypes,
-      params.getStartDate(), params.getEndDate(), List.of(params.getFeeFineOwner()),
-      params.getCreatedAt(), null, ORDER_BY_ACTION_DATE_ASC, REPORT_ROWS_LIMIT)
+        params.getStartDate(), params.getEndDate(), List.of(params.getFeeFineOwner()),
+        params.getCreatedAt(), null, ORDER_BY_ACTION_DATE_ASC, REPORT_ROWS_LIMIT)
       .map(ctx::withActionsToAccounts)
       .compose(this::processAllFeeFineActions)
       .map(this::buildReport);

@@ -5,6 +5,7 @@ import static org.folio.rest.domain.logs.LogEventPayloadHelper.buildFeeFineLogEv
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.persist.PgUtil;

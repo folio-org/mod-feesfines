@@ -11,6 +11,7 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.util.UuidUtil.isUuid;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -18,6 +19,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +39,7 @@ public class OkapiClient {
   private final String token;
 
   OkapiClient(Vertx vertx, Map<String, String> okapiHeaders) {
-    this.webClient = WebClientProvider.getWebClient(vertx) ;
+    this.webClient = WebClientProvider.getWebClient(vertx);
     okapiUrl = okapiHeaders.get(OKAPI_URL_HEADER);
     tenant = okapiHeaders.get(OKAPI_HEADER_TENANT);
     token = okapiHeaders.get(OKAPI_HEADER_TOKEN);
@@ -98,11 +100,9 @@ public class OkapiClient {
 
     if (objectType == null) {
       errorMessage = "Requested object type is null";
-    }
-    else if (isBlank(path)) {
+    } else if (isBlank(path)) {
       errorMessage = "Invalid resource path for " + objectType.getSimpleName();
-    }
-    else if (!isUuid(id)) {
+    } else if (!isUuid(id)) {
       errorMessage = "Invalid UUID: " + id;
     }
 
