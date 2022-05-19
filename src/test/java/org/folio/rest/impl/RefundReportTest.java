@@ -628,13 +628,13 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
     Account account1 = charge(USER_ID_1, 10.0, "ff-type-1", item1.getId(), OWNER_ID_1);
     createAction(1, account1, "2020-01-03 12:00:00", PAID_PARTIALLY, PAYMENT_METHOD,
       8.0, 2.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO, PAYMENT_TX_INFO);
-    Feefineaction refundAction1 = createAction(1, account1, "2019-12-30 12:00:00",
+    createAction(1, account1, "2019-12-30 12:00:00",
       REFUNDED_PARTIALLY, REFUND_REASON, 1.0, 3.0, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
     Feefineaction refundAction2 = createAction(1, account1, "2020-01-04 12:00:00",
       REFUNDED_PARTIALLY, REFUND_REASON, 1.1, 4.1, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
-    Feefineaction refundAction3 = createAction(1, account1, "2020-02-01 12:00:00",
+    createAction(1, account1, "2020-02-01 12:00:00",
       REFUNDED_PARTIALLY, REFUND_REASON, 1.2, 5.3, REFUND_STAFF_INFO, REFUND_PATRON_INFO,
       REFUND_TX_INFO);
 
