@@ -210,7 +210,9 @@ public class RefundReportService {
         log.error("Transfer amount is null - fee/fine action {}, account {}", feeFineAction.getId(),
           accountId);
       }
-    } else if (actionIsOfType(feeFineAction, REFUND)) {
+    } else if (actionIsOfType(feeFineAction, REFUND)
+      && ctx.refunds.containsKey(feeFineAction.getId())) {
+
       RefundData refundData = ctx.refunds.get(feeFineAction.getId());
       RefundReportEntry reportEntry = refundData.reportEntry;
 
