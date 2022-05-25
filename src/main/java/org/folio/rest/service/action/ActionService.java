@@ -157,8 +157,10 @@ public abstract class ActionService {
     if (isFullAction) {
       account.getStatus().setName(CLOSED.getValue());
       account.setRemaining(MonetaryValue.ZERO);
+      account.setDateClosed(new Date());
     } else {
       account.setRemaining(feeFineAction.getBalance());
+      account.setDateClosed(null);
     }
 
     return feeFineAction;

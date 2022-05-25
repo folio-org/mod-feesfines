@@ -164,6 +164,7 @@ public class RefundActionService extends ActionService {
     account.setRemaining(feeFineAction.getBalance());
     account.getPaymentStatus().setName(fromValue(feeFineAction.getTypeAction()));
     account.getStatus().setName(OPEN.getValue());
+    account.setDateClosed(null);
   }
 
   private static String buildRefundTransactionInfo(Action action, String targetAccount) {

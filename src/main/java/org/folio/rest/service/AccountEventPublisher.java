@@ -7,6 +7,7 @@ import static org.folio.rest.utils.JsonHelper.write;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 import org.folio.rest.domain.MonetaryValue;
@@ -37,7 +38,8 @@ public class AccountEventPublisher {
   public void publishDeletedAccountBalanceChangeEvent(String accountId) {
     final Account account = new Account()
       .withId(accountId)
-      .withRemaining(new MonetaryValue(BigDecimal.ZERO));
+      .withRemaining(new MonetaryValue(BigDecimal.ZERO))
+      .withDateClosed(new Date());
 
     publishAccountBalanceChangeEvent(account);
   }
