@@ -354,7 +354,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue(amount))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
-      .withStatus(new Status().withName("Open"));
+      .withStatus(new Status().withName("Open"))
+      .withDateClosed(null);
   }
 
   private void postAccount(Account account) {

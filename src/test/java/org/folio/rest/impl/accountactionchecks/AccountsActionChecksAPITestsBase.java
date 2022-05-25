@@ -7,6 +7,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
@@ -139,6 +140,7 @@ public class AccountsActionChecksAPITestsBase extends ApiTests {
       .forEach(account -> {
         account.setRemaining(new MonetaryValue(0.0));
         account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
+        account.setDateClosed(new Date());
         accountsClient.update(account.getId(), account);
       });
   }

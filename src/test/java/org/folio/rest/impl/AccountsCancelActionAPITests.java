@@ -19,6 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -131,6 +132,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
   public void shouldReturn422WhenAccountIsClosed() {
     Account account = buildAccount(ACCOUNT_ID);
     account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
+    account.setDateClosed(new Date());
     postAccount(account);
 
     accountCancelClient.attemptCreate(createCancelActionRequest())
@@ -151,6 +153,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
   public void bulkCancelShouldReturn422WhenAccountIsClosed() {
     Account account = buildAccount(ACCOUNT_ID);
     account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
+    account.setDateClosed(new Date());
     postAccount(account);
 
     accountBulkCancelClient.attemptCreate(createBulkCancelActionRequest(List.of(account.getId())))

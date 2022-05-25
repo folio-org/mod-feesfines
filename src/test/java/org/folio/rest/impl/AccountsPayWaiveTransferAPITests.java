@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpStatus;
@@ -161,6 +162,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       remainingAmount.add(new MonetaryValue(1.0)).toDouble()).withRemaining(
       remainingAmount);
     account.getStatus().setName(FeeFineStatus.CLOSED.getValue());
+    account.setDateClosed(new Date());
     postAccount(account);
 
     String requestedAmount = "1.23";
@@ -331,7 +333,8 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue(amount))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
-      .withStatus(new Status().withName("Open"));
+      .withStatus(new Status().withName("Open"))
+      .withDateClosed(null);
   }
 
   private void postAccount(Account account) {

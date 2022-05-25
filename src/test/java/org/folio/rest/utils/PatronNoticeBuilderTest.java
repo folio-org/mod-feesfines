@@ -161,7 +161,8 @@ public class PatronNoticeBuilderTest {
       .withBarcode("Account-level barcode")
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
-      .withLocation("Account-level location");
+      .withLocation("Account-level location")
+      .withDateClosed(null);
 
     final FeeFineNoticeContext sourceContext = new FeeFineNoticeContext()
       .withAccount(account)
@@ -275,7 +276,8 @@ public class PatronNoticeBuilderTest {
       .withMaterialType("book")
       .withAmount(new MonetaryValue(new BigDecimal(ACCOUNT_AMOUNT)))
       .withRemaining(new MonetaryValue(new BigDecimal(ACCOUNT_REMAINING)))
-      .withMetadata(new Metadata().withCreatedDate(new Date()));
+      .withMetadata(new Metadata().withCreatedDate(new Date()))
+      .withDateClosed(null);
   }
 
   private static HoldingsRecord createHoldingsRecord() {
