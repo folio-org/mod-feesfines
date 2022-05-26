@@ -679,8 +679,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withMaterialType("book")
       .withMaterialTypeId(randomId())
       .withAmount(new MonetaryValue(ACCOUNT_AMOUNT))
-      .withRemaining(new MonetaryValue(ACCOUNT_REMAINING))
-      .withDateClosed(null);
+      .withRemaining(new MonetaryValue(ACCOUNT_REMAINING));
   }
 
   private static Owner createOwner() {

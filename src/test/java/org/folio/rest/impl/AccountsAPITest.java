@@ -379,8 +379,7 @@ public class AccountsAPITest extends ApiTests {
       .withAmount(new MonetaryValue(new BigDecimal("7.77")))
       .withRemaining(new MonetaryValue(new BigDecimal("3.33")))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
-      .withStatus(new Status().withName("Open"))
-      .withDateClosed(null);
+      .withStatus(new Status().withName("Open"));
 
   }
 

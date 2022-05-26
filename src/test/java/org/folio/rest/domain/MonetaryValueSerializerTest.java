@@ -150,7 +150,6 @@ public class MonetaryValueSerializerTest extends ApiTests {
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue("3.33"))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
-      .withStatus(new Status().withName("Open"))
-      .withDateClosed(null);
+      .withStatus(new Status().withName("Open"));
   }
 }

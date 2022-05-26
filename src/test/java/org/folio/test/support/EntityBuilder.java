@@ -82,8 +82,7 @@ public class EntityBuilder {
       .withAmount(new MonetaryValue(amount))
       .withRemaining(new MonetaryValue(amount))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
-      .withStatus(new Status().withName("Open"))
-      .withDateClosed(null);
+      .withStatus(new Status().withName("Open"));
   }
 
   public static Account buildAccount() {
@@ -100,8 +99,7 @@ public class EntityBuilder {
       .withAmount(new MonetaryValue(9.0))
       .withRemaining(new MonetaryValue(4.55))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
-      .withStatus(new Status().withName("Open"))
-      .withDateClosed(null);
+      .withStatus(new Status().withName("Open"));
   }
 
   public static Account buildAccount(String accountId) {
