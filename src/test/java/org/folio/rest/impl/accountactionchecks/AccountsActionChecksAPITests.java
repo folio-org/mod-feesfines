@@ -5,8 +5,8 @@ import static org.folio.rest.utils.ResourceClients.buildAccountCheckTransferClie
 import static org.folio.rest.utils.ResourceClients.buildAccountCheckWaiveClient;
 
 import org.folio.rest.utils.ResourceClient;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class AccountsActionChecksAPITests extends AccountsActionChecksAPITestsBase {
 
@@ -17,7 +17,7 @@ public class AccountsActionChecksAPITests extends AccountsActionChecksAPITestsBa
   private ResourceClient accountsCheckWaiveClient;
   private ResourceClient accountsCheckTransferClient;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     firstAccount = createAccount();
     secondAccount = createAccount();

@@ -44,8 +44,8 @@ import org.folio.rest.jaxrs.model.UserGroup;
 import org.folio.rest.utils.ReportResourceClient;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.constant.ServicePath;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
@@ -102,7 +102,7 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
   private StubMapping holdingsStubMapping;
   private StubMapping instanceStubMapping;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     clearDatabase();
     createLocaleSettingsStub();

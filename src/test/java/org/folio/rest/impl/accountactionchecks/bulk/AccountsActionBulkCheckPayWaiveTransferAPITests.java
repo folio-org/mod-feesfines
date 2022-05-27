@@ -7,41 +7,33 @@ import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckPayClien
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckTransferClient;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkCheckWaiveClient;
 
+import java.util.stream.Stream;
+
 import org.folio.rest.domain.Action;
 import org.folio.rest.impl.accountactionchecks.AccountsActionChecksAPITestsBase;
 import org.folio.rest.utils.ResourceClient;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@RunWith(Parameterized.class)
 public class AccountsActionBulkCheckPayWaiveTransferAPITests extends AccountsActionChecksAPITestsBase {
-
-  private final Action action;
-  private ResourceClient bulkClient;
 
   private final ResourceClient accountsBulkCheckPayClient = buildAccountBulkCheckPayClient();
   private final ResourceClient accountsBulkCheckWaiveClient = buildAccountBulkCheckWaiveClient();
   private final ResourceClient accountsBulkCheckTransferClient = buildAccountBulkCheckTransferClient();
 
-  @Before
+  @BeforeEach
   public void setUp() {
     firstAccount = createAccount();
     secondAccount = createAccount();
-    bulkClient = getAccountsBulkClient();
   }
 
-  public AccountsActionBulkCheckPayWaiveTransferAPITests(Action action) {
-    this.action = action;
+  public static Stream<Arguments> parameters() {
+    return Stream.of(Arguments.of(PAY), Arguments.of(WAIVE), Arguments.of(TRANSFER));
   }
 
-  @Parameterized.Parameters(name = "{0}")
-  public static Object[] parameters() {
-    return new Object[]{PAY, WAIVE, TRANSFER};
-  }
-
-  private ResourceClient getAccountsBulkClient() {
+  private ResourceClient getAccountsBulkClient(Action action) {
     switch (action) {
       case PAY:
         return accountsBulkCheckPayClient;
@@ -55,42 +47,49 @@ public class AccountsActionBulkCheckPayWaiveTransferAPITests extends AccountsAct
     }
   }
 
-  @Test
-  public void bulkCheckAmountShouldBeAllowed() {
-    actionShouldBeAllowed(true, bulkClient, "7.87");
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void bulkCheckAmountShouldBeAllowed(Action action) {
+    actionShouldBeAllowed(true, getAccountsBulkClient(action), "7.87");
   }
 
-  @Test
-  public void bulkCheckAmountShouldNotBeAllowedWithExceededAmount() {
-    actionCheckAmountShouldNotBeAllowedWithExceededAmount(true, bulkClient);
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void bulkCheckAmountShouldNotBeAllowedWithExceededAmount(Action action) {
+    actionCheckAmountShouldNotBeAllowedWithExceededAmount(true, getAccountsBulkClient(action));
   }
 
-  @Test
-  public void bulkCheckAmountShouldNotBeAllowedWithNegativeAmount() {
-    actionShouldNotBeAllowed(true, bulkClient, "-5.0",
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void bulkCheckAmountShouldNotBeAllowedWithNegativeAmount(Action action) {
+    actionShouldNotBeAllowed(true, getAccountsBulkClient(action), "-5.0",
       ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
-  @Test
-  public void bulkCheckAmountShouldNotBeAllowedWithZeroAmount() {
-    actionShouldNotBeAllowed(true, bulkClient, "0.0",
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void bulkCheckAmountShouldNotBeAllowedWithZeroAmount(Action action) {
+    actionShouldNotBeAllowed(true, getAccountsBulkClient(action), "0.0",
       ERROR_MESSAGE_MUST_BE_POSITIVE);
   }
 
-  @Test
-  public void bulkCheckAmountShouldBeNumeric() {
-    actionShouldNotBeAllowed(true, bulkClient, "abc",
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void bulkCheckAmountShouldBeNumeric(Action action) {
+    actionShouldNotBeAllowed(true, getAccountsBulkClient(action), "abc",
       ERROR_MESSAGE_INVALID_AMOUNT);
   }
 
-  @Test
-  public void bulkCheckAmountShouldNotFailForNonExistentAccount() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void bulkCheckAmountShouldNotFailForNonExistentAccount(Action action) {
     removeAllFromTable(ACCOUNTS_TABLE);
-    actionCheckShouldNotFailForNonExistentAccount(true, bulkClient);
+    actionCheckShouldNotFailForNonExistentAccount(true, getAccountsBulkClient(action));
   }
 
-  @Test
-  public void bulkCheckAmountShouldNotBeAllowedForClosedAccount() {
-    actionCheckAmountShouldNotBeAllowedForClosedAccount(true, bulkClient);
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void bulkCheckAmountShouldNotBeAllowedForClosedAccount(Action action) {
+    actionCheckAmountShouldNotBeAllowedForClosedAccount(true, getAccountsBulkClient(action));
   }
 }

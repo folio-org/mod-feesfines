@@ -43,10 +43,9 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
 import org.hamcrest.CoreMatchers;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,8 +72,6 @@ public class ApiTests {
   public static final String MODULE_NAME = "mod-feesfines";
   public static final String FEEFINES_TABLE = "feefines";
   public static final String OWNERS_TABLE = "owners";
-
-  @ClassRule
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
 
   protected static Vertx vertx;
@@ -86,9 +83,11 @@ public class ApiTests {
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
 
-  @BeforeClass
-  public static void deployVerticle() throws Exception {
+  @BeforeAll
+  public static void deployVerticle() {
     vertx = Vertx.vertx();
+    okapiDeployment.start();
+    okapiDeployment.setUpMapping();
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
@@ -100,7 +99,7 @@ public class ApiTests {
     get(future);
   }
 
-  @AfterClass
+  @AfterAll
   public static void undeployEnvironment() {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
@@ -110,9 +109,10 @@ public class ApiTests {
     });
 
     get(future);
+    okapiDeployment.resetAll();
   }
 
-  @Before
+  @BeforeEach
   public void setUpMapping() {
     okapiDeployment.setUpMapping();
   }

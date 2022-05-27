@@ -18,15 +18,15 @@ import org.folio.rest.impl.accountactionchecks.AccountsActionChecksAPITestsBase;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.utils.ResourceClient;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class AccountsActionCheckBulkRefundAPITests extends AccountsActionChecksAPITestsBase {
 
   private static final ResourceClient accountsBulkCheckRefundClient = buildAccountBulkCheckRefundClient();
   private ResourceClient accountsCheckRefundClient;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     firstAccount = createAccount();
     secondAccount = createAccount();

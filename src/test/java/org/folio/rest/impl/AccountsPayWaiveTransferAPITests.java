@@ -26,6 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
@@ -43,8 +44,13 @@ import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
 import org.folio.util.PomUtils;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -52,32 +58,24 @@ import org.junit.runners.Parameterized.Parameters;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 
-@RunWith(value = Parameterized.class)
 public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
   private static final String ACCOUNT_ID = randomId();
   private static final String FEE_FINE_ACTIONS = "feefineactions";
 
   private final ResourceClient actionsClient = buildFeeFineActionsClient();
-  private final Action action;
-  private ResourceClient resourceClient;
 
-  public AccountsPayWaiveTransferAPITests(Action action) {
-    this.action = action;
+  public static Stream<Arguments> parameters() {
+    return Stream.of(Arguments.of(PAY), Arguments.of(WAIVE), Arguments.of(TRANSFER));
   }
 
-  @Parameters(name = "{0}")
-  public static Object[] parameters() {
-    return new Object[] { PAY, WAIVE, TRANSFER };
-  }
-
-  @Before
+  @BeforeEach
   public void beforeEach() {
     removeAllFromTable(FEE_FINE_ACTIONS);
     removeAllFromTable("accounts");
-    resourceClient = getClient();
+//    resourceClient = getClient();
   }
 
-  private ResourceClient getClient() {
+  private ResourceClient getClient(Action action) {
     switch (action) {
     case PAY:
       return buildAccountPayClient(ACCOUNT_ID);
@@ -91,8 +89,10 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
     }
   }
 
-  @Test
-  public void return404WhenAccountDoesNotExist() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void return404WhenAccountDoesNotExist(Action action) {
+    ResourceClient resourceClient = getClient(action);
     resourceClient.post(createRequestJson(String.valueOf(10.0)))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND)
@@ -100,17 +100,19 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .body(equalTo(format("Fee/fine ID %s not found", ACCOUNT_ID)));
   }
 
-  @Test
-  public void return422WhenRequestedAmountIsNegative() {
-    testRequestWithNonPositiveAmount(-1.0);
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void return422WhenRequestedAmountIsNegative(Action action) {
+    testRequestWithNonPositiveAmount(-1.0, action);
   }
 
-  @Test
-  public void return422WhenRequestedAmountIsZero() {
-    testRequestWithNonPositiveAmount(0.0);
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void return422WhenRequestedAmountIsZero(Action action) {
+    testRequestWithNonPositiveAmount(0.0, action);
   }
 
-  private void testRequestWithNonPositiveAmount(double amount) {
+  private void testRequestWithNonPositiveAmount(double amount, Action action) {
     postAccount(createAccount(1.0));
 
     String amountString = String.valueOf(amount);
@@ -120,15 +122,16 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .withAccountId(ACCOUNT_ID)
       .withErrorMessage("Amount must be positive");
 
-    resourceClient.post(createRequestJson(amountString))
+    getClient(action).post(createRequestJson(amountString))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
       .body(equalTo(toJson(expectedResponse)));
   }
 
-  @Test
-  public void return422WhenRequestedAmountIsInvalidString() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void return422WhenRequestedAmountIsInvalidString(Action action) {
     postAccount(createAccount(1.0));
 
     String invalidAmount = "eleven";
@@ -138,25 +141,29 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .withAccountId(ACCOUNT_ID)
       .withErrorMessage("Invalid amount entered");
 
-    resourceClient.post(createRequestJson(invalidAmount))
+    getClient(action).post(createRequestJson(invalidAmount))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
       .body(equalTo(toJson(expectedResponse)));
   }
 
-  @Test
-  public void return422WhenAccountIsClosed() {
-    return422WhenAccountIsEffectivelyClosed(new MonetaryValue(0.0));
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void return422WhenAccountIsClosed(Action action) {
+    return422WhenAccountIsEffectivelyClosed(new MonetaryValue(0.0), action);
   }
 
-  @Test
-  public void return422WhenAccountIsEffectivelyClosed() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void return422WhenAccountIsEffectivelyClosed(Action action) {
     // will be rounded to 0.00 (2 decimal places) when compared to zero
-    return422WhenAccountIsEffectivelyClosed(new MonetaryValue(0.004987654321));
+    return422WhenAccountIsEffectivelyClosed(new MonetaryValue(0.004987654321), action);
   }
 
-  private void return422WhenAccountIsEffectivelyClosed(MonetaryValue remainingAmount) {
+  private void return422WhenAccountIsEffectivelyClosed(MonetaryValue remainingAmount,
+    Action action) {
+
     Account account = createAccount(
       remainingAmount.add(new MonetaryValue(1.0)).toDouble()).withRemaining(
       remainingAmount);
@@ -170,15 +177,16 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .withAccountId(ACCOUNT_ID)
       .withErrorMessage("Fee/fine is already closed");
 
-    resourceClient.post(createRequestJson(requestedAmount))
+    getClient(action).post(createRequestJson(requestedAmount))
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(JSON)
       .body(equalTo(toJson(expectedResponse)));
   }
 
-  @Test
-  public void longDecimalsAreHandledCorrectlyAndAccountIsClosed() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void longDecimalsAreHandledCorrectlyAndAccountIsClosed(Action action) {
     final Account account = createAccount(1.004987654321);
     postAccount(account);
 
@@ -188,7 +196,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
 
     final DefaultActionRequest request = createRequest(requestedAmountString);
 
-    resourceClient.post(toJson(request))
+    getClient(action).post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
@@ -213,8 +221,9 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         0.0)));
   }
 
-  @Test
-  public void longDecimalsAreHandledCorrectly() {
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void longDecimalsAreHandledCorrectly(Action action) {
     final Account account = createAccount(1.23987654321); // should be rounded to 1.24
     postAccount(account);
 
@@ -224,7 +233,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
 
     final DefaultActionRequest request = createRequest(requestedAmountString);
 
-    resourceClient.post(toJson(request))
+    getClient(action).post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)
@@ -249,17 +258,21 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         1.0,0.24)));
   }
 
-  @Test
-  public void partialActionCreatesActionAndUpdatesAccount() {
-    paymentCreatesActionAndUpdatesAccount(false);
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void partialActionCreatesActionAndUpdatesAccount(Action action) {
+    paymentCreatesActionAndUpdatesAccount(false, action);
   }
 
-  @Test
-  public void fullActionCreatesActionAndClosesAccount() {
-    paymentCreatesActionAndUpdatesAccount(true);
+  @ParameterizedTest
+  @MethodSource("parameters")
+  public void fullActionCreatesActionAndClosesAccount(Action action) {
+    paymentCreatesActionAndUpdatesAccount(true, action);
   }
 
-  private void paymentCreatesActionAndUpdatesAccount(boolean terminalAction) {
+  private void paymentCreatesActionAndUpdatesAccount(boolean terminalAction,
+    Action action) {
+
     MonetaryValue accountBalanceBefore = new MonetaryValue(3.45);
     MonetaryValue requestedAmount = terminalAction ?
       accountBalanceBefore :
@@ -277,7 +290,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
 
     final DefaultActionRequest request = createRequest(requestedAmountString);
 
-    resourceClient.post(toJson(request))
+    getClient(action).post(toJson(request))
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(JSON)

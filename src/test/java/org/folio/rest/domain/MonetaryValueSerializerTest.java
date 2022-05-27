@@ -14,25 +14,21 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.test.support.ApiTests;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-@RunWith(JUnitParamsRunner.class)
 public class MonetaryValueSerializerTest extends ApiTests {
 
   private static final String ACCOUNT_ID = randomId();
 
-  @After
+  @AfterEach
   public void afterEach() {
     deleteEntity("/accounts", ACCOUNT_ID);
   }
 
-  @Test
-  @Parameters({"0", "0.0", "0.00", "0.000"})
+  @ParameterizedTest
+  @ValueSource(strings = {"0", "0.0", "0.00", "0.000"})
   public void monetaryValueShouldBeZero(String amount) {
     Account accountToPost = buildAccount(amount);
 
@@ -49,8 +45,8 @@ public class MonetaryValueSerializerTest extends ApiTests {
       .body("amount", is(0.0f));
   }
 
-  @Test
-  @Parameters({ "1", "0.006", "0.0051", "0.0050000000000001" })
+  @ParameterizedTest
+  @ValueSource(strings = {"1", "0.006", "0.0051", "0.0050000000000001"})
   public void monetaryValueShouldNotBeZero(String amount) {
     Account accountToPost = buildAccount(amount);
 
@@ -67,8 +63,8 @@ public class MonetaryValueSerializerTest extends ApiTests {
       .body("amount", not(0.0f));
   }
 
-  @Test
-  @Parameters({ "1", "0.1", "0.01", "0.006", "0.0051", "0.0050000000000001" })
+  @ParameterizedTest
+  @ValueSource(strings = {"1", "0.1", "0.01", "0.006", "0.0051", "0.0050000000000001"})
   public void monetaryValueIsPositive(String amount) {
     Account accountToPost = buildAccount(amount);
 
@@ -85,8 +81,8 @@ public class MonetaryValueSerializerTest extends ApiTests {
       .body("amount", greaterThan(0.0f));
   }
 
-  @Test
-  @Parameters({ "-1", "-0.00000001" })
+  @ParameterizedTest
+  @ValueSource(strings = {"-1", "-0.00000001"})
   public void monetaryValueIsNotPositive(String amount) {
     Account accountToPost = buildAccount(amount);
 
@@ -103,8 +99,8 @@ public class MonetaryValueSerializerTest extends ApiTests {
       .body("amount", lessThanOrEqualTo(0.0f));
   }
 
-  @Test
-  @Parameters({ "-1", "-0.1", "-0.01", "-0.006", "-0.0051", "-0.0050000000000001" })
+  @ParameterizedTest
+  @ValueSource(strings = {"-1", "-0.1", "-0.01", "-0.006", "-0.0051", "-0.0050000000000001"})
   public void monetaryValueIsNegative(String amount) {
     Account accountToPost = buildAccount(amount);
 
@@ -121,8 +117,8 @@ public class MonetaryValueSerializerTest extends ApiTests {
       .body("amount", lessThan(0.0f));
   }
 
-  @Test
-  @Parameters({ "1", "0", "0.00", "0.000", "0.005", "0.000000000001" })
+  @ParameterizedTest
+  @ValueSource(strings = {"1", "0", "0.00", "0.000", "0.005", "0.000000000001"})
   public void monetaryValueIsNotNegative(String amount) {
     Account accountToPost = buildAccount(amount);
 
