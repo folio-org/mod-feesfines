@@ -11,19 +11,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 
 import org.folio.rest.tools.utils.NetworkUtils;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
-public final class OkapiDeployment extends WireMockRule {
+public final class OkapiDeployment extends WireMockServer {
   private static final int OKAPI_PORT = NetworkUtils.nextFreePort();
 
   public OkapiDeployment() {
     super(new WireMockConfiguration().dynamicPort());
-  }
-
-  @Override
-  protected void before() {
-    setUpMapping();
   }
 
   public String getOkapiUrl() {

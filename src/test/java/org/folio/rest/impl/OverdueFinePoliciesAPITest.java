@@ -13,8 +13,8 @@ import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.folio.test.support.ApiTests;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -25,7 +25,7 @@ public class OverdueFinePoliciesAPITest extends ApiTests {
   private static final String REST_PATH = "/overdue-fines-policies";
   private static final String NEGATIVE_QUANTITY_MESSAGE = "Quantity must not be negative.";
 
-  @Before
+  @BeforeEach
   public void setUp() {
     removeAllFromTable(OverdueFinePoliciesAPI.TABLE_NAME);
   }

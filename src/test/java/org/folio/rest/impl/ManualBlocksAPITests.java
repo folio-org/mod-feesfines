@@ -32,7 +32,7 @@ import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.service.LogEventPublisher;
 import org.folio.test.support.ApiTests;
 import org.folio.util.PomUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;

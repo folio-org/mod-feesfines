@@ -43,8 +43,8 @@ import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
@@ -59,7 +59,7 @@ public class AccountsAPITest extends ApiTests {
   private static final String FEEFINE_CLOSED_EVENT_NAME = "LOAN_RELATED_FEE_FINE_CLOSED";
   private static final String CONTRIBUTORS_FIELD_NAME = "contributors";
 
-  @Before
+  @BeforeEach
   public void setUp() {
     getOkapi().stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
       .willReturn(aResponse().withBodyFile("holdings.json")));

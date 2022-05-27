@@ -10,7 +10,7 @@ import org.folio.rest.jaxrs.model.ManualBlockTemplate;
 import org.folio.rest.jaxrs.model.ManualBlockTemplateCollection;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ManualBlockTemplatesAPITest extends ApiTests {
 

@@ -13,8 +13,8 @@ import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.folio.test.support.ApiTests;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -25,7 +25,7 @@ public class LostItemFeePoliciesAPITest extends ApiTests {
   private static final String REST_PATH = "/lost-item-fees-policies";
   private static final String NEGATIVE_VALUE_MESSAGE = "The value must greater than or equal to 0";
 
-  @Before
+  @BeforeEach
   public void setUp() {
     removeAllFromTable(LostItemFeePoliciesAPI.TABLE_NAME);
   }

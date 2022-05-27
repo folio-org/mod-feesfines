@@ -28,14 +28,13 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BulkActionSuccessResponse;
 import org.folio.rest.jaxrs.model.CancelActionRequest;
 import org.folio.rest.jaxrs.model.CancelBulkActionRequest;
-import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.LogEventMatcher;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class AccountsCancelActionAPITests extends ApiTests {
   private static final String FEE_FINE_ACTIONS = "feefineactions";
@@ -46,7 +45,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
   private final ResourceClient accountCancelClient = buildAccountCancelClient(ACCOUNT_ID);
   private final ResourceClient accountBulkCancelClient = buildAccountBulkCancelClient();
 
-  @Before
+  @BeforeEach
   public void setUp() {
     removeAllFromTable(ACCOUNTS_TABLE);
     removeAllFromTable(FEE_FINE_ACTIONS);
