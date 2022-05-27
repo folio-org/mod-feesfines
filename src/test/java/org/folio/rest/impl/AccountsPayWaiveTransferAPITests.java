@@ -44,16 +44,10 @@ import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
 import org.folio.util.PomUtils;
-
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
@@ -72,7 +66,6 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
   public void beforeEach() {
     removeAllFromTable(FEE_FINE_ACTIONS);
     removeAllFromTable("accounts");
-//    resourceClient = getClient();
   }
 
   private ResourceClient getClient(Action action) {

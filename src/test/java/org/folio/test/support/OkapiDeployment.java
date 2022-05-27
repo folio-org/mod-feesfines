@@ -14,8 +14,6 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 
-//public final class OkapiDeployment extends WireMockRule {
-//public final class OkapiDeployment extends WireMockServer implements BeforeEachCallback, AfterEachCallback {
 public final class OkapiDeployment extends WireMockServer {
   private static final int OKAPI_PORT = NetworkUtils.nextFreePort();
 
