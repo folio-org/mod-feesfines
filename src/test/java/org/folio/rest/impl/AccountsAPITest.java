@@ -54,12 +54,13 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.restassured.response.Response;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import java.io.Console;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 public class AccountsAPITest extends ApiTests {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String FEEFINE_CLOSED_EVENT_NAME = "LOAN_RELATED_FEE_FINE_CLOSED";
   private static final String CONTRIBUTORS_FIELD_NAME = "contributors";
+  private static final String DATE_CLOSED = new Date().toString();
 
   @Before
   public void setUp() {
@@ -160,7 +161,7 @@ public class AccountsAPITest extends ApiTests {
       .put("status", createNamedObject("Closed"))
       .put("paymentStatus", createNamedObject(PAID_FULLY.value()))
       .put("remaining", 0.0)
-      .put("dateClosed", new Date());
+      .put("dateClosed", DATE_CLOSED);
 
     accountsClient.update(accountId, updatedAccount);
 
@@ -168,7 +169,7 @@ public class AccountsAPITest extends ApiTests {
     assertThat(byId, isPaidFully());
 
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
-      hasJsonPath("dateClosed", notNullValue())
+      hasJsonPath("dateClosed", equalTo(DATE_CLOSED))
     ));
 
     final Event event = getLastFeeFineClosedEvent();
@@ -204,13 +205,13 @@ public class AccountsAPITest extends ApiTests {
       .put("status", createNamedObject("Closed"))
       .put("paymentStatus", createNamedObject(PAID_FULLY.value()))
       .put("remaining", 0.0)
-      .put("dateClosed", new Date());
+      .put("dateClosed", DATE_CLOSED);
 
     accountsClient.update(accountId, updatedAccount);
 
     assertThat(accountsClient.getById(accountId), isPaidFully());
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
-      hasJsonPath("dateClosed", notNullValue())
+      hasJsonPath("dateClosed", equalTo(DATE_CLOSED))
     ));
     assertThat(getLastFeeFineClosedEvent(), notNullValue());
   }
@@ -232,14 +233,14 @@ public class AccountsAPITest extends ApiTests {
       .put("status", createNamedObject("Closed"))
       .put("paymentStatus", createNamedObject(PAID_PARTIALLY.value()))
       .put("remaining", 0.1)
-      .put("dateClosed", new Date());
+      .put("dateClosed", DATE_CLOSED);
 
 
     accountsClient.update(accountId, updatedAccount);
 
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
       hasJsonPath("status.name", is("Closed")),
-      hasJsonPath("dateClosed", notNullValue()),
+      hasJsonPath("dateClosed", equalTo(DATE_CLOSED)),
       hasJsonPath("paymentStatus.name", is(PAID_PARTIALLY.value())),
       hasJsonPath("remaining", is(0.1))
     ));
@@ -260,11 +261,11 @@ public class AccountsAPITest extends ApiTests {
       .put("status", createNamedObject("Closed"))
       .put("paymentStatus", createNamedObject(PAID_FULLY.value()))
       .put("remaining", 0.0)
-      .put("dateClosed", new Date());
+      .put("dateClosed", DATE_CLOSED);
 
     accountsClient.update(accountId, updatedAccount);
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
-      hasJsonPath("dateClosed", notNullValue())
+      hasJsonPath("dateClosed", equalTo(DATE_CLOSED))
     ));
     assertThat(accountsClient.getById(accountId), isPaidFully());
     assertThat(getLastFeeFineClosedEvent(), nullValue());
