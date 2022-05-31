@@ -165,8 +165,10 @@ public class PatronNoticeBuilder {
       .put("owner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
       .put("paymentStatus", paymentStatus)
-      .put("amount", account.getAmount().getAmount().setScale(2, RoundingMode.HALF_EVEN))
-      .put("remainingAmount", account.getRemaining().getAmount().setScale(2, RoundingMode.HALF_EVEN));
+      .put("amount", account.getAmount().getAmount()
+        .setScale(2, RoundingMode.HALF_EVEN).toString())
+      .put("remainingAmount", account.getRemaining().getAmount()
+        .setScale(2, RoundingMode.HALF_EVEN).toString());
 
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
@@ -198,8 +200,10 @@ public class PatronNoticeBuilder {
       .put("type", action.getTypeAction())
       .put("actionDate", actionDate)
       .put("actionDateTime", actionDate)
-      .put("amount", action.getAmountAction().getAmount().setScale(2, RoundingMode.HALF_EVEN))
-      .put("remainingAmount", action.getBalance().getAmount().setScale(2, RoundingMode.HALF_EVEN))
+      .put("amount", action.getAmountAction().getAmount()
+        .setScale(2, RoundingMode.HALF_EVEN).toString())
+      .put("remainingAmount", action.getBalance().getAmount()
+        .setScale(2, RoundingMode.HALF_EVEN).toString())
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
 
     return feeActionContext;
