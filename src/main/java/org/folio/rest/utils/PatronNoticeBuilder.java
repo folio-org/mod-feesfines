@@ -7,6 +7,8 @@ import static org.folio.rest.utils.FeeFineActionHelper.PATRON_COMMENTS_KEY;
 import static org.folio.rest.utils.FeeFineActionHelper.parseFeeFineComments;
 import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -163,8 +165,8 @@ public class PatronNoticeBuilder {
       .put("owner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
       .put("paymentStatus", paymentStatus)
-      .put("amount", account.getAmount().toString())
-      .put("remainingAmount", account.getRemaining().toString());
+      .put("amount", account.getAmount().getAmount().setScale(2, RoundingMode.HALF_EVEN))
+      .put("remainingAmount", account.getRemaining().getAmount().setScale(2, RoundingMode.HALF_EVEN));
 
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
@@ -196,8 +198,8 @@ public class PatronNoticeBuilder {
       .put("type", action.getTypeAction())
       .put("actionDate", actionDate)
       .put("actionDateTime", actionDate)
-      .put("amount", action.getAmountAction().toString())
-      .put("remainingAmount", action.getBalance().toString())
+      .put("amount", action.getAmountAction().getAmount().setScale(2, RoundingMode.HALF_EVEN))
+      .put("remainingAmount", action.getBalance().getAmount().setScale(2, RoundingMode.HALF_EVEN))
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
 
     return feeActionContext;
