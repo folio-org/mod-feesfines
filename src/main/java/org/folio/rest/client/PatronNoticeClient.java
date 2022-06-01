@@ -28,11 +28,11 @@ public class PatronNoticeClient extends OkapiClient {
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
     final JsonObject chargeContext = (JsonObject) notice.getContext().getAdditionalProperties().get("feeCharge");
     final JsonObject actionContext = (JsonObject) notice.getContext().getAdditionalProperties().get("feeAction");
-    log.warn("amount value from json [{}]", chargeContext.getString("amount"));
-    log.warn("remainingAmount value from json [{}]", chargeContext.getString("remainingAmount"));
-    log.warn("buildFeeActionContext");
-    log.warn("amount value from json [{}]", actionContext.getString("amount"));
-    log.warn("remainingAmount value from json [{}]", actionContext.getString("remainingAmount"));
+    log.info("amount value from json [{}]", chargeContext.getString("amount"));
+    log.info("remainingAmount value from json [{}]", chargeContext.getString("remainingAmount"));
+    log.info("buildFeeActionContext");
+    log.info("amount value from json [{}]", actionContext.getString("amount"));
+    log.info("remainingAmount value from json [{}]", actionContext.getString("remainingAmount"));
     okapiPostAbs("/patron-notice").sendJson(notice, promise);
 
     return promise.future()

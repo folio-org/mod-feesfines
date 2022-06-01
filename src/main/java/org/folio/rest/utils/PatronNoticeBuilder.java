@@ -172,10 +172,10 @@ public class PatronNoticeBuilder {
       .put("paymentStatus", paymentStatus)
       .put("amount", decimalFormat.format(account.getAmount().toDouble()))
       .put("remainingAmount", decimalFormat.format(account.getRemaining().toDouble()));
-    log.warn("amount value without json [{}]", decimalFormat.format(account.getAmount().toDouble()));
-    log.warn("remainingAmount value without json [{}]", decimalFormat.format(account.getRemaining().toDouble()));
-    log.warn("amount value from json [{}]", feeChargeContext.getString("amount"));
-    log.warn("remainingAmount value from json [{}]", feeChargeContext.getString("remainingAmount"));
+    log.info("amount value without json [{}]", decimalFormat.format(account.getAmount().toDouble()));
+    log.info("remainingAmount value without json [{}]", decimalFormat.format(account.getRemaining().toDouble()));
+    log.info("amount value from json [{}]", feeChargeContext.getString("amount"));
+    log.info("remainingAmount value from json [{}]", feeChargeContext.getString("remainingAmount"));
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
       String chargeDate = dateToString(metadata.getCreatedDate());
@@ -209,11 +209,11 @@ public class PatronNoticeBuilder {
       .put("amount", decimalFormat.format(action.getAmountAction().toDouble()))
       .put("remainingAmount", decimalFormat.format(action.getBalance().toDouble()))
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
-    log.warn("buildFeeActionContext");
-    log.warn("amount value without json [{}]", decimalFormat.format(action.getAmountAction().toDouble()));
-    log.warn("remainingAmount value without json [{}]", decimalFormat.format(action.getBalance().toDouble()));
-    log.warn("amount value from json [{}]", feeActionContext.getString("amount"));
-    log.warn("remainingAmount value from json [{}]", feeActionContext.getString("remainingAmount"));
+    log.info("buildFeeActionContext");
+    log.info("amount value without json [{}]", decimalFormat.format(action.getAmountAction().toDouble()));
+    log.info("remainingAmount value without json [{}]", decimalFormat.format(action.getBalance().toDouble()));
+    log.info("amount value from json [{}]", feeActionContext.getString("amount"));
+    log.info("remainingAmount value from json [{}]", feeActionContext.getString("remainingAmount"));
     return feeActionContext;
   }
 
