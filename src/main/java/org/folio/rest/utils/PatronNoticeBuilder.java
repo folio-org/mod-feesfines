@@ -9,6 +9,7 @@ import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -160,13 +161,13 @@ public class PatronNoticeBuilder {
 
     String paymentStatus = account.getPaymentStatus() == null ?
       null : account.getPaymentStatus().getName().value();
-
+    DecimalFormat decimalFormat = new DecimalFormat("0.00");
     feeChargeContext
       .put("owner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
       .put("paymentStatus", paymentStatus)
-      .put("amount", String.format ("%.2f", account.getAmount().toDouble()))
-      .put("remainingAmount", String.format ("%.2f", account.getRemaining().toDouble()));
+      .put("amount", decimalFormat.format(account.getAmount().toDouble()))
+      .put("remainingAmount", decimalFormat.format(account.getRemaining().toDouble()));
 
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
@@ -193,13 +194,13 @@ public class PatronNoticeBuilder {
     }
 
     String actionDate = dateToString(action.getDateAction());
-
+    DecimalFormat decimalFormat = new DecimalFormat("0.00");
     feeActionContext
       .put("type", action.getTypeAction())
       .put("actionDate", actionDate)
       .put("actionDateTime", actionDate)
-      .put("amount", String.format ("%.2f", action.getAmountAction().toDouble()))
-      .put("remainingAmount", String.format ("%.2f", action.getBalance().toDouble()))
+      .put("amount", decimalFormat.format(action.getAmountAction().toDouble()))
+      .put("remainingAmount", decimalFormat.format(action.getBalance().toDouble()))
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
 
     return feeActionContext;
