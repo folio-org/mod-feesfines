@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.folio.rest.client.FeeFinePubSubClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Context;
@@ -31,10 +32,13 @@ import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.User;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.vertx.core.json.JsonObject;
 
 public class PatronNoticeBuilder {
+  private static final Logger log = LoggerFactory.getLogger(PatronNoticeBuilder.class);
   private static final String LIST_VALUES_SEPARATOR = "; ";
   private static final String BARCODE = "barcode";
   public static final String TITLE = "title";
@@ -168,7 +172,10 @@ public class PatronNoticeBuilder {
       .put("paymentStatus", paymentStatus)
       .put("amount", decimalFormat.format(account.getAmount().toDouble()))
       .put("remainingAmount", decimalFormat.format(account.getRemaining().toDouble()));
-
+    log.warn("amount value without json [{}]", decimalFormat.format(account.getAmount().toDouble()));
+    log.warn("remainingAmount value without json [{}]", decimalFormat.format(account.getRemaining().toDouble()));
+    log.warn("amount value from json [{}]", feeChargeContext.getString("amount"));
+    log.warn("remainingAmount value from json [{}]", feeChargeContext.getString("remainingAmount"));
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
       String chargeDate = dateToString(metadata.getCreatedDate());
@@ -202,7 +209,11 @@ public class PatronNoticeBuilder {
       .put("amount", decimalFormat.format(action.getAmountAction().toDouble()))
       .put("remainingAmount", decimalFormat.format(action.getBalance().toDouble()))
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
-
+    log.warn("buildFeeActionContext");
+    log.warn("amount value without json [{}]", decimalFormat.format(action.getAmountAction().toDouble()));
+    log.warn("remainingAmount value without json [{}]", decimalFormat.format(action.getBalance().toDouble()));
+    log.warn("amount value from json [{}]", feeActionContext.getString("amount"));
+    log.warn("remainingAmount value from json [{}]", feeActionContext.getString("remainingAmount"));
     return feeActionContext;
   }
 

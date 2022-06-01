@@ -7,21 +7,32 @@ import static org.folio.HttpStatus.HTTP_OK;
 import java.util.Map;
 
 import org.folio.rest.jaxrs.model.PatronNotice;
+import org.folio.rest.utils.PatronNoticeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 
 public class PatronNoticeClient extends OkapiClient {
-
+  private static final Logger log = LoggerFactory.getLogger(PatronNoticeClient.class);
   public PatronNoticeClient(Vertx vertx, Map<String, String> okapiHeaders) {
     super(vertx, okapiHeaders);
   }
 
   public Future<Void> postPatronNotice(PatronNotice notice) {
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
+    final JsonObject chargeContext = (JsonObject) notice.getContext().getAdditionalProperties().get("feeCharge");
+    final JsonObject actionContext = (JsonObject) notice.getContext().getAdditionalProperties().get("feeAction");
+    log.warn("amount value from json [{}]", chargeContext.getString("amount"));
+    log.warn("remainingAmount value from json [{}]", chargeContext.getString("remainingAmount"));
+    log.warn("buildFeeActionContext");
+    log.warn("amount value from json [{}]", actionContext.getString("amount"));
+    log.warn("remainingAmount value from json [{}]", actionContext.getString("remainingAmount"));
     okapiPostAbs("/patron-notice").sendJson(notice, promise);
 
     return promise.future()
