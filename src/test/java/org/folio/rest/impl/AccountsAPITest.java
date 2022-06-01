@@ -24,8 +24,10 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +62,8 @@ public class AccountsAPITest extends ApiTests {
   private static final String ACCOUNTS_TABLE = "accounts";
   private static final String FEEFINE_CLOSED_EVENT_NAME = "LOAN_RELATED_FEE_FINE_CLOSED";
   private static final String CONTRIBUTORS_FIELD_NAME = "contributors";
-  private static final String DATE_CLOSED = new Date().toString();
+  private static final Date DATE_CLOSED = new Date();
+  private SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'+00:00'");
 
   @Before
   public void setUp() {
@@ -68,6 +71,7 @@ public class AccountsAPITest extends ApiTests {
       .willReturn(aResponse().withBodyFile("holdings.json")));
 
     removeAllFromTable(ACCOUNTS_TABLE);
+    format.setTimeZone(TimeZone.getTimeZone("GMT"));
   }
 
   @Test
@@ -169,7 +173,7 @@ public class AccountsAPITest extends ApiTests {
     assertThat(byId, isPaidFully());
 
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
-      hasJsonPath("dateClosed", equalTo(DATE_CLOSED))
+      hasJsonPath("dateClosed", equalTo(format.format(DATE_CLOSED).toString()))
     ));
 
     final Event event = getLastFeeFineClosedEvent();
@@ -211,7 +215,7 @@ public class AccountsAPITest extends ApiTests {
 
     assertThat(accountsClient.getById(accountId), isPaidFully());
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
-      hasJsonPath("dateClosed", equalTo(DATE_CLOSED))
+      hasJsonPath("dateClosed", equalTo(format.format(DATE_CLOSED).toString()))
     ));
     assertThat(getLastFeeFineClosedEvent(), notNullValue());
   }
@@ -240,7 +244,7 @@ public class AccountsAPITest extends ApiTests {
 
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
       hasJsonPath("status.name", is("Closed")),
-      hasJsonPath("dateClosed", equalTo(DATE_CLOSED)),
+      hasJsonPath("dateClosed", equalTo(format.format(DATE_CLOSED).toString())),
       hasJsonPath("paymentStatus.name", is(PAID_PARTIALLY.value())),
       hasJsonPath("remaining", is(0.1))
     ));
@@ -265,7 +269,7 @@ public class AccountsAPITest extends ApiTests {
 
     accountsClient.update(accountId, updatedAccount);
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
-      hasJsonPath("dateClosed", equalTo(DATE_CLOSED))
+      hasJsonPath("dateClosed", equalTo(format.format(DATE_CLOSED).toString()))
     ));
     assertThat(accountsClient.getById(accountId), isPaidFully());
     assertThat(getLastFeeFineClosedEvent(), nullValue());
