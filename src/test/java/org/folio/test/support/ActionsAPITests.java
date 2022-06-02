@@ -3,6 +3,7 @@ package org.folio.test.support;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import java.util.Date;
 
@@ -23,7 +24,8 @@ public abstract class ActionsAPITests extends ApiTests {
       .body("remaining", is((float) amount.toDouble()))
       .body("status.name", is(statusName))
       .body("paymentStatus.name", is(expectedPaymentStatus))
-      .body("metadata.updatedDate", notNullValue());
+      .body("metadata.updatedDate", notNullValue())
+      .body("dateClosed", (statusName== "Open" ? nullValue() : notNullValue()));
 
     final Account updatedAccount = getAccountByIdResponse.as(Account.class);
     final Date dateCreated = updatedAccount.getMetadata().getCreatedDate();
