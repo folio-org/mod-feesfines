@@ -309,6 +309,9 @@ public class AccountsAPITest extends ApiTests {
     assertAccountCreationSuccess(buildAccount().withInstanceId(null));
     assertAccountCreationSuccess(buildAccount().withHoldingsRecordId(null));
     assertAccountCreationSuccess(buildAccount().withMaterialTypeId(null));
+    assertAccountCreationSuccess(buildAccount().withLoanPolicyId(null));
+    assertAccountCreationSuccess(buildAccount().withOverdueFinePolicyId(null));
+    assertAccountCreationSuccess(buildAccount().withLostItemFeePolicyId(null));
   }
 
   @Test
@@ -332,6 +335,9 @@ public class AccountsAPITest extends ApiTests {
     assertAccountCreationFailure(buildAccount().withInstanceId(invalidId));
     assertAccountCreationFailure(buildAccount().withHoldingsRecordId(invalidId));
     assertAccountCreationFailure(buildAccount().withMaterialTypeId(invalidId));
+    assertAccountCreationFailure(buildAccount().withLoanPolicyId(invalidId));
+    assertAccountCreationFailure(buildAccount().withOverdueFinePolicyId(invalidId));
+    assertAccountCreationFailure(buildAccount().withLostItemFeePolicyId(invalidId));
   }
 
   private void assertAccountCreationFailure(Account account) {

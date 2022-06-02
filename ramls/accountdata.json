@@ -162,6 +162,18 @@
           "name"
         ]
       }
+    },
+    "loanPolicyId": {
+      "description": "Loan policy ID",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "overdueFinePolicyId": {
+      "description": "Overdue fine policy ID",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "lostItemFeePolicyId": {
+      "description": "Lost item fee policy ID",
+      "$ref": "raml-util/schemas/uuid.schema"
     }
   },
   "additionalProperties": false,
