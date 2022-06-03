@@ -131,6 +131,8 @@ public class AccountsRefundAPITests extends ActionsAPITests {
 
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       REFUND.getFullResult(), expectedFeeFineActions);
+    verifyAccountAndGet(accountsClient, FIRST_ACCOUNT_ID,
+      REFUND.getFullResult(), new MonetaryValue(5.0), OPEN.getValue());
   }
 
   @Test
