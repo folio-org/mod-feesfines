@@ -28,13 +28,10 @@ import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.User;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.vertx.core.json.JsonObject;
 
 public class PatronNoticeBuilder {
-  private static final Logger log = LoggerFactory.getLogger(PatronNoticeBuilder.class);
   private static final String LIST_VALUES_SEPARATOR = "; ";
   private static final String BARCODE = "barcode";
   public static final String TITLE = "title";
