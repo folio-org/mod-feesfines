@@ -122,6 +122,14 @@ public class MonetaryValue {
     return amount.toString();
   }
 
+  public String toScaledString() {
+    return scaledAmount().toString();
+  }
+
+  private BigDecimal scaledAmount() {
+    return amount.setScale(2, RoundingMode.HALF_UP);
+  }
+
   String toStringOriginalAmount() {
     BigDecimal strippedTrailingZerosAmount = originalAmount.stripTrailingZeros();
 

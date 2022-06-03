@@ -7,15 +7,11 @@ import static org.folio.rest.utils.FeeFineActionHelper.PATRON_COMMENTS_KEY;
 import static org.folio.rest.utils.FeeFineActionHelper.parseFeeFineComments;
 import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.folio.rest.client.FeeFinePubSubClient;
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Context;
@@ -165,17 +161,14 @@ public class PatronNoticeBuilder {
 
     String paymentStatus = account.getPaymentStatus() == null ?
       null : account.getPaymentStatus().getName().value();
-    DecimalFormat decimalFormat = new DecimalFormat("0.00");
+
     feeChargeContext
       .put("owner", account.getFeeFineOwner())
       .put("type", account.getFeeFineType())
       .put("paymentStatus", paymentStatus)
-      .put("amount", decimalFormat.format(account.getAmount().toDouble()))
-      .put("remainingAmount", decimalFormat.format(account.getRemaining().toDouble()));
-    log.info("amount value without json [{}]", decimalFormat.format(account.getAmount().toDouble()));
-    log.info("remainingAmount value without json [{}]", decimalFormat.format(account.getRemaining().toDouble()));
-    log.info("amount value from json [{}]", feeChargeContext.getString("amount"));
-    log.info("remainingAmount value from json [{}]", feeChargeContext.getString("remainingAmount"));
+      .put("amount", account.getAmount().toScaledString())
+      .put("remainingAmount", account.getRemaining().toScaledString());
+
     final Metadata metadata = account.getMetadata();
     if (metadata != null) {
       String chargeDate = dateToString(metadata.getCreatedDate());
@@ -201,19 +194,15 @@ public class PatronNoticeBuilder {
     }
 
     String actionDate = dateToString(action.getDateAction());
-    DecimalFormat decimalFormat = new DecimalFormat("0.00");
+
     feeActionContext
       .put("type", action.getTypeAction())
       .put("actionDate", actionDate)
       .put("actionDateTime", actionDate)
-      .put("amount", decimalFormat.format(action.getAmountAction().toDouble()))
-      .put("remainingAmount", decimalFormat.format(action.getBalance().toDouble()))
+      .put("amount", action.getAmountAction().toScaledString())
+      .put("remainingAmount", action.getBalance().toScaledString())
       .put("additionalInfo", getCommentsFromFeeFineAction(action));
-    log.info("buildFeeActionContext");
-    log.info("amount value without json [{}]", decimalFormat.format(action.getAmountAction().toDouble()));
-    log.info("remainingAmount value without json [{}]", decimalFormat.format(action.getBalance().toDouble()));
-    log.info("amount value from json [{}]", feeActionContext.getString("amount"));
-    log.info("remainingAmount value from json [{}]", feeActionContext.getString("remainingAmount"));
+
     return feeActionContext;
   }
 
