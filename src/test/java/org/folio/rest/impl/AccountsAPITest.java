@@ -12,6 +12,7 @@ import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
 import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_FULLY;
 import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_PARTIALLY;
 import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
+import static org.folio.test.support.matcher.AccountMatchers.singleAccountMatcher;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -41,6 +42,7 @@ import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.test.support.ApiTests;
+import org.folio.test.support.matcher.AccountMatchers;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,7 +83,8 @@ public class AccountsAPITest extends ApiTests {
     accountsClient.create(accountToPost)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
-      .contentType(JSON);
+      .contentType(JSON)
+      .body(singleAccountMatcher(accountToPost));
 
     assertBalanceChangedEventPublished(accountToPost);
 
@@ -363,7 +366,10 @@ public class AccountsAPITest extends ApiTests {
       .withAmount(new MonetaryValue(new BigDecimal("7.77")))
       .withRemaining(new MonetaryValue(new BigDecimal("3.33")))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
-      .withStatus(new Status().withName("Open"));
+      .withStatus(new Status().withName("Open"))
+      .withLoanPolicyId(randomId())
+      .withOverdueFinePolicyId(randomId())
+      .withLostItemFeePolicyId(randomId());
   }
 
   private JsonObject createAccountJsonObject(String accountID) {

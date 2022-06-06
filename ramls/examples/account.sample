@@ -31,5 +31,8 @@
   "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
   "feeFineId": "57dbeeba-f26b-4dc0-abc8-21cce7659834",
   "ownerId": "3c7b8695-b537-40b1-b0a3-948ad7e1fc09",
-  "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434379"
+  "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434379",
+  "loanPolicyId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434379",
+  "overdueFinePolicyId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434379",
+  "lostItemFeePolicyId": "0bab56e5-1ab6-4ac2-afdf-8b2df0434379",
 }
