@@ -42,7 +42,6 @@ import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.test.support.ApiTests;
-import org.folio.test.support.matcher.AccountMatchers;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
