@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +39,7 @@ import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
+import org.folio.rest.jaxrs.model.ItemStatus;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.ContributorData;
@@ -366,6 +368,14 @@ public class AccountsAPITest extends ApiTests {
       .withRemaining(new MonetaryValue(new BigDecimal("3.33")))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
       .withStatus(new Status().withName("Open"))
+      .withItemStatus(new ItemStatus().withName("Available"))
+      .withMaterialType("Material type")
+      .withMaterialTypeId(randomId())
+      .withLocation("Location")
+      .withDueDate(new Date())
+      .withReturnedDate(new Date())
+      .withLoanId(randomId())
+      .withItemId(randomId())
       .withLoanPolicyId(randomId())
       .withOverdueFinePolicyId(randomId())
       .withLostItemFeePolicyId(randomId());
