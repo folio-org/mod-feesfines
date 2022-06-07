@@ -240,7 +240,8 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject account = createAccountJsonObject(accountId)
       .put("remaining", 90.00)
-      .put("status", createNamedObject("Open"));
+      .put("status", createNamedObject("Open"))
+      .put("loanId", null);
 
     accountsClient.create(account);
 
@@ -368,6 +369,9 @@ public class AccountsAPITest extends ApiTests {
       .withRemaining(new MonetaryValue(new BigDecimal("3.33")))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
       .withStatus(new Status().withName("Open"))
+      .withBarcode("barcode")
+      .withCallNumber("call number")
+      .withTitle("title")
       .withItemStatus(new ItemStatus().withName("Available"))
       .withMaterialType("Material type")
       .withMaterialTypeId(randomId())
