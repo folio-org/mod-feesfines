@@ -50,7 +50,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"17.2",
+      "version":"17.3",
       "handlers":[
         {
           "methods":[
