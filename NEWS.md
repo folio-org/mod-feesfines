@@ -1,3 +1,6 @@
+## 17.1.2 2022-06-08
+* Release mod-feesfines 17.1.2 fixing ZipException (Lotus HF#1) (MODFEE-260)
+
 ## 17.1.1 2022-04-12
 Return remaining amount in response to refund (MODFEE-247)
 Prevent deleting/updating required FeeFines (MODFEE-243)
