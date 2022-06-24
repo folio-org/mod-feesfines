@@ -143,8 +143,7 @@ public class AccountsAPITest extends ApiTests {
 
     Account accountToDelete = new Account()
       .withId(accountId)
-      .withRemaining(new MonetaryValue(new BigDecimal("0.00")))
-      .withDateClosed(new Date());
+      .withRemaining(new MonetaryValue(new BigDecimal("0.00")));
     assertBalanceChangedEventPublished(accountToDelete);
   }
 
