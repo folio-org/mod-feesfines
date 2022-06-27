@@ -1,3 +1,17 @@
+## 18.0.0 2022-06-27
+* Make `paymentStatus` property in accountdata.json required and also make it an enum (MODFEE-220)
+* Prevent deleting/updating required `Feefine` (MODFEE-243)
+* Reformat code according to FOLIO code style (MODFEE-244)
+* Add missing account payment status `Suspended claim returned` (MODFEE-245)
+* Return remaining amount in action response (MODFEE-247)
+* Fix Refund report for cases when there are refunds linked to same account both inside and outside of the requested interval (MODFEE-249)
+* Make comments field not required for cancelling a fee/fine (MODFEE-250)
+* Validate that Overdue fine policy interval is not negative (MODFEE-252)
+* Validate that Lost item processing fee value is not negative (MODFEE-253)
+* Update tests with JUnit 5 (MODFEE-254)
+* Add policy fields to the account record (MODFEE-257)
+* Upgrade RMB to 34.0.0 (MODFEE-261)
+
 ## 17.1.0 2022-02-22
 Reopen a fee/fine on refund (MODFEE-229)
 Upgrade to RMB 33.0.4 and Log4j 2.16.0 (MODFEE-232)
