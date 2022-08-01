@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.utils.ResourceClients.buildFinancialTransactionsDetailReportClient;
@@ -20,6 +21,7 @@ import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_GROUPS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
@@ -52,6 +54,8 @@ import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.constant.ServicePath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
@@ -536,6 +540,33 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
         .withByTransferAccount(List.of(
           buildReportTotalsEntry(TRANSFER_ACCOUNT_TOTALS, "0.00", "0")))
       ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "2020-01-13T01:23:45.000000+0000",
+    "2020-01-13T01:23:45+00:00",
+    "2020-01-13T01:23:45.000Z",
+    "2020-01-13T01:23:45Z",
+    "2020-01-13T01:23:45"
+  })
+  void canHandleLoanDateInAnyValidFormat(String loanDate) {
+    Loan loan = buildLoan(loanDate, DUE_DATE_1, RETURN_DATE_1, item1.getId(), loanPolicy.getId(),
+      overdueFinePolicy.getId(), lostItemFeePolicy.getId());
+
+    createStub(ServicePath.LOANS_PATH, loan, loan.getId());
+
+    Account account = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, item1.getId(), loan,
+      OWNER_ID_1, OWNER_1, withTenantTz("2020-01-02 02:00:00"), CREATED_AT_ID_1, SOURCE_1);
+
+    createAction(USER_ID_1, 2, account, withTenantTz("2020-01-03 00:10:00"),
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT_ID_1, SOURCE_1);
+
+    requestReport(START_DATE, END_DATE, singletonList(CREATED_AT_ID_1), OWNER_ID_1)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("reportData[0].loanDate", equalTo("1/12/20, 8:23 PM"));
   }
 
   @Test
