@@ -545,6 +545,7 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   @ParameterizedTest
   @ValueSource(strings = {
     "2020-01-13T01:23:45.000000+0000",
+    "2020-01-13T01:23:45.000000",
     "2020-01-13T01:23:45+00:00",
     "2020-01-13T01:23:45.000Z",
     "2020-01-13T01:23:45Z",
