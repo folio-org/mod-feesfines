@@ -29,7 +29,6 @@ public abstract class DateBasedReportService<T, P> {
 
   DateTimeZone timeZone;
   DateTimeFormatter dateTimeFormatter;
-  DateTimeFormatter loanDateTimeFormatter;
   Currency currency;
 
   public DateBasedReportService(Map<String, String> headers, Context context) {
@@ -42,7 +41,6 @@ public abstract class DateBasedReportService<T, P> {
     timeZone = localeSettings.getDateTimeZone();
     dateTimeFormatter = DateTimeFormat.forPattern(DateTimeFormat.patternForStyle("SS",
       Locale.forLanguageTag(localeSettings.getLocale())));
-    loanDateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     currency = Currency.getInstance(localeSettings.getCurrency());
   }
 
@@ -83,7 +81,7 @@ public abstract class DateBasedReportService<T, P> {
   }
 
   String reformatLoanDate(String date) {
-    return DateTime.parse(date, loanDateTimeFormatter)
+    return DateTime.parse(date)
       .withZoneRetainFields(UTC)
       .withZone(timeZone)
       .toString(dateTimeFormatter);
