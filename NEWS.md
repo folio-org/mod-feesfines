@@ -1,3 +1,6 @@
+## 18.0.1 2022-08-09
+* Add support for different loan date formats to Financial Transactions Report (MODFEE-266)
+
 ## 18.0.0 2022-06-27
 * Make `paymentStatus` property in accountdata.json required and also make it an enum (MODFEE-220)
 * Prevent deleting/updating required `Feefine` (MODFEE-243)
