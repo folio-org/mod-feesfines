@@ -1,15 +1,18 @@
+## 17.1.3 2022-08-10
+* Add support for more loan date formats to financial transactions detail report (MODFEE-266)
+
 ## 17.1.2 2022-06-08
 * Release mod-feesfines 17.1.2 fixing ZipException (Lotus HF#1) (MODFEE-260)
 
 ## 17.1.1 2022-04-12
-Return remaining amount in response to refund (MODFEE-247)
-Prevent deleting/updating required FeeFines (MODFEE-243)
-Generate aged to lost fees and fines  (MODFEE-239)
+* Return remaining amount in response to refund (MODFEE-247)
+* Prevent deleting/updating required FeeFines (MODFEE-243)
+* Generate aged to lost fees and fines  (MODFEE-239)
 
 ## 17.1.0 2022-02-22
-Reopen a fee/fine on refund (MODFEE-229)
-Upgrade to RMB 33.0.4 and Log4j 2.16.0 (MODFEE-232)
-Upgrade to RMB 33.2.4 (MODFEE-236)
+* Reopen a fee/fine on refund (MODFEE-229)
+* Upgrade to RMB 33.0.4 and Log4j 2.16.0 (MODFEE-232)
+* Upgrade to RMB 33.2.4 (MODFEE-236)
 
 ## 17.0.0 2021-09-29
 * Use BigDecimal to represent monetary values (MODFEE-29)
