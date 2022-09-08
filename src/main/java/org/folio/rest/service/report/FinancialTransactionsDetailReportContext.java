@@ -4,6 +4,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.util.UuidUtil.isUuid;
 import static org.joda.time.DateTimeZone.UTC;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,10 +160,9 @@ public class FinancialTransactionsDetailReportContext
 
   @Override
   public List<Feefineaction> getAccountFeeFineActions(String accountId) {
-    AccountContextData accountCtx = getAccountContextById(
-      accountId);
+    AccountContextData accountCtx = getAccountContextById(accountId);
     if (accountCtx == null) {
-      return null;
+      return new ArrayList<>();
     }
 
     return accountCtx.getActions();
