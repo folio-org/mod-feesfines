@@ -27,7 +27,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 

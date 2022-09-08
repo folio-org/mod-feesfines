@@ -152,7 +152,7 @@ public class OkapiClient {
       });
   }
 
-  protected <T> Future<Collection<T>> getByIds(String path, Collection<String> ids, Class<T> objectType,
+  public <T> Future<Collection<T>> getByIds(String path, Collection<String> ids, Class<T> objectType,
     String collectionName) {
 
     Collection<T> results = new ArrayList<>();
