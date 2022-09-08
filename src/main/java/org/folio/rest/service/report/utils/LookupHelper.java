@@ -100,7 +100,6 @@ public class LookupHelper {
       .stream()
       .filter(Objects::nonNull)
       .map(Account::getUserId)
-      .filter(UuidUtil::isUuid)
       .collect(toSet());
 
     return usersClient.fetchUsers(userIds)
@@ -142,7 +141,6 @@ public class LookupHelper {
       .stream()
       .filter(Objects::nonNull)
       .map(User::getPatronGroup)
-      .filter(UuidUtil::isUuid)
       .collect(toSet());
 
     return usersClient.fetchUserGroupsByIds(patronGroupIds)
@@ -181,7 +179,6 @@ public class LookupHelper {
       .stream()
       .filter(Objects::nonNull)
       .map(Account::getItemId)
-      .filter(UuidUtil::isUuid)
       .collect(toSet());
 
     return inventoryClient.getItemsByIds(itemIds)
@@ -239,7 +236,6 @@ public class LookupHelper {
       .stream()
       .filter(Objects::nonNull)
       .map(Item::getHoldingsRecordId)
-      .filter(UuidUtil::isUuid)
       .collect(toSet());
 
     return inventoryClient.getHoldingsByIds(holdingsRecordIds)
@@ -277,7 +273,6 @@ public class LookupHelper {
       .stream()
       .filter(Objects::nonNull)
       .map(Item::getEffectiveLocationId)
-      .filter(UuidUtil::isUuid)
       .collect(toSet());
 
     return inventoryClient.getLocationsByIds(locationIds)
@@ -341,7 +336,6 @@ public class LookupHelper {
     Set<String> servicePointIds = context.getActionsToAccounts().keySet()
       .stream()
       .map(Feefineaction::getCreatedAt)
-      .filter(UuidUtil::isUuid)
       .collect(toSet());
 
     return inventoryClient.getServicePointsByIds(servicePointIds)
@@ -358,7 +352,6 @@ public class LookupHelper {
       .stream()
       .filter(Objects::nonNull)
       .map(Account::getLoanId)
-      .filter(UuidUtil::isUuid)
       .collect(toSet());
 
     return circulationStorageClient.getLoansByIds(loanIds)
