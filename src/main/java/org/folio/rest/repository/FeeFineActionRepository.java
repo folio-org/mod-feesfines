@@ -14,8 +14,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.Action;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -23,9 +26,7 @@ import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.GroupedCriterias;
 import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.interfaces.Results;
-import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.utils.FeeFineActionHelper;
 
 import io.vertx.core.Context;
@@ -37,7 +38,7 @@ import io.vertx.sqlclient.RowIterator;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 
-public class FeeFineActionRepository {
+public class FeeFineActionRepository extends AbstractRepository {
   private static final String ACTIONS_TABLE = "feefineactions";
   private static final String ACCOUNTS_TABLE = "accounts";
   public static final String ACTIONS_TABLE_ALIAS = "actions";
@@ -53,12 +54,8 @@ public class FeeFineActionRepository {
   public static final String ORDER_BY_OWNER_SOURCE_DATE_ASC = "accounts.jsonb->>'feeFineOwner', " +
     "actions.jsonb->>'source' ASC, actions.jsonb->>'dateAction' ASC";
 
-  private final PostgresClient pgClient;
-  private final String tenantId;
-
   public FeeFineActionRepository(Map<String, String> headers, Context context) {
-    pgClient = PostgresClient.getInstance(context.owner(), TenantTool.tenantId(headers));
-    tenantId = TenantTool.tenantId(headers);
+    super(headers, context);
   }
 
   public Future<List<Feefineaction>> get(Criterion criterion) {
@@ -82,6 +79,14 @@ public class FeeFineActionRepository {
 
     return promise.future()
       .map(Results::getResults);
+  }
+
+  public Future<Collection<Feefineaction>> findActionsForAccounts(Collection<Account> accounts) {
+    Set<String> accountIds = accounts.stream()
+      .map(Account::getId)
+      .collect(Collectors.toSet());
+
+    return getByKeyValues(ACTIONS_TABLE, ACCOUNT_ID_FIELD, accountIds, Feefineaction.class);
   }
 
   public Future<List<Feefineaction>> findActionsOfTypesForAccount(String accountId,
@@ -205,7 +210,7 @@ public class FeeFineActionRepository {
         "WHERE " + join(" AND ", conditions) + " " +
         "ORDER BY %6$s " +
         "LIMIT $1",
-      PostgresClient.convertToPsqlStandard(tenantId),
+      getSchemaName(),
       ACTIONS_TABLE, ACTIONS_TABLE_ALIAS,
       ACCOUNTS_TABLE, ACCOUNTS_TABLE_ALIAS,
       orderBy);
@@ -235,7 +240,7 @@ public class FeeFineActionRepository {
         "FROM %1$s.%2$s %3$s " +
         "WHERE " + join(" AND ", conditions) + " " +
         "LIMIT $1",
-      PostgresClient.convertToPsqlStandard(tenantId), ACTIONS_TABLE, ACTIONS_TABLE_ALIAS);
+      getSchemaName(), ACTIONS_TABLE, ACTIONS_TABLE_ALIAS);
 
     Promise<RowSet<Row>> promise = Promise.promise();
     pgClient.select(query, params, promise);

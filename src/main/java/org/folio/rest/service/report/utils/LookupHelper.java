@@ -1,38 +1,52 @@
 package org.folio.rest.service.report.utils;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.util.UuidUtil.isUuid;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.client.CirculationStorageClient;
 import org.folio.rest.client.InventoryClient;
-import org.folio.rest.client.UserGroupsClient;
 import org.folio.rest.client.UsersClient;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Loan;
+import org.folio.rest.jaxrs.model.LoanPolicy;
+import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.LostItemFeePolicy;
+import org.folio.rest.jaxrs.model.OverdueFinePolicy;
 import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.jaxrs.model.User;
+import org.folio.rest.jaxrs.model.UserGroup;
 import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.repository.LostItemFeePolicyRepository;
 import org.folio.rest.repository.OverdueFinePolicyRepository;
+import org.folio.rest.service.report.FinancialTransactionsDetailReportContext;
 import org.folio.rest.service.report.context.HasAccountInfo;
 import org.folio.rest.service.report.context.HasItemInfo;
-import org.folio.rest.service.report.context.HasLoanInfo;
-import org.folio.rest.service.report.context.HasServicePointsInfo;
 import org.folio.rest.service.report.context.HasUserInfo;
+import org.folio.util.UuidUtil;
 import org.joda.time.DateTime;
 
 import io.vertx.core.Context;
@@ -43,7 +57,6 @@ public class LookupHelper {
 
   private final InventoryClient inventoryClient;
   private final UsersClient usersClient;
-  private final UserGroupsClient userGroupsClient;
 
   private final FeeFineActionRepository feeFineActionRepository;
   private final CirculationStorageClient circulationStorageClient;
@@ -53,7 +66,6 @@ public class LookupHelper {
   public LookupHelper(Map<String, String> headers, Context context) {
     inventoryClient = new InventoryClient(context.owner(), headers);
     usersClient = new UsersClient(context.owner(), headers);
-    userGroupsClient = new UserGroupsClient(context.owner(), headers);
     circulationStorageClient = new CirculationStorageClient(context.owner(), headers);
 
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
@@ -81,6 +93,23 @@ public class LookupHelper {
       .otherwise(ctx);
   }
 
+  public Future<FinancialTransactionsDetailReportContext> lookupUsersForAccounts(
+    FinancialTransactionsDetailReportContext context) {
+
+    Set<String> userIds = context.getActionsToAccounts().values()
+      .stream()
+      .filter(Objects::nonNull)
+      .map(Account::getUserId)
+      .filter(UuidUtil::isUuid)
+      .collect(toSet());
+
+    return usersClient.fetchUsers(userIds)
+      .map(users -> mapBy(users, User::getId))
+      .map(context::withUsers)
+      .onFailure(t -> log.error("Failed to fetch users", t))
+      .otherwise(context);
+  }
+
   private <T extends HasUserInfo> Future<T> addUserToContext(T ctx, User user, String accountId,
     String userId) {
 
@@ -100,10 +129,27 @@ public class LookupHelper {
       return succeededFuture(ctx);
     }
 
-    return userGroupsClient.fetchUserGroupById(user.getPatronGroup())
+    return usersClient.fetchUserGroupById(user.getPatronGroup())
       .map(userGroup -> ctx.getUserGroups().put(userGroup.getId(), userGroup))
       .map(ctx)
       .otherwise(ctx);
+  }
+
+  public Future<FinancialTransactionsDetailReportContext> lookupGroupsForUsers(
+    FinancialTransactionsDetailReportContext context) {
+
+    Set<String> patronGroupIds = context.getUsers().values()
+      .stream()
+      .filter(Objects::nonNull)
+      .map(User::getPatronGroup)
+      .filter(UuidUtil::isUuid)
+      .collect(toSet());
+
+    return usersClient.fetchUserGroupsByIds(patronGroupIds)
+      .map(groups -> mapBy(groups, UserGroup::getId))
+      .map(context::withUserGroups)
+      .onFailure(t -> log.error("Failed to fetch user groups", t))
+      .otherwise(context);
   }
 
   public <T extends HasItemInfo> Future<T> lookupItemForAccount(T ctx, String accountId) {
@@ -126,6 +172,23 @@ public class LookupHelper {
       .map(item -> addItemToContext(ctx, item, accountId, itemId))
       .map(ctx)
       .otherwise(ctx);
+  }
+
+  public Future<FinancialTransactionsDetailReportContext> lookupItemsForAccounts(
+    FinancialTransactionsDetailReportContext context) {
+
+    Set<String> itemIds = context.getActionsToAccounts().values()
+      .stream()
+      .filter(Objects::nonNull)
+      .map(Account::getItemId)
+      .filter(UuidUtil::isUuid)
+      .collect(toSet());
+
+    return inventoryClient.getItemsByIds(itemIds)
+      .map(items -> mapBy(items, Item::getId))
+      .map(context::withItems)
+      .onFailure(t -> log.error("Failed to fetch items", t))
+      .otherwise(context);
   }
 
   private <T extends HasItemInfo> T addItemToContext(T ctx, Item item, String accountId,
@@ -169,50 +232,89 @@ public class LookupHelper {
       });
   }
 
-  public <T extends HasItemInfo> Future<T> lookupLocationForAccount(T ctx, String accountId) {
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
+  public Future<FinancialTransactionsDetailReportContext> lookupInstancesForItems(
+    FinancialTransactionsDetailReportContext context) {
 
-    Item item = ctx.getItemByAccountId(accountId);
-    if (item == null) {
-      return succeededFuture(ctx);
-    }
+    Set<String> holdingsRecordIds = context.getItems().values()
+      .stream()
+      .filter(Objects::nonNull)
+      .map(Item::getHoldingsRecordId)
+      .filter(UuidUtil::isUuid)
+      .collect(toSet());
 
-    String effectiveLocationId = item.getEffectiveLocationId();
-    if (!isUuid(effectiveLocationId)) {
-      log.info("Effective location ID {} is not a valid UUID - account {}", effectiveLocationId,
-        accountId);
-      return succeededFuture(ctx);
-    }
-
-    return inventoryClient.getLocationById(effectiveLocationId)
-      .map(effectiveLocation ->
-        ctx.updateAccountContextWithEffectiveLocation(accountId, effectiveLocation))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find location for account {}, effectiveLocationId is {}", accountId,
-          effectiveLocationId);
-        return ctx;
-      });
+    return inventoryClient.getHoldingsByIds(holdingsRecordIds)
+      .onFailure(t -> log.error("Failed to fetch holdings", t))
+      .compose(holdings -> fetchInstancesForHoldings(context, holdings))
+      .otherwise(context);
   }
 
-  public <T extends HasAccountInfo> Future<T> lookupFeeFineActionsForAccount(T ctx,
-    String accountId) {
+  private Future<FinancialTransactionsDetailReportContext> fetchInstancesForHoldings(
+    FinancialTransactionsDetailReportContext context, Collection<HoldingsRecord> holdingsRecords) {
 
-    if (!ctx.isAccountContextCreated(accountId)) {
-      return succeededFuture(ctx);
-    }
+    Map<String, String> holdingsIdToInstanceId = holdingsRecords.stream()
+      .collect(toMap(HoldingsRecord::getId, HoldingsRecord::getInstanceId));
 
-    return feeFineActionRepository.findActionsForAccount(accountId)
-      .map(this::sortFeeFineActionsByDate)
-      .map(actions -> ctx.updateAccountContextWithActions(accountId, actions))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find actions for account {}", accountId);
-        return ctx;
-      });
+    return inventoryClient.getInstancesByIds(holdingsIdToInstanceId.values())
+      .map(instances -> mapBy(instances, Instance::getId))
+      .onSuccess(instances -> context.getActionsToAccounts()
+        .values()
+        .stream()
+        .filter(Objects::nonNull)
+        .forEach(account -> Optional.ofNullable(account.getItemId())
+          .map(itemId -> context.getItems().get(itemId))
+          .map(Item::getHoldingsRecordId)
+          .map(holdingsIdToInstanceId::get)
+          .map(instances::get)
+          .ifPresent(instance -> context.updateAccountContextWithInstance(account.getId(), instance))))
+      .onFailure(t -> log.error("Failed to fetch instances", t))
+      .map(context);
+  }
+
+  public Future<FinancialTransactionsDetailReportContext> lookupLocationsForItems(
+    FinancialTransactionsDetailReportContext context) {
+
+    Set<String> locationIds = context.getItems().values()
+      .stream()
+      .filter(Objects::nonNull)
+      .map(Item::getEffectiveLocationId)
+      .filter(UuidUtil::isUuid)
+      .collect(toSet());
+
+    return inventoryClient.getLocationsByIds(locationIds)
+      .onSuccess(locations -> {
+        Map<String, Location> locationsById = mapBy(locations, Location::getId);
+        context.getActionsToAccounts()
+          .values()
+          .stream()
+          .filter(Objects::nonNull)
+          .forEach(account -> Optional.ofNullable(account.getItemId())
+            .map(itemId -> context.getItems().get(itemId))
+            .map(Item::getEffectiveLocationId)
+            .map(locationsById::get)
+            .ifPresent(location -> context.updateAccountContextWithEffectiveLocation(account.getId(), location)));
+      })
+      .map(context)
+      .onFailure(t -> log.error("Failed to fetch locations", t))
+      .otherwise(context);
+  }
+
+  public Future<FinancialTransactionsDetailReportContext> lookupActionsForAccounts(
+    FinancialTransactionsDetailReportContext context) {
+
+    List<Account> accounts = context.getActionsToAccounts()
+      .values()
+      .stream()
+      .filter(Objects::nonNull)
+      .collect(toList());
+
+    return feeFineActionRepository.findActionsForAccounts(accounts)
+      .onSuccess(rowSet -> rowSet.stream()
+        .sorted(actionDateComparator())
+        .collect(groupingBy(Feefineaction::getAccountId))
+        .forEach(context::updateAccountContextWithActions))
+      .map(context)
+      .onFailure(t -> log.error("Failed to fetch actions for accounts", t))
+      .otherwise(context);
   }
 
   public <T extends HasAccountInfo> Future<T> lookupRefundPayTransferFeeFineActionsForAccount(T ctx,
@@ -233,139 +335,134 @@ public class LookupHelper {
       });
   }
 
-  public <T extends HasAccountInfo & HasServicePointsInfo> Future<T>
-  lookupServicePointsForAllActionsInAccount(T ctx, String accountId) {
+  public Future<FinancialTransactionsDetailReportContext> lookupServicePointsForFeeFineActions(
+    FinancialTransactionsDetailReportContext context) {
 
-    List<Feefineaction> actions = ctx.getAccountFeeFineActions(accountId);
-    if (actions == null || actions.isEmpty()) {
-      return succeededFuture(ctx);
-    }
-
-    return actions.stream()
+    Set<String> servicePointIds = context.getActionsToAccounts().keySet()
+      .stream()
       .map(Feefineaction::getCreatedAt)
-      .distinct()
-      .reduce(succeededFuture(ctx),
-        (f, a) -> f.compose(result -> lookupServicePointForFeeFineAction(ctx, a)),
-        (a, b) -> succeededFuture(ctx));
+      .filter(UuidUtil::isUuid)
+      .collect(toSet());
+
+    return inventoryClient.getServicePointsByIds(servicePointIds)
+      .map(servicePoints -> mapBy(servicePoints, ServicePoint::getId))
+      .map(context::withServicePoints)
+      .onFailure(t -> log.error("Failed to fetch service points", t))
+      .otherwise(context);
   }
 
-  private <T extends HasServicePointsInfo> Future<T> lookupServicePointForFeeFineAction(T ctx,
-    String servicePointId) {
+  public Future<FinancialTransactionsDetailReportContext> lookupLoansForAccounts(
+    FinancialTransactionsDetailReportContext context) {
 
-    if (servicePointId == null) {
-      return succeededFuture(ctx);
-    }
+    Set<String> loanIds = context.getActionsToAccounts().values()
+      .stream()
+      .filter(Objects::nonNull)
+      .map(Account::getLoanId)
+      .filter(UuidUtil::isUuid)
+      .collect(toSet());
 
-    if (!isUuid(servicePointId)) {
-      log.info("Service point ID is not a valid UUID - {}", servicePointId);
-      return succeededFuture(ctx);
-    } else {
-      if (ctx.getServicePoints().containsKey(servicePointId)) {
-        return succeededFuture(ctx);
-      } else {
-        return inventoryClient.getServicePointById(servicePointId)
-          .map(sp -> addServicePointToContext(ctx, sp, sp.getId()))
-          .map(ctx)
-          .otherwise(ctx);
-      }
-    }
+    return circulationStorageClient.getLoansByIds(loanIds)
+      .onFailure(t -> log.error("Failed to fetch loans", t))
+      .onSuccess(loans -> {
+        Map<String, Loan> loansById = mapBy(loans, Loan::getId);
+        context.getActionsToAccounts()
+          .values()
+          .stream()
+          .filter(Objects::nonNull)
+          .forEach(account -> Optional.ofNullable(account.getLoanId())
+            .map(loansById::get)
+            .ifPresent(loan -> context.updateAccountContextWithLoan(account.getId(), loan)));
+      })
+      .compose(loans -> lookupPoliciesForLoans(context, loans))
+      .otherwise(context);
   }
 
-  private <T extends HasServicePointsInfo> Future<T> addServicePointToContext(T ctx,
-    ServicePoint servicePoint, String servicePointId) {
+  private Future<FinancialTransactionsDetailReportContext> lookupPoliciesForLoans(
+    FinancialTransactionsDetailReportContext context, Collection<Loan> loans) {
 
-    if (servicePoint == null) {
-      log.error("Service point not found - service point {}", servicePointId);
-    } else {
-      ctx.getServicePoints().put(servicePoint.getId(), servicePoint);
-    }
-
-    return succeededFuture(ctx);
+    return succeededFuture(loans)
+      .compose(l -> lookupLoanPoliciesForLoans(context, loans))
+      .compose(l -> lookupOverdueFinePoliciesForLoans(context, loans))
+      .compose(l -> lookupLostItemFeePoliciesForLoans(context, loans));
   }
 
-  public <T extends HasLoanInfo & HasAccountInfo> Future<T> lookupLoanForAccount(T ctx,
-    String accountId) {
+  private Future<FinancialTransactionsDetailReportContext> lookupLoanPoliciesForLoans(
+    FinancialTransactionsDetailReportContext context, Collection<Loan> loans) {
 
-    Account account = ctx.getAccountById(accountId);
-    if (account == null) {
-      return succeededFuture(ctx);
-    }
+    Map<String, String> loanIdToPolicyId = loans.stream()
+      .collect(toMap(Loan::getId, Loan::getLoanPolicyId));
 
-    String loanId = account.getLoanId();
-    if (!isUuid(loanId)) {
-      log.info("Loan ID {} is not a valid UUID - account {}", loanId, accountId);
-      return succeededFuture(ctx);
-    }
-
-    return circulationStorageClient.getLoanById(loanId)
-      .onSuccess(loan -> ctx.updateAccountContextWithLoan(accountId, loan))
-      .compose(loan -> circulationStorageClient.getLoanPolicyById(loan.getLoanPolicyId()))
-      .onSuccess(loanPolicy -> ctx.updateAccountContextWithLoanPolicy(accountId, loanPolicy))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find loan for account {}, loan is {}", accountId,
-          loanId);
-        return ctx;
-      });
+    return circulationStorageClient.getLoanPoliciesByIds(loanIdToPolicyId.values())
+      .onSuccess(policies -> {
+        Map<String, LoanPolicy> policiesById = mapBy(policies, LoanPolicy::getId);
+        context.getActionsToAccounts()
+          .values()
+          .stream()
+          .filter(Objects::nonNull)
+          .forEach(account -> Optional.ofNullable(account.getLoanId())
+            .map(loanIdToPolicyId::get)
+            .map(policiesById::get)
+            .ifPresent(policy -> context.updateAccountContextWithLoanPolicy(account.getId(), policy)));
+      })
+      .map(context)
+      .onFailure(t -> log.error("Failed to fetch loan policies", t))
+      .otherwise(context);
   }
 
-  public <T extends HasLoanInfo & HasAccountInfo> Future<T> lookupOverdueFinePolicyForAccount(
-    T ctx, String accountId) {
+  private Future<FinancialTransactionsDetailReportContext> lookupOverdueFinePoliciesForLoans(
+    FinancialTransactionsDetailReportContext context, Collection<Loan> loans) {
 
-    Loan loan = ctx.getLoanByAccountId(accountId);
-    if (loan == null) {
-      return succeededFuture(ctx);
-    }
+    Map<String, String> loanIdToPolicyId = loans.stream()
+      .collect(toMap(Loan::getId, Loan::getOverdueFinePolicyId));
 
-    String overdueFinePolicyId = loan.getOverdueFinePolicyId();
-    if (!isUuid(overdueFinePolicyId)) {
-      log.info("Overdue fine policy ID {} is not a valid UUID - account {}", overdueFinePolicyId,
-        accountId);
-      return succeededFuture(ctx);
-    }
-
-    return overdueFinePolicyRepository.getOverdueFinePolicyById(overdueFinePolicyId)
-      .onSuccess(policy -> ctx.updateAccountContextWithOverdueFinePolicy(accountId, policy))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find overdue fine policy for account {}, overdue fine policy is {}",
-          accountId, overdueFinePolicyId);
-        return ctx;
-      });
+    return overdueFinePolicyRepository.getOverdueFinePoliciesByIds(loanIdToPolicyId.values())
+      .onSuccess(policies -> {
+        Map<String, OverdueFinePolicy> policiesById = mapBy(policies, OverdueFinePolicy::getId);
+        context.getActionsToAccounts()
+          .values()
+          .stream()
+          .filter(Objects::nonNull)
+          .forEach(account -> Optional.ofNullable(account.getLoanId())
+            .map(loanIdToPolicyId::get)
+            .map(policiesById::get)
+            .ifPresent(policy -> context.updateAccountContextWithOverdueFinePolicy(account.getId(),
+              policy)));
+      })
+      .map(context)
+      .onFailure(t -> log.error("Failed to fetch overdue fine policies", t))
+      .otherwise(context);
   }
 
-  public <T extends HasLoanInfo & HasAccountInfo> Future<T> lookupLostItemFeePolicyForAccount(
-    T ctx, String accountId) {
+  private Future<FinancialTransactionsDetailReportContext> lookupLostItemFeePoliciesForLoans(
+    FinancialTransactionsDetailReportContext context, Collection<Loan> loans) {
 
-    Loan loan = ctx.getLoanByAccountId(accountId);
-    if (loan == null) {
-      return succeededFuture(ctx);
-    }
+    Map<String, String> loanIdToPolicyId = loans.stream()
+      .collect(toMap(Loan::getId, Loan::getLostItemPolicyId));
 
-    String lostItemFeePolicyId = loan.getLostItemPolicyId();
-    if (!isUuid(lostItemFeePolicyId)) {
-      log.info("Lost item fee policy ID {} is not a valid UUID - account {}", lostItemFeePolicyId,
-        accountId);
-      return succeededFuture(ctx);
-    }
-
-    return lostItemFeePolicyRepository.getLostItemFeePolicyById(lostItemFeePolicyId)
-      .onSuccess(policy -> ctx.updateAccountContextWithLostItemFeePolicy(accountId, policy))
-      .map(ctx)
-      .otherwise(throwable -> {
-        log.error("Failed to find lost item fee policy for account {}, lost item fee policy is {}",
-          accountId, lostItemFeePolicyId);
-        return ctx;
-      });
+    return lostItemFeePolicyRepository.getLostItemFeePoliciesByIds(loanIdToPolicyId.values())
+      .onSuccess(lostItemFeePolicies -> {
+        Map<String, LostItemFeePolicy> policiesById = mapBy(lostItemFeePolicies, LostItemFeePolicy::getId);
+        context.getActionsToAccounts()
+          .values()
+          .stream()
+          .filter(Objects::nonNull)
+          .forEach(account -> Optional.ofNullable(account.getLoanId())
+            .map(loanIdToPolicyId::get)
+            .map(policiesById::get)
+            .ifPresent(policy -> context.updateAccountContextWithLostItemFeePolicy(account.getId(), policy)));
+      })
+      .map(context)
+      .onFailure(t -> log.error("Failed to fetch lost item fee policies", t))
+      .otherwise(context);
   }
 
   private List<Feefineaction> sortFeeFineActionsByDate(List<Feefineaction> feeFineActions) {
     return feeFineActions.stream()
       .sorted(actionDateComparator())
-      .collect(Collectors.toList());
+      .collect(toList());
   }
 
-  private Comparator<Feefineaction> actionDateComparator() {
+  private static Comparator<Feefineaction> actionDateComparator() {
     return (left, right) -> {
       if (left == null || right == null) {
         return 0;
@@ -381,5 +478,10 @@ public class LookupHelper {
           .isAfter(new DateTime(rightDate)) ? 1 : -1;
       }
     };
+  }
+
+  private static <K, V> Map<K, V> mapBy(Collection<V> collection, Function<V, K> keyMapper) {
+    return collection.stream()
+      .collect(toMap(keyMapper, identity()));
   }
 }
