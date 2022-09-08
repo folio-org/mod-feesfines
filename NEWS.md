@@ -1,3 +1,7 @@
+## 18.1.0 IN-PROGRESS
+
+* Supports users interface versions 15.1 16.0 (MODFEE-265)
+
 ## 18.0.0 2022-06-27
 * Make `paymentStatus` property in accountdata.json required and also make it an enum (MODFEE-220)
 * Prevent deleting/updating required `Feefine` (MODFEE-243)
