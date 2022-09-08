@@ -121,6 +121,8 @@ public class FinancialTransactionsDetailReportService extends
     FinancialTransactionsDetailReportParameters params, List<String> actionTypes,
     FinancialTransactionsDetailReportContext ctx) {
 
+    log.info("Fetching actions and accounts");
+
     return feeFineActionRepository.findFeeFineActionsAndAccounts(actionTypes,
         params.getStartDate(), params.getEndDate(), List.of(params.getFeeFineOwner()),
         params.getCreatedAt(), null, ORDER_BY_ACTION_DATE_ASC, REPORT_ROWS_LIMIT)

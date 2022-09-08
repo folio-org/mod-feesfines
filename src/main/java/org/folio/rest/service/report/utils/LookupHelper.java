@@ -302,7 +302,10 @@ public class LookupHelper {
       .filter(Objects::nonNull)
       .collect(toList());
 
+    log.info("Fetching actions for accounts");
+
     return feeFineActionRepository.findActionsForAccounts(accounts)
+      .onSuccess(actions -> log.info("Fetched {} actions", actions.size()))
       .onSuccess(rowSet -> rowSet.stream()
         .sorted(actionDateComparator())
         .collect(groupingBy(Feefineaction::getAccountId))

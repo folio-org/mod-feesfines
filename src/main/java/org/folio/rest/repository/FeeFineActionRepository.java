@@ -204,7 +204,7 @@ public class FeeFineActionRepository extends AbstractRepository {
 
     String query = format(
       "SELECT actions.jsonb, accounts.jsonb FROM %1$s.%2$s %3$s " +
-        "LEFT OUTER JOIN %1$s.%4$s %5$s ON %3$s.jsonb->>'accountId' = %5$s.jsonb->>'id' " +
+        "LEFT OUTER JOIN %1$s.%4$s %5$s ON left(lower(f_unaccent(%3$s.jsonb->>'accountId')), 600) = %5$s.jsonb->>'id' " +
         "WHERE " + join(" AND ", conditions) + " " +
         "ORDER BY %6$s " +
         "LIMIT $1",
