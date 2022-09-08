@@ -94,7 +94,7 @@ public class OkapiClientTest extends BaseClientTest{
     okapiClient.getById(USERS_URL, USER_ID, User.class)
       .onSuccess(r -> context.fail("should have failed"))
       .onFailure(failure -> {
-        String expectedErrorMessage = "Failed to fetch User " + USER_ID + ": [404] User not found";
+        String expectedErrorMessage = "GET /users/" + USER_ID + ": [404] User not found";
         context.assertEquals(expectedErrorMessage, failure.getMessage());
         async.complete();
       });

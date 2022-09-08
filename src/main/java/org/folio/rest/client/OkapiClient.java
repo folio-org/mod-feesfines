@@ -89,12 +89,12 @@ public class OkapiClient {
 
     return promise.future().compose(response -> {
       int responseStatus = response.statusCode();
-      log.info("{} {}ms GET {}", responseStatus, currentTimeMillis() - start, resourcePath);
+      log.debug("[{} {}ms] GET {}", responseStatus, currentTimeMillis() - start, resourcePath);
       if (responseStatus != 200) {
         final String errorMessage = format("Failed to get %s by ID %s. Response status code: %s",
           objectType.getSimpleName(), id, responseStatus);
         log.error(errorMessage);
-        return failedFuture(new HttpGetException(url, response, objectType));
+        return failedFuture(new HttpGetException(url, response));
       }
       try {
         T object = objectMapper.readValue(response.bodyAsString(), objectType);
@@ -137,7 +137,7 @@ public class OkapiClient {
         log.debug("[{}] [{}ms] GET {}", responseStatus, currentTimeMillis() - startTimeMillis,
           resourcePath);
         if (responseStatus != 200) {
-          HttpGetException exception = new HttpGetException(path, response, objectType);
+          HttpGetException exception = new HttpGetException(path, response);
           log.error("GET by query failed", exception);
           return failedFuture(exception);
         }
@@ -173,7 +173,7 @@ public class OkapiClient {
       .map(batch -> fetchBatch(path, batch, objectType, collectionName).onSuccess(results::addAll))
       .reduce(succeededFuture(), (f1, f2) -> f1.compose(r -> f2))
       .map(results)
-      .onSuccess(r -> log.info("Fetched {} {} in {} ms", results.size(), objectType.getSimpleName(),
+      .onSuccess(r -> log.debug("Fetched {} {} in {} ms", results.size(), objectType.getSimpleName(),
         currentTimeMillis() - startTime));
   }
 

@@ -7,10 +7,8 @@ import lombok.Getter;
 
 @Getter
 public class HttpGetException extends HttpException {
-  private final Class<?> objectType;
 
-  public HttpGetException(String url, HttpResponse<Buffer> response, Class<?> objectType) {
+  public HttpGetException(String url, HttpResponse<Buffer> response) {
     super(HttpMethod.GET, url, response);
-    this.objectType = objectType;
   }
 }
