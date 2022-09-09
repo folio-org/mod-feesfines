@@ -1,3 +1,6 @@
+## 18.0.2 2022-09-09
+* Improve performance of Financial Transactions Detail Report (MODFEE-264)
+
 ## 18.0.1 2022-08-09
 * Add support for different loan date formats to Financial Transactions Report (MODFEE-266)
 
