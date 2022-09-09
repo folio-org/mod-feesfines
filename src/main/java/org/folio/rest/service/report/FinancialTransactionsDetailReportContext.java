@@ -62,8 +62,9 @@ public class FinancialTransactionsDetailReportContext
       return null;
     }
 
-    if (accountContexts.containsKey(accountId)) {
-      return accountContexts.get(accountId);
+    AccountContextData existingContext = accountContexts.get(accountId);
+    if (existingContext != null) {
+      return existingContext;
     }
 
     Account account = actionsToAccounts.values().stream()
@@ -72,8 +73,7 @@ public class FinancialTransactionsDetailReportContext
       .orElse(null);
 
     if (account != null) {
-      AccountContextData accountContext = new AccountContextData().withAccount(
-        account);
+      AccountContextData accountContext = new AccountContextData().withAccount(account);
       accountContexts.put(accountId, accountContext);
       return accountContext;
     }
@@ -143,8 +143,7 @@ public class FinancialTransactionsDetailReportContext
   public Future<Void> updateAccountContextWithActions(String accountId,
     List<Feefineaction> actions) {
 
-    AccountContextData accountContextData = getAccountContextById(
-      accountId);
+    AccountContextData accountContextData = getAccountContextById(accountId);
     if (accountContextData == null) {
       return succeededFuture();
     }
