@@ -6,6 +6,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
@@ -20,12 +22,14 @@ import static org.junit.Assert.assertThat;
 
 import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.MediaType;
 
@@ -60,6 +64,7 @@ import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class ApiTests {
@@ -269,6 +274,20 @@ public class ApiTests {
     ResponseDefinitionBuilder responseBuilder) {
 
     return createStub(urlPathMatching(regex), responseBuilder);
+  }
+
+  public <T> StubMapping createStubForCollection(String url, Collection<T> returnObjects,
+    String collectionName) {
+
+    JsonArray results = returnObjects.stream()
+      .map(JsonObject::mapFrom)
+      .collect(collectingAndThen(toList(), JsonArray::new));
+
+    JsonObject response = new JsonObject()
+      .put(collectionName, results)
+      .put("totalRecords", returnObjects.stream());
+
+    return createStubForPathMatching(url, aResponse().withBody(response.encodePrettily()));
   }
 
   private StubMapping createStub(UrlPathPattern urlPathPattern,
