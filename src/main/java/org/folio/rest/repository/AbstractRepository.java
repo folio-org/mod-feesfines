@@ -26,7 +26,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 public abstract class AbstractRepository {
-  private static final Logger log = LogManager.getLogger(LookupHelper.class);
+  private static final Logger log = LogManager.getLogger(AbstractRepository.class);
 
   protected final PostgresClient pgClient;
 
