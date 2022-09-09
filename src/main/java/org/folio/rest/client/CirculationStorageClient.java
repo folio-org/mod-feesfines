@@ -1,5 +1,6 @@
 package org.folio.rest.client;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.folio.rest.jaxrs.model.Loan;
@@ -17,7 +18,15 @@ public class CirculationStorageClient extends OkapiClient {
     return getById("/loan-storage/loans", id, Loan.class);
   }
 
+  public Future<Collection<Loan>> getLoansByIds(Collection<String> ids) {
+    return getByIds("/loan-storage/loans", ids, Loan.class, "loans");
+  }
+
   public Future<LoanPolicy> getLoanPolicyById(String id) {
     return getById("/loan-policy-storage/loan-policies", id, LoanPolicy.class);
+  }
+
+  public Future<Collection<LoanPolicy>> getLoanPoliciesByIds(Collection<String> ids) {
+    return getByIds("/loan-policy-storage/loan-policies", ids, LoanPolicy.class, "loanPolicies");
   }
 }
