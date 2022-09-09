@@ -13,7 +13,10 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.service.report.utils.LookupHelper;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
@@ -23,6 +26,8 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 public abstract class AbstractRepository {
+  private static final Logger log = LogManager.getLogger(LookupHelper.class);
+
   protected final PostgresClient pgClient;
 
   AbstractRepository(Map<String, String> headers, Context context) {
@@ -39,6 +44,7 @@ public abstract class AbstractRepository {
   }
 
   <T> Future<Collection<T>> getByIds(String tableName, Collection<String> ids, Class<T> objectType) {
+    log.info("Fetching {} {} by ID", ids.size(), objectType.getSimpleName());
     return getByKeyValues(tableName, "id", ids, objectType);
   }
 

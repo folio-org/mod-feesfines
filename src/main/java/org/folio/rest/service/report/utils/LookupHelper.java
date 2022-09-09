@@ -403,7 +403,12 @@ public class LookupHelper {
     Map<String, String> loanIdToPolicyId = loans.stream()
       .collect(toMap(Loan::getId, Loan::getLoanPolicyId));
 
-    return circulationStorageClient.getLoanPoliciesByIds(loanIdToPolicyId.values())
+    Set<String> policyIds = loanIdToPolicyId.values()
+      .stream()
+      .filter(Objects::nonNull)
+      .collect(toSet());
+
+    return circulationStorageClient.getLoanPoliciesByIds(policyIds)
       .onSuccess(policies -> {
         Map<String, LoanPolicy> policiesById = mapBy(policies, LoanPolicy::getId);
         context.getActionsToAccounts()
@@ -426,9 +431,12 @@ public class LookupHelper {
     Map<String, String> loanIdToPolicyId = loans.stream()
       .collect(toMap(Loan::getId, Loan::getOverdueFinePolicyId));
 
-    log.info("Fetching overdue fine policies");
+    Set<String> policyIds = loanIdToPolicyId.values()
+      .stream()
+      .filter(Objects::nonNull)
+      .collect(toSet());
 
-    return overdueFinePolicyRepository.getOverdueFinePoliciesByIds(loanIdToPolicyId.values())
+    return overdueFinePolicyRepository.getOverdueFinePoliciesByIds(policyIds)
       .onSuccess(policies -> {
         Map<String, OverdueFinePolicy> policiesById = mapBy(policies, OverdueFinePolicy::getId);
         context.getActionsToAccounts()
@@ -452,9 +460,12 @@ public class LookupHelper {
     Map<String, String> loanIdToPolicyId = loans.stream()
       .collect(toMap(Loan::getId, Loan::getLostItemPolicyId));
 
-    log.info("Fetching lost item fee policies");
+    Set<String> policyIds = loanIdToPolicyId.values()
+      .stream()
+      .filter(Objects::nonNull)
+      .collect(toSet());
 
-    return lostItemFeePolicyRepository.getLostItemFeePoliciesByIds(loanIdToPolicyId.values())
+    return lostItemFeePolicyRepository.getLostItemFeePoliciesByIds(policyIds)
       .onSuccess(lostItemFeePolicies -> {
         Map<String, LostItemFeePolicy> policiesById = mapBy(lostItemFeePolicies, LostItemFeePolicy::getId);
         context.getActionsToAccounts()

@@ -5,6 +5,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -19,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -157,18 +159,18 @@ public class OkapiClient {
 
     Collection<T> results = new ArrayList<>();
 
-    List<String> filteredIds = ids.stream()
+    Set<String> filteredIds = ids.stream()
       .filter(StringUtils::isNotBlank)
-      .collect(toList());
+      .collect(toSet());
 
     if (ids.isEmpty()) {
       return succeededFuture(results);
     }
 
-    log.info("Fetching {} {} by IDs", ids.size(), objectType.getSimpleName());
+    log.info("Fetching {} {} by ID", ids.size(), objectType.getSimpleName());
     long startTime = currentTimeMillis();
 
-    return ListUtils.partition(filteredIds, ID_BATCH_SIZE)
+    return ListUtils.partition(new ArrayList<>(filteredIds), ID_BATCH_SIZE)
       .stream()
       .map(batch -> fetchBatch(path, batch, objectType, collectionName).onSuccess(results::addAll))
       .reduce(succeededFuture(), (f1, f2) -> f1.compose(r -> f2))
