@@ -181,43 +181,45 @@ public class FinancialTransactionsDetailReportContext
 
   @Override
   public void updateAccountContextWithLoan(String accountId, Loan loan) {
-    if (!isAccountContextCreated(accountId)) {
+    AccountContextData accountContext = getAccountContextById(accountId);
+    if (accountContext == null) {
       return;
     }
 
-    accountContexts.put(accountId, getAccountContextById(accountId).withLoan(loan));
+    accountContexts.put(accountId, accountContext.withLoan(loan));
   }
 
   @Override
   public void updateAccountContextWithLoanPolicy(String accountId, LoanPolicy loanPolicy) {
-    if (!isAccountContextCreated(accountId)) {
+    AccountContextData accountContext = getAccountContextById(accountId);
+    if (accountContext == null) {
       return;
     }
 
-    accountContexts.put(accountId, getAccountContextById(accountId).withLoanPolicy(loanPolicy));
+    accountContexts.put(accountId, accountContext.withLoanPolicy(loanPolicy));
   }
 
   @Override
   public void updateAccountContextWithOverdueFinePolicy(String accountId,
     OverdueFinePolicy overdueFinePolicy) {
 
-    if (!isAccountContextCreated(accountId)) {
+    AccountContextData accountContext = getAccountContextById(accountId);
+    if (accountContext == null) {
       return;
     }
 
-    accountContexts.put(accountId, getAccountContextById(accountId)
-      .withOverdueFinePolicy(overdueFinePolicy));
+    accountContexts.put(accountId, accountContext.withOverdueFinePolicy(overdueFinePolicy));
   }
 
   @Override
   public void updateAccountContextWithLostItemFeePolicy(String accountId,
     LostItemFeePolicy lostItemFeePolicy) {
 
-    if (!isAccountContextCreated(accountId)) {
+    AccountContextData accountContext = getAccountContextById(accountId);
+    if (accountContext == null) {
       return;
     }
 
-    accountContexts.put(accountId, getAccountContextById(accountId)
-      .withLostItemFeePolicy(lostItemFeePolicy));
+    accountContexts.put(accountId, accountContext.withLostItemFeePolicy(lostItemFeePolicy));
   }
 }

@@ -6,7 +6,6 @@ import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
-import static org.folio.rest.repository.FeeFineActionRepository.ORDER_BY_ACTION_DATE_ASC;
 import static org.folio.rest.service.report.utils.ReportStatsHelper.calculateTotals;
 import static org.folio.rest.utils.FeeFineActionHelper.getPatronInfoFromComment;
 import static org.folio.rest.utils.FeeFineActionHelper.getStaffInfoFromComment;
@@ -23,7 +22,6 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Contributor;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -38,7 +36,6 @@ import org.folio.rest.jaxrs.model.OverdueFinePolicy;
 import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
-import org.folio.rest.repository.FeeFineActionRepository;
 import org.folio.rest.service.report.parameters.FinancialTransactionsDetailReportParameters;
 import org.folio.rest.service.report.utils.LookupHelper;
 
@@ -49,7 +46,6 @@ public class FinancialTransactionsDetailReportService extends
 
   private static final Logger log = LogManager.getLogger(FinancialTransactionsDetailReportService.class);
 
-  private static final int REPORT_ROWS_LIMIT = 1_000_000;
   private static final String EMPTY_VALUE = "-";
   private static final Map<String, String> ACTION_NAMES = new HashMap<>();
 
@@ -67,13 +63,10 @@ public class FinancialTransactionsDetailReportService extends
     ACTION_NAMES.put("Staff info only", "Staff info only");
   }
 
-  private final FeeFineActionRepository feeFineActionRepository;
-
   private final LookupHelper lookupHelper;
 
   public FinancialTransactionsDetailReportService(Map<String, String> headers, io.vertx.core.Context context) {
     super(headers, context);
-    feeFineActionRepository = new FeeFineActionRepository(headers, context);
     lookupHelper = new LookupHelper(headers, context);
   }
 
@@ -105,7 +98,7 @@ public class FinancialTransactionsDetailReportService extends
 
     FinancialTransactionsDetailReportContext ctx = new FinancialTransactionsDetailReportContext();
 
-    return findActionsAndAccounts(params, actionTypes, ctx)
+    return lookupHelper.findActionsAndAccounts(params, actionTypes, ctx)
       .compose(lookupHelper::lookupActionsForAccounts)
       .compose(lookupHelper::lookupServicePointsForFeeFineActions)
       .compose(lookupHelper::lookupUsersForAccounts)
@@ -115,18 +108,6 @@ public class FinancialTransactionsDetailReportService extends
       .compose(lookupHelper::lookupLocationsForItems)
       .compose(lookupHelper::lookupLoansForAccounts)
       .map(this::buildReport);
-  }
-
-  private Future<FinancialTransactionsDetailReportContext> findActionsAndAccounts(
-    FinancialTransactionsDetailReportParameters params, List<String> actionTypes,
-    FinancialTransactionsDetailReportContext ctx) {
-
-    log.info("Fetching actions and accounts");
-
-    return feeFineActionRepository.findFeeFineActionsAndAccounts(actionTypes,
-        params.getStartDate(), params.getEndDate(), List.of(params.getFeeFineOwner()),
-        params.getCreatedAt(), null, ORDER_BY_ACTION_DATE_ASC, REPORT_ROWS_LIMIT)
-      .map(ctx::withActionsToAccounts);
   }
 
   private FinancialTransactionsDetailReport buildReport(FinancialTransactionsDetailReportContext ctx) {

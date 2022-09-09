@@ -18,7 +18,8 @@ import lombok.With;
 
 @AllArgsConstructor
 @Getter
-@With class AccountContextData {
+@With
+public class AccountContextData {
   final Account account;
   final List<Feefineaction> actions;
   final HoldingsRecord holdingsRecord;

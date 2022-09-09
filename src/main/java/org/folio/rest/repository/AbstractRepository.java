@@ -57,7 +57,8 @@ public abstract class AbstractRepository {
       .map(value -> StringUtils.wrap(value, "'"))
       .collect(Collectors.joining(","));
 
-    String query = format("SELECT t.jsonb FROM %s.%s t WHERE jsonb->>'%s' IN (%s)",
+    String query = format(
+      "SELECT t.jsonb FROM %s.%s t WHERE left(lower(f_unaccent(jsonb->>'%s')), 600) IN (%s)",
       getSchemaName(), tableName, key, joinedValues);
 
     return getByQuery(query, objectType);

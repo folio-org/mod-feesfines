@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
+import static org.folio.rest.repository.FeeFineActionRepository.ORDER_BY_ACTION_DATE_ASC;
 import static org.folio.util.UuidUtil.isUuid;
 
 import java.util.Collection;
@@ -46,6 +47,7 @@ import org.folio.rest.service.report.FinancialTransactionsDetailReportContext;
 import org.folio.rest.service.report.context.HasAccountInfo;
 import org.folio.rest.service.report.context.HasItemInfo;
 import org.folio.rest.service.report.context.HasUserInfo;
+import org.folio.rest.service.report.parameters.FinancialTransactionsDetailReportParameters;
 import org.folio.util.UuidUtil;
 import org.joda.time.DateTime;
 
@@ -54,6 +56,7 @@ import io.vertx.core.Future;
 
 public class LookupHelper {
   private static final Logger log = LogManager.getLogger(LookupHelper.class);
+  private static final int REPORT_ROWS_LIMIT = 1_000_000;
 
   private final InventoryClient inventoryClient;
   private final UsersClient usersClient;
@@ -293,6 +296,18 @@ public class LookupHelper {
       .otherwise(context);
   }
 
+  public Future<FinancialTransactionsDetailReportContext> findActionsAndAccounts(
+    FinancialTransactionsDetailReportParameters params, List<String> actionTypes,
+    FinancialTransactionsDetailReportContext ctx) {
+
+    log.info("Fetching actions and accounts");
+
+    return feeFineActionRepository.findFeeFineActionsAndAccounts(actionTypes,
+        params.getStartDate(), params.getEndDate(), List.of(params.getFeeFineOwner()),
+        params.getCreatedAt(), null, ORDER_BY_ACTION_DATE_ASC, REPORT_ROWS_LIMIT)
+      .map(ctx::withActionsToAccounts);
+  }
+
   public Future<FinancialTransactionsDetailReportContext> lookupActionsForAccounts(
     FinancialTransactionsDetailReportContext context) {
 
@@ -411,6 +426,8 @@ public class LookupHelper {
     Map<String, String> loanIdToPolicyId = loans.stream()
       .collect(toMap(Loan::getId, Loan::getOverdueFinePolicyId));
 
+    log.info("Fetching overdue fine policies");
+
     return overdueFinePolicyRepository.getOverdueFinePoliciesByIds(loanIdToPolicyId.values())
       .onSuccess(policies -> {
         Map<String, OverdueFinePolicy> policiesById = mapBy(policies, OverdueFinePolicy::getId);
@@ -434,6 +451,8 @@ public class LookupHelper {
 
     Map<String, String> loanIdToPolicyId = loans.stream()
       .collect(toMap(Loan::getId, Loan::getLostItemPolicyId));
+
+    log.info("Fetching lost item fee policies");
 
     return lostItemFeePolicyRepository.getLostItemFeePoliciesByIds(loanIdToPolicyId.values())
       .onSuccess(lostItemFeePolicies -> {
