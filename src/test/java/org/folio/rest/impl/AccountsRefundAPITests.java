@@ -51,8 +51,8 @@ import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.util.PomUtils;
 import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -93,7 +93,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
   private final ResourceClient refundClient = buildAccountsRefundClient(FIRST_ACCOUNT_ID);
   private final ResourceClient bulkRefundClient = buildAccountBulkRefundClient();
 
-  @Before
+  @BeforeEach
   public void beforeEach() {
     removeAllFromTable(FEE_FINE_ACTIONS);
     removeAllFromTable("accounts");

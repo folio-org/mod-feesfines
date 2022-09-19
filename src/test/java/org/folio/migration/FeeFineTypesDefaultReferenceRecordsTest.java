@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.folio.rest.persist.PostgresClient;
 import org.folio.test.support.ApiTests;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.vertx.core.Vertx;
 

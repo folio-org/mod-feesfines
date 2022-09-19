@@ -27,9 +27,7 @@ import static org.folio.test.support.EntityBuilder.buildLocation;
 import static org.folio.test.support.EntityBuilder.buildUser;
 import static org.folio.test.support.matcher.LogEventMatcher.noticeErrorLogRecord;
 import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
-import static org.folio.test.support.matcher.constant.DbTable.FEEFINES_TABLE;
 import static org.folio.test.support.matcher.constant.DbTable.FEE_FINE_ACTIONS_TABLE;
-import static org.folio.test.support.matcher.constant.DbTable.OWNERS_TABLE;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.CAMPUSES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.FEEFINES_PATH;
@@ -78,11 +76,13 @@ import org.folio.test.support.matcher.FeeFineActionMatchers;
 import org.folio.test.support.matcher.constant.ServicePath;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
@@ -92,6 +92,7 @@ import io.restassured.response.Response;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+@ExtendWith(WireMockExtension.class)
 public class FeeFineActionsAPITest extends ApiTests {
   private static final String PRIMARY_CONTRIBUTOR_NAME = "Primary contributor";
   private static final String NON_PRIMARY_CONTRIBUTOR_NAME = "Non-primary contributor";
@@ -129,7 +130,7 @@ public class FeeFineActionsAPITest extends ApiTests {
   private StubMapping libraryStub;
   private StubMapping patronNoticeStub;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     removeAllFromTable(FEEFINES_TABLE);
     removeAllFromTable(ACCOUNTS_TABLE);
@@ -220,10 +221,10 @@ public class FeeFineActionsAPITest extends ApiTests {
     verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
 
     String expectedErrorMessage = "Following errors may result in missing token values: " +
-      "\"Failed to fetch User " + user.getId() + ": [404] Not found\", " +
-      "\"Failed to fetch Item " + item.getId() + ": [404] Not found\", " +
-      "\"Failed to fetch HoldingsRecord " + holdingsRecord.getId() + ": [404] Not found\", " +
-      "\"Failed to fetch Instance " + instance.getId() + ": [404] Not found\", " +
+      "\"GET /users/" + user.getId() + ": [404] Not found\", " +
+      "\"GET /item-storage/items/" + item.getId() + ": [404] Not found\", " +
+      "\"GET /holdings-storage/holdings/" + holdingsRecord.getId() + ": [404] Not found\", " +
+      "\"GET /instance-storage/instances/" + instance.getId() + ": [404] Not found\", " +
       "\"Invalid Location ID: null\"";
 
     assertThatNoticeErrorEventWasPublished(charge, expectedErrorMessage);

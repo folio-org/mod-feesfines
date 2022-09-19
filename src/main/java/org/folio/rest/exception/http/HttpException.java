@@ -23,6 +23,6 @@ public class HttpException extends RuntimeException {
 
   @Override
   public String getMessage() {
-    return String.format("%s %s failed: [%d] %s", httpMethod, url, responseStatus, responseBody);
+    return String.format("%s %s: [%d] %s", httpMethod, url, responseStatus, responseBody);
   }
 }

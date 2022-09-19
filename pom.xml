@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-feesfines</artifactId>
-  <version>17.2.0-SNAPSHOT</version>
+  <version>18.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <licenses>
@@ -17,7 +17,7 @@
     <powermock.version>2.0.7</powermock.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <raml-module-builder.version>33.2.4</raml-module-builder.version>
+    <raml-module-builder.version>34.0.0</raml-module-builder.version>
     <vertx.version>4.1.5</vertx.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
@@ -45,6 +45,12 @@
       <artifactId>junit</artifactId>
       <version>4.12</version>
       <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock-jre8</artifactId>
+      <version>2.33.2</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
@@ -141,7 +147,7 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.12</version>
+      <version>1.18.22</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

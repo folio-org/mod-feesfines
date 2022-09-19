@@ -10,6 +10,8 @@ import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Collections;
 
@@ -19,18 +21,16 @@ import org.folio.rest.jaxrs.model.Address;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.test.support.ApiTests;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 
-@RunWith(VertxUnitRunner.class)
+@ExtendWith(VertxExtension.class)
 public class UsersClientTest extends ApiTests {
   private final UsersClient usersClient;
   {
@@ -42,9 +42,7 @@ public class UsersClientTest extends ApiTests {
   }
 
   @Test
-  public void shouldSucceedWhenUserIsFetched(TestContext context) {
-    Async async = context.async();
-
+  public void shouldSucceedWhenUserIsFetched(VertxTestContext context) {
     User user = new User()
       .withId(USER_ID)
       .withUsername("tester")
@@ -69,34 +67,30 @@ public class UsersClientTest extends ApiTests {
     mockUsersResponse(HttpStatus.SC_OK, userJson.encodePrettily());
 
     usersClient.fetchUserById(USER_ID)
-      .onFailure(context::fail)
+      .onFailure(context::failNow)
       .onSuccess(result -> {
-        context.assertEquals(userJson, JsonObject.mapFrom(result));
-        async.complete();
+        assertThat(userJson, is(JsonObject.mapFrom(result)));
+        context.completeNow();
       });
   }
 
   @Test
-  public void shouldFailWhenUserIsNotFound(TestContext context) {
-    Async async = context.async();
-
+  public void shouldFailWhenUserIsNotFound(VertxTestContext context) {
     String responseBody = "User not found";
     mockUsersResponse(HttpStatus.SC_NOT_FOUND, responseBody);
 
-    String expectedFailureMessage = "Failed to fetch User " + USER_ID + ": [404] User not found";
+    String expectedFailureMessage = "GET /users/" + USER_ID + ": [404] User not found";
 
     usersClient.fetchUserById(USER_ID)
-      .onSuccess(user -> context.fail("Should have failed"))
+      .onSuccess(user -> context.failNow("Should have failed"))
       .onFailure(throwable -> {
-        context.assertEquals(expectedFailureMessage, throwable.getMessage());
-        async.complete();
+        assertThat(throwable.getMessage(), is(expectedFailureMessage));
+        context.completeNow();
       });
   }
 
   @Test
-  public void shouldFailWhenReceivedInvalidResponse(TestContext context) {
-    Async async = context.async();
-
+  public void shouldFailWhenReceivedInvalidResponse(VertxTestContext context) {
     String responseBody = "not a json";
     mockUsersResponse(HttpStatus.SC_OK, responseBody);
 
@@ -105,10 +99,10 @@ public class UsersClientTest extends ApiTests {
 
 
     usersClient.fetchUserById(USER_ID)
-      .onSuccess(user -> context.fail("Should have failed"))
+      .onSuccess(user -> context.failNow("Should have failed"))
       .onFailure(throwable -> {
-        context.assertEquals(expectedErrorMessage, throwable.getMessage());
-        async.complete();
+        assertThat(expectedErrorMessage, is(throwable.getMessage()));
+        context.completeNow();
       });
   }
 
@@ -120,5 +114,4 @@ public class UsersClientTest extends ApiTests {
       .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
       .willReturn(aResponse().withStatus(status).withBody(response)));
   }
-
 }

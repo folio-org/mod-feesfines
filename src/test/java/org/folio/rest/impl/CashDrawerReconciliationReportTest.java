@@ -28,8 +28,8 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
 import org.folio.rest.utils.ReportResourceClient;
 import org.folio.test.support.EntityBuilder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.restassured.response.Response;
 
@@ -64,7 +64,7 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
   private final ReportResourceClient reportClient = buildCashDrawerReconciliationReportClient();
   private final ReportResourceClient reportSourcesClient = buildCashDrawerReconciliationReportSourcesClient();
 
-  @Before
+  @BeforeEach
   public void setUp() {
     clearDatabase();
     createLocaleSettingsStub();

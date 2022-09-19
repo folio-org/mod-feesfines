@@ -12,6 +12,7 @@ import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
 import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_FULLY;
 import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_PARTIALLY;
 import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
+import static org.folio.test.support.matcher.AccountMatchers.singleAccountMatcher;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -26,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.Date;
@@ -40,14 +42,15 @@ import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
+import org.folio.rest.jaxrs.model.ItemStatus;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
@@ -65,7 +68,7 @@ public class AccountsAPITest extends ApiTests {
   private static final Date DATE_CLOSED = new Date();
   private SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'+00:00'");
 
-  @Before
+  @BeforeEach
   public void setUp() {
     getOkapi().stubFor(WireMock.get(WireMock.urlPathMatching("/holdings-storage/holdings.*"))
       .willReturn(aResponse().withBodyFile("holdings.json")));
@@ -88,7 +91,8 @@ public class AccountsAPITest extends ApiTests {
     accountsClient.create(accountToPost)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
-      .contentType(JSON);
+      .contentType(JSON)
+      .body(singleAccountMatcher(accountToPost));
 
     assertBalanceChangedEventPublished(accountToPost);
 
@@ -256,7 +260,8 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject account = createAccountJsonObject(accountId)
       .put("remaining", 90.00)
-      .put("status", createNamedObject("Open"));
+      .put("status", createNamedObject("Open"))
+      .put("loanId", null);
 
     accountsClient.create(account);
 
@@ -334,6 +339,9 @@ public class AccountsAPITest extends ApiTests {
     assertAccountCreationSuccess(buildAccount().withInstanceId(null));
     assertAccountCreationSuccess(buildAccount().withHoldingsRecordId(null));
     assertAccountCreationSuccess(buildAccount().withMaterialTypeId(null));
+    assertAccountCreationSuccess(buildAccount().withLoanPolicyId(null));
+    assertAccountCreationSuccess(buildAccount().withOverdueFinePolicyId(null));
+    assertAccountCreationSuccess(buildAccount().withLostItemFeePolicyId(null));
   }
 
   @Test
@@ -357,6 +365,9 @@ public class AccountsAPITest extends ApiTests {
     assertAccountCreationFailure(buildAccount().withInstanceId(invalidId));
     assertAccountCreationFailure(buildAccount().withHoldingsRecordId(invalidId));
     assertAccountCreationFailure(buildAccount().withMaterialTypeId(invalidId));
+    assertAccountCreationFailure(buildAccount().withLoanPolicyId(invalidId));
+    assertAccountCreationFailure(buildAccount().withOverdueFinePolicyId(invalidId));
+    assertAccountCreationFailure(buildAccount().withLostItemFeePolicyId(invalidId));
   }
 
   private void assertAccountCreationFailure(Account account) {
@@ -382,8 +393,21 @@ public class AccountsAPITest extends ApiTests {
       .withAmount(new MonetaryValue(new BigDecimal("7.77")))
       .withRemaining(new MonetaryValue(new BigDecimal("3.33")))
       .withPaymentStatus(new PaymentStatus().withName(OUTSTANDING))
-      .withStatus(new Status().withName("Open"));
-
+      .withStatus(new Status().withName("Open"))
+      .withBarcode("barcode")
+      .withCallNumber("call number")
+      .withTitle("title")
+      .withItemStatus(new ItemStatus().withName("Available"))
+      .withMaterialType("Material type")
+      .withMaterialTypeId(randomId())
+      .withLocation("Location")
+      .withDueDate(new Date())
+      .withReturnedDate(new Date())
+      .withLoanId(randomId())
+      .withItemId(randomId())
+      .withLoanPolicyId(randomId())
+      .withOverdueFinePolicyId(randomId())
+      .withLostItemFeePolicyId(randomId());
   }
 
   private JsonObject createAccountJsonObject(String accountID) {

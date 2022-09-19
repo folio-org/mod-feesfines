@@ -14,6 +14,7 @@ import io.vertx.ext.web.client.HttpResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -114,16 +115,32 @@ public class InventoryClient extends OkapiClient {
     return getById("/item-storage/items", id, Item.class);
   }
 
+  public Future<Collection<Item>> getItemsByIds(Collection<String> ids) {
+    return getByIds("/item-storage/items", ids, Item.class, "items");
+  }
+
   public Future<HoldingsRecord> getHoldingById(String id) {
     return getById("/holdings-storage/holdings", id, HoldingsRecord.class);
+  }
+
+  public Future<Collection<HoldingsRecord>> getHoldingsByIds(Collection<String> ids) {
+    return getByIds("/holdings-storage/holdings", ids, HoldingsRecord.class, "holdingsRecords");
   }
 
   public Future<Instance> getInstanceById(String id) {
     return getById("/instance-storage/instances", id, Instance.class);
   }
 
+  public Future<Collection<Instance>> getInstancesByIds(Collection<String> ids) {
+    return getByIds("/instance-storage/instances", ids, Instance.class, "instances");
+  }
+
   public Future<Location> getLocationById(String id) {
     return getById("/locations", id, Location.class);
+  }
+
+  public Future<Collection<Location>> getLocationsByIds(Collection<String> ids) {
+    return getByIds("/locations", ids, Location.class, "locations");
   }
 
   public Future<Institution> getInstitutionById(String id) {
@@ -140,5 +157,9 @@ public class InventoryClient extends OkapiClient {
 
   public Future<ServicePoint> getServicePointById(String id) {
     return getById("/service-points", id, ServicePoint.class);
+  }
+
+  public Future<Collection<ServicePoint>> getServicePointsByIds(Collection<String> ids) {
+    return getByIds("/service-points", ids, ServicePoint.class, "servicepoints");
   }
 }

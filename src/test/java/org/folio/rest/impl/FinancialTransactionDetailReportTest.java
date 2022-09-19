@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.utils.ResourceClients.buildFinancialTransactionsDetailReportClient;
@@ -18,8 +19,10 @@ import static org.folio.test.support.matcher.ReportMatcher.financialTransactions
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.HOLDINGS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.LOANS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_GROUPS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsIterableWithSize.iterableWithSize;
@@ -50,8 +53,10 @@ import org.folio.rest.jaxrs.model.UserGroup;
 import org.folio.rest.utils.ReportResourceClient;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.constant.ServicePath;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
@@ -120,6 +125,9 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   private static final String ZERO_MONETARY = "0.00";
   private static final String ZERO_COUNT = "0";
 
+//  public static final String QUERY_BY_IDS_REGEX = "\\?query=id==\\(.+\\)&limit=\\d+";
+  public static final String QUERY_BY_IDS_REGEX = "\\\\?.*";
+
   private final ReportResourceClient reportClient = buildFinancialTransactionsDetailReportClient();
 
   private Location location;
@@ -135,76 +143,71 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   private Loan loan1;
   private Loan loan2;
 
-  private StubMapping userStubMapping1;
-  private StubMapping userGroupStubMapping1;
+  private StubMapping userStubMapping;
+  private StubMapping userGroupStubMapping;
   private StubMapping itemStubMapping;
   private StubMapping loanStubMapping;
   private StubMapping holdingsStubMapping;
   private StubMapping instanceStubMapping;
   private StubMapping locationStubMapping;
-  private StubMapping servicePoint1StubMapping;
-  private StubMapping servicePoint2StubMapping;
+  private StubMapping servicePointStubMapping;
   private StubMapping loanPolicyStubMapping;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     clearDatabase();
     createLocaleSettingsStub();
 
     loanPolicy = buildLoanPolicy("Loan policy");
-    loanPolicyStubMapping = createStub(ServicePath.LOAN_POLICIES_PATH, loanPolicy,
-      loanPolicy.getId());
+    loanPolicyStubMapping = createStubForCollection(ServicePath.LOAN_POLICIES_PATH,
+      List.of(loanPolicy), "loanPolicies");
+
     overdueFinePolicy = buildOverdueFinePolicy("ofp-1" + randomId());
     createOverdueFinePolicy(overdueFinePolicy);
     lostItemFeePolicy = buildLostItemFeePolicy("lfp-1" + randomId());
     createLostItemFeePolicy(lostItemFeePolicy);
 
     ServicePoint servicePoint1 = buildServicePoint(CREATED_AT_ID_1, CREATED_AT_1);
-    servicePoint1StubMapping = createStub(ServicePath.SERVICE_POINTS_PATH, servicePoint1,
-      servicePoint1.getId());
     ServicePoint servicePoint2 = buildServicePoint(CREATED_AT_ID_2, CREATED_AT_2);
-    servicePoint2StubMapping = createStub(ServicePath.SERVICE_POINTS_PATH, servicePoint2,
-      servicePoint2.getId());
+    servicePointStubMapping = createStubForCollection(ServicePath.SERVICE_POINTS_PATH,
+      List.of(servicePoint1, servicePoint2), "servicepoints");
 
     location = buildLocation("Location");
-    locationStubMapping = createStub(ServicePath.LOCATIONS_PATH, location, location.getId());
+    locationStubMapping = createStubForCollection(ServicePath.LOCATIONS_PATH, List.of(location),
+      "locations");
 
     instance = buildInstance();
+    instanceStubMapping = createStubForCollection(INSTANCES_PATH, List.of(instance), "instances");
+
     holdingsRecord = buildHoldingsRecord(instance);
+    holdingsStubMapping = createStubForCollection(HOLDINGS_PATH, List.of(holdingsRecord), "holdingsRecords");
+
     item1 = buildItem(holdingsRecord, location);
     item2 = buildItem(holdingsRecord, location).withBarcode("item2-barcode");
+    itemStubMapping = createStubForCollection(ServicePath.ITEMS_PATH, List.of(item1, item2), "items");
+
     loan1 = buildLoan(LOAN_DATE_1, DUE_DATE_1, RETURN_DATE_1, item1.getId(), loanPolicy.getId(),
       overdueFinePolicy.getId(), lostItemFeePolicy.getId());
-    loanStubMapping = createStub(ServicePath.LOANS_PATH, loan1, loan1.getId());
     loan2 = buildLoan(LOAN_DATE_2, DUE_DATE_2, RETURN_DATE_2, item2.getId(), loanPolicy.getId(),
       overdueFinePolicy.getId(), lostItemFeePolicy.getId());
-    loanStubMapping = createStub(ServicePath.LOANS_PATH, loan2, loan2.getId());
-
-    itemStubMapping = createStub(ServicePath.ITEMS_PATH, item1, item1.getId());
-    createStub(ServicePath.ITEMS_PATH, item2, item2.getId());
-    holdingsStubMapping = createStub(HOLDINGS_PATH, holdingsRecord, holdingsRecord.getId());
-    instanceStubMapping = createStub(INSTANCES_PATH, instance, instance.getId());
+    loanStubMapping = createStubForCollection(ServicePath.LOANS_PATH, List.of(loan1, loan2), "loans");
 
     UserGroup userGroup1 = EntityBuilder.buildUserGroup().withGroup(USER_GROUP_1);
-    userGroupStubMapping1 = createStub(USERS_GROUPS_PATH, userGroup1, userGroup1.getId());
+    UserGroup userGroup2 = EntityBuilder.buildUserGroup().withGroup(USER_GROUP_2);
+    userGroupStubMapping = createStubForCollection(USERS_GROUPS_PATH,
+      List.of(userGroup1, userGroup2), "usergroups");
 
     user1 = EntityBuilder.buildUser()
       .withId(USER_ID_1)
       .withPatronGroup(userGroup1.getId())
       .withBarcode(USER_BARCODE_1);
-    userStubMapping1 = createStub(USERS_PATH, user1, USER_ID_1);
-
-    UserGroup userGroup2 = EntityBuilder.buildUserGroup().withGroup(USER_GROUP_2);
-    createStub(USERS_GROUPS_PATH, userGroup2, userGroup2.getId());
 
     user2 = EntityBuilder.buildUser()
       .withId(USER_ID_2)
       .withPatronGroup(userGroup2.getId())
       .withBarcode(USER_BARCODE_2);
-    createStub(USERS_PATH, user2, USER_ID_2);
 
-    createStub(USERS_PATH, EntityBuilder.buildUser().withId(SOURCE_ID_1), SOURCE_ID_1);
-    createStub(USERS_PATH, EntityBuilder.buildUser().withId(SOURCE_ID_2), SOURCE_ID_2);
+    userStubMapping = createStubForCollection(USERS_PATH, List.of(user1,user2), "users");
   }
 
   @Test
@@ -538,25 +541,53 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
       ));
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "2020-01-13T01:23:45.000000+0000",
+    "2020-01-13T01:23:45.000000",
+    "2020-01-13T01:23:45+00:00",
+    "2020-01-13T01:23:45.000Z",
+    "2020-01-13T01:23:45Z",
+    "2020-01-13T01:23:45"
+  })
+  void canHandleLoanDateInAnyValidFormat(String loanDate) {
+    Loan loan = buildLoan(loanDate, DUE_DATE_1, RETURN_DATE_1, item1.getId(), loanPolicy.getId(),
+      overdueFinePolicy.getId(), lostItemFeePolicy.getId());
+
+    removeStub(loanStubMapping);
+    loanStubMapping = createStubForCollection(LOANS_PATH, List.of(loan), "loans");
+
+    Account account = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, item1.getId(), loan,
+      OWNER_ID_1, OWNER_1, withTenantTz("2020-01-02 02:00:00"), CREATED_AT_ID_1, SOURCE_1);
+
+    createAction(USER_ID_1, 2, account, withTenantTz("2020-01-03 00:10:00"),
+      PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
+      PAYMENT_TX_INFO, CREATED_AT_ID_1, SOURCE_1);
+
+    requestReport(START_DATE, END_DATE, singletonList(CREATED_AT_ID_1), OWNER_ID_1)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("reportData[0].loanDate", equalTo("1/12/20, 8:23 PM"));
+  }
+
   @Test
   public void validResponseWhenStubsAreMissing() {
     validResponseWithStubsMissing(() -> {
-      removeStub(userStubMapping1);
-      removeStub(userGroupStubMapping1);
+      removeStub(userStubMapping);
+      removeStub(userGroupStubMapping);
       removeStub(itemStubMapping);
       removeStub(loanStubMapping);
       removeStub(holdingsStubMapping);
       removeStub(instanceStubMapping);
       removeStub(locationStubMapping);
-      removeStub(servicePoint1StubMapping);
-      removeStub(servicePoint2StubMapping);
+      removeStub(servicePointStubMapping);
     });
   }
 
   @Test
   public void validResponseWhenUserGroupStubIsMissing() {
     validResponseWithStubsMissing(() -> {
-      removeStub(userGroupStubMapping1);
+      removeStub(userGroupStubMapping);
     });
   }
 
@@ -668,4 +699,5 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     return format("%s, %s %s", user.getPersonal().getLastName(),
       user.getPersonal().getFirstName(), user.getPersonal().getMiddleName());
   }
+
 }

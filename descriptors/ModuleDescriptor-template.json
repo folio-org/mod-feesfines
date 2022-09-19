@@ -8,15 +8,15 @@
     },
     {
       "id": "holdings-storage",
-      "version": "4.2 5.0"
+      "version": "4.2 5.0 6.0"
     },
     {
       "id": "item-storage",
-      "version": "8.4 9.0"
+      "version": "8.4 9.0 10.0"
     },
     {
       "id": "instance-storage",
-      "version": "7.4 8.0"
+      "version": "7.4 8.0 9.0"
     },
     {
       "id": "locations",
@@ -28,7 +28,7 @@
     },
     {
       "id": "users",
-      "version": "15.1"
+      "version": "15.1 16.0"
     },
     {
       "id": "pubsub-event-types",
@@ -50,7 +50,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"17.2",
+      "version":"17.3",
       "handlers":[
         {
           "methods":[
@@ -981,14 +981,23 @@
           "modulePermissions": [
             "configuration.entries.collection.get",
             "inventory-storage.service-points.item.get",
+            "inventory-storage.service-points.collection.get",
             "users.item.get",
+            "users.collection.get",
             "usergroups.item.get",
+            "usergroups.collection.get",
             "inventory-storage.items.item.get",
+            "inventory-storage.items.collection.get",
             "inventory-storage.holdings.item.get",
+            "inventory-storage.holdings.collection.get",
             "inventory-storage.instances.item.get",
+            "inventory-storage.instances.collection.get",
             "inventory-storage.locations.item.get",
+            "inventory-storage.locations.collection.get",
             "circulation-storage.loans.item.get",
-            "circulation-storage.loan-policies.item.get"
+            "circulation-storage.loans.collection.get",
+            "circulation-storage.loan-policies.item.get",
+            "circulation-storage.loan-policies.collection.get"
           ]
         }
       ]

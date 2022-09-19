@@ -5,21 +5,19 @@ import static org.hamcrest.CoreMatchers.is;
 import org.apache.http.HttpStatus;
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.test.support.ApiTests;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
-@RunWith(JUnitParamsRunner.class)
 public class FeeFinesAPITest extends ApiTests {
   private static final String REST_PATH = "/feefines";
 
-  @Before
+  @BeforeEach
   public void setUp() {
     removeAllFromTable(FEEFINES_TABLE);
     removeAllFromTable(OWNERS_TABLE);
@@ -100,8 +98,8 @@ public class FeeFinesAPITest extends ApiTests {
       .contentType(ContentType.JSON);
   }
 
-  @Test
-  @Parameters(source = AutomaticFeeFineType.class)
+  @ParameterizedTest
+  @EnumSource(value = AutomaticFeeFineType.class)
   public void cannotChangeAutomaticFeeFineType(AutomaticFeeFineType automaticFeeFineType) {
     var url = REST_PATH + "/" + automaticFeeFineType.getId();
     var errorMessage = "Attempt to change an automatic fee/fine type";

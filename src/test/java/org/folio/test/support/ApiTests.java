@@ -6,6 +6,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
@@ -20,12 +22,14 @@ import static org.junit.Assert.assertThat;
 
 import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.MediaType;
 
@@ -43,10 +47,9 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
 import org.hamcrest.CoreMatchers;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,6 +64,7 @@ import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class ApiTests {
@@ -73,8 +77,6 @@ public class ApiTests {
   public static final String MODULE_NAME = "mod-feesfines";
   public static final String FEEFINES_TABLE = "feefines";
   public static final String OWNERS_TABLE = "owners";
-
-  @ClassRule
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
 
   protected static Vertx vertx;
@@ -86,9 +88,11 @@ public class ApiTests {
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
 
-  @BeforeClass
-  public static void deployVerticle() throws Exception {
+  @BeforeAll
+  public static void deployVerticle() {
     vertx = Vertx.vertx();
+    okapiDeployment.start();
+    okapiDeployment.setUpMapping();
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
@@ -100,7 +104,7 @@ public class ApiTests {
     get(future);
   }
 
-  @AfterClass
+  @AfterAll
   public static void undeployEnvironment() {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
@@ -110,9 +114,10 @@ public class ApiTests {
     });
 
     get(future);
+    okapiDeployment.resetAll();
   }
 
-  @Before
+  @BeforeEach
   public void setUpMapping() {
     okapiDeployment.setUpMapping();
   }
@@ -269,6 +274,20 @@ public class ApiTests {
     ResponseDefinitionBuilder responseBuilder) {
 
     return createStub(urlPathMatching(regex), responseBuilder);
+  }
+
+  public <T> StubMapping createStubForCollection(String url, Collection<T> returnObjects,
+    String collectionName) {
+
+    JsonArray results = returnObjects.stream()
+      .map(JsonObject::mapFrom)
+      .collect(collectingAndThen(toList(), JsonArray::new));
+
+    JsonObject response = new JsonObject()
+      .put(collectionName, results)
+      .put("totalRecords", returnObjects.stream());
+
+    return createStubForPathMatching(url, aResponse().withBody(response.encodePrettily()));
   }
 
   private StubMapping createStub(UrlPathPattern urlPathPattern,
