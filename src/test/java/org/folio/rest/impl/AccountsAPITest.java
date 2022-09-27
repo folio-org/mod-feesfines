@@ -211,11 +211,13 @@ public class AccountsAPITest extends ApiTests {
   public void eventNotPublishedWhenFeeFineIsClosedWithRemainingAmount() {
     final String accountId = randomId();
     final String loanId = UUID.randomUUID().toString();
+    final String processId = UUID.randomUUID().toString();
 
     final JsonObject account = createAccountJsonObject(accountId)
       .put("loanId", loanId)
       .put("remaining", 90.00)
-      .put("status", createNamedObject("Open"));
+      .put("status", createNamedObject("Open"))
+      .put("processId", processId);
 
     accountsClient.create(account);
 
@@ -229,7 +231,8 @@ public class AccountsAPITest extends ApiTests {
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
       hasJsonPath("status.name", is("Closed")),
       hasJsonPath("paymentStatus.name", is(PAID_PARTIALLY.value())),
-      hasJsonPath("remaining", is(0.1))
+      hasJsonPath("remaining", is(0.1)),
+      hasJsonPath("processId", is(processId))
     ));
     assertThat(getLastFeeFineClosedEvent(), nullValue());
   }
@@ -259,10 +262,12 @@ public class AccountsAPITest extends ApiTests {
   @Test
   public void eventNotPublishedWhenFeeFineIsOpenButNoRemainingAmount() {
     final String accountId = randomId();
+    final String processId = randomId();
     final JsonObject account = createAccountJsonObject(accountId)
       .put("loanId", UUID.randomUUID().toString())
       .put("remaining", 90.00)
-      .put("status", createNamedObject("Open"));
+      .put("status", createNamedObject("Open"))
+      .put("processId", processId);
 
     accountsClient.create(account);
 
@@ -276,8 +281,8 @@ public class AccountsAPITest extends ApiTests {
     assertThat(accountsClient.getById(accountId).getBody().asString(), allOf(
       hasJsonPath("status.name", is("Open")),
       hasJsonPath("paymentStatus.name", is(PAID_FULLY.value())),
-      hasJsonPath("remaining", is(0.0))
-    ));
+      hasJsonPath("remaining", is(0.0)),
+      hasJsonPath("processId", is(processId))));
     assertThat(getLastFeeFineClosedEvent(), nullValue());
   }
 
@@ -343,6 +348,7 @@ public class AccountsAPITest extends ApiTests {
     assertAccountCreationFailure(buildAccount().withLoanPolicyId(invalidId));
     assertAccountCreationFailure(buildAccount().withOverdueFinePolicyId(invalidId));
     assertAccountCreationFailure(buildAccount().withLostItemFeePolicyId(invalidId));
+    assertAccountCreationFailure(buildAccount().withProcessId(invalidId));
   }
 
   private void assertAccountCreationFailure(Account account) {
@@ -382,7 +388,8 @@ public class AccountsAPITest extends ApiTests {
       .withItemId(randomId())
       .withLoanPolicyId(randomId())
       .withOverdueFinePolicyId(randomId())
-      .withLostItemFeePolicyId(randomId());
+      .withLostItemFeePolicyId(randomId())
+      .withProcessId(randomId());
   }
 
   private JsonObject createAccountJsonObject(String accountID) {
