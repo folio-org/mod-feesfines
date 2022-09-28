@@ -34,5 +34,6 @@
   "id": "0bab56e5-1ab6-4ac2-afdf-8b2df0434379",
   "loanPolicyId": "f5b3ea0e-7c62-4f73-bbe5-ea8eae37c615",
   "overdueFinePolicyId": "f6f6aa71-33de-4af8-a066-2d29756f2e26",
-  "lostItemFeePolicyId": "952967a2-ce04-4eb8-a47c-e003ca6d4c31"
+  "lostItemFeePolicyId": "952967a2-ce04-4eb8-a47c-e003ca6d4c31",
+  "processId": "2294ddf3-9a30-4efd-a0a4-b2743915944f"
 }
