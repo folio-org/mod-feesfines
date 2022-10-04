@@ -133,7 +133,7 @@ public class LostItemFeePoliciesAPITest extends ApiTests {
       .then()
       .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR)
       .body(
-        containsString("password authentication failed for user \\\"test_breaker_mod_feesfines\\\""));
+        containsString("password authentication failed for user"));
   }
 
   @Test
