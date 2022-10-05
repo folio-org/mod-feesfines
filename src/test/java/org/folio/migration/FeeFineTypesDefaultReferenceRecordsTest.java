@@ -20,8 +20,8 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
   public void lostItemFeeForActualCostIsAddedWhenMigratingFrom15_9To15_10() {
     feeFinesClient.delete(LOST_FEE_FOR_ACTUAL_COST_ID);
 
-    // module was enabled in parent class with moduleTo=current_version
-    // we must bring module version back to 15.9.0 first to rerun the migration script (see RMB-937)
+    // module was enabled in @BeforeAll with moduleTo=current_version
+    // we must downgrade to 15.9.0 first if we want to rerun the migration script (see RMB-937)
     createTenant(getModuleVersion(), "15.9.0");
     createTenant("15.9.0", "15.10.0");
 
