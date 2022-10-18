@@ -1,6 +1,9 @@
-## 18.1.0 IN-PROGRESS
-
-* Supports users interface versions 15.1 16.0 (MODFEE-265)
+## 18.1.0 2022-10-18
+* Upgrade to RMB 35.0.0 and Vertx 4.3.3 (MODFEE-281)
+* Add processId field to account schema (MODFEE-275)
+* Add batching for Financial Transactions Report (MODFEE-264)
+* Supports instance-storage 9.0, holdings-storage 6.0, item-storage 10.0 interface versions (MODFEE-270)
+* Add support for different loan date formats to Financial Transactions Report (MODFEE-266)
 
 ## 18.0.0 2022-06-27
 * Make `paymentStatus` property in accountdata.json required and also make it an enum (MODFEE-220)
