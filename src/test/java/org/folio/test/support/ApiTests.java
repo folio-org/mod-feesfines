@@ -29,8 +29,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -76,6 +74,7 @@ public class ApiTests {
   public static final String OKAPI_TOKEN = generateOkapiToken();
   public static final String MODULE_NAME = "mod-feesfines";
   public static final String FEEFINES_TABLE = "feefines";
+  public static final String LOST_FEE_FOR_ACTUAL_COST_ID = "73785370-d3bd-4d92-942d-ae2268e02ded";
   public static final String OWNERS_TABLE = "owners";
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
 
@@ -166,8 +165,9 @@ public class ApiTests {
     Criterion criterion = new Criterion();
     if (FEEFINES_TABLE.equals(tableName)) {
       for (AutomaticFeeFineType type : AutomaticFeeFineType.values()) {
-        criterion.addCriterion(createAutomaticFeeFineExclusionCriteria(type), "AND");
+        criterion.addCriterion(createFeeFineExclusionCriteria(type.getId()), "AND");
       }
+      criterion.addCriterion(createFeeFineExclusionCriteria(LOST_FEE_FOR_ACTUAL_COST_ID), "AND");
     }
     PostgresClient.getInstance(vertx, TENANT_NAME)
       .delete(tableName, criterion, result -> future.complete(null));
@@ -175,11 +175,11 @@ public class ApiTests {
     get(future);
   }
 
-  private Criteria createAutomaticFeeFineExclusionCriteria(AutomaticFeeFineType automaticFeeFineType) {
+  private static Criteria createFeeFineExclusionCriteria(String id) {
     return new Criteria()
-      .addField("id")
+      .addField("'id'")
       .setOperation("!=")
-      .setVal(automaticFeeFineType.getId());
+      .setVal(id);
   }
 
   private static String generateOkapiToken() {
