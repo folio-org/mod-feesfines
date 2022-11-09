@@ -61,6 +61,7 @@ import io.restassured.http.ContentType;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -74,7 +75,6 @@ public class ApiTests {
   public static final String OKAPI_TOKEN = generateOkapiToken();
   public static final String MODULE_NAME = "mod-feesfines";
   public static final String FEEFINES_TABLE = "feefines";
-  public static final String LOST_FEE_FOR_ACTUAL_COST_ID = "73785370-d3bd-4d92-942d-ae2268e02ded";
   public static final String OWNERS_TABLE = "owners";
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
 
@@ -167,7 +167,6 @@ public class ApiTests {
       for (AutomaticFeeFineType type : AutomaticFeeFineType.values()) {
         criterion.addCriterion(createFeeFineExclusionCriteria(type.getId()), "AND");
       }
-      criterion.addCriterion(createFeeFineExclusionCriteria(LOST_FEE_FOR_ACTUAL_COST_ID), "AND");
     }
     PostgresClient.getInstance(vertx, TENANT_NAME)
       .delete(tableName, criterion, result -> future.complete(null));
@@ -194,6 +193,14 @@ public class ApiTests {
 
   protected static String randomId() {
     return UUID.randomUUID().toString();
+  }
+
+  protected static <T> T get(Future<T> future) {
+    try {
+      return future.toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   protected static <T> T get(CompletableFuture<T> future) {
