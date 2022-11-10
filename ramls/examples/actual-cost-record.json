@@ -1,0 +1,64 @@
+{
+  "id": "89105c06-dbdb-4aa0-9695-d4d19c733270",
+  "lossType": "Aged to lost",
+  "lossDate": "2022-01-01T22:25:37.000+00:00",
+  "expirationDate": "2022-02-01T23:59:59.000+00:00",
+  "user": {
+    "id": "88805c06-dbdb-4aa0-9695-d4d19c733221",
+    "barcode": "777",
+    "firstName": "John",
+    "lastName": "Doe",
+    "middleName": "Robert",
+    "patronGroupId": "4bb563d9-3f9d-4e1e-8d1d-04e75666d68f",
+    "patronGroup": "librarian"
+  },
+  "loan": {
+    "id": "65de6432-be11-48ba-9686-a65101634040"
+  },
+  "item": {
+    "id": "b7bee7e9-f41d-4136-b7eb-af00c2f6d274",
+    "barcode": "123456",
+    "materialTypeId": "57a578ab-4dde-4f75-909c-edc74772d09b",
+    "materialType": "book",
+    "permanentLocationId": "9da9dcdd-474f-4e16-bb83-21e64e5eb288",
+    "permanentLocation": "Main library",
+    "loanTypeId": "e1e17294-dd52-44ae-8a94-b96aa08ef3b5",
+    "loanType": "Can circulate",
+    "holdingsRecordId": "68190dd4-9a88-4dbe-af1a-9048be222ac8",
+    "effectiveCallNumberComponents": {
+      "callNumber": "TX809.M17J66",
+      "prefix": "f",
+      "suffix": "1993"
+    },
+    "volume": "v. 2",
+    "enumeration": "v.73:no.1-6",
+    "chronology": "1985:July-Dec.",
+    "copyNumber": "c.1"
+  },
+  "instance": {
+    "id": "9dfe10e5-6db9-4f80-b574-7edc0f960288",
+    "title": "Nod",
+    "identifiers": [{
+      "value": "9781466636897",
+      "identifierType": "ISBN",
+      "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+    }
+    ]
+  },
+  "feeFine": {
+    "accountId": "306339a5-539b-4652-be7c-ab041a286c8c",
+    "ownerId": "a2e1729a-2593-4a2a-8069-2fee39d9ae31",
+    "owner": "Default owner",
+    "typeId": "92ef9706-f1af-430d-9edd-78035689efa2",
+    "type": "Overdue fine"
+  },
+  "status": "Billed",
+  "additionalInformationForStaff": "Additional information for staff",
+  "additionalInformationForPatron": "Additional information for a patron",
+  "metadata": {
+    "createdDate": "2022-09-19T14:09:41.284+00:00",
+    "createdByUserId": "5bcadcf1-2608-4cd3-b4e2-947ffe58d15f",
+    "updatedDate": "2022-09-19T14:09:41.284+00:00",
+    "updatedByUserId": "5bcadcf1-2608-4cd3-b4e2-947ffe58d15f"
+  }
+}

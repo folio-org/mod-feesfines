@@ -1,0 +1,24 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "Do not bill actual cost of lost item schema",
+  "description": "Actual cost record for lost item fee should not be billed (cancelled)",
+  "type": "object",
+  "properties": {
+    "actualCostRecordId": {
+      "description": "Actual Cost Record ID",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "additionalInfoForStaff": {
+      "description": "Additional information for staff",
+      "type": "string"
+    },
+    "additionalInfoForPatron": {
+      "description": "Additional information for a patron",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "actualCostRecordId"
+   ]
+}

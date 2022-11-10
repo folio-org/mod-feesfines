@@ -74,6 +74,14 @@ public class OkapiClient {
       .putHeader(OKAPI_HEADER_TOKEN, token);
   }
 
+  HttpRequest<Buffer> okapiPutAbs(String path, String id) {
+    return webClient.putAbs(okapiUrl + path + "/" + id)
+      .putHeader(ACCEPT, APPLICATION_JSON)
+      .putHeader(OKAPI_HEADER_TENANT, tenant)
+      .putHeader(OKAPI_URL_HEADER, okapiUrl)
+      .putHeader(OKAPI_HEADER_TOKEN, token);
+  }
+
   public <T> Future<T> getById(String resourcePath, String id, Class<T> objectType) {
     Optional<String> validationError = validateGetByIdArguments(resourcePath, id, objectType);
     if (validationError.isPresent()) {

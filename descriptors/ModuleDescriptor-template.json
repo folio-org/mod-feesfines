@@ -50,7 +50,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version":"17.4",
+      "version":"17.5",
       "handlers":[
         {
           "methods":[
@@ -906,6 +906,18 @@
           "pathPattern":"/manual-block-templates/{id}",
           "permissionsRequired":[
             "manual-block-templates.item.delete"
+          ]
+        },
+        {
+          "methods":[
+            "POST"
+          ],
+          "pathPattern":"/do-not-bill-actual-cost-lost-item-fee",
+          "permissionsRequired":[
+            "do-not-bill-actual-cost-lost-item-fee.post"
+          ],
+          "modulePermissions": [
+            "actual-cost-record-storage.actual-cost-records.item.put"
           ]
         }
       ]

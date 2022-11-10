@@ -270,6 +270,10 @@ public class ApiTests {
     return createStub(urlPathEqualTo(url), responseBuilder);
   }
 
+  protected StubMapping createStubWith404Status(String url) {
+    return createStub(url, aResponse().withStatus(404));
+  }
+
   private StubMapping createStubForPathMatching(String regex,
     ResponseDefinitionBuilder responseBuilder) {
 
