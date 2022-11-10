@@ -16,11 +16,11 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
 
-public class DoNotBillActualCostLostItemFeeAPITest extends ApiTests {
+class DoNotBillActualCostLostItemFeeAPITest extends ApiTests {
   private static final String REST_PATH = "/do-not-bill-actual-cost-lost-item-fee";
 
   @Test
-  public void canPostDoNotBillActualCostEntity() {
+  void canPostDoNotBillActualCostEntity() {
     String actualCostRecordId = randomId();
 
     String doNotBilActualCostJson = new JsonObject()
@@ -48,7 +48,7 @@ public class DoNotBillActualCostLostItemFeeAPITest extends ApiTests {
   }
 
   @Test
-  public void postDoNotBillActualCostEntityShouldFailIfRecordIsNotFound() {
+  void postDoNotBillActualCostEntityShouldFailIfRecordIsNotFound() {
     String actualCostRecordId = randomId();
 
     String doNotBilActualCostJson = new JsonObject()
