@@ -1,12 +1,16 @@
 package org.folio.rest.service;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.String.format;
+import static org.folio.rest.jaxrs.model.ActualCostRecord.Status.CANCELLED;
 
 import java.util.Map;
 
-import org.folio.rest.client.ActualCostRecordClient;
+import org.folio.rest.client.CirculationStorageClient;
+import org.folio.rest.exception.FailedValidationException;
+import org.folio.rest.jaxrs.model.ActualCostFeeFineCancel;
 import org.folio.rest.jaxrs.model.ActualCostRecord;
-import org.folio.rest.jaxrs.model.DoNotBillActualCost;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -14,26 +18,35 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 
 public class ActualCostRecordService {
-  private final ActualCostRecordClient actualCostRecordClient;
+  private final CirculationStorageClient circulationStorageClient;
 
   public ActualCostRecordService(Vertx vertx, Map<String, String> okapiHeaders) {
-    this.actualCostRecordClient = new ActualCostRecordClient(vertx, okapiHeaders);
+    this.circulationStorageClient = new CirculationStorageClient(vertx, okapiHeaders);
   }
 
-  public Future<HttpResponse<Buffer>> cancelActualCostRecord(DoNotBillActualCost doNotBillActualCostEntity) {
-    return actualCostRecordClient.fetchActualCostRecordById(doNotBillActualCostEntity.getActualCostRecordId())
-      .compose(actualCostRecord -> updateActualCostRecordWithCancelledStatus(
-        actualCostRecord, doNotBillActualCostEntity))
-      .compose(actualCostRecordClient::updateActualCostRecord)
-      .recover(Future::failedFuture);
+  public Future<HttpResponse<Buffer>> cancelActualCostRecord(ActualCostFeeFineCancel entity) {
+    return circulationStorageClient.fetchActualCostRecordById(entity.getActualCostRecordId())
+      .compose(this::checkIfRecordAlreadyCancelled)
+      .map(actualCostRecord -> updateActualCostRecord(actualCostRecord, entity, CANCELLED))
+      .compose(circulationStorageClient::updateActualCostRecord);
   }
 
-  private Future<ActualCostRecord> updateActualCostRecordWithCancelledStatus(
-    ActualCostRecord actualCostRecord, DoNotBillActualCost doNotBillActualCostEntity) {
+  private Future<ActualCostRecord> checkIfRecordAlreadyCancelled(
+    ActualCostRecord actualCostRecord) {
 
-    return succeededFuture(actualCostRecord
-      .withStatus(ActualCostRecord.Status.CANCELLED)
-      .withAdditionalInfoForPatron(doNotBillActualCostEntity.getAdditionalInfoForPatron())
-      .withAdditionalInfoForStaff(doNotBillActualCostEntity.getAdditionalInfoForStaff()));
+    if (actualCostRecord.getStatus() == CANCELLED) {
+      return failedFuture(new FailedValidationException(format(
+        "Actual cost record %s is already cancelled", actualCostRecord.getId())));
+    }
+    return succeededFuture(actualCostRecord);
+  }
+
+  private ActualCostRecord updateActualCostRecord(ActualCostRecord actualCostRecord,
+    ActualCostFeeFineCancel actualCostFeeFineCancel, ActualCostRecord.Status status) {
+
+    return actualCostRecord
+      .withStatus(status)
+      .withAdditionalInfoForPatron(actualCostFeeFineCancel.getAdditionalInfoForPatron())
+      .withAdditionalInfoForStaff(actualCostFeeFineCancel.getAdditionalInfoForStaff());
   }
 }

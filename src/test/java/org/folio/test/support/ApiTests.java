@@ -271,7 +271,11 @@ public class ApiTests {
   }
 
   protected StubMapping createStubWith404Status(String url) {
-    return createStub(url, aResponse().withStatus(404));
+    return createStub(urlPathEqualTo(url), aResponse().withStatus(404));
+  }
+
+  protected StubMapping createStubWith204StatusForPut(String url) {
+    return createStubForPut(urlPathEqualTo(url), aResponse().withStatus(204));
   }
 
   private StubMapping createStubForPathMatching(String regex,
@@ -298,6 +302,17 @@ public class ApiTests {
     ResponseDefinitionBuilder responseBuilder) {
 
     return getOkapi().stubFor(WireMock.get(urlPathPattern)
+      .withHeader(ACCEPT, matching(APPLICATION_JSON))
+      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
+      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
+      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
+      .willReturn(responseBuilder));
+  }
+
+  public StubMapping createStubForPut(UrlPathPattern urlPathPattern,
+    ResponseDefinitionBuilder responseBuilder) {
+
+    return getOkapi().stubFor(WireMock.put(urlPathPattern)
       .withHeader(ACCEPT, matching(APPLICATION_JSON))
       .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
       .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))

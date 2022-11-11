@@ -16,11 +16,12 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
 
-class DoNotBillActualCostLostItemFeeAPITest extends ApiTests {
-  private static final String REST_PATH = "/do-not-bill-actual-cost-lost-item-fee";
+class ActualCostFeeFineAPITest extends ApiTests {
+  private static final String ACTUAL_COST_CANCEL_PATH = "/actual-cost-fee-fine/cancel";
+  public static final String ACTUAL_COST_RECORDS_PATH = "/actual-cost-record-storage/actual-cost-records/%s";
 
   @Test
-  void canPostDoNotBillActualCostEntity() {
+  void canPostActualCostCancelEntity() {
     String actualCostRecordId = randomId();
 
     String doNotBilActualCostJson = new JsonObject()
@@ -35,6 +36,7 @@ class DoNotBillActualCostLostItemFeeAPITest extends ApiTests {
 
     createStub(format("/actual-cost-record-storage/actual-cost-records/%s", actualCostRecordId),
       actualCostRecord);
+    createStubWith204StatusForPut(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId));
 
     post(doNotBilActualCostJson)
       .then()
@@ -48,7 +50,7 @@ class DoNotBillActualCostLostItemFeeAPITest extends ApiTests {
   }
 
   @Test
-  void postDoNotBillActualCostEntityShouldFailIfRecordIsNotFound() {
+  void postActualCostCancelEntityShouldFailIfRecordIsNotFound() {
     String actualCostRecordId = randomId();
 
     String doNotBilActualCostJson = new JsonObject()
@@ -57,15 +59,14 @@ class DoNotBillActualCostLostItemFeeAPITest extends ApiTests {
       .put("additionalInfoForPatron", "Test info for patron")
       .encodePrettily();
 
-    createStubWith404Status(format("/actual-cost-record-storage/actual-cost-records/%s",
-      actualCostRecordId));
+    createStubWith404Status(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId));
 
     post(doNotBilActualCostJson)
       .then()
-      .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+      .statusCode(HttpStatus.SC_NOT_FOUND);
   }
 
   private Response post(String entity) {
-    return client.post(REST_PATH, entity);
+    return client.post(ACTUAL_COST_CANCEL_PATH, entity);
   }
 }

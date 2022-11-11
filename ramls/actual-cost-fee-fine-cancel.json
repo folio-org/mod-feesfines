@@ -1,7 +1,7 @@
 {
   "$schema" : "http://json-schema.org/draft-04/schema#",
-  "title": "Do not bill actual cost of lost item schema",
-  "description": "Actual cost record for lost item fee should not be billed (cancelled)",
+  "title": "Actual cost fee fine cancel schema",
+  "description": "Actual cost record of lost item fee should be cancelled",
   "type": "object",
   "properties": {
     "actualCostRecordId": {
