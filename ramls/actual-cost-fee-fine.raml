@@ -5,7 +5,7 @@ baseUri: http://github.com/org/folio/mod-feesfines
 
 documentation:
   - title: Actual Cost Fee Fine API
-    content: This documents the API calls to not bill actual cost
+    content: This documents the Actual Cost Fee Fine API
 
 types:
   actualCostFeeFineCancel: !include actual-cost-fee-fine-cancel.json
@@ -21,7 +21,7 @@ traits:
   /cancel:
     post:
       is: [validate]
-      description: "Return data for a refund report"
+      description: "Cancel actual cost record"
       body:
         application/json:
           schema: actualCostFeeFineCancel
@@ -30,8 +30,8 @@ traits:
         201:
           body:
             application/json:
-              schema: actualCostFeeFineCancel
-              example: !include examples/actual-cost-fee-fine-cancel.sample
+              schema: actualCostRecord
+              example: !include examples/actual-cost-record.sample
         404:
           description: "Actual cost record was not found"
           body:

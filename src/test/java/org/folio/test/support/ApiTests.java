@@ -29,7 +29,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.core.MediaType;
 
@@ -53,6 +52,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
@@ -270,14 +270,6 @@ public class ApiTests {
     return createStub(urlPathEqualTo(url), responseBuilder);
   }
 
-  protected StubMapping createStubWith404Status(String url) {
-    return createStub(urlPathEqualTo(url), aResponse().withStatus(404));
-  }
-
-  protected StubMapping createStubWith204StatusForPut(String url) {
-    return createStubForPut(urlPathEqualTo(url), aResponse().withStatus(204));
-  }
-
   private StubMapping createStubForPathMatching(String regex,
     ResponseDefinitionBuilder responseBuilder) {
 
@@ -301,23 +293,23 @@ public class ApiTests {
   private StubMapping createStub(UrlPathPattern urlPathPattern,
     ResponseDefinitionBuilder responseBuilder) {
 
-    return getOkapi().stubFor(WireMock.get(urlPathPattern)
-      .withHeader(ACCEPT, matching(APPLICATION_JSON))
-      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
-      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
-      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
+    return getOkapi().stubFor(fillHeader(WireMock.get(urlPathPattern))
       .willReturn(responseBuilder));
   }
 
-  public StubMapping createStubForPut(UrlPathPattern urlPathPattern,
+  public StubMapping createStub(MappingBuilder mappingBuilder,
     ResponseDefinitionBuilder responseBuilder) {
 
-    return getOkapi().stubFor(WireMock.put(urlPathPattern)
-      .withHeader(ACCEPT, matching(APPLICATION_JSON))
-      .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
-      .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
-      .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()))
+    return getOkapi().stubFor(fillHeader(mappingBuilder)
       .willReturn(responseBuilder));
+  }
+
+  private MappingBuilder fillHeader(MappingBuilder mappingBuilder) {
+      return mappingBuilder
+        .withHeader(ACCEPT, matching(APPLICATION_JSON))
+        .withHeader(OKAPI_HEADER_TENANT, matching(TENANT_NAME))
+        .withHeader(OKAPI_HEADER_TOKEN, matching(OKAPI_TOKEN))
+        .withHeader(OKAPI_URL_HEADER, matching(getOkapiUrl()));
   }
 
   public void removeStub(StubMapping stubMapping) {

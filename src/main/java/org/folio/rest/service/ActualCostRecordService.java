@@ -24,7 +24,7 @@ public class ActualCostRecordService {
     this.circulationStorageClient = new CirculationStorageClient(vertx, okapiHeaders);
   }
 
-  public Future<HttpResponse<Buffer>> cancelActualCostRecord(ActualCostFeeFineCancel entity) {
+  public Future<ActualCostRecord> cancelActualCostRecord(ActualCostFeeFineCancel entity) {
     return circulationStorageClient.fetchActualCostRecordById(entity.getActualCostRecordId())
       .compose(this::checkIfRecordAlreadyCancelled)
       .map(actualCostRecord -> updateActualCostRecord(actualCostRecord, entity, CANCELLED))
@@ -34,10 +34,18 @@ public class ActualCostRecordService {
   private Future<ActualCostRecord> checkIfRecordAlreadyCancelled(
     ActualCostRecord actualCostRecord) {
 
-    if (actualCostRecord.getStatus() == CANCELLED) {
+    return checkIfRecordAlreadyProcessed(actualCostRecord, CANCELLED);
+  }
+
+  private Future<ActualCostRecord> checkIfRecordAlreadyProcessed(
+    ActualCostRecord actualCostRecord, ActualCostRecord.Status status) {
+
+    if (actualCostRecord.getStatus() == status) {
       return failedFuture(new FailedValidationException(format(
-        "Actual cost record %s is already cancelled", actualCostRecord.getId())));
+        "Actual cost record %s is already %s}", actualCostRecord.getId(),
+        actualCostRecord.getStatus())));
     }
+
     return succeededFuture(actualCostRecord);
   }
 

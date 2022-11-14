@@ -1,9 +1,12 @@
 package org.folio.rest.impl;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
 
 import java.util.List;
 
@@ -11,6 +14,8 @@ import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.test.support.ApiTests;
 import org.junit.jupiter.api.Test;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -24,7 +29,7 @@ class ActualCostFeeFineAPITest extends ApiTests {
   void canPostActualCostCancelEntity() {
     String actualCostRecordId = randomId();
 
-    String doNotBilActualCostJson = new JsonObject()
+    String actualCostFeeFineCancel = new JsonObject()
       .put("actualCostRecordId", actualCostRecordId)
       .put("additionalInfoForStaff", "Test info for staff")
       .put("additionalInfoForPatron", "Test info for patron")
@@ -34,39 +39,58 @@ class ActualCostFeeFineAPITest extends ApiTests {
       .withId(actualCostRecordId)
       .withStatus(ActualCostRecord.Status.OPEN);
 
-    createStub(format("/actual-cost-record-storage/actual-cost-records/%s", actualCostRecordId),
-      actualCostRecord);
-    createStubWith204StatusForPut(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId));
+    createStub(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId), actualCostRecord);
+    createStub(WireMock.put(urlPathEqualTo(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId))),
+      aResponse().withStatus(HttpStatus.SC_NO_CONTENT));
 
-    post(doNotBilActualCostJson)
+    postActualCostCancel(actualCostFeeFineCancel)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
       .contentType(ContentType.JSON)
       .body(allOf(List.of(
-        hasJsonPath("actualCostRecordId", is(actualCostRecordId)),
+        hasJsonPath("id", is(actualCostRecordId)),
         hasJsonPath("additionalInfoForStaff", is("Test info for staff")),
         hasJsonPath("additionalInfoForPatron", is("Test info for patron"))
       )));
   }
 
   @Test
-  void postActualCostCancelEntityShouldFailIfRecordIsNotFound() {
+  void postActualCostCancelShouldFailIfRecordIsNotFound() {
     String actualCostRecordId = randomId();
-
-    String doNotBilActualCostJson = new JsonObject()
+    String actualCostCancelEntity = new JsonObject()
       .put("actualCostRecordId", actualCostRecordId)
       .put("additionalInfoForStaff", "Test info for staff")
       .put("additionalInfoForPatron", "Test info for patron")
       .encodePrettily();
+    createStub(WireMock.get(urlPathEqualTo(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId))),
+      aResponse().withStatus(HttpStatus.SC_NOT_FOUND));
 
-    createStubWith404Status(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId));
-
-    post(doNotBilActualCostJson)
+    postActualCostCancel(actualCostCancelEntity)
       .then()
-      .statusCode(HttpStatus.SC_NOT_FOUND);
+      .statusCode(HttpStatus.SC_NOT_FOUND)
+      .body(startsWith(format("Actual cost record %s was not found", actualCostRecordId)));
   }
 
-  private Response post(String entity) {
+  @Test
+  void postActualCostCancelShouldFailIfRecordAlreadyCancelled() {
+    String actualCostRecordId = randomId();
+    String actualCostCancelEntity = new JsonObject()
+      .put("actualCostRecordId", actualCostRecordId)
+      .put("additionalInfoForStaff", "Test info for staff")
+      .put("additionalInfoForPatron", "Test info for patron")
+      .encodePrettily();
+    ActualCostRecord actualCostRecord = new ActualCostRecord()
+      .withId(actualCostRecordId)
+      .withStatus(ActualCostRecord.Status.CANCELLED);
+    createStub(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId), actualCostRecord);
+
+    postActualCostCancel(actualCostCancelEntity)
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .body(startsWith(format("Actual cost record %s is already Cancelled", actualCostRecordId)));
+  }
+
+  private Response postActualCostCancel(String entity) {
     return client.post(ACTUAL_COST_CANCEL_PATH, entity);
   }
 }

@@ -1,22 +1,29 @@
 package org.folio.rest.client;
 
-import static org.folio.HttpStatus.HTTP_NO_CONTENT;
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
+import static java.lang.String.format;
 
 import java.util.Collection;
 import java.util.Map;
 
+import org.folio.rest.exception.http.HttpNotFoundException;
+import org.folio.rest.exception.http.HttpPutException;
 import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LoanPolicy;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.HttpResponse;
 
 public class CirculationStorageClient extends OkapiClient {
-  private static final String ACTUAL_COST_RECORD_STORAGE =
+  private static final String ACTUAL_COST_RECORD_STORAGE_URL =
     "/actual-cost-record-storage/actual-cost-records";
 
   public CirculationStorageClient(Vertx vertx, Map<String, String> okapiHeaders) {
@@ -40,12 +47,34 @@ public class CirculationStorageClient extends OkapiClient {
   }
 
   public Future<ActualCostRecord> fetchActualCostRecordById(String actualCostRecordId) {
-    return getById(ACTUAL_COST_RECORD_STORAGE, actualCostRecordId,
-      org.folio.rest.jaxrs.model.ActualCostRecord.class);
+    return getById(ACTUAL_COST_RECORD_STORAGE_URL, actualCostRecordId, ActualCostRecord.class);
   }
 
-  public Future<HttpResponse<Buffer>> updateActualCostRecord(ActualCostRecord actualCostRecord) {
-    return okapiPutAbs(ACTUAL_COST_RECORD_STORAGE, actualCostRecord.getId())
-      .sendJson(actualCostRecord);
+  public Future<ActualCostRecord> updateActualCostRecord(ActualCostRecord actualCostRecord) {
+    Promise<HttpResponse<Buffer>> promise = Promise.promise();
+    okapiPutAbs(ACTUAL_COST_RECORD_STORAGE_URL, actualCostRecord.getId())
+      .sendJson(actualCostRecord, promise);
+
+    return promise.future().compose(response -> {
+      int responseStatus = response.statusCode();
+      if (responseStatus != 204) {
+        log.error("Failed to update record with ID {}. Response status code: {}",
+          actualCostRecord.getId(), responseStatus);
+        if (responseStatus == 404) {
+          return failedFuture(new HttpNotFoundException(HttpMethod.PUT, ACTUAL_COST_RECORD_STORAGE_URL,
+            response));
+        }
+        return failedFuture(new HttpPutException(ACTUAL_COST_RECORD_STORAGE_URL, response));
+      }
+      return succeededFuture(actualCostRecord);
+//      try {
+//        return succeededFuture(objectMapper.readValue(response.bodyAsString(), ActualCostRecord.class));
+//      } catch (JsonProcessingException e) {
+//        final String errorMessage = format("Failed to parse response from %s. Response body: %s",
+//          ACTUAL_COST_RECORD_STORAGE_URL, response.bodyAsString());
+//        log.error(errorMessage);
+//        return failedFuture(errorMessage);
+//      }
+    });
   }
 }

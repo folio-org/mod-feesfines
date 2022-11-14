@@ -912,9 +912,9 @@
           "methods":[
             "POST"
           ],
-          "pathPattern":"/do-not-bill-actual-cost-lost-item-fee",
+          "pathPattern":"/actual-cost-fee-fine/cancel",
           "permissionsRequired":[
-            "do-not-bill-actual-cost-lost-item-fee.post"
+            "actual-cost-fee-fine-cancel.post"
           ],
           "modulePermissions": [
             "actual-cost-record-storage.actual-cost-records.item.put"

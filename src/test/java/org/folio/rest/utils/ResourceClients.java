@@ -122,10 +122,6 @@ public final class ResourceClients {
     return new ReportResourceClient("/feefine-reports/financial-transactions-detail");
   }
 
-  public static ResourceClient buildDoNotBillActualCostLostItemFeeClient() {
-    return new ResourceClient("/do-not-bill-actual-cost-lost-item-fee");
-  }
-
   public static ResourceClient tenantClient() {
     return new ResourceClient("/_/tenant");
   }
