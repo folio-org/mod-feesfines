@@ -55,7 +55,7 @@ class ActualCostFeeFineAPITest extends ApiTests {
   }
 
   @Test
-  void postActualCostCancelShouldFailIfRecordIsNotFound() {
+  void postActualCostCancelShouldFailIfRecordIsNotFoundOnRetrieve() {
     String actualCostRecordId = randomId();
     String actualCostCancelEntity = new JsonObject()
       .put("actualCostRecordId", actualCostRecordId)
@@ -63,6 +63,28 @@ class ActualCostFeeFineAPITest extends ApiTests {
       .put("additionalInfoForPatron", "Test info for patron")
       .encodePrettily();
     createStub(WireMock.get(urlPathEqualTo(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId))),
+      aResponse().withStatus(HttpStatus.SC_NOT_FOUND));
+
+    postActualCostCancel(actualCostCancelEntity)
+      .then()
+      .statusCode(HttpStatus.SC_NOT_FOUND)
+      .body(startsWith(format("Actual cost record %s was not found", actualCostRecordId)));
+  }
+
+  @Test
+  void postActualCostCancelShouldFailIfRecordIsNotFoundOnUpdate() {
+    String actualCostRecordId = randomId();
+    String actualCostCancelEntity = new JsonObject()
+      .put("actualCostRecordId", actualCostRecordId)
+      .put("additionalInfoForStaff", "Test info for staff")
+      .put("additionalInfoForPatron", "Test info for patron")
+      .encodePrettily();
+    ActualCostRecord actualCostRecord = new ActualCostRecord()
+      .withId(actualCostRecordId)
+      .withStatus(ActualCostRecord.Status.OPEN);
+
+    createStub(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId), actualCostRecord);
+    createStub(WireMock.put(urlPathEqualTo(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId))),
       aResponse().withStatus(HttpStatus.SC_NOT_FOUND));
 
     postActualCostCancel(actualCostCancelEntity)

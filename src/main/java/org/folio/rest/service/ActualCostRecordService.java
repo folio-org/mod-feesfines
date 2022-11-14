@@ -14,8 +14,6 @@ import org.folio.rest.jaxrs.model.ActualCostRecord;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.ext.web.client.HttpResponse;
 
 public class ActualCostRecordService {
   private final CirculationStorageClient circulationStorageClient;

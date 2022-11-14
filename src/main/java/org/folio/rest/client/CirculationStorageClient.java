@@ -2,7 +2,6 @@ package org.folio.rest.client;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
-import static java.lang.String.format;
 
 import java.util.Collection;
 import java.util.Map;
@@ -12,8 +11,6 @@ import org.folio.rest.exception.http.HttpPutException;
 import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LoanPolicy;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -67,14 +64,6 @@ public class CirculationStorageClient extends OkapiClient {
         return failedFuture(new HttpPutException(ACTUAL_COST_RECORD_STORAGE_URL, response));
       }
       return succeededFuture(actualCostRecord);
-//      try {
-//        return succeededFuture(objectMapper.readValue(response.bodyAsString(), ActualCostRecord.class));
-//      } catch (JsonProcessingException e) {
-//        final String errorMessage = format("Failed to parse response from %s. Response body: %s",
-//          ACTUAL_COST_RECORD_STORAGE_URL, response.bodyAsString());
-//        log.error(errorMessage);
-//        return failedFuture(errorMessage);
-//      }
     });
   }
 }
