@@ -917,6 +917,7 @@
             "actual-cost-fee-fine-cancel.post"
           ],
           "modulePermissions": [
+            "actual-cost-record-storage.actual-cost-records.item.get",
             "actual-cost-record-storage.actual-cost-records.item.put"
           ]
         }
