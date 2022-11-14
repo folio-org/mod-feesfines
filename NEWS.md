@@ -1,3 +1,6 @@
+## 18.1.1 2022-11-15
+* RMB 35.0.2, Vert.x 4.3.4, mod-pubsub-client 2.7.0, maven-model 3.8.6 (MODFEE-299)
+
 ## 18.1.0 2022-10-18
 * Upgrade to RMB 35.0.0 and Vertx 4.3.3 (MODFEE-281)
 * Add processId field to account schema (MODFEE-275)
