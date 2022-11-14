@@ -2,10 +2,12 @@ package org.folio.migration;
 
 import static org.folio.test.support.matcher.FeeFineMatchers.hasAllAutomaticFeeFineTypes;
 import static org.folio.util.PomUtils.getModuleVersion;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
-
+import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.test.support.ApiTests;
 import org.junit.jupiter.api.Test;
@@ -13,16 +15,19 @@ import org.junit.jupiter.api.Test;
 import io.vertx.core.Vertx;
 
 public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
-  private static final String LOST_FEE_FOR_ACTUAL_COST_ID = "73785370-d3bd-4d92-942d-ae2268e02ded";
   private static final String MIGRATION_SCRIPT = loadMigrationScript();
 
   @Test
   public void lostItemFeeForActualCostIsAddedWhenMigratingFrom15_9To15_10() {
-    feeFinesClient.delete(LOST_FEE_FOR_ACTUAL_COST_ID);
-
     // module was enabled in @BeforeAll with moduleTo=current_version
     // we must downgrade to 15.9.0 first if we want to rerun the migration script (see RMB-937)
     createTenant(getModuleVersion(), "15.9.0");
+
+    // use SQL to delete, API refuses deleting automatic type
+    var deleted = get(PostgresClient.getInstance(vertx, TENANT_NAME)
+        .delete(FEEFINES_TABLE, AutomaticFeeFineType.LOST_FEE_FOR_ACTUAL_COST.getId()));
+    assertThat(deleted.rowCount(), is(1));
+
     createTenant("15.9.0", "15.10.0");
 
     feeFinesClient.getAll().then()

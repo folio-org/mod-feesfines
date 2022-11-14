@@ -29,7 +29,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -63,6 +62,7 @@ import io.restassured.http.ContentType;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -166,7 +166,7 @@ public class ApiTests {
     Criterion criterion = new Criterion();
     if (FEEFINES_TABLE.equals(tableName)) {
       for (AutomaticFeeFineType type : AutomaticFeeFineType.values()) {
-        criterion.addCriterion(createAutomaticFeeFineExclusionCriteria(type), "AND");
+        criterion.addCriterion(createFeeFineExclusionCriteria(type.getId()), "AND");
       }
     }
     PostgresClient.getInstance(vertx, TENANT_NAME)
@@ -175,11 +175,11 @@ public class ApiTests {
     get(future);
   }
 
-  private Criteria createAutomaticFeeFineExclusionCriteria(AutomaticFeeFineType automaticFeeFineType) {
+  private static Criteria createFeeFineExclusionCriteria(String id) {
     return new Criteria()
-      .addField("id")
+      .addField("'id'")
       .setOperation("!=")
-      .setVal(automaticFeeFineType.getId());
+      .setVal(id);
   }
 
   private static String generateOkapiToken() {
@@ -194,6 +194,14 @@ public class ApiTests {
 
   protected static String randomId() {
     return UUID.randomUUID().toString();
+  }
+
+  protected static <T> T get(Future<T> future) {
+    try {
+      return future.toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   protected static <T> T get(CompletableFuture<T> future) {
