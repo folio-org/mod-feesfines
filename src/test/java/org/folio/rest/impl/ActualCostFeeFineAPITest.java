@@ -9,9 +9,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.startsWith;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.ActualCostRecord;
+import org.folio.rest.jaxrs.model.ActualCostRecordLoan;
 import org.folio.test.support.ApiTests;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,7 +41,8 @@ class ActualCostFeeFineAPITest extends ApiTests {
 
     ActualCostRecord actualCostRecord = new ActualCostRecord()
       .withId(actualCostRecordId)
-      .withStatus(ActualCostRecord.Status.OPEN);
+      .withStatus(ActualCostRecord.Status.OPEN)
+      .withLoan(new ActualCostRecordLoan().withId(UUID.randomUUID().toString()));
 
     createStub(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId), actualCostRecord);
     createStub(WireMock.put(urlPathEqualTo(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId))),
