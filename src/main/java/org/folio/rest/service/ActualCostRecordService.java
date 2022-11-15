@@ -18,9 +18,11 @@ import io.vertx.core.Vertx;
 
 public class ActualCostRecordService {
   private final CirculationStorageClient circulationStorageClient;
+  private final AccountEventPublisher accountEventPublisher;
 
   public ActualCostRecordService(Vertx vertx, Map<String, String> okapiHeaders) {
     this.circulationStorageClient = new CirculationStorageClient(vertx, okapiHeaders);
+    this.accountEventPublisher = new AccountEventPublisher(vertx, okapiHeaders);
   }
 
   public Future<ActualCostRecord> cancelActualCostRecord(
@@ -31,7 +33,14 @@ public class ActualCostRecordService {
         .compose(this::checkIfRecordIsOpen)
         .map(actualCostRecord -> updateActualCostRecord(actualCostRecord, cancellationRequest,
           CANCELLED))
-        .compose(circulationStorageClient::updateActualCostRecord);
+        .compose(circulationStorageClient::updateActualCostRecord)
+        .compose(this::sendLoanRelatedFeeFineClosedEvent);
+  }
+
+  private Future<ActualCostRecord> sendLoanRelatedFeeFineClosedEvent(ActualCostRecord actualCostRecord) {
+    accountEventPublisher.publishLoanRelatedFeeFineClosedEvent(actualCostRecord);
+
+    return succeededFuture(actualCostRecord);
   }
 
   private Future<ActualCostRecord> checkIfRecordIsOpen(ActualCostRecord actualCostRecord) {

@@ -2,6 +2,7 @@ package org.folio.rest.service;
 
 import static org.folio.rest.domain.EventType.FEE_FINE_BALANCE_CHANGED;
 import static org.folio.rest.domain.EventType.LOAN_RELATED_FEE_FINE_CLOSED;
+import static org.folio.rest.domain.LoanRelatedFeeFineClosedEvent.forActualCostRecord;
 import static org.folio.rest.domain.LoanRelatedFeeFineClosedEvent.forFeeFine;
 import static org.folio.rest.utils.JsonHelper.write;
 
@@ -11,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.util.UuidUtil;
 
 import io.vertx.core.Context;
@@ -24,7 +26,7 @@ public class AccountEventPublisher {
     this(context.owner(), headers);
   }
 
-  private AccountEventPublisher(Vertx vertx, Map<String, String> headers) {
+  public AccountEventPublisher(Vertx vertx, Map<String, String> headers) {
     eventPublisher = new EventPublisher(vertx, headers);
   }
 
@@ -45,6 +47,13 @@ public class AccountEventPublisher {
   public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(Account feeFine) {
     return eventPublisher.publishEvent(LOAN_RELATED_FEE_FINE_CLOSED,
       forFeeFine(feeFine).toJsonString());
+  }
+
+  public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(
+    ActualCostRecord actualCostRecord) {
+
+    return eventPublisher.publishEvent(LOAN_RELATED_FEE_FINE_CLOSED,
+      forActualCostRecord(actualCostRecord).toJsonString());
   }
 
   private String createBalanceChangedPayload(Account account) {
