@@ -13,11 +13,8 @@ import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LoanPolicy;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.ext.web.client.HttpResponse;
 
 public class CirculationStorageClient extends OkapiClient {
   private static final String ACTUAL_COST_RECORD_STORAGE_URL =
@@ -48,7 +45,6 @@ public class CirculationStorageClient extends OkapiClient {
   }
 
   public Future<ActualCostRecord> updateActualCostRecord(ActualCostRecord actualCostRecord) {
-    Promise<HttpResponse<Buffer>> promise = Promise.promise();
     return okapiPutAbs(ACTUAL_COST_RECORD_STORAGE_URL, actualCostRecord.getId())
       .sendJson(actualCostRecord)
       .compose(response -> {
