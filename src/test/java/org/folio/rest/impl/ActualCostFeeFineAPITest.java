@@ -14,6 +14,9 @@ import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.test.support.ApiTests;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
@@ -115,8 +118,9 @@ class ActualCostFeeFineAPITest extends ApiTests {
       .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
   }
 
-  @Test
-  void postActualCostCancelShouldFailIfRecordAlreadyCancelled() {
+  @ParameterizedTest
+  @EnumSource(value = ActualCostRecord.Status.class, names = {"CANCELLED", "BILLED", "EXPIRED"})
+  void postActualCostCancelShouldFailIfRecordAlreadyProcessed(ActualCostRecord.Status recordStatus) {
     String actualCostRecordId = randomId();
     String actualCostCancelEntity = new JsonObject()
       .put("actualCostRecordId", actualCostRecordId)
@@ -125,13 +129,13 @@ class ActualCostFeeFineAPITest extends ApiTests {
       .encodePrettily();
     ActualCostRecord actualCostRecord = new ActualCostRecord()
       .withId(actualCostRecordId)
-      .withStatus(ActualCostRecord.Status.CANCELLED);
+      .withStatus(recordStatus);
     createStub(format(ACTUAL_COST_RECORDS_PATH, actualCostRecordId), actualCostRecord);
 
     postActualCostCancel(actualCostCancelEntity)
       .then()
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
-      .body(startsWith(format("Actual cost record %s is already Cancelled", actualCostRecordId)));
+      .body(startsWith(format("Actual cost record %s is already %s", actualCostRecordId, recordStatus)));
   }
 
   private Response postActualCostCancel(String entity) {

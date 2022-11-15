@@ -4,6 +4,7 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static org.folio.rest.jaxrs.model.ActualCostRecord.Status.CANCELLED;
+import static org.folio.rest.jaxrs.model.ActualCostRecord.Status.OPEN;
 
 import java.util.Map;
 
@@ -27,22 +28,20 @@ public class ActualCostRecordService {
 
     return circulationStorageClient.fetchActualCostRecordById(
       cancellationRequest.getActualCostRecordId())
-        .compose(this::checkIfRecordAlreadyCancelled)
+        .compose(this::checkIfRecordIsOpen)
         .map(actualCostRecord -> updateActualCostRecord(actualCostRecord, cancellationRequest,
           CANCELLED))
         .compose(circulationStorageClient::updateActualCostRecord);
   }
 
-  private Future<ActualCostRecord> checkIfRecordAlreadyCancelled(
-    ActualCostRecord actualCostRecord) {
-
-    return checkIfRecordAlreadyProcessed(actualCostRecord, CANCELLED);
+  private Future<ActualCostRecord> checkIfRecordIsOpen(ActualCostRecord actualCostRecord) {
+    return failIfRecordAlreadyProcessed(actualCostRecord, OPEN);
   }
 
-  private Future<ActualCostRecord> checkIfRecordAlreadyProcessed(
+  private Future<ActualCostRecord> failIfRecordAlreadyProcessed(
     ActualCostRecord actualCostRecord, ActualCostRecord.Status status) {
 
-    if (actualCostRecord.getStatus() == status) {
+    if (actualCostRecord.getStatus() != status) {
       return failedFuture(new FailedValidationException(format(
         "Actual cost record %s is already %s}", actualCostRecord.getId(),
         actualCostRecord.getStatus())));
