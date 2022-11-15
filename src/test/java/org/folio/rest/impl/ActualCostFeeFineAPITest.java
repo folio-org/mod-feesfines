@@ -50,7 +50,8 @@ class ActualCostFeeFineAPITest extends ApiTests {
       .body(allOf(List.of(
         hasJsonPath("id", is(actualCostRecordId)),
         hasJsonPath("additionalInfoForStaff", is("Test info for staff")),
-        hasJsonPath("additionalInfoForPatron", is("Test info for patron"))
+        hasJsonPath("additionalInfoForPatron", is("Test info for patron")),
+        hasJsonPath("status", is("Cancelled"))
       )));
   }
 

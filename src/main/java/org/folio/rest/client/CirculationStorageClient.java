@@ -49,20 +49,19 @@ public class CirculationStorageClient extends OkapiClient {
 
   public Future<ActualCostRecord> updateActualCostRecord(ActualCostRecord actualCostRecord) {
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
-    okapiPutAbs(ACTUAL_COST_RECORD_STORAGE_URL, actualCostRecord.getId())
-      .sendJson(actualCostRecord, promise);
-
-    return promise.future().compose(response -> {
-      int responseStatus = response.statusCode();
-      if (responseStatus != 204) {
-        log.error("Failed to update record with ID {}. Response status code: {}",
-          actualCostRecord.getId(), responseStatus);
-        if (responseStatus == 404) {
-          return failedFuture(new HttpNotFoundException(HttpMethod.PUT, ACTUAL_COST_RECORD_STORAGE_URL,
-            response));
+    return okapiPutAbs(ACTUAL_COST_RECORD_STORAGE_URL, actualCostRecord.getId())
+      .sendJson(actualCostRecord)
+      .compose(response -> {
+        int responseStatus = response.statusCode();
+        if (responseStatus != 204) {
+          log.error("Failed to update record with ID {}. Response status code: {}",
+            actualCostRecord.getId(), responseStatus);
+          if (responseStatus == 404) {
+            return failedFuture(new HttpNotFoundException(HttpMethod.PUT, ACTUAL_COST_RECORD_STORAGE_URL,
+              response));
+          }
+          return failedFuture(new HttpPutException(ACTUAL_COST_RECORD_STORAGE_URL, response));
         }
-        return failedFuture(new HttpPutException(ACTUAL_COST_RECORD_STORAGE_URL, response));
-      }
       return succeededFuture(actualCostRecord);
     });
   }

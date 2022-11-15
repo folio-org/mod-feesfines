@@ -22,11 +22,15 @@ public class ActualCostRecordService {
     this.circulationStorageClient = new CirculationStorageClient(vertx, okapiHeaders);
   }
 
-  public Future<ActualCostRecord> cancelActualCostRecord(ActualCostFeeFineCancel entity) {
-    return circulationStorageClient.fetchActualCostRecordById(entity.getActualCostRecordId())
-      .compose(this::checkIfRecordAlreadyCancelled)
-      .map(actualCostRecord -> updateActualCostRecord(actualCostRecord, entity, CANCELLED))
-      .compose(circulationStorageClient::updateActualCostRecord);
+  public Future<ActualCostRecord> cancelActualCostRecord(
+    ActualCostFeeFineCancel cancellationRequest) {
+
+    return circulationStorageClient.fetchActualCostRecordById(
+      cancellationRequest.getActualCostRecordId())
+        .compose(this::checkIfRecordAlreadyCancelled)
+        .map(actualCostRecord -> updateActualCostRecord(actualCostRecord, cancellationRequest,
+          CANCELLED))
+        .compose(circulationStorageClient::updateActualCostRecord);
   }
 
   private Future<ActualCostRecord> checkIfRecordAlreadyCancelled(

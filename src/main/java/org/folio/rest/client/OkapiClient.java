@@ -61,18 +61,18 @@ public class OkapiClient {
   }
 
   HttpRequest<Buffer> okapiGetAbs(String path) {
-    return fillHeader(webClient.getAbs(okapiUrl + path));
+    return fillHeaders(webClient.getAbs(okapiUrl + path));
   }
 
   HttpRequest<Buffer> okapiPostAbs(String path) {
-    return fillHeader(webClient.postAbs(okapiUrl + path));
+    return fillHeaders(webClient.postAbs(okapiUrl + path));
   }
 
   HttpRequest<Buffer> okapiPutAbs(String path, String id) {
-    return fillHeader(webClient.putAbs(okapiUrl + path + "/" + id));
+    return fillHeaders(webClient.putAbs(okapiUrl + path + "/" + id));
   }
 
-  HttpRequest<Buffer> fillHeader(HttpRequest<Buffer> httpRequest) {
+  HttpRequest<Buffer> fillHeaders(HttpRequest<Buffer> httpRequest) {
     return httpRequest
       .putHeader(ACCEPT, APPLICATION_JSON)
       .putHeader(OKAPI_HEADER_TENANT, tenant)
@@ -99,8 +99,8 @@ public class OkapiClient {
       int responseStatus = response.statusCode();
       log.debug("[{} {}ms] GET {}", responseStatus, currentTimeMillis() - start, resourcePath);
       if (responseStatus != 200) {
-        log.error("Failed to get {}} by ID {}}. Response status code: {}}",
-          objectType.getSimpleName(), id, responseStatus);
+        log.error("Failed to get {} by ID {}. Response status code: {}, response body: {}",
+          objectType.getSimpleName(), id, responseStatus, response.body());
         if (responseStatus == 404) {
           return failedFuture(new HttpNotFoundException(HttpMethod.GET, url, response));
         }
