@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.exception.http.HttpGetException;
+import org.folio.rest.exception.http.HttpNotFoundException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,6 +35,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
@@ -59,15 +61,19 @@ public class OkapiClient {
   }
 
   HttpRequest<Buffer> okapiGetAbs(String path) {
-    return webClient.getAbs(okapiUrl + path)
-      .putHeader(OKAPI_HEADER_TENANT, tenant)
-      .putHeader(OKAPI_URL_HEADER, okapiUrl)
-      .putHeader(OKAPI_HEADER_TOKEN, token)
-      .putHeader(ACCEPT, APPLICATION_JSON);
+    return fillHeaders(webClient.getAbs(okapiUrl + path));
   }
 
   HttpRequest<Buffer> okapiPostAbs(String path) {
-    return webClient.postAbs(okapiUrl + path)
+    return fillHeaders(webClient.postAbs(okapiUrl + path));
+  }
+
+  HttpRequest<Buffer> okapiPutAbs(String path, String id) {
+    return fillHeaders(webClient.putAbs(okapiUrl + path + "/" + id));
+  }
+
+  HttpRequest<Buffer> fillHeaders(HttpRequest<Buffer> httpRequest) {
+    return httpRequest
       .putHeader(ACCEPT, APPLICATION_JSON)
       .putHeader(OKAPI_HEADER_TENANT, tenant)
       .putHeader(OKAPI_URL_HEADER, okapiUrl)
@@ -93,9 +99,11 @@ public class OkapiClient {
       int responseStatus = response.statusCode();
       log.debug("[{} {}ms] GET {}", responseStatus, currentTimeMillis() - start, resourcePath);
       if (responseStatus != 200) {
-        final String errorMessage = format("Failed to get %s by ID %s. Response status code: %s",
-          objectType.getSimpleName(), id, responseStatus);
-        log.error(errorMessage);
+        log.error("Failed to get {} by ID {}. Response status code: {}, response body: {}",
+          objectType.getSimpleName(), id, responseStatus, response.body());
+        if (responseStatus == 404) {
+          return failedFuture(new HttpNotFoundException(HttpMethod.GET, url, response));
+        }
         return failedFuture(new HttpGetException(url, response));
       }
       try {

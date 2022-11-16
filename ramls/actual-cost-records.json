@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of Actual cost records",
+  "type": "object",
+  "properties": {
+    "actualCostRecords": {
+      "description": "List of Actual cost records",
+      "id": "actualCostRecords",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "actual-cost-record.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "actualCostRecords",
+    "totalRecords"
+  ]
+}
+

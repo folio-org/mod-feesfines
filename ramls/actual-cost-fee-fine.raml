@@ -1,0 +1,49 @@
+#%RAML 1.0
+title: Actual cost fee/fine API
+version: v17.3
+baseUri: http://github.com/org/folio/mod-feesfines
+
+documentation:
+  - title: Actual Cost Fee Fine API
+    content: This documents the Actual Cost Fee Fine API
+
+types:
+  actualCostFeeFineCancel: !include actual-cost-fee-fine-cancel.json
+  actualCostRecord: !include actual-cost-record.json
+  actualCostRecords: !include actual-cost-records.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+/actual-cost-fee-fine:
+  /cancel:
+    post:
+      is: [validate]
+      description: "Cancel actual cost record"
+      body:
+        application/json:
+          schema: actualCostFeeFineCancel
+          example: !include examples/actual-cost-fee-fine-cancel.sample
+      responses:
+        201:
+          body:
+            application/json:
+              schema: actualCostRecord
+              example: !include examples/actual-cost-record.sample
+        404:
+          description: "Actual cost record was not found"
+          body:
+            text/plain:
+              example: "Invalid actualCostRecordId"
+        422:
+          description: "Unprocessable entity"
+          body:
+            text/plain:
+              example: "Invalid request"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error"

@@ -911,6 +911,27 @@
       ]
     },
     {
+      "id":"actual-cost-fee-fine",
+      "version":"0.1",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/actual-cost-fee-fine/cancel",
+          "permissionsRequired": [
+            "actual-cost-fee-fine-cancel.post"
+          ],
+          "modulePermissions": [
+            "actual-cost-record-storage.actual-cost-records.collection.get",
+            "actual-cost-record-storage.actual-cost-records.item.get",
+            "actual-cost-record-storage.actual-cost-records.item.put",
+            "pubsub.publish.post"
+          ]
+        }
+      ]
+    },
+    {
       "id" : "_tenant",
       "version" : "2.0",
       "interfaceType": "system",

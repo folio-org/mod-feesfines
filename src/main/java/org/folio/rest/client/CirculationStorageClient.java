@@ -1,15 +1,25 @@
 package org.folio.rest.client;
 
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
+
 import java.util.Collection;
 import java.util.Map;
 
+import org.folio.rest.exception.http.HttpNotFoundException;
+import org.folio.rest.exception.http.HttpPutException;
+import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LoanPolicy;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 
 public class CirculationStorageClient extends OkapiClient {
+  private static final String ACTUAL_COST_RECORD_STORAGE_URL =
+    "/actual-cost-record-storage/actual-cost-records";
+
   public CirculationStorageClient(Vertx vertx, Map<String, String> okapiHeaders) {
     super(vertx, okapiHeaders);
   }
@@ -28,5 +38,27 @@ public class CirculationStorageClient extends OkapiClient {
 
   public Future<Collection<LoanPolicy>> getLoanPoliciesByIds(Collection<String> ids) {
     return getByIds("/loan-policy-storage/loan-policies", ids, LoanPolicy.class, "loanPolicies");
+  }
+
+  public Future<ActualCostRecord> fetchActualCostRecordById(String actualCostRecordId) {
+    return getById(ACTUAL_COST_RECORD_STORAGE_URL, actualCostRecordId, ActualCostRecord.class);
+  }
+
+  public Future<ActualCostRecord> updateActualCostRecord(ActualCostRecord actualCostRecord) {
+    return okapiPutAbs(ACTUAL_COST_RECORD_STORAGE_URL, actualCostRecord.getId())
+      .sendJson(actualCostRecord)
+      .compose(response -> {
+        int responseStatus = response.statusCode();
+        if (responseStatus != 204) {
+          log.error("Failed to update record with ID {}. Response status code: {}",
+            actualCostRecord.getId(), responseStatus);
+          if (responseStatus == 404) {
+            return failedFuture(new HttpNotFoundException(HttpMethod.PUT, ACTUAL_COST_RECORD_STORAGE_URL,
+              response));
+          }
+          return failedFuture(new HttpPutException(ACTUAL_COST_RECORD_STORAGE_URL, response));
+        }
+      return succeededFuture(actualCostRecord);
+    });
   }
 }
