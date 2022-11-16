@@ -37,10 +37,11 @@ public class ActualCostRecordService {
         .compose(this::sendLoanRelatedFeeFineClosedEvent);
   }
 
-  private Future<ActualCostRecord> sendLoanRelatedFeeFineClosedEvent(ActualCostRecord actualCostRecord) {
-    accountEventPublisher.publishLoanRelatedFeeFineClosedEvent(actualCostRecord);
+  private Future<ActualCostRecord> sendLoanRelatedFeeFineClosedEvent(
+    ActualCostRecord actualCostRecord) {
 
-    return succeededFuture(actualCostRecord);
+    return succeededFuture(actualCostRecord)
+      .onSuccess(accountEventPublisher::publishLoanRelatedFeeFineClosedEvent);
   }
 
   private Future<ActualCostRecord> checkIfRecordIsOpen(ActualCostRecord actualCostRecord) {

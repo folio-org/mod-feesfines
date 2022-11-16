@@ -925,7 +925,8 @@
           "modulePermissions": [
             "actual-cost-record-storage.actual-cost-records.collection.get",
             "actual-cost-record-storage.actual-cost-records.item.get",
-            "actual-cost-record-storage.actual-cost-records.item.put"
+            "actual-cost-record-storage.actual-cost-records.item.put",
+            "pubsub.publish.post"
           ]
         }
       ]
