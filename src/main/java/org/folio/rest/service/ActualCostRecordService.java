@@ -34,14 +34,7 @@ public class ActualCostRecordService {
         .map(actualCostRecord -> updateActualCostRecord(actualCostRecord, cancellationRequest,
           CANCELLED))
         .compose(circulationStorageClient::updateActualCostRecord)
-        .compose(this::sendLoanRelatedFeeFineClosedEvent);
-  }
-
-  private Future<ActualCostRecord> sendLoanRelatedFeeFineClosedEvent(
-    ActualCostRecord actualCostRecord) {
-
-    return succeededFuture(actualCostRecord)
-      .onSuccess(accountEventPublisher::publishLoanRelatedFeeFineClosedEvent);
+        .onSuccess(accountEventPublisher::publishLoanRelatedFeeFineClosedEvent);
   }
 
   private Future<ActualCostRecord> checkIfRecordIsOpen(ActualCostRecord actualCostRecord) {
