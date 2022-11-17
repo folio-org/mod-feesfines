@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import io.vertx.core.Vertx;
 
 public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
-  private static final String LOST_FEE_FOR_ACTUAL_COST_ID = "73785370-d3bd-4d92-942d-ae2268e02ded";
   private static final String MIGRATION_SCRIPT = loadMigrationScript();
 
   @Test
