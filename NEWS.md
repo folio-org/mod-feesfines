@@ -1,3 +1,6 @@
+## 18.0.3 2022-11-15
+* Upgrade springframework/spring-beans to 5.2.22 (Spring4Shell) (MODFEE-299)
+
 ## 18.0.2 2022-09-09
 * Improve performance of Financial Transactions Detail Report (MODFEE-264)
 
