@@ -1464,6 +1464,11 @@
       "permissionName":"feefine-reports.financial-transactions-detail.post",
       "displayName":"module permissions for loading financial transactions detail report",
       "description":"Load a financial transactions detail report"
+    },
+    {
+      "permissionName":"actual-cost-fee-fine-cancel.post",
+      "displayName":"module permissions for canceling actual cost fee/fine record",
+      "description":"Cancel actual cost fee/fine record"
     }
   ],
   "launchDescriptor": {
