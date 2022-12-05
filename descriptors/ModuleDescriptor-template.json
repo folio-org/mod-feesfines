@@ -1486,8 +1486,8 @@
     },
     {
       "permissionName":"actual-cost-fee-fine-cancel.post",
-      "displayName":"Actual cost fee/fine - cancel",
-      "description":"Cancel actual cost fee/fine"
+      "displayName":"module permissions for canceling actual cost fee/fine record",
+      "description":"Cancel actual cost fee/fine record"
     },
     {
       "permissionName":"actual-cost-fee-fine-bill.post",
