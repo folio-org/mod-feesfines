@@ -2,6 +2,7 @@ package org.folio.test.support;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.request;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
@@ -54,6 +55,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
@@ -72,11 +74,13 @@ public class ApiTests {
   public static final String TENANT_NAME = "test_tenant";
   public static final String OKAPI_URL_HEADER = "x-okapi-url";
   public static final String USER_ID = "69d9169d-06da-4622-9c18-2868bd46b60f";
-  public static final String X_OKAPI_USER_ID = "94e5465a-67af-8799-4g87-1326cf12a22b";
+  public static final String X_OKAPI_USER_ID = "a3ac258e-08b0-48de-b0e8-fc94eccc7551";
   public static final String OKAPI_TOKEN = generateOkapiToken();
   public static final String MODULE_NAME = "mod-feesfines";
   public static final String FEEFINES_TABLE = "feefines";
   public static final String OWNERS_TABLE = "owners";
+  public static final String ACCOUNTS_TABLE = "accounts";
+  public static final String FEE_FINE_ACTIONS_TABLE = "feefineactions";
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
 
   protected static Vertx vertx;
@@ -303,6 +307,12 @@ public class ApiTests {
 
     return getOkapi().stubFor(fillHeader(WireMock.get(urlPathPattern))
       .willReturn(responseBuilder));
+  }
+
+  public StubMapping createStub(RequestMethod method, String url,
+    ResponseDefinitionBuilder responseBuilder) {
+
+    return createStub(request(method.getName(), urlPathEqualTo(url)), responseBuilder);
   }
 
   public StubMapping createStub(MappingBuilder mappingBuilder,

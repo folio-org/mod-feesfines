@@ -15,8 +15,8 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.service.report.utils.LookupHelper;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.Context;
@@ -32,6 +32,10 @@ public abstract class AbstractRepository {
 
   AbstractRepository(Map<String, String> headers, Context context) {
     pgClient = PostgresClient.getInstance(context.owner(), TenantTool.tenantId(headers));
+  }
+
+  AbstractRepository(PostgresClient pgClient) {
+    this.pgClient = pgClient;
   }
 
   <T> Future<T> getById(String tableName, String id, Class<T> objectType) {
@@ -85,4 +89,13 @@ public abstract class AbstractRepository {
     return pgClient.getTenantId();
   }
 
+  public <T> Future<T> save(String tableName, String id, T object) {
+    return pgClient.save(tableName, id, object)
+      .map(object);
+  }
+
+  public <T> Future<T> save(String tableName, String id, T object, Conn conn) {
+    return conn.save(tableName, id, object)
+      .map(object);
+  }
 }

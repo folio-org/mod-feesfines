@@ -9,6 +9,7 @@ documentation:
 
 types:
   actualCostFeeFineCancel: !include actual-cost-fee-fine-cancel.json
+  actualCostFeeFineBill: !include actual-cost-fee-fine-bill.json
   actualCostRecord: !include actual-cost-record.json
   actualCostRecords: !include actual-cost-records.json
   errors: !include raml-util/schemas/errors.schema
@@ -32,11 +33,30 @@ traits:
             application/json:
               schema: actualCostRecord
               example: !include examples/actual-cost-record.sample
-        404:
-          description: "Actual cost record was not found"
+        422:
+          description: "Unprocessable entity"
           body:
             text/plain:
-              example: "Invalid actualCostRecordId"
+              example: "Invalid request"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error"
+  /bill:
+    post:
+      is: [validate]
+      description: "Bill actual cost record"
+      body:
+        application/json:
+          schema: actualCostFeeFineBill
+          example: !include examples/actual-cost-fee-fine-bill.sample
+      responses:
+        201:
+          body:
+            application/json:
+              schema: actualCostRecord
+              example: !include examples/actual-cost-record.sample
         422:
           description: "Unprocessable entity"
           body:

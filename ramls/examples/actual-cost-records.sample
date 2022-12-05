@@ -10,7 +10,9 @@
         "barcode": "777",
         "firstName": "John",
         "lastName": "Doe",
-        "middleName": "Robert"
+        "middleName": "Robert",
+        "patronGroupId": "4bb563d9-3f9d-4e1e-8d1d-04e75666d68f",
+        "patronGroup": "librarian"
       },
       "loan": {
         "id": "65de6432-be11-48ba-9686-a65101634040"
@@ -22,6 +24,8 @@
         "materialType": "book",
         "permanentLocationId": "9da9dcdd-474f-4e16-bb83-21e64e5eb288",
         "permanentLocation": "Main library",
+        "effectiveLocationId": "5513cf26-a45c-482e-a25a-3ce5c32e619c",
+        "effectiveLocation": "Annex",
         "loanTypeId": "e1e17294-dd52-44ae-8a94-b96aa08ef3b5",
         "loanType": "Can circulate",
         "holdingsRecordId": "68190dd4-9a88-4dbe-af1a-9048be222ac8",
@@ -29,16 +33,26 @@
           "callNumber": "TX809.M17J66",
           "prefix": "f",
           "suffix": "1993"
-        }
+        },
+        "volume": "v. 2",
+        "enumeration": "v.73:no.1-6",
+        "chronology": "1985:July-Dec.",
+        "copyNumber": "c.1"
       },
       "instance": {
         "id": "9dfe10e5-6db9-4f80-b574-7edc0f960288",
         "title": "Nod",
-        "identifiers": [{
-          "value": "9781466636897",
-          "identifierType": "ISBN",
-          "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
-        }
+        "identifiers": [
+          {
+            "value": "9781466636897",
+            "identifierType": "ISBN",
+            "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+          }
+        ],
+        "contributors": [
+          {
+            "name": "Schmitz, Bettina"
+          }
         ]
       },
       "feeFine": {
@@ -48,6 +62,9 @@
         "typeId": "92ef9706-f1af-430d-9edd-78035689efa2",
         "type": "Overdue fine"
       },
+      "status": "Billed",
+      "additionalInfoForStaff": "Additional information for staff",
+      "additionalInfoForPatron": "Additional information for a patron",
       "metadata": {
         "createdDate": "2022-09-19T14:09:41.284+00:00",
         "createdByUserId": "5bcadcf1-2608-4cd3-b4e2-947ffe58d15f",
@@ -55,7 +72,6 @@
         "updatedByUserId": "5bcadcf1-2608-4cd3-b4e2-947ffe58d15f"
       }
     }
-
   ],
   "totalRecords": 1
 }

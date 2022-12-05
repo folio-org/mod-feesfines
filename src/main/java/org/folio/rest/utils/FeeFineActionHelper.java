@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.domain.Action.TRANSFER;
 
 import java.util.Arrays;
@@ -21,6 +22,8 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 public class FeeFineActionHelper {
   public static final String PATRON_COMMENTS_KEY = "PATRON";
   public static final String STAFF_COMMENTS_KEY = "STAFF";
+  private static final String COMMENT_KEY_VALUE_SEPARATOR = " : ";
+  private static final String COMMENTS_SEPARATOR = " \n ";
 
   private FeeFineActionHelper() {
     throw new UnsupportedOperationException("Do not instantiate");
@@ -47,9 +50,31 @@ public class FeeFineActionHelper {
     return defaultString(parseFeeFineComments(action.getComments()).get(PATRON_COMMENTS_KEY));
   }
 
+  public static String buildComments(String commentForStaff, String commentForPatron) {
+    StringBuilder builder = new StringBuilder();
+    boolean staffCommentIsNotBlank = isNotBlank(commentForStaff);
+    boolean patronCommentIsNotBlank = isNotBlank(commentForPatron);
+
+    if (staffCommentIsNotBlank) {
+      builder.append(STAFF_COMMENTS_KEY)
+        .append(COMMENT_KEY_VALUE_SEPARATOR)
+        .append(commentForStaff);
+      if (patronCommentIsNotBlank) {
+        builder.append(COMMENTS_SEPARATOR);
+      }
+    }
+    if (patronCommentIsNotBlank) {
+      builder.append(PATRON_COMMENTS_KEY)
+        .append(COMMENT_KEY_VALUE_SEPARATOR)
+        .append(commentForPatron);
+    }
+
+    return builder.toString();
+  }
+
   public static Map<String, String> parseFeeFineComments(String comments) {
-    return Arrays.stream(defaultString(comments).split(" \n "))
-      .map(s -> s.split(" : "))
+    return Arrays.stream(defaultString(comments).split(COMMENTS_SEPARATOR))
+      .map(s -> s.split(COMMENT_KEY_VALUE_SEPARATOR))
       .filter(arr -> arr.length == 2)
       .map(strings -> Pair.of(strings[0], strings[1]))
       .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (s, s2) -> s));

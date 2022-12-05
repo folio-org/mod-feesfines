@@ -21,6 +21,7 @@ public class ServicePath {
   public static final String LOANS_PATH = "/loan-storage/loans";
   public static final String SERVICE_POINTS_PATH = "/service-points";
   public static final String PATRON_NOTICE_PATH = "/patron-notice";
+  public static final String ACTUAL_COST_RECORDS_PATH = "/actual-cost-record-storage/actual-cost-records";
 
   private ServicePath() {
     throw new UnsupportedOperationException("Do not instantiate");

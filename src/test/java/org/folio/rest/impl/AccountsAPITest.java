@@ -378,7 +378,6 @@ public class AccountsAPITest extends ApiTests {
       .withBarcode("barcode")
       .withCallNumber("call number")
       .withTitle("title")
-      .withItemStatus(new ItemStatus().withName("Available"))
       .withMaterialType("Material type")
       .withMaterialTypeId(randomId())
       .withLocation("Location")

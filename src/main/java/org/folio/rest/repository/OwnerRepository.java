@@ -1,9 +1,5 @@
 package org.folio.rest.repository;
 
-import java.util.Optional;
-
-import org.folio.rest.domain.FeeFineNoticeContext;
-import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.persist.PostgresClient;
 

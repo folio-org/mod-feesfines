@@ -116,6 +116,15 @@
           "description": "Permanent location name",
           "type": "string"
         },
+        "effectiveLocationId": {
+          "description": "Effective location ID",
+          "type": "string",
+          "$ref": "raml-util/schemas/uuid.schema"
+        },
+        "effectiveLocation": {
+          "description": "Effective location name",
+          "type": "string"
+        },
         "loanTypeId": {
           "description": "Loan type ID",
           "type": "string",
@@ -217,6 +226,24 @@
               "value",
               "identifierType",
               "identifierTypeId"
+            ]
+          }
+        },
+        "contributors": {
+          "type": "array",
+          "description": "List of contributors",
+          "minItems": 0,
+          "items": {
+            "javaType": "org.folio.rest.jaxrs.model.ContributorData",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Contributor name"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "name"
             ]
           }
         }

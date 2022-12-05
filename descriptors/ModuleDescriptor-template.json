@@ -912,7 +912,7 @@
     },
     {
       "id":"actual-cost-fee-fine",
-      "version":"0.1",
+      "version":"0.2",
       "handlers": [
         {
           "methods": [
@@ -926,6 +926,25 @@
             "actual-cost-record-storage.actual-cost-records.collection.get",
             "actual-cost-record-storage.actual-cost-records.item.get",
             "actual-cost-record-storage.actual-cost-records.item.put",
+            "pubsub.publish.post"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/actual-cost-fee-fine/bill",
+          "permissionsRequired": [
+            "actual-cost-fee-fine-bill.post"
+          ],
+          "modulePermissions": [
+            "actual-cost-record-storage.actual-cost-records.item.get",
+            "actual-cost-record-storage.actual-cost-records.collection.get",
+            "actual-cost-record-storage.actual-cost-records.item.put",
+            "circulation-storage.loans.item.get",
+            "circulation-storage.loans.collection.get",
+            "users.item.get",
+            "users.collection.get",
             "pubsub.publish.post"
           ]
         }
@@ -1464,6 +1483,16 @@
       "permissionName":"feefine-reports.financial-transactions-detail.post",
       "displayName":"module permissions for loading financial transactions detail report",
       "description":"Load a financial transactions detail report"
+    },
+    {
+      "permissionName":"actual-cost-fee-fine-cancel.post",
+      "displayName":"Actual cost fee/fine - cancel",
+      "description":"Cancel actual cost fee/fine"
+    },
+    {
+      "permissionName":"actual-cost-fee-fine-bill.post",
+      "displayName":"Actual cost fee/fine - bill",
+      "description":"Bill actual cost fee/fine"
     }
   ],
   "launchDescriptor": {
