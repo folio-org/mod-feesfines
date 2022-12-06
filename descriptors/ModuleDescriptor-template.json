@@ -45,6 +45,10 @@
     {
       "id": "pubsub-publish",
       "version": "0.1"
+    },
+    {
+      "id": "actual-cost-record-storage",
+      "version": "0.6"
     }
   ],
   "provides":[
