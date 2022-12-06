@@ -3,8 +3,6 @@ package org.folio.rest.utils;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Status;
