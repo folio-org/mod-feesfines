@@ -45,6 +45,10 @@
     {
       "id": "pubsub-publish",
       "version": "0.1"
+    },
+    {
+      "id": "actual-cost-record-storage",
+      "version": "0.6"
     }
   ],
   "provides":[
@@ -912,7 +916,7 @@
     },
     {
       "id":"actual-cost-fee-fine",
-      "version":"0.1",
+      "version":"0.2",
       "handlers": [
         {
           "methods": [
@@ -926,6 +930,25 @@
             "actual-cost-record-storage.actual-cost-records.collection.get",
             "actual-cost-record-storage.actual-cost-records.item.get",
             "actual-cost-record-storage.actual-cost-records.item.put",
+            "pubsub.publish.post"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/actual-cost-fee-fine/bill",
+          "permissionsRequired": [
+            "actual-cost-fee-fine-bill.post"
+          ],
+          "modulePermissions": [
+            "actual-cost-record-storage.actual-cost-records.item.get",
+            "actual-cost-record-storage.actual-cost-records.collection.get",
+            "actual-cost-record-storage.actual-cost-records.item.put",
+            "circulation-storage.loans.item.get",
+            "circulation-storage.loans.collection.get",
+            "users.item.get",
+            "users.collection.get",
             "pubsub.publish.post"
           ]
         }
@@ -1469,6 +1492,11 @@
       "permissionName":"actual-cost-fee-fine-cancel.post",
       "displayName":"module permissions for canceling actual cost fee/fine record",
       "description":"Cancel actual cost fee/fine record"
+    },
+    {
+      "permissionName":"actual-cost-fee-fine-bill.post",
+      "displayName":"Actual cost fee/fine - bill",
+      "description":"Bill actual cost fee/fine"
     }
   ],
   "launchDescriptor": {

@@ -20,10 +20,12 @@ import java.util.stream.Collectors;
 import org.folio.rest.domain.Action;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.GroupedCriterias;
 import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.interfaces.Results;
 import org.folio.rest.utils.FeeFineActionHelper;
 
@@ -54,6 +56,18 @@ public class FeeFineActionRepository extends AbstractRepository {
 
   public FeeFineActionRepository(Map<String, String> headers, Context context) {
     super(headers, context);
+  }
+
+  public FeeFineActionRepository(PostgresClient pgClient) {
+    super(pgClient);
+  }
+
+  public Future<Feefineaction> save(Feefineaction action) {
+    return save(ACTIONS_TABLE, action.getId(), action);
+  }
+
+  public Future<Feefineaction> save(Feefineaction action, Conn conn) {
+    return save(ACTIONS_TABLE, action.getId(), action, conn);
   }
 
   public Future<List<Feefineaction>> get(Criterion criterion) {
@@ -258,13 +272,6 @@ public class FeeFineActionRepository extends AbstractRepository {
         .filter(Objects::nonNull)
         .map(value -> format("'%s'", value))
         .collect(Collectors.joining(", "))));
-  }
-
-  public Future<Feefineaction> save(Feefineaction feefineaction) {
-    Promise<String> promise = Promise.promise();
-    pgClient.save(ACTIONS_TABLE, feefineaction.getId(), feefineaction, promise);
-
-    return promise.future().map(feefineaction);
   }
 
   private List<Criteria> getTypeCriterias(List<Action> actions) {

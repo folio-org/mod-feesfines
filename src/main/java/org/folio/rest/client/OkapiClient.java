@@ -102,7 +102,7 @@ public class OkapiClient {
         log.error("Failed to get {} by ID {}. Response status code: {}, response body: {}",
           objectType.getSimpleName(), id, responseStatus, response.body());
         if (responseStatus == 404) {
-          return failedFuture(new HttpNotFoundException(HttpMethod.GET, url, response));
+          return failedFuture(new HttpNotFoundException(objectType, id, HttpMethod.GET, url, response));
         }
         return failedFuture(new HttpGetException(url, response));
       }

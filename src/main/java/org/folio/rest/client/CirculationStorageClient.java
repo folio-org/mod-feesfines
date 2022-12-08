@@ -53,8 +53,8 @@ public class CirculationStorageClient extends OkapiClient {
           log.error("Failed to update record with ID {}. Response status code: {}",
             actualCostRecord.getId(), responseStatus);
           if (responseStatus == 404) {
-            return failedFuture(new HttpNotFoundException(HttpMethod.PUT, ACTUAL_COST_RECORD_STORAGE_URL,
-              response));
+            return failedFuture(new HttpNotFoundException(ActualCostRecord.class,
+              actualCostRecord.getId(), HttpMethod.PUT, ACTUAL_COST_RECORD_STORAGE_URL, response));
           }
           return failedFuture(new HttpPutException(ACTUAL_COST_RECORD_STORAGE_URL, response));
         }

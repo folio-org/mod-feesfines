@@ -57,6 +57,26 @@ public class FeeFineActionMatchers {
     ));
   }
 
+  public static Matcher<JsonObject> feeFineAction(String accountId, String userId, double balance,
+    MonetaryValue amount, String actionType, String transactionInfo, String userName,
+    String comments, boolean notifyPatron, String createdAt) {
+
+    return allOf(Arrays.asList(
+      hasJsonPath("typeAction", is(actionType)),
+      hasJsonPath("amountAction", is((float) amount.toDouble())),
+      hasJsonPath("balance", is((float) balance)),
+      hasJsonPath("transactionInformation", is(transactionInfo)),
+      hasJsonPath("accountId", is(accountId)),
+      hasJsonPath("userId", is(userId)),
+      hasJsonPath("id", notNullValue(String.class)),
+      hasJsonPath("dateAction", notNullValue(String.class)),
+      hasJsonPath("source", is(userName)),
+      hasJsonPath("comments", is(comments)),
+      hasJsonPath("notify", is(notifyPatron)),
+      hasJsonPath("createdAt", is(createdAt))
+    ));
+  }
+
   public static Matcher<JsonObject> feeFineAction(Feefineaction feefineaction) {
     return allOf(Arrays.asList(
       hasJsonPath("typeAction", is(feefineaction.getTypeAction())),

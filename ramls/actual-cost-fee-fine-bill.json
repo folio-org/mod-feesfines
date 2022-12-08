@@ -1,0 +1,33 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "Actual cost fee/fine billing request schema",
+  "description": "Actual cost fee/fine billing request",
+  "type": "object",
+  "properties": {
+    "actualCostRecordId": {
+      "description": "Actual Cost Record ID",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "amount": {
+      "description": "Amount to bill",
+      "type": "string"
+    },
+    "servicePointId": {
+      "description": "ID of the Service Point where actual cost fee/fine is being billed",
+      "$ref": "raml-util/schemas/uuid.schema"
+    },
+    "additionalInfoForStaff": {
+      "description": "Additional information for staff",
+      "type": "string"
+    },
+    "additionalInfoForPatron": {
+      "description": "Additional information for a patron",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "actualCostRecordId",
+    "amount"
+   ]
+}

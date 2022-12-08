@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 
@@ -15,16 +16,23 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
-public class AccountRepository {
+public class AccountRepository extends AbstractRepository {
   private static final String ACCOUNTS_TABLE = "accounts";
-  private final PostgresClient pgClient;
 
   public AccountRepository(PostgresClient pgClient) {
-    this.pgClient = pgClient;
+    super(pgClient);
   }
 
   public AccountRepository(Context context, Map<String, String> headers) {
     this(PostgresClient.getInstance(context.owner(), TenantTool.tenantId(headers)));
+  }
+
+  public Future<Account> save(Account account) {
+    return save(ACCOUNTS_TABLE, account.getId(), account);
+  }
+
+  public Future<Account> save(Account account, Conn conn) {
+    return save(ACCOUNTS_TABLE, account.getId(), account, conn);
   }
 
   public Future<Account> getAccountById(String accountId) {
@@ -52,4 +60,5 @@ public class AccountRepository {
     pgClient.update(ACCOUNTS_TABLE, account, account.getId(), promise);
     return promise.future().map(account);
   }
+
 }

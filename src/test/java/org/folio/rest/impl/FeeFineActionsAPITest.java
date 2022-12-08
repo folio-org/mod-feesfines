@@ -221,10 +221,10 @@ public class FeeFineActionsAPITest extends ApiTests {
     verifyPublishedLogRecordsCount(NOTICE_ERROR, 1);
 
     String expectedErrorMessage = "Following errors may result in missing token values: " +
-      "\"GET /users/" + user.getId() + ": [404] Not found\", " +
-      "\"GET /item-storage/items/" + item.getId() + ": [404] Not found\", " +
-      "\"GET /holdings-storage/holdings/" + holdingsRecord.getId() + ": [404] Not found\", " +
-      "\"GET /instance-storage/instances/" + instance.getId() + ": [404] Not found\", " +
+      "\"User " + user.getId() + " was not found\", " +
+      "\"Item " + item.getId() + " was not found\", " +
+      "\"HoldingsRecord " + holdingsRecord.getId() + " was not found\", " +
+      "\"Instance " + instance.getId() + " was not found\", " +
       "\"Invalid Location ID: null\"";
 
     assertThatNoticeErrorEventWasPublished(charge, expectedErrorMessage);

@@ -42,7 +42,6 @@ public final class AccountMatchers {
       hasJsonPath("barcode", is(account.getBarcode())),
       hasJsonPath("materialType", is(account.getMaterialType())),
       hasJsonPath("materialTypeId", is(account.getMaterialTypeId())),
-      hasJsonPath("itemStatus.name", is(account.getItemStatus().getName())),
       hasJsonPath("location", is(account.getLocation())),
       hasJsonPath("dueDate", is(formatDate(account.getDueDate()))),
       hasJsonPath("returnedDate", is(formatDate(account.getReturnedDate()))),
