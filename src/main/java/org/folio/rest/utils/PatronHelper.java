@@ -38,7 +38,6 @@ public class PatronHelper {
     return builder.toString();
   }
 
-  // get username for FeeFineAction.source
   public static String getUserName(User user) {
     Personal personal = user.getPersonal();
 

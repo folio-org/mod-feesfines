@@ -44,7 +44,6 @@ public class FeeFineChargeService {
       .onFailure(t -> log.error("Failed to charge fee/fine \"{}\" for user {}: {}",
         feeFineType, userId, t.getMessage()))
       .mapEmpty();
-
   }
 
 }

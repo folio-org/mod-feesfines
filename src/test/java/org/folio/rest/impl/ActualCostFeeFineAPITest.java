@@ -66,10 +66,6 @@ import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
 
 class ActualCostFeeFineAPITest extends ApiTests {
-  private static final String ACTUAL_COST_CANCEL_PATH = "/actual-cost-fee-fine/cancel";
-  private static final String ACTUAL_COST_BILL_PATH = "/actual-cost-fee-fine/bill";
-  private static final String ACTUAL_COST_RECORD_PATH_TEMPLATE = ACTUAL_COST_RECORDS_PATH + "/%s";
-
   private static final String ACTUAL_COST_RECORD_ID = "9e13ebc0-d749-4927-a29e-bdb337208e6a";
   private static final String FEE_FINE_TYPE_ID = "615ce21a-1a80-47c3-aab9-cd948244d5ba";
   private static final String OWNER_ID = "b3b16e50-8f6b-447e-9fa5-0709778b9144";
@@ -84,6 +80,9 @@ class ActualCostFeeFineAPITest extends ApiTests {
   private static final String LOST_ITEM_FEE_POLICY_ID = "c2642b90-dee3-4f10-ae0a-e2b5854893fd";
   private static final String SERVICE_POINT_ID = "bdfc9624-0d0a-40ac-91c1-2363641e01fa";
 
+  private static final String ACTUAL_COST_CANCEL_PATH = "/actual-cost-fee-fine/cancel";
+  private static final String ACTUAL_COST_BILL_PATH = "/actual-cost-fee-fine/bill";
+  private static final String ACTUAL_COST_RECORD_PATH_TEMPLATE = ACTUAL_COST_RECORDS_PATH + "/%s";
   private static final String ACTUAL_COST_RECORD_PATH =
     String.format(ACTUAL_COST_RECORD_PATH_TEMPLATE, ACTUAL_COST_RECORD_ID);
 
