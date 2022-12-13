@@ -102,7 +102,6 @@ public class ActualCostFeeFineBillingService extends ActualCostFeeFineService {
     ActualCostFeeFineBill request = context.getBillingRequest();
     ActualCostRecord actualCostRecord = context.getActualCostRecord();
     Loan loan = context.getLoan();
-    MonetaryValue amount = new MonetaryValue(request.getAmount());
 
     String callNumber = ofNullable(actualCostRecord.getItem())
       .map(ActualCostRecordItem::getEffectiveCallNumberComponents)
@@ -117,8 +116,8 @@ public class ActualCostFeeFineBillingService extends ActualCostFeeFineService {
 
     Account account = new Account()
       .withId(UUID.randomUUID().toString())
-      .withAmount(amount)
-      .withRemaining(amount)
+      .withAmount(request.getAmount())
+      .withRemaining(request.getAmount())
       .withFeeFineId(actualCostRecord.getFeeFine().getTypeId())
       .withFeeFineType(actualCostRecord.getFeeFine().getType())
       .withOwnerId(actualCostRecord.getFeeFine().getOwnerId())
@@ -185,14 +184,19 @@ public class ActualCostFeeFineBillingService extends ActualCostFeeFineService {
   }
 
   private Future<ActualCostRecord> updateRecord(BillingContext context) {
-    context.getActualCostRecord()
-      .withStatus(BILLED)
-      .withAdditionalInfoForStaff(context.getBillingRequest().getAdditionalInfoForStaff())
-      .withAdditionalInfoForPatron(context.getBillingRequest().getAdditionalInfoForPatron())
-      .getFeeFine()
-      .withAccountId(context.getAccount().getId());
+    ActualCostFeeFineBill billingRequest = context.getBillingRequest();
+    Account account = context.getAccount();
+    ActualCostRecord actualCostRecord = context.getActualCostRecord();
 
-    return updateActualCostRecord(context.getActualCostRecord());
+    actualCostRecord
+      .withStatus(BILLED)
+      .withAdditionalInfoForStaff(billingRequest.getAdditionalInfoForStaff())
+      .withAdditionalInfoForPatron(billingRequest.getAdditionalInfoForPatron())
+      .getFeeFine()
+      .withAccountId(account.getId())
+      .withBilledAmount(account.getAmount());
+
+    return updateActualCostRecord(actualCostRecord);
   }
 
   @Getter

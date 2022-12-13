@@ -264,6 +264,11 @@
           "type": "string",
           "$ref": "raml-util/schemas/uuid.schema"
         },
+        "billedAmount": {
+          "description": "Initial amount of a fee/fine created upon billing",
+          "type": "string",
+          "javaType": "org.folio.rest.domain.MonetaryValue"
+        },
         "ownerId": {
           "description": "Fee/fine owner ID",
           "type": "string",

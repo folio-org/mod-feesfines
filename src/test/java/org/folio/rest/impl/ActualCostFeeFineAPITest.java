@@ -235,7 +235,9 @@ class ActualCostFeeFineAPITest extends ApiTests {
       .withStatus(ActualCostRecord.Status.BILLED)
       .withAdditionalInfoForPatron(billingRequest.getAdditionalInfoForPatron())
       .withAdditionalInfoForStaff(billingRequest.getAdditionalInfoForStaff())
-      .withFeeFine(record.getFeeFine().withAccountId(accountId));
+      .withFeeFine(record.getFeeFine()
+        .withAccountId(accountId)
+        .withBilledAmount(billingRequest.getAmount()));
 
     assertThat(mapFrom(billedRecord), hasSameProperties(mapFrom(expectedBilledRecord)));
 
@@ -433,7 +435,7 @@ class ActualCostFeeFineAPITest extends ApiTests {
   private static ActualCostFeeFineBill buildBillingRequest() {
     return new ActualCostFeeFineBill()
       .withActualCostRecordId(ACTUAL_COST_RECORD_ID)
-      .withAmount(String.valueOf(BILLING_AMOUNT))
+      .withAmount(new MonetaryValue(BILLING_AMOUNT))
       .withAdditionalInfoForStaff(STAFF_COMMENT)
       .withAdditionalInfoForPatron(PATRON_COMMENT)
       .withServicePointId(SERVICE_POINT_ID);
