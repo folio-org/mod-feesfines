@@ -48,7 +48,7 @@
     },
     {
       "id": "actual-cost-record-storage",
-      "version": "0.6"
+      "version": "0.7"
     }
   ],
   "provides":[
