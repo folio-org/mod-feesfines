@@ -55,7 +55,7 @@
   },
   "feeFine": {
     "accountId": "306339a5-539b-4652-be7c-ab041a286c8c",
-    "billedAmount": "9.99",
+    "billedAmount": 9.99,
     "ownerId": "a2e1729a-2593-4a2a-8069-2fee39d9ae31",
     "owner": "Default owner",
     "typeId": "92ef9706-f1af-430d-9edd-78035689efa2",

@@ -102,6 +102,7 @@ public class ActualCostFeeFineBillingService extends ActualCostFeeFineService {
     ActualCostFeeFineBill request = context.getBillingRequest();
     ActualCostRecord actualCostRecord = context.getActualCostRecord();
     Loan loan = context.getLoan();
+    MonetaryValue amount = new MonetaryValue(request.getAmount());
 
     String callNumber = ofNullable(actualCostRecord.getItem())
       .map(ActualCostRecordItem::getEffectiveCallNumberComponents)
@@ -116,8 +117,8 @@ public class ActualCostFeeFineBillingService extends ActualCostFeeFineService {
 
     Account account = new Account()
       .withId(UUID.randomUUID().toString())
-      .withAmount(request.getAmount())
-      .withRemaining(request.getAmount())
+      .withAmount(amount)
+      .withRemaining(amount)
       .withFeeFineId(actualCostRecord.getFeeFine().getTypeId())
       .withFeeFineType(actualCostRecord.getFeeFine().getType())
       .withOwnerId(actualCostRecord.getFeeFine().getOwnerId())

@@ -21,6 +21,7 @@ import static org.folio.test.support.matcher.constant.ServicePath.ACTUAL_COST_RE
 import static org.folio.test.support.matcher.constant.ServicePath.LOANS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.USERS_PATH;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -237,7 +238,7 @@ class ActualCostFeeFineAPITest extends ApiTests {
       .withAdditionalInfoForStaff(billingRequest.getAdditionalInfoForStaff())
       .withFeeFine(record.getFeeFine()
         .withAccountId(accountId)
-        .withBilledAmount(billingRequest.getAmount()));
+        .withBilledAmount(new MonetaryValue(billingRequest.getAmount())));
 
     assertThat(mapFrom(billedRecord), hasSameProperties(mapFrom(expectedBilledRecord)));
 
@@ -323,6 +324,17 @@ class ActualCostFeeFineAPITest extends ApiTests {
       .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
       .contentType(TEXT)
       .body(equalTo("User " + X_OKAPI_USER_ID + " was not found"));
+
+    assertThatFeeFineWasNotBilled();
+  }
+
+  @Test
+  void billingFailsWhenRequestedAmountIsNegative() {
+    bill(buildBillingRequest().withAmount(-9.99))
+      .then()
+      .statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY)
+      .contentType(JSON)
+      .body(containsString("must be greater than or equal to 0"));
 
     assertThatFeeFineWasNotBilled();
   }
@@ -435,7 +447,7 @@ class ActualCostFeeFineAPITest extends ApiTests {
   private static ActualCostFeeFineBill buildBillingRequest() {
     return new ActualCostFeeFineBill()
       .withActualCostRecordId(ACTUAL_COST_RECORD_ID)
-      .withAmount(new MonetaryValue(BILLING_AMOUNT))
+      .withAmount(BILLING_AMOUNT)
       .withAdditionalInfoForStaff(STAFF_COMMENT)
       .withAdditionalInfoForPatron(PATRON_COMMENT)
       .withServicePointId(SERVICE_POINT_ID);
