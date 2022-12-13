@@ -10,7 +10,8 @@
     },
     "amount": {
       "description": "Amount to bill",
-      "type": "string"
+      "type": "number",
+      "minimum": 0.0
     },
     "servicePointId": {
       "description": "ID of the Service Point where actual cost fee/fine is being billed",

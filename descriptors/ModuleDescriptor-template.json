@@ -48,7 +48,7 @@
     },
     {
       "id": "actual-cost-record-storage",
-      "version": "0.6"
+      "version": "0.7"
     }
   ],
   "provides":[
@@ -916,7 +916,7 @@
     },
     {
       "id":"actual-cost-fee-fine",
-      "version":"0.2",
+      "version":"0.3",
       "handlers": [
         {
           "methods": [
