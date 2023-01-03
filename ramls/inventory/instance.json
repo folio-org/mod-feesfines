@@ -5,16 +5,76 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "The unique ID of the instance record; a UUID",
+      "description": "The system assigned unique ID of the instance record",
       "$ref": "../raml-util/schemas/uuid.schema"
+    },
+    "_version": {
+      "type": "integer",
+      "description": "Record version for optimistic locking"
     },
     "hrid": {
       "type": "string",
       "description": "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
     },
+    "matchKey": {
+      "type": "string",
+      "description" : "An unique instance identifier matching a client-side bibliographic record identification. Could be an actual local identifier or a key generated from metadata in the local bibliographic record. Enables the client to determine if a client side bibliographic record already exists as an Instance in Inventory"
+    },
     "source": {
       "type": "string",
       "description": "The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)"
+    },
+    "parentInstances": {
+      "description": "Array of parent instances",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Id of the parent instance",
+            "type": "string"
+          },
+          "superInstanceId": {
+            "description": "Id of the super instance",
+            "type": "string"
+          },
+          "instanceRelationshipTypeId": {
+            "description": "Id of the relationship type",
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "superInstanceId",
+          "instanceRelationshipTypeId"
+        ]
+      }
+    },
+    "childInstances": {
+      "description": "Child instances",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subInstanceId": {
+            "description": "Id of sub Instance",
+            "type": "string"
+          },
+          "instanceRelationshipTypeId": {
+            "description": "Id of the relationship type",
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "id",
+          "subInstanceId",
+          "instanceRelationshipTypeId"
+        ]
+      }
     },
     "title": {
       "type": "string",
@@ -32,12 +92,17 @@
         "properties": {
           "alternativeTitleTypeId": {
             "type": "string",
-            "description": "UUID for an alternative title qualifier",
+            "description": "ID for an alternative title qualifier",
             "$ref": "../raml-util/schemas/uuid.schema"
           },
           "alternativeTitle": {
             "type": "string",
             "description": "An alternative title for the resource"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls an alternative title",
+            "$ref": "../raml-util/schemas/uuid.schema"
           }
         }
       },
@@ -55,7 +120,22 @@
       "type": "array",
       "description": "List of series titles associated with the resource (e.g. Harry Potter)",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Series title value"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls an series title",
+            "$ref": "../raml-util/schemas/uuid.schema"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "value"
+        ]
       },
       "uniqueItems": true
     },
@@ -72,19 +152,8 @@
           },
           "identifierTypeId": {
             "type": "string",
-            "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
+            "description": "Resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
             "$ref": "../raml-util/schemas/uuid.schema"
-          },
-          "identifierTypeObject": {
-            "type": "object",
-            "description": "Information about identifier type, looked up from identifierTypeId",
-            "folio:$ref": "illpolicy.json",
-            "readonly": true,
-            "folio:isVirtual": true,
-            "folio:linkBase": "identifier-types",
-            "folio:linkFromField": "identifierTypeId",
-            "folio:linkToField": "id",
-            "folio:includedElement": "identifierTypes.0"
           }
         },
         "additionalProperties": true,
@@ -107,7 +176,7 @@
           },
           "contributorTypeId": {
             "type": "string",
-            "description": "UUID for the contributor type term defined in controlled vocabulary",
+            "description": "ID for the contributor type term defined as a referencetable in settings",
             "$ref": "../raml-util/schemas/uuid.schema"
           },
           "contributorTypeText": {
@@ -116,20 +185,13 @@
           },
           "contributorNameTypeId": {
             "type": "string",
-            "description": "UUID of contributor name type term defined by the MARC code list for relators",
+            "description": "Contributor type terms defined by the MARC code list for relators",
             "$ref": "../raml-util/schemas/uuid.schema"
           },
-          "contributorNameType": {
-            "type": "object",
-            "description": "Dereferenced contributor-name type",
-            "javaType": "org.folio.rest.jaxrs.model.contributorNameTypeVirtual",
-            "folio:$ref": "contributornametype.json",
-            "readonly": true,
-            "folio:isVirtual": true,
-            "folio:linkBase": "contributor-name-types",
-            "folio:linkFromField": "contributorNameTypeId",
-            "folio:linkToField": "id",
-            "folio:includedElement": "contributorNameTypes.0"
+          "authorityId": {
+            "type": "string",
+            "description": "ID of authority record that controls the contributor",
+            "$ref": "../raml-util/schemas/uuid.schema"
           },
           "primary": {
             "type": "boolean",
@@ -147,7 +209,22 @@
       "type": "array",
       "description": "List of subject headings",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Subject heading value"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls a subject heading",
+            "$ref": "../raml-util/schemas/uuid.schema"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "value"
+        ]
       },
       "uniqueItems": true
     },
@@ -164,20 +241,8 @@
           },
           "classificationTypeId": {
             "type": "string",
-            "description": "UUID of classification schema (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)",
+            "description": "List of classification schemas (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)",
             "$ref": "../raml-util/schemas/uuid.schema"
-          },
-          "classificationType": {
-            "type": "object",
-            "description": "Dereferenced classification schema",
-            "javaType": "org.folio.rest.jaxrs.model.classificationTypeVirtual",
-            "readonly": true,
-            "folio:$ref": "classificationtype.json",
-            "folio:isVirtual": true,
-            "folio:linkBase": "classification-types",
-            "folio:linkFromField": "classificationTypeId",
-            "folio:linkToField": "id",
-            "folio:includedElement": "classificationTypes.0"
           }
         },
         "additionalProperties": true,
@@ -228,6 +293,21 @@
       },
       "uniqueItems": true
     },
+    "publicationPeriod": {
+      "type": "object",
+      "description": "Publication period",
+      "properties": {
+        "start": {
+          "type": "integer",
+          "description": "Publication start year"
+        },
+        "end": {
+          "type": "integer",
+          "description": "Publication end year"
+        }
+      },
+      "additionalProperties": true
+    },
     "electronicAccess": {
       "type": "array",
       "description": "List of electronic access items",
@@ -236,7 +316,7 @@
         "properties": {
           "uri": {
             "type": "string",
-            "description": "uniform resource identifier (URI) is a string of characters designed for unambiguous identification of resources"
+            "description": "Uniform Resource Identifier (URI) is a string of characters designed for unambiguous identification of resources"
           },
           "linkText": {
             "type": "string",
@@ -252,7 +332,7 @@
           },
           "relationshipId": {
             "type": "string",
-            "description": "UUID for the type of relationship between the electronic resource at the location identified and the item described in the record as a whole",
+            "description": "Relationship between the electronic resource at the location identified and the item described in the record as a whole",
             "$ref": "../raml-util/schemas/uuid.schema"
           }
         },
@@ -264,30 +344,16 @@
     },
     "instanceTypeId": {
       "type": "string",
-      "description": "UUID of the unique term for the resource type whether it's from the RDA content term list of locally defined",
+      "description": "The unique term for the resource type whether it's from the RDA content term list of locally defined",
       "$ref": "../raml-util/schemas/uuid.schema"
     },
     "instanceFormatIds": {
       "type": "array",
-      "description": "UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined",
+      "description": "The unique term for the format whether it's from the RDA carrier term list of locally defined",
       "items": {
         "type": "string",
         "$ref": "../raml-util/schemas/uuid.schema"
       }
-    },
-    "instanceFormats": {
-      "type": "array",
-      "description": "List of dereferenced instance formats",
-      "items": {
-        "type": "object",
-        "$ref": "instanceformat.json"
-      },
-      "readonly": true,
-      "folio:isVirtual": true,
-      "folio:linkBase": "instance-formats",
-      "folio:linkFromField": "instanceFormatIds",
-      "folio:linkToField": "id",
-      "folio:includedElement": "instanceFormats"
     },
     "physicalDescriptions": {
       "type": "array",
@@ -326,9 +392,17 @@
         }
       }
     },
+    "administrativeNotes":{
+      "type": "array",
+      "description": "Administrative notes",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    },
     "modeOfIssuanceId": {
       "type": "string",
-      "description": "UUID of the RDA mode of issuance, a categorization reflecting whether a resource is issued in one or more parts, the way it is updated, and whether its termination is predetermined or not (e.g. monograph,  sequential monograph, serial; integrating Resource, other)",
+      "description": "RDA mode of issuance is a categorization reflecting whether a resource is issued in one or more parts, the way it is updated, and whether its termination is predetermined or not (e.g. monograph,  sequential monograph, serial; integrating Resource, other)",
       "$ref": "../raml-util/schemas/uuid.schema"
     },
     "catalogedDate": {
@@ -345,8 +419,7 @@
     },
     "discoverySuppress": {
       "type": "boolean",
-      "description": "Records the fact that the record should not be displayed in a discovery system",
-      "default": false
+      "description": "Records the fact that the record should not be displayed in a discovery system"
     },
     "statisticalCodeIds": {
       "type": "array",
@@ -354,18 +427,17 @@
       "items": {
         "type": "string",
         "$ref": "../raml-util/schemas/uuid.schema"
-      },
-      "uniqueItems": true
+      }
     },
     "sourceRecordFormat": {
+      "description": "Format of the instance source record, if a source record exists",
       "type": "string",
-      "description": "Format of the instance source record, if a source record exists (e.g. FOLIO if it's a record created in Inventory,  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)",
       "enum": ["MARC-JSON"],
       "readonly": true
     },
     "statusId": {
       "type": "string",
-      "description": "UUID for the Instance status term (e.g. cataloged, uncatalogued, batch loaded, temporary, other, not yet assigned)",
+      "description": "Instance status term (e.g. cataloged, uncatalogued, batch loaded, temporary, other, not yet assigned)",
       "$ref": "../raml-util/schemas/uuid.schema"
     },
     "statusUpdatedDate": {
@@ -383,28 +455,121 @@
       "$ref": "../raml-util/schemas/metadata.schema",
       "readonly": true
     },
-    "holdingsRecords2": {
-      "type": "array",
-      "description": "List of holdings records",
-      "items": {
-        "type": "object",
-        "$ref": "holdingsrecord.json"
-      },
-      "readonly": true,
-      "folio:isVirtual": true,
-      "folio:linkBase": "holdings-storage/holdings",
-      "folio:linkFromField": "id",
-      "folio:linkToField": "instanceId",
-      "folio:includedElement": "holdingsRecords"
-    },
     "natureOfContentTermIds": {
       "type": "array",
       "description": "Array of UUID for the Instance nature of content (e.g. bibliography, biography, exhibition catalogue, festschrift, newspaper, proceedings, research report, thesis or website)",
-      "uniqueItems": true,
       "items": {
         "type": "string",
         "description": "Single UUID for the Instance nature of content",
         "$ref": "../raml-util/schemas/uuid.schema"
+      }
+    },
+    "isBoundWith": {
+      "description": "Indicates if this Instance is included in a bound-with",
+      "type": "boolean",
+      "default": false,
+      "readonly": true
+    },
+    "precedingTitles": {
+      "description": "Array of preceding titles",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Id of the preceding title",
+            "type": "string",
+            "$ref": "../raml-util/schemas/uuid.schema"
+          },
+          "precedingInstanceId": {
+            "description": "Id of the preceding instance id",
+            "type": "string",
+            "$ref": "../raml-util/schemas/uuid.schema"
+          },
+          "title": {
+            "type": "string",
+            "description": "The primary title (or label) associated with the resource"
+          },
+          "hrid": {
+            "type": "string",
+            "description": "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
+          },
+          "identifiers": {
+            "type": "array",
+            "description": "An extensible set of name-value pairs of identifiers associated with the resource",
+            "minItems": 0,
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "description": "Resource identifier value"
+                },
+                "identifierTypeId": {
+                  "type": "string",
+                  "description": "Resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)"
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "value",
+                "identifierTypeId"
+              ]
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "succeedingTitles": {
+      "description": "Array of succeeding titles",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Id of the succeeding title",
+            "type": "string",
+            "$ref": "../raml-util/schemas/uuid.schema"
+          },
+          "succeedingInstanceId": {
+            "description": "Id of the succeeding instance id",
+            "type": "string",
+            "$ref": "../raml-util/schemas/uuid.schema"
+          },
+          "title": {
+            "type": "string",
+            "description": "The primary title (or label) associated with the resource"
+          },
+          "hrid": {
+            "type": "string",
+            "description": "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
+          },
+          "identifiers": {
+            "type": "array",
+            "description": "An extensible set of name-value pairs of identifiers associated with the resource",
+            "minItems": 0,
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "description": "Resource identifier value"
+                },
+                "identifierTypeId": {
+                  "type": "string",
+                  "description": "Resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)"
+                }
+              },
+              "additionalProperties": true,
+              "required": [
+                "value",
+                "identifierTypeId"
+              ]
+            }
+          }
+        },
+        "additionalProperties": true
       }
     }
   },
