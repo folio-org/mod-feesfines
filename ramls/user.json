@@ -59,6 +59,10 @@
           "description": "The user's middle name (if any)",
           "type": "string"
         },
+        "preferredFirstName": {
+          "description": "The user's preferred first name (if any)",
+          "type": "string"
+        },
         "email": {
           "description": "The user's email address",
           "type": "string"

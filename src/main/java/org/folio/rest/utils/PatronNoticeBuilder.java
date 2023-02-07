@@ -74,7 +74,10 @@ public class PatronNoticeBuilder {
       userContext
         .put("firstName", personal.getFirstName())
         .put("lastName", personal.getLastName())
-        .put("middleName", personal.getMiddleName());
+        .put("middleName", personal.getMiddleName())
+        .put("preferredFirstName", personal.getPreferredFirstName() == null ?
+           personal.getFirstName() : personal.getPreferredFirstName());
+
     }
 
     return userContext;
