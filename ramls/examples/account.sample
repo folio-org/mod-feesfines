@@ -1,8 +1,6 @@
 {
   "amount": 15.0,
   "remaining": 15.0,
-  "dateCreated": "2018-01-31T00:00:01Z",
-  "dateUpdated": "2018-01-31T00:00:01Z",
   "status": {
     "name": "Open"
   },

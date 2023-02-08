@@ -14,16 +14,6 @@
       "javaType": "org.folio.rest.domain.MonetaryValue",
       "type": "number"
     },
-    "dateCreated": {
-      "description": "Date and time the account of the fine/fee was created",
-      "type": "string",
-      "format": "date-time"
-    },
-    "dateUpdated": {
-      "description": "Date and time the account of the fine/fee was updated",
-      "type": "string",
-      "format": "date-time"
-    },
     "status": {
       "description": "Overall status of the fee/fine",
       "type": "object",
