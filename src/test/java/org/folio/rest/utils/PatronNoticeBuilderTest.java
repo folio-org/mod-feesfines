@@ -97,6 +97,7 @@ public class PatronNoticeBuilderTest {
     assertEquals(user.getPersonal().getFirstName(), userContext.getString("firstName"));
     assertEquals(user.getPersonal().getMiddleName(), userContext.getString("middleName"));
     assertEquals(user.getPersonal().getLastName(), userContext.getString("lastName"));
+    assertEquals(user.getPersonal().getPreferredFirstName(), userContext.getString("preferredFirstName"));
 
     final JsonObject itemContext = (JsonObject) context.getAdditionalProperties().get("item");
 
@@ -314,7 +315,8 @@ public class PatronNoticeBuilderTest {
       .withPersonal(new Personal()
         .withFirstName("First")
         .withMiddleName("Middle")
-        .withLastName("Last"));
+        .withLastName("Last")
+        .withPreferredFirstName("PreferredFirstName"));
   }
 
   private static Owner createOwner() {
