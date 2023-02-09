@@ -34,8 +34,6 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.FeeFineNoticeContext;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
@@ -46,8 +44,6 @@ public class LogEventPayloadHelper {
   private static final String STAFF_INFO_ONLY = "Staff info only";
   private static final String STAFF_INFO_ONLY_ADDED = "Staff information only added";
   private static final String BILLED = "Billed";
-
-  private static final Logger logger = LogManager.getLogger(LogEventPayloadHelper.class);
 
   private LogEventPayloadHelper() {
   }
@@ -148,8 +144,6 @@ public class LogEventPayloadHelper {
       write(json, TYPE.value(), ff.getFeeFineType());
       write(json, AUTOMATED.value(), ff.getAutomatic());
     });
-
-    logger.info("buildFeeFineLogEventPayload :: payload :{}",json);
 
     return succeededFuture(json);
   }
