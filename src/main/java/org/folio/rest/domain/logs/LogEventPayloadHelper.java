@@ -126,6 +126,7 @@ public class LogEventPayloadHelper {
         write(json, COMMENTS.value(), act.getComments());
       } else if (isCharge(act)) {
         write(json, ACTION.value(), BILLED);
+        write(json, COMMENTS.value(), act.getComments());
       }
     });
 
