@@ -1,3 +1,12 @@
+## 18.2.0 2023-02-15
+* Upgrade to RMB 35.0.2 and Vertx 4.3.4 (MODFEE-299, MODFEE-262)
+* Actual cost record cancelling API (MODFEE-298)
+* Actual cost record billing API (MODFEE-297)
+* Add billed amount to actual cost record (MODFEE-307)
+* Update instance-storage interface version and schema (MODFEE-309)
+* Add user.preferredFirstName field to the User Object in the Notice context (MODFEE-316)
+* Fix for Additional Info not coming for circulation-log description (MODFEE-314)
+
 ## 18.1.0 2022-10-18
 * Upgrade to RMB 35.0.0 and Vertx 4.3.3 (MODFEE-281)
 * Add processId field to account schema (MODFEE-275)
