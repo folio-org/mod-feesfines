@@ -145,6 +145,18 @@ class FeeFineActionMigrationTest extends ApiTests {
     verifyResponseMessage(response, "fallbackServicePointId is not a valid UUID: not a UUID");
   }
 
+  @Test
+  void migrationFailsWhenFallbackServicePointDoesNotExist() {
+    String servicePointId = randomId();
+    Parameter parameter = new Parameter()
+      .withKey(FALLBACK_SERVICE_POINT_ID_KEY)
+      .withValue(servicePointId);
+
+    Response response = postTenant(MODULE_FROM, MODULE_TO, parameter);;
+    assertThat(response.getStatus(), is(SC_INTERNAL_SERVER_ERROR));
+    verifyResponseMessage(response, "Fallback service point was not found by ID: " + servicePointId);
+  }
+
   // We know that migration is skipped because we get 201 in response. Had it not been skipped, we
   // would have received a 500 due to a missing fallbackServicePointId.
   @Test
