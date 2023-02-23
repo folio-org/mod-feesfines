@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.http.HttpStatus;
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.test.support.ApiTests;
@@ -44,7 +45,9 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
 
     CompletableFuture<Response> future = new CompletableFuture<>();
     createTenant(tenantAttributes, future);
-    get(future);
+
+    Response postTenantResponse = get(future);
+    assertThat(postTenantResponse.getStatus(), is(HttpStatus.SC_NO_CONTENT));
   }
 
   @Test

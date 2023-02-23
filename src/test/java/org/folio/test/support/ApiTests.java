@@ -49,6 +49,7 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,7 +109,9 @@ public class ApiTests {
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions(),
       res -> createTenant(getTenantAttributes(), future));
-    get(future);
+
+    Response postTenantResponse = get(future);
+    assertThat(postTenantResponse.getStatus(), Matchers.is(HttpStatus.SC_NO_CONTENT));
   }
 
   @AfterAll
@@ -130,11 +133,6 @@ public class ApiTests {
   }
 
   public static void createTenant(TenantAttributes attributes, CompletableFuture<Response> future) {
-    createTenant(attributes, future, HttpStatus.SC_NO_CONTENT);
-  }
-
-  public static void createTenant(TenantAttributes attributes, CompletableFuture<Response> future,
-    int expectedResponseStatus) {
 
     TenantRefAPI tenantAPI = new TenantRefAPI();
     Map<String, String> headers = new CaseInsensitiveMap<>();
@@ -146,7 +144,6 @@ public class ApiTests {
 
     tenantAPI.postTenant(attributes, headers, responseAsyncResult -> {
       assertThat(responseAsyncResult.succeeded(), is(true));
-      assertThat(responseAsyncResult.result().getStatus(), is(expectedResponseStatus));
       pgClient = PostgresClient.getInstance(vertx, TENANT_NAME);
       future.complete(responseAsyncResult.result());
     }, vertx.getOrCreateContext());

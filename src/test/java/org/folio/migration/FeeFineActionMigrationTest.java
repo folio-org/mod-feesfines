@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.apache.http.HttpStatus.SC_OK;
+import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.test.support.EntityBuilder.buildServicePoint;
 import static org.folio.test.support.matcher.constant.ServicePath.SERVICE_POINTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.SERVICE_POINTS_USERS_PATH;
@@ -31,7 +32,6 @@ import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.jaxrs.model.ServicePointsUser;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.utils.ResourceClient;
-import org.folio.rest.utils.ResourceClients;
 import org.folio.test.support.ApiTests;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.AfterEach;
@@ -64,10 +64,9 @@ class FeeFineActionMigrationTest extends ApiTests {
   private static final Parameter FALLBACK_SERVICE_POINT_ID_PARAMETER =
     new Parameter().withKey(FALLBACK_SERVICE_POINT_ID_KEY).withValue(FALLBACK_SERVICE_POINT_ID);
 
-  private final ResourceClient feeFineActionsClient = ResourceClients.buildFeeFineActionsClient();
+  private final ResourceClient feeFineActionsClient = buildFeeFineActionsClient();
   private StubMapping servicePointsStub;
   private StubMapping servicePointsUsersStub;
-
 
   @BeforeEach
   void beforeEach() {
@@ -83,48 +82,55 @@ class FeeFineActionMigrationTest extends ApiTests {
   @Test
   void createdAtIsNotCreatedWhenActionDidNotHaveItInitially() {
     String actionId = createAction(null, randomId());
-    postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER, SC_NO_CONTENT);
+    Response response = postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
     verifyCreatedAt(actionId, nullValue());
   }
 
   @Test
   void createdAtIsNotChangedWhenItAlreadyContainsFallbackServicePointId() {
     String actionId = createAction(FALLBACK_SERVICE_POINT_ID, randomId());
-    postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER, SC_NO_CONTENT);
+    Response response = postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
     verifyCreatedAt(actionId, FALLBACK_SERVICE_POINT_ID);
   }
 
   @Test
   void createdAtIsChangedToServicePointIdWhenItContainsServicePointName() {
     String actionId = createAction(ANOTHER_SERVICE_POINT_NAME, randomId());
-    postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER, SC_NO_CONTENT);
+    Response response = postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
     verifyCreatedAt(actionId, ANOTHER_SERVICE_POINT_ID);
   }
 
   @Test
   void createdAtIsChangedToDefaultServicePointIdOfAssociatedUser() {
     String actionId = createAction(OWNER_NAME, USER_ID_WITH_DEFAULT_SERVICE_POINT);
-    postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER, SC_NO_CONTENT);
+    Response response = postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
     verifyCreatedAt(actionId, DEFAULT_SERVICE_POINT_ID);
   }
 
   @Test
   void createdAtIsChangedToFallbackServicePointIdWhenAssociatedUserHasNoDefaultServicePoint() {
     String actionId = createAction(OWNER_NAME, USER_ID_WITHOUT_DEFAULT_SERVICE_POINT);
-    postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER, SC_NO_CONTENT);
+    Response response = postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
     verifyCreatedAt(actionId, FALLBACK_SERVICE_POINT_ID);
   }
 
   @Test
   void createdAtIsNotUpdatedWhenItAlreadyContainsValidUuid() {
     String actionId = createAction(ANOTHER_SERVICE_POINT_ID, randomId());
-    postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER, SC_NO_CONTENT);
+    Response response = postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
     verifyCreatedAt(actionId, ANOTHER_SERVICE_POINT_ID);
   }
 
   @Test
   void migrationFailsWhenFallbackServicePointIdIsMissing() {
-    Response response = postTenant(MODULE_FROM, MODULE_TO, null, SC_INTERNAL_SERVER_ERROR);;
+    Response response = postTenant(MODULE_FROM, MODULE_TO, null);
+    assertThat(response.getStatus(), is(SC_INTERNAL_SERVER_ERROR));
     verifyResponseMessage(response, "fallbackServicePointId was not found among tenantParameters");
   }
 
@@ -134,38 +140,42 @@ class FeeFineActionMigrationTest extends ApiTests {
       .withKey(FALLBACK_SERVICE_POINT_ID_KEY)
       .withValue("not a UUID");
 
-    Response response = postTenant(MODULE_FROM, MODULE_TO, parameter, SC_INTERNAL_SERVER_ERROR);;
+    Response response = postTenant(MODULE_FROM, MODULE_TO, parameter);;
+    assertThat(response.getStatus(), is(SC_INTERNAL_SERVER_ERROR));
     verifyResponseMessage(response, "fallbackServicePointId is not a valid UUID: not a UUID");
   }
 
   // We know that migration is skipped because we get 201 in response. Had it not been skipped, we
   // would have received a 500 due to a missing fallbackServicePointId.
-
   @Test
   void migrationIsSkippedWhenModuleFromIsNull() {
-    postTenant(null, MODULE_TO, null, SC_NO_CONTENT);
+    Response response = postTenant(null, MODULE_TO, null);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
   }
 
   @Test
   void migrationIsSkippedWhenModuleToIsNull() {
-    postTenant(MODULE_FROM, null, null, SC_NO_CONTENT);
+    Response response = postTenant(MODULE_FROM, null, null);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
   }
 
   @Test
   void migrationIsSkippedWhenModuleToVersionIsTooLow() {
-    postTenant(MODULE_FROM, "mod-feesfines-18.2.99", null, SC_NO_CONTENT);
+    Response response = postTenant(MODULE_FROM, "mod-feesfines-18.2.99", null);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
   }
 
   @Test
   void migrationIsSkippedWhenModuleFromVersionIsTooHigh() {
-    postTenant("mod-feesfines-18.3.0", "mod-feesfines-18.4.0", null, SC_NO_CONTENT);
+    Response response = postTenant("mod-feesfines-18.3.0", "mod-feesfines-18.4.0", null);
+    assertThat(response.getStatus(), is(SC_NO_CONTENT));
   }
 
   @Test
   void migrationFailsWhenServicePointsApiIsUnreachable() {
     getOkapi().removeStub(servicePointsStub);
-    Response response = postTenant(MODULE_FROM, MODULE_TO,
-      FALLBACK_SERVICE_POINT_ID_PARAMETER, SC_INTERNAL_SERVER_ERROR);;
+    Response response = postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER);
+    assertThat(response.getStatus(), is(SC_INTERNAL_SERVER_ERROR));
     verifyResponseMessage(response, "Resource not found");
   }
 
@@ -173,8 +183,8 @@ class FeeFineActionMigrationTest extends ApiTests {
   void migrationFailsWhenServicePointsUsersApiIsUnreachable() {
     getOkapi().removeStub(servicePointsUsersStub);
     createAction(OWNER_NAME, USER_ID_WITH_DEFAULT_SERVICE_POINT);
-    Response response = postTenant(MODULE_FROM, MODULE_TO,
-      FALLBACK_SERVICE_POINT_ID_PARAMETER, SC_INTERNAL_SERVER_ERROR);;
+    Response response = postTenant(MODULE_FROM, MODULE_TO, FALLBACK_SERVICE_POINT_ID_PARAMETER);
+    assertThat(response.getStatus(), is(SC_INTERNAL_SERVER_ERROR));
     verifyResponseMessage(response, "Resource not found");
   }
 
@@ -238,7 +248,7 @@ class FeeFineActionMigrationTest extends ApiTests {
   }
 
   private static Response postTenant(String moduleFrom, String moduleTo,
-    Parameter parameter, int expectedStatus) {
+    Parameter parameter) {
 
     TenantAttributes tenantAttributes = getTenantAttributes()
       .withModuleFrom(moduleFrom)
@@ -248,7 +258,7 @@ class FeeFineActionMigrationTest extends ApiTests {
       .ifPresent(tenantAttributes.getParameters()::add);
 
     CompletableFuture<Response> future = new CompletableFuture<>();
-    createTenant(tenantAttributes, future, expectedStatus);
+    createTenant(tenantAttributes, future);
 
     return get(future);
   }

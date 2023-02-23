@@ -35,6 +35,7 @@ public class InventoryClient extends OkapiClient {
 
   private static final String ITEMS_LIMIT = "1000";
   private static final String HOLDINGS_LIMIT = "1000";
+  private static final String SERVICE_POINTS = "/service-points";
 
   public InventoryClient(Vertx vertx, Map<String, String> okapiHeaders) {
     super(vertx, okapiHeaders);
@@ -157,15 +158,15 @@ public class InventoryClient extends OkapiClient {
   }
 
   public Future<ServicePoint> getServicePointById(String id) {
-    return getById("/service-points", id, ServicePoint.class);
+    return getById(SERVICE_POINTS, id, ServicePoint.class);
   }
 
   public Future<Collection<ServicePoint>> getServicePointsByIds(Collection<String> ids) {
-    return getByIds("/service-points", ids, ServicePoint.class, "servicepoints");
+    return getByIds(SERVICE_POINTS, ids, ServicePoint.class, "servicepoints");
   }
 
   public Future<Collection<ServicePoint>> getAllServicePoints() {
-    return getAll("/service-points", ServicePoint.class, "servicepoints");
+    return getAll(SERVICE_POINTS, ServicePoint.class, "servicepoints");
   }
 
   public Future<Collection<ServicePointsUser>> getServicePointsUsers(Collection<String> userIds) {
