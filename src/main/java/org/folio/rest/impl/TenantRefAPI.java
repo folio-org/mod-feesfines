@@ -55,7 +55,7 @@ public class TenantRefAPI extends TenantAPI {
             new FeeFineActionMigrationService(headers, context).doMigration(tenantAttributes)
               .compose(ignored -> new PubSubRegistrationService(vertx, headers).registerModule())
               .onSuccess(r -> log.info("postTenant success"))
-              .onFailure(t -> log.error("postTenant failure"))
+              .onFailure(t -> log.error("postTenant failure", t))
               .onComplete(promise),
             result -> {
               if (result.failed()) {

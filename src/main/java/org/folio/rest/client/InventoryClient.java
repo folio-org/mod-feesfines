@@ -168,7 +168,7 @@ public class InventoryClient extends OkapiClient {
     return getAll("/service-points", ServicePoint.class, "servicepoints");
   }
 
-  public Future<Collection<ServicePointsUser>> fetchServicePointsUsers(Collection<String> userIds) {
+  public Future<Collection<ServicePointsUser>> getServicePointsUsers(Collection<String> userIds) {
     return fetchInBatches("/service-points-users", "userId", userIds, ServicePointsUser.class,
       "servicePointsUsers");
   }

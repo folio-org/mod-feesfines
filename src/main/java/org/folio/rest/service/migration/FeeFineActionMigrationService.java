@@ -147,7 +147,7 @@ public class FeeFineActionMigrationService {
       .map(Feefineaction::getUserId)
       .collect(toSet());
 
-    return inventoryClient.fetchServicePointsUsers(userIds)
+    return inventoryClient.getServicePointsUsers(userIds)
       .map(users -> processServicePointUsers(context, users));
   }
 
