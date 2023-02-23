@@ -965,7 +965,11 @@
           "modulePermissions": [
             "pubsub.event-types.post",
             "pubsub.publishers.post",
-            "pubsub.subscribers.post"
+            "pubsub.subscribers.post",
+            "inventory-storage.service-points.collection.get",
+            "inventory-storage.service-points.item.get",
+            "inventory-storage.service-points-users.collection.get",
+            "inventory-storage.service-points-users.item.get"
           ]
         }, {
           "methods": ["GET","DELETE"],

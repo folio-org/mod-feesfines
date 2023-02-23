@@ -260,6 +260,10 @@ public class FeeFineActionRepository extends AbstractRepository {
     return promise.future().map(this::mapToListOfStrings);
   }
 
+  public Future<Collection<Feefineaction>> findByQuery(String query) {
+    return getByQuery(query, Feefineaction.class);
+  }
+
   private void addFilterByListToConditions(List<String> conditions, String tableName,
     String fieldName, List<String> valueList) {
 
@@ -330,5 +334,9 @@ public class FeeFineActionRepository extends AbstractRepository {
     GroupedCriterias groupedCriterias = new GroupedCriterias();
     criterias.forEach(criteria -> groupedCriterias.addCriteria(criteria, op));
     return groupedCriterias;
+  }
+
+  public Future<Collection<Feefineaction>> updateBatch(Collection<Feefineaction> actions) {
+    return super.updateBatch(ACTIONS_TABLE, actions);
   }
 }

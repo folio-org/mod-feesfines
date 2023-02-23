@@ -81,7 +81,7 @@ public abstract class AbstractRepository {
       .collect(toList());
   }
 
-  String getSchemaName() {
+  public String getSchemaName() {
     return pgClient.getSchemaName();
   }
 
@@ -98,4 +98,15 @@ public abstract class AbstractRepository {
     return conn.save(tableName, id, object)
       .map(object);
   }
+
+  protected <T> Future<Collection<T>> updateBatch(String tableName, Collection<T> entities) {
+    if (entities.isEmpty()) {
+      log.debug("updateBatch:: nothing to update");
+      return succeededFuture(entities);
+    }
+
+    return pgClient.updateBatch(tableName, new ArrayList<>(entities))
+      .map(entities);
+  }
+
 }

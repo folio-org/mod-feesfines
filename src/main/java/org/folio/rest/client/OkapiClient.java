@@ -137,18 +137,28 @@ public class OkapiClient {
   public <T> Future<Collection<T>> getByQuery(String resourcePath, String query,
     Class<T> objectType, String collectionName, int limit) {
 
-    long startTimeMillis = currentTimeMillis();
-    String path = String.format("%s?query=%s&limit=%d", resourcePath, urlEncode(query), limit);
+    String url = String.format("%s?query=%s&limit=%d", resourcePath, urlEncode(query), limit);
+    return get(url, objectType, collectionName);
+  }
 
-    return okapiGetAbs(path)
+  public <T> Future<Collection<T>> getAll(String resourcePath, Class<T> objectType,
+    String collectionName) {
+
+    String url = String.format("%s?limit=%d", resourcePath, Integer.MAX_VALUE);
+    return get(url, objectType, collectionName);
+  }
+
+  public <T> Future<Collection<T>> get(String url, Class<T> objectType, String collectionName) {
+    long startTimeMillis = currentTimeMillis();
+
+    return okapiGetAbs(url)
       .send()
       .compose(response -> {
         int responseStatus = response.statusCode();
-        log.debug("[{}] [{}ms] GET {}", responseStatus, currentTimeMillis() - startTimeMillis,
-          resourcePath);
+        log.debug("[{}] [{}ms] GET {}", responseStatus, currentTimeMillis() - startTimeMillis, url);
         if (responseStatus != 200) {
-          HttpGetException exception = new HttpGetException(path, response);
-          log.error("GET by query failed", exception);
+          HttpGetException exception = new HttpGetException(url, response);
+          log.error("GET request failed", exception);
           return failedFuture(exception);
         }
         return succeededFuture(
@@ -165,33 +175,39 @@ public class OkapiClient {
   public <T> Future<Collection<T>> getByIds(String path, Collection<String> ids, Class<T> objectType,
     String collectionName) {
 
+    return fetchInBatches(path, "id", ids, objectType, collectionName);
+  }
+
+  protected  <T> Future<Collection<T>> fetchInBatches(String path, String property,
+    Collection<String> values, Class<T> objectType, String collectionName) {
+
     Collection<T> results = new ArrayList<>();
 
-    Set<String> filteredIds = ids.stream()
+    Set<String> filteredValues = values.stream()
       .filter(StringUtils::isNotBlank)
       .collect(toSet());
 
-    if (ids.isEmpty()) {
+    if (filteredValues.isEmpty()) {
       return succeededFuture(results);
     }
 
-    log.info("Fetching {} {} by ID", ids.size(), objectType.getSimpleName());
+    log.info("Fetching {} {} by {}", filteredValues.size(), objectType.getSimpleName(), property);
     long startTime = currentTimeMillis();
 
-    return ListUtils.partition(new ArrayList<>(filteredIds), ID_BATCH_SIZE)
+    return ListUtils.partition(new ArrayList<>(filteredValues), ID_BATCH_SIZE)
       .stream()
-      .map(batch -> fetchBatch(path, batch, objectType, collectionName).onSuccess(results::addAll))
+      .map(batch -> fetchBatch(path, property, batch, objectType, collectionName).onSuccess(results::addAll))
       .reduce(succeededFuture(), (f1, f2) -> f1.compose(r -> f2))
       .map(results)
       .onSuccess(r -> log.debug("Fetched {} {} in {} ms", results.size(), objectType.getSimpleName(),
         currentTimeMillis() - startTime));
   }
 
-  private <T> Future<Collection<T>> fetchBatch(String resourcePath, List<String> batch,
-    Class<T> objectType, String collectionName) {
+  private <T> Future<Collection<T>> fetchBatch(String resourcePath, String property,
+    List<String> batch, Class<T> objectType, String collectionName) {
 
     log.debug("Fetching batch of {} {}", batch.size(), objectType.getSimpleName());
-    String query = String.format("id==(%s)", String.join(" or ", batch));
+    String query = String.format("%s==(%s)", property, String.join(" or ", batch));
 
     return getByQuery(resourcePath, query, objectType, collectionName, batch.size());
   }

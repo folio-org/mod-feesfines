@@ -10,11 +10,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.service.PubSubRegistrationService;
+import org.folio.rest.service.migration.FeeFineActionMigrationService;
 import org.folio.rest.tools.utils.TenantLoading;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
@@ -49,13 +51,17 @@ public class TenantRefAPI extends TenantAPI {
             return;
           }
 
-          vertx.executeBlocking(
-            promise -> new PubSubRegistrationService(vertx, headers).registerModule(promise),
-            registration -> {
-              if (registration.failed()) {
-                log.error("postTenant failure", registration.cause());
+          vertx.executeBlocking((Promise<Void> promise) ->
+            new FeeFineActionMigrationService(headers, context).doMigration(tenantAttributes)
+              .compose(ignored -> new PubSubRegistrationService(vertx, headers).registerModule())
+              .onSuccess(r -> log.info("postTenant success"))
+              .onFailure(t -> log.error("postTenant failure"))
+              .onComplete(promise),
+            result -> {
+              if (result.failed()) {
+                log.error("postTenant failure", result.cause());
                 handler.handle(succeededFuture(PostTenantResponse
-                  .respond500WithTextPlain(registration.cause().getLocalizedMessage())));
+                  .respond500WithTextPlain(result.cause().getLocalizedMessage())));
               } else {
                 log.info("postTenant executed successfully");
                 handler.handle(res);
