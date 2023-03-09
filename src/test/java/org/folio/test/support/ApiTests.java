@@ -19,7 +19,8 @@ import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockTemplateClient;
 import static org.folio.util.PomUtils.getModuleVersion;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -30,7 +31,9 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
@@ -45,7 +48,8 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
-import org.hamcrest.CoreMatchers;
+import org.folio.util.PomUtils;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,6 +95,7 @@ public class ApiTests {
   protected final ResourceClient feeFinesClient = buildFeeFinesClient();
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
+  protected static PostgresClient pgClient;
 
   @BeforeAll
   public static void deployVerticle() {
@@ -100,12 +105,13 @@ public class ApiTests {
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
-    final CompletableFuture<Void> future = new CompletableFuture<>();
+    final CompletableFuture<Response> future = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions(),
       res -> createTenant(getTenantAttributes(), future));
 
-    get(future);
+    Response postTenantResponse = get(future);
+    assertThat(postTenantResponse.getStatus(), Matchers.is(HttpStatus.SC_NO_CONTENT));
   }
 
   @AfterAll
@@ -126,7 +132,7 @@ public class ApiTests {
     okapiDeployment.setUpMapping();
   }
 
-  public static void createTenant(TenantAttributes attributes, CompletableFuture<Void> future) {
+  public static void createTenant(TenantAttributes attributes, CompletableFuture<Response> future) {
     TenantRefAPI tenantAPI = new TenantRefAPI();
     Map<String, String> headers = new CaseInsensitiveMap<>();
 
@@ -136,9 +142,9 @@ public class ApiTests {
     headers.put(OKAPI_URL_HEADER, getOkapiUrl());
 
     tenantAPI.postTenant(attributes, headers, responseAsyncResult -> {
-      assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
-      assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
-      future.complete(null);
+      assertThat(responseAsyncResult.succeeded(), is(true));
+      pgClient = PostgresClient.getInstance(vertx, TENANT_NAME);
+      future.complete(responseAsyncResult.result());
     }, vertx.getOrCreateContext());
   }
 
@@ -148,7 +154,7 @@ public class ApiTests {
 
     return new TenantAttributes()
       .withModuleFrom(MODULE_NAME + "-14.2.4")
-      .withModuleTo(MODULE_NAME + "-" + getModuleVersion())
+      .withModuleTo(PomUtils.getModuleId())
       .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 
@@ -297,7 +303,7 @@ public class ApiTests {
 
     JsonObject response = new JsonObject()
       .put(collectionName, results)
-      .put("totalRecords", returnObjects.stream());
+      .put("totalRecords", returnObjects.size());
 
     return createStubForPathMatching(url, aResponse().withBody(response.encodePrettily()));
   }

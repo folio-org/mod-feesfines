@@ -7,6 +7,9 @@ import static org.hamcrest.Matchers.is;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
+
+import javax.ws.rs.core.Response;
+
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.test.support.ApiTests;
@@ -39,7 +42,7 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
       .withModuleFrom(MODULE_NAME + "-" + moduleFromVersion)
       .withModuleTo(MODULE_NAME + "-" + moduleToVersion);
 
-    CompletableFuture<Void> future = new CompletableFuture<>();
+    CompletableFuture<Response> future = new CompletableFuture<>();
     createTenant(tenantAttributes, future);
     get(future);
   }
