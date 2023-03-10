@@ -42,7 +42,7 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
       .withModuleFrom(MODULE_NAME + "-" + moduleFromVersion)
       .withModuleTo(MODULE_NAME + "-" + moduleToVersion);
 
-    CompletableFuture<Response> future = new CompletableFuture<>();
+    CompletableFuture<Void> future = new CompletableFuture<>();
     createTenant(tenantAttributes, future);
     get(future);
   }

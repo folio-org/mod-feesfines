@@ -1,16 +1,12 @@
 package org.folio.migration;
 
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.util.PomUtils.getModuleId;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
-
-import javax.ws.rs.core.Response;
 
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -45,16 +41,9 @@ class FeeFineActionMigrationTest extends ApiTests {
   }
 
   @Test
-  void migrationIsSuccessfulWhenNoInvalidActionsAreFound() {
-    Response response = postTenant(OLDER_VERSION, MIGRATION_VERSION);
-    assertThat(response.getStatus(), is(SC_NO_CONTENT));
-  }
-
-  @Test
   void actionIsNotUpdatedWhenWhenItDoesNotHaveCreatedAt() {
     String actionId = createAction(null);
-    Response response = postTenant(OLDER_VERSION, MIGRATION_VERSION);
-    assertThat(response.getStatus(), is(SC_NO_CONTENT));
+    postTenant(OLDER_VERSION, MIGRATION_VERSION);
     verifyKeyValue(actionId, CREATED_AT_KEY, nullValue());
     verifyKeyValue(actionId, ORIGINAL_CREATED_AT_KEY, nullValue());
   }
@@ -63,8 +52,7 @@ class FeeFineActionMigrationTest extends ApiTests {
   void actionIsNotUpdatedWhenItAlreadyContainsValidCreatedAtValue() {
     String uuid = randomId();
     String actionId = createAction(uuid);
-    Response response = postTenant(OLDER_VERSION, MIGRATION_VERSION);
-    assertThat(response.getStatus(), is(SC_NO_CONTENT));
+    postTenant(OLDER_VERSION, MIGRATION_VERSION);
     verifyKeyValue(actionId, CREATED_AT_KEY, uuid);
     verifyKeyValue(actionId, ORIGINAL_CREATED_AT_KEY, nullValue());
   }
@@ -73,8 +61,7 @@ class FeeFineActionMigrationTest extends ApiTests {
   void actionIsUpdatedWhenCreatedAtContainsNonUuidValue() {
     String createdAt = "not-a-uuid";
     String actionId = createAction(createdAt);
-    Response response = postTenant(OLDER_VERSION, MIGRATION_VERSION);
-    assertThat(response.getStatus(), is(SC_NO_CONTENT));
+    postTenant(OLDER_VERSION, MIGRATION_VERSION);
     verifyKeyValue(actionId, CREATED_AT_KEY, nullValue());
     verifyKeyValue(actionId, ORIGINAL_CREATED_AT_KEY, createdAt);
   }
@@ -95,15 +82,14 @@ class FeeFineActionMigrationTest extends ApiTests {
       .withCreatedAt(createdAt);
   }
 
-  private static Response postTenant(String moduleFrom, String moduleTo) {
+  private static void postTenant(String moduleFrom, String moduleTo) {
     TenantAttributes tenantAttributes = getTenantAttributes()
       .withModuleFrom(moduleFrom)
       .withModuleTo(moduleTo);
 
-    CompletableFuture<Response> future = new CompletableFuture<>();
+    CompletableFuture<Void> future = new CompletableFuture<>();
     createTenant(tenantAttributes, future);
-
-    return get(future);
+    get(future);
   }
   
   private String createAction(String createdAt) {

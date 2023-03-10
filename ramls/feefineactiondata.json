@@ -27,7 +27,7 @@
       "type": "number"
     },
     "balance": {
-      "description": "Calculated amount of remaining balance based on original fee/fine and what has been paid/waived/tranferred/refunded",
+      "description": "Calculated amount of remaining balance based on original fee/fine and what has been paid/waived/transferred/refunded",
       "javaType": "org.folio.rest.domain.MonetaryValue",
       "type": "number"
     },
