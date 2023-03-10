@@ -624,9 +624,12 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     Account account1 = charge(USER_ID_1, 10.0, FEE_FINE_TYPE_1, item1.getId(), loan1,
       OWNER_ID_1, OWNER_1, chargeActionDate, CREATED_AT_ID_1, SOURCE_1);
 
-    createAction(USER_ID_1, 1, account1, withTenantTz("2020-01-01 00:10:00"),
+    Feefineaction action = buildAction(USER_ID_1, 1, account1,
+      withTenantTz("2020-01-01 00:10:00"),
       PAID_PARTIALLY, PAYMENT_METHOD_1, 3.0, 7.0, PAYMENT_STAFF_INFO, PAYMENT_PATRON_INFO,
       PAYMENT_TX_INFO, CREATED_AT_ID_1 + "-not-a-uuid", SOURCE_1);
+
+    get(pgClient.save("feefineactions", action));
 
     requestReport(START_DATE, END_DATE, List.of(CREATED_AT_ID_1), OWNER_ID_1).then()
       .statusCode(HttpStatus.SC_OK)
