@@ -18,6 +18,7 @@ import static org.folio.rest.utils.ResourceClients.buildFeeFineActionsClient;
 import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockTemplateClient;
+import static org.folio.util.PomUtils.getModuleVersion;
 import static org.junit.Assert.assertThat;
 
 import java.text.SimpleDateFormat;
@@ -44,7 +45,6 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
-import org.folio.util.PomUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -150,7 +150,7 @@ public class ApiTests {
 
     return new TenantAttributes()
       .withModuleFrom(MODULE_NAME + "-14.2.4")
-      .withModuleTo(PomUtils.getModuleId())
+      .withModuleTo(MODULE_NAME + "-" + getModuleVersion())
       .withParameters(Collections.singletonList(loadReferenceParameter));
   }
 
