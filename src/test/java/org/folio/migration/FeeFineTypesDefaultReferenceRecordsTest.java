@@ -8,8 +8,6 @@ import static org.hamcrest.Matchers.is;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
-import javax.ws.rs.core.Response;
-
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.test.support.ApiTests;
