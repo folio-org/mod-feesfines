@@ -6,11 +6,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
 import java.util.Date;
-import java.util.concurrent.CompletableFuture;
 
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Feefineaction;
-import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ApiTests;
 import org.hamcrest.Matcher;
@@ -43,7 +41,7 @@ class FeeFineActionMigrationTest extends ApiTests {
   @Test
   void actionIsNotUpdatedWhenWhenItDoesNotHaveCreatedAt() {
     String actionId = createAction(null);
-    postTenant(OLDER_VERSION, MIGRATION_VERSION);
+    runMigration();
     verifyKeyValue(actionId, CREATED_AT_KEY, nullValue());
     verifyKeyValue(actionId, ORIGINAL_CREATED_AT_KEY, nullValue());
   }
@@ -52,7 +50,7 @@ class FeeFineActionMigrationTest extends ApiTests {
   void actionIsNotUpdatedWhenItAlreadyContainsValidCreatedAtValue() {
     String uuid = randomId();
     String actionId = createAction(uuid);
-    postTenant(OLDER_VERSION, MIGRATION_VERSION);
+    runMigration();
     verifyKeyValue(actionId, CREATED_AT_KEY, uuid);
     verifyKeyValue(actionId, ORIGINAL_CREATED_AT_KEY, nullValue());
   }
@@ -61,9 +59,20 @@ class FeeFineActionMigrationTest extends ApiTests {
   void actionIsUpdatedWhenCreatedAtContainsNonUuidValue() {
     String createdAt = "not-a-uuid";
     String actionId = createAction(createdAt);
-    postTenant(OLDER_VERSION, MIGRATION_VERSION);
+    runMigration();
     verifyKeyValue(actionId, CREATED_AT_KEY, nullValue());
     verifyKeyValue(actionId, ORIGINAL_CREATED_AT_KEY, createdAt);
+  }
+
+  private static void runMigration() {
+    postTenant(OLDER_VERSION, MIGRATION_VERSION);
+  }
+  
+  private String createAction(String createdAt) {
+    Feefineaction action = buildAction(createdAt);
+    get(pgClient.save(FEE_FINE_ACTIONS_TABLE, action.getId(), action));
+    
+    return action.getId();
   }
 
   private static Feefineaction buildAction(String createdAt) {
@@ -80,23 +89,6 @@ class FeeFineActionMigrationTest extends ApiTests {
       .withNotify(false)
       .withTransactionInformation("-")
       .withCreatedAt(createdAt);
-  }
-
-  private static void postTenant(String moduleFrom, String moduleTo) {
-    TenantAttributes tenantAttributes = getTenantAttributes()
-      .withModuleFrom(moduleFrom)
-      .withModuleTo(moduleTo);
-
-    CompletableFuture<Void> future = new CompletableFuture<>();
-    createTenant(tenantAttributes, future);
-    get(future);
-  }
-  
-  private String createAction(String createdAt) {
-    Feefineaction action = buildAction(createdAt);
-    get(pgClient.save(FEE_FINE_ACTIONS_TABLE, action.getId(), action));
-    
-    return action.getId();
   }
 
   private void verifyKeyValue(String actionId, String key, String value) {

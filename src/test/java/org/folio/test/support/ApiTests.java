@@ -144,6 +144,16 @@ public class ApiTests {
     }, vertx.getOrCreateContext());
   }
 
+  public static void postTenant(String moduleFrom, String moduleTo) {
+    TenantAttributes tenantAttributes = getTenantAttributes()
+      .withModuleFrom(moduleFrom)
+      .withModuleTo(moduleTo);
+
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    createTenant(tenantAttributes, future);
+    get(future);
+  }
+
   protected static TenantAttributes getTenantAttributes() {
     final Parameter loadReferenceParameter = new Parameter()
       .withKey("loadReference").withValue("true");
