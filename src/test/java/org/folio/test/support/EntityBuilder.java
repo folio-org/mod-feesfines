@@ -256,6 +256,18 @@ public class EntityBuilder {
       .withTotalRecords(1);
   }
 
+  public static KvConfigurations buildLocaleSettingsConfigurationsWithoutCurrency() {
+    return new KvConfigurations()
+      .withConfigs(List.of(new Config()
+        .withId(randomId())
+        .withModule("ORG")
+        .withConfigName("localeSettings")
+        .withEnabled(true)
+        .withValue(
+          "{\"locale\":\"en-US\",\"timezone\":\"America/New_York\"}")))
+      .withTotalRecords(1);
+  }
+
   public static Loan buildLoan(String loanDate, Date dueDate, String returnDate, String itemId,
     String loanPolicyId, String overdueFinePolicyId, String lostItemPolicyId) {
 

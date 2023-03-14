@@ -2,9 +2,7 @@ package org.folio.rest.impl;
 
 import static java.lang.String.format;
 import static org.folio.test.support.EntityBuilder.buildLocaleSettingsConfigurations;
-import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
-import static org.folio.test.support.matcher.constant.DbTable.FEEFINES_TABLE;
-import static org.folio.test.support.matcher.constant.DbTable.FEE_FINE_ACTIONS_TABLE;
+import static org.folio.test.support.EntityBuilder.buildLocaleSettingsConfigurationsWithoutCurrency;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 
 import java.util.Date;
@@ -61,6 +59,11 @@ public class FeeFineReportsAPITestBase extends ApiTests {
     final KvConfigurations localeSettingsConfigurations = buildLocaleSettingsConfigurations();
     localeSettingsStubMapping = createStubForPath(ServicePath.CONFIGURATION_ENTRIES,
       localeSettingsConfigurations, ".*");
+  }
+
+  void createLocaleSettingsStubWithoutCurrency() {
+    localeSettingsStubMapping = createStubForPath(ServicePath.CONFIGURATION_ENTRIES,
+      buildLocaleSettingsConfigurationsWithoutCurrency(), ".*");
   }
 
   void removeLocaleSettingsStub() {
