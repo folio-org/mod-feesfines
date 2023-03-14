@@ -141,7 +141,7 @@ public class FeeFineActionsAPI implements Feefineactions {
   public void postFeefineactions(String lang, Feefineaction entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
+    logger.info("Inside postFeefineactions with feeFineAction {} , okApiHeaders {} , asyncResultHandler {} , vertxContext {}",entity,okapiHeaders,asyncResultHandler,vertxContext);
     Promise<Response> postCompleted = Promise.promise();
     PgUtil.post(FEEFINEACTIONS_TABLE, entity, okapiHeaders, vertxContext,
       PostFeefineactionsResponse.class, postCompleted);
@@ -163,7 +163,7 @@ public class FeeFineActionsAPI implements Feefineactions {
 
   private void publishLogEvent(Feefineaction entity, Map<String, String> okapiHeaders,
     Context vertxContext) {
-
+    logger.info("Inside publish logEvent with entity {} ",entity);
     new LogEventService(vertxContext.owner(), okapiHeaders)
       .createFeeFineLogEventPayload(entity)
       .onSuccess(eventPayload -> new LogEventPublisher(vertxContext, okapiHeaders)

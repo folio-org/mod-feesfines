@@ -101,7 +101,10 @@ public class PatronNoticeBuilder {
         .put("yearCaption", String.join(LIST_VALUES_SEPARATOR, item.getYearCaption()))
         .put("copy", getCopyNumber(item, holdingsRecord))
         .put("numberOfPieces", item.getNumberOfPieces())
-        .put("descriptionOfPieces", item.getDescriptionOfPieces());
+        .put("descriptionOfPieces", item.getDescriptionOfPieces())
+        .put("loanTypeId",item.getTemporaryLoanTypeId()!=null?item.getTemporaryLoanTypeId():item.getPermanentLoanTypeId())
+        .put("loanType",item.getTemporaryLoanTypeName()!=null?item.getTemporaryLoanTypeName():item.getPermanentLoanTypeName());
+
 
       EffectiveCallNumberComponents callNumberComponents = item.getEffectiveCallNumberComponents();
       if (callNumberComponents != null) {
