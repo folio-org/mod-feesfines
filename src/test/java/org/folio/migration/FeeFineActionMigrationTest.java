@@ -22,7 +22,7 @@ class FeeFineActionMigrationTest extends ApiTests {
   private static final String ORIGINAL_CREATED_AT_KEY = "originalCreatedAt";
   private static final String FEE_FINE_ACTIONS_TABLE = "feefineactions";
   private static final String OLDER_VERSION = "mod-feesfines-18.2.0";
-  private static final String MIGRATION_VERSION = "mod-feesfines-18.3.0";
+  private static final String MIGRATION_VERSION = "mod-feesfines-18.2.1";
 
   private final ResourceClient feeFineActionsClient = buildFeeFineActionsClient();
 
