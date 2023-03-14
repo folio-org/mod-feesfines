@@ -244,27 +244,14 @@ public class EntityBuilder {
       .withAdditionalProperty(KEY_NAME, "Institution");
   }
 
-  public static KvConfigurations buildLocaleSettingsConfigurations() {
+  public static KvConfigurations buildLocaleSettingsConfigurations(String value) {
     return new KvConfigurations()
       .withConfigs(List.of(new Config()
         .withId(randomId())
         .withModule("ORG")
         .withConfigName("localeSettings")
         .withEnabled(true)
-        .withValue(
-          "{\"locale\":\"en-US\",\"timezone\":\"America/New_York\",\"currency\":\"USD\"}")))
-      .withTotalRecords(1);
-  }
-
-  public static KvConfigurations buildLocaleSettingsConfigurationsWithoutCurrency() {
-    return new KvConfigurations()
-      .withConfigs(List.of(new Config()
-        .withId(randomId())
-        .withModule("ORG")
-        .withConfigName("localeSettings")
-        .withEnabled(true)
-        .withValue(
-          "{\"locale\":\"en-US\",\"timezone\":\"America/New_York\"}")))
+        .withValue(value)))
       .withTotalRecords(1);
   }
 

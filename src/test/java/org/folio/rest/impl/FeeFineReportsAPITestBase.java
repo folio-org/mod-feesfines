@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import static java.lang.String.format;
 import static org.folio.test.support.EntityBuilder.buildLocaleSettingsConfigurations;
-import static org.folio.test.support.EntityBuilder.buildLocaleSettingsConfigurationsWithoutCurrency;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 
 import java.util.Date;
@@ -56,14 +55,15 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   }
 
   void createLocaleSettingsStub() {
-    final KvConfigurations localeSettingsConfigurations = buildLocaleSettingsConfigurations();
+    final KvConfigurations localeSettingsConfigurations = buildLocaleSettingsConfigurations(
+      "{\"locale\":\"en-US\",\"timezone\":\"America/New_York\",\"currency\":\"USD\"}");
     localeSettingsStubMapping = createStubForPath(ServicePath.CONFIGURATION_ENTRIES,
       localeSettingsConfigurations, ".*");
   }
 
   void createLocaleSettingsStubWithoutCurrency() {
     localeSettingsStubMapping = createStubForPath(ServicePath.CONFIGURATION_ENTRIES,
-      buildLocaleSettingsConfigurationsWithoutCurrency(), ".*");
+      buildLocaleSettingsConfigurations("{\"locale\":\"en-US\",\"timezone\":\"America/New_York\"}"), ".*");
   }
 
   void removeLocaleSettingsStub() {

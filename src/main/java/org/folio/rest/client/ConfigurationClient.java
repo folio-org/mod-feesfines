@@ -70,7 +70,7 @@ public class ConfigurationClient extends OkapiClient {
             ));
           }
         } catch (Exception e) {
-          log.error("Failed to parse response: " + response.bodyAsString());
+          log.error("Failed to parse response: {}", response.bodyAsString(), e);
           return failedFuture(e);
         }
       }
