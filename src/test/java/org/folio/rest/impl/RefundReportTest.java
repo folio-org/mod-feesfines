@@ -148,6 +148,13 @@ public class RefundReportTest extends FeeFineReportsAPITestBase {
   }
 
   @Test
+  public void okResponseWhenLocaleConfigDoesNotHaveCurrency() {
+    removeLocaleSettingsStub();
+    createLocaleSettingsStubWithoutCurrency();
+    requestAndCheck(List.of());
+  }
+
+  @Test
   public void okResponseWhenLocaleConfigExists() {
     requestAndCheck(List.of());
   }

@@ -81,6 +81,13 @@ public class CashDrawerReconciliationReportTest extends FeeFineReportsAPITestBas
   }
 
   @Test
+  public void okResponseWhenLocaleConfigDoesNotHaveCurrency() {
+    removeLocaleSettingsStub();
+    createLocaleSettingsStubWithoutCurrency();
+    requestAndCheck(emptyReport());
+  }
+
+  @Test
   public void okResponseWhenLocaleConfigExists() {
     requestAndCheck(emptyReport());
   }
