@@ -28,9 +28,6 @@ import io.vertx.ext.web.client.HttpResponse;
 public class ConfigurationClient extends OkapiClient {
   private static final Logger log = LogManager.getLogger(ConfigurationClient.class);
 
-  private static final DateTimeZone DEFAULT_DATE_TIME_ZONE = DateTimeZone.UTC;
-  private static final String TIMEZONE_KEY = "timezone";
-
   public ConfigurationClient(Vertx vertx, Map<String, String> okapiHeaders) {
     super(vertx, okapiHeaders);
   }
@@ -72,8 +69,8 @@ public class ConfigurationClient extends OkapiClient {
               localeSettingsJsonObject.getString("currency")
             ));
           }
-        } catch (JsonProcessingException e) {
-          log.error("Failed to parse response: " + response.bodyAsString());
+        } catch (Exception e) {
+          log.error("Failed to parse response: {}", response.bodyAsString(), e);
           return failedFuture(e);
         }
       }
