@@ -4,6 +4,7 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.firstNonBlank;
 import static org.apache.commons.lang3.StringUtils.wrap;
 import static org.folio.rest.domain.logs.LogEventPayloadField.DATE;
 import static org.folio.rest.domain.logs.LogEventPayloadHelper.setErrorMessage;
@@ -33,6 +34,7 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.User;
@@ -204,7 +206,8 @@ public class PatronNoticeService {
       .compose(this::fetchItem)
       .compose(this::fetchHolding)
       .compose(this::fetchInstance)
-      .compose(this::fetchLocation);
+      .compose(this::fetchLocation)
+      .compose(this::fetchLoanType);
   }
 
   private Future<FeeFineNoticeContext> fetchItem(FeeFineNoticeContext context) {
@@ -260,6 +263,20 @@ public class PatronNoticeService {
       .compose(locationService::getEffectiveLocation)
       .otherwise(t -> captureError(t, context))
       .map(context::withEffectiveLocation);
+  }
+
+  private Future<FeeFineNoticeContext> fetchLoanType(FeeFineNoticeContext context) {
+    logger.info("Inside fetch Loan Type");
+    String loanTypeId = ofNullable(context.getItem())
+      .map(item -> firstNonBlank(item.getTemporaryLoanTypeId(),item.getPermanentLoanTypeId()))
+      .orElse(null);
+    return validateId(loanTypeId,Location.class)
+      .compose(inventoryClient::getLoanTypeById)
+      .otherwise(t -> captureError(t, context))
+      .map(loan -> {
+        logger.info("Loan Id {} , Loan Name {} ",loan.getId() , loan.getName());
+        return context.withLoanType(loan);
+      });
   }
 
   private FeeFineNoticeContext buildLogEventPayload(FeeFineNoticeContext context) {

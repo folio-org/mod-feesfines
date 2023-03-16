@@ -21,6 +21,7 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.PatronNotice;
@@ -89,6 +90,7 @@ public class PatronNoticeBuilder {
     final HoldingsRecord holdingsRecord = ctx.getHoldingsRecord();
     final Account account = ctx.getAccount();
     final Location location = ctx.getEffectiveLocation();
+    final LoanType loanType = ctx.getLoanType();
 
     final JsonObject itemContext = new JsonObject();
 
@@ -101,9 +103,7 @@ public class PatronNoticeBuilder {
         .put("yearCaption", String.join(LIST_VALUES_SEPARATOR, item.getYearCaption()))
         .put("copy", getCopyNumber(item, holdingsRecord))
         .put("numberOfPieces", item.getNumberOfPieces())
-        .put("descriptionOfPieces", item.getDescriptionOfPieces())
-        .put("loanTypeId",item.getTemporaryLoanTypeId()!=null?item.getTemporaryLoanTypeId():item.getPermanentLoanTypeId())
-        .put("loanType",item.getTemporaryLoanTypeName()!=null?item.getTemporaryLoanTypeName():item.getPermanentLoanTypeName());
+        .put("descriptionOfPieces", item.getDescriptionOfPieces());
 
 
       EffectiveCallNumberComponents callNumberComponents = item.getEffectiveCallNumberComponents();
@@ -148,6 +148,10 @@ public class PatronNoticeBuilder {
       writeIfDoesNotExist(itemContext, TITLE, account.getTitle());
       writeIfDoesNotExist(itemContext, CALL_NUMBER, account.getCallNumber());
       writeIfDoesNotExist(itemContext, EFFECTIVE_LOCATION_SPECIFIC, account.getLocation());
+    }
+
+    if(loanType != null){
+      itemContext.put("loanType", loanType.getName());
     }
 
     return itemContext;

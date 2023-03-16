@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A loan type",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "description": "label for the loan type",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name"
+  ]
+}

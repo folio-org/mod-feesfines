@@ -270,14 +270,6 @@
       "type": "string",
       "description": "Temporary loan type, is the temporary loan type for a given item."
     },
-    "permanentLoanTypeName": {
-      "type": "string",
-      "description": "The permanent loan type, is the default loan type for a given item. Loan types are tenant-defined."
-    },
-    "temporaryLoanTypeName": {
-      "type": "string",
-      "description": "Temporary loan type, is the temporary loan type for a given item."
-    },
     "permanentLocationId": {
       "type": "string",
       "description": "Permanent item location is the default location, shelving location, or holding which is a physical place where items are stored, or an Online location."
