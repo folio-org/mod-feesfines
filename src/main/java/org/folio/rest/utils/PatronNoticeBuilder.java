@@ -105,7 +105,6 @@ public class PatronNoticeBuilder {
         .put("numberOfPieces", item.getNumberOfPieces())
         .put("descriptionOfPieces", item.getDescriptionOfPieces());
 
-
       EffectiveCallNumberComponents callNumberComponents = item.getEffectiveCallNumberComponents();
       if (callNumberComponents != null) {
         itemContext

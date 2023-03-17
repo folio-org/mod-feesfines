@@ -86,7 +86,6 @@ public class PatronNoticeService {
   }
 
   public Future<Void> sendPatronNotice(Feefineaction action) {
-    logger.info("Inside send patron notice {} ",action);
     return succeededFuture(action)
       .map(this::createContext)
       .compose(this::fetchAccount)
@@ -155,7 +154,6 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> sendNoticeWhenTemplateIsSet(FeeFineNoticeContext context) {
-    logger.info("Inside sendNoticeWhenTemplateIsSet");
     if (!context.isTemplateSet()) {
       logger.info("Patron notice template is not set, doing nothing");
       return succeededFuture(context);
@@ -170,7 +168,6 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> fetchCharge(FeeFineNoticeContext context) {
-    logger.info("Inside fetch charge with context {} ",context);
     if (context.getCharge() != null) {
       return succeededFuture(context);
     }
@@ -187,7 +184,6 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> fetchUser(FeeFineNoticeContext context) {
-    logger.info("Fetching user details");
     String userId = context.getUserId();
 
     return validateId(userId, User.class)
@@ -197,7 +193,6 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> fetchItemAndRelatedRecords(FeeFineNoticeContext context) {
-    logger.info("Fetching Item related records with context {}",context);
     if (context.getAccount().getItemId() == null) {
       return succeededFuture(context);
     }
@@ -211,7 +206,6 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> fetchItem(FeeFineNoticeContext context) {
-    logger.info("Inside fetch Item with context {}",context);
     String itemId = ofNullable(context.getAccount())
       .map(Account::getItemId)
       .orElse(null);
@@ -219,14 +213,10 @@ public class PatronNoticeService {
     return validateId(itemId, Item.class)
       .compose(inventoryClient::getItemById)
       .otherwise(t -> captureError(t, context))
-      .map(item -> {
-        logger.info("Item value is {}",item);
-        return context.withItem(item);
-      });
+      .map(context::withItem);
   }
 
   private Future<FeeFineNoticeContext> fetchHolding(FeeFineNoticeContext context) {
-    logger.info("Inside fetch Holding");
     String holdingsRecordId = ofNullable(context.getAccount())
       .map(Account::getHoldingsRecordId)
       .orElseGet(() -> ofNullable(context.getItem())
@@ -240,7 +230,6 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> fetchInstance(FeeFineNoticeContext context) {
-    logger.info("Inside fetch Instance");
     String instanceId = ofNullable(context.getAccount())
       .map(Account::getInstanceId)
       .orElseGet(() -> ofNullable(context.getHoldingsRecord())
@@ -254,7 +243,6 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> fetchLocation(FeeFineNoticeContext context) {
-    logger.info("Inside Fetch location");
     String locationId = ofNullable(context.getItem())
       .map(Item::getEffectiveLocationId)
       .orElse(null);
@@ -266,17 +254,13 @@ public class PatronNoticeService {
   }
 
   private Future<FeeFineNoticeContext> fetchLoanType(FeeFineNoticeContext context) {
-    logger.info("Inside fetch Loan Type");
     String loanTypeId = ofNullable(context.getItem())
       .map(item -> firstNonBlank(item.getTemporaryLoanTypeId(),item.getPermanentLoanTypeId()))
       .orElse(null);
-    return validateId(loanTypeId,Location.class)
+    return validateId(loanTypeId,LoanType.class)
       .compose(inventoryClient::getLoanTypeById)
       .otherwise(t -> captureError(t, context))
-      .map(loan -> {
-        logger.info("Loan Id {} , Loan Name {} ",loan.getId() , loan.getName());
-        return context.withLoanType(loan);
-      });
+      .map(context::withLoanType);
   }
 
   private FeeFineNoticeContext buildLogEventPayload(FeeFineNoticeContext context) {

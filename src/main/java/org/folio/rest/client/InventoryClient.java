@@ -165,7 +165,6 @@ public class InventoryClient extends OkapiClient {
   }
 
   public Future<LoanType> getLoanTypeById(String id) {
-    log.info("Inside getLoanTypeById with id {} ",id);
     return getById("/loan-types",id,LoanType.class);
   }
 }
