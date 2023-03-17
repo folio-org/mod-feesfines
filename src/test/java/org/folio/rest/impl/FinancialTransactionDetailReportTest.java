@@ -218,6 +218,13 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
   }
 
   @Test
+  public void okResponseWhenLocaleConfigDoesNotHaveCurrency() {
+    removeLocaleSettingsStub();
+    createLocaleSettingsStubWithoutCurrency();
+    requestAndCheck(emptyReport());
+  }
+
+  @Test
   public void okResponseWhenLocaleConfigExists() {
     requestAndCheck(emptyReport());
   }

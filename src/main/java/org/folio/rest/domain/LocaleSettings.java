@@ -5,6 +5,7 @@ import org.joda.time.DateTimeZone;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
 
 @AllArgsConstructor
 @Getter
@@ -13,6 +14,7 @@ public class LocaleSettings {
 
   private final String locale;
   private final String timezone;
+  @NonNull
   private final String currency;
 
   public DateTimeZone getDateTimeZone() {
