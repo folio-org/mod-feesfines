@@ -21,6 +21,7 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.PatronNotice;
@@ -89,6 +90,7 @@ public class PatronNoticeBuilder {
     final HoldingsRecord holdingsRecord = ctx.getHoldingsRecord();
     final Account account = ctx.getAccount();
     final Location location = ctx.getEffectiveLocation();
+    final LoanType loanType = ctx.getLoanType();
 
     final JsonObject itemContext = new JsonObject();
 
@@ -145,6 +147,10 @@ public class PatronNoticeBuilder {
       writeIfDoesNotExist(itemContext, TITLE, account.getTitle());
       writeIfDoesNotExist(itemContext, CALL_NUMBER, account.getCallNumber());
       writeIfDoesNotExist(itemContext, EFFECTIVE_LOCATION_SPECIFIC, account.getLocation());
+    }
+
+    if (loanType != null) {
+      itemContext.put("loanType", loanType.getName());
     }
 
     return itemContext;

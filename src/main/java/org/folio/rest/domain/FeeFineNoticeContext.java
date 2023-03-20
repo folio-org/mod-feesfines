@@ -12,6 +12,7 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.User;
@@ -38,7 +39,7 @@ public class FeeFineNoticeContext {
   private Instance instance;
   private HoldingsRecord holdingsRecord;
   private Location effectiveLocation;
-
+  private LoanType loanType;
   private JsonObject logEventPayload;
   private List<Throwable> errors = new ArrayList<>();
 

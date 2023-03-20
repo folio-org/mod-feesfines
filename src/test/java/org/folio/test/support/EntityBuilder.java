@@ -28,6 +28,7 @@ import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LoanPolicy;
+import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.ManualBlockTemplate;
@@ -192,7 +193,8 @@ public class EntityBuilder {
         new EffectiveCallNumberComponents()
           .withCallNumber("ABC.123.DEF")
           .withPrefix("PREFIX")
-          .withSuffix("SUFFIX"));
+          .withSuffix("SUFFIX"))
+      .withPermanentLoanTypeId(randomId());
   }
 
   public static HoldingsRecord buildHoldingsRecord(Instance instance) {
@@ -320,5 +322,11 @@ public class EntityBuilder {
       .withName(name)
       .withTotalAmount(totalAmount)
       .withTotalCount(totalCount);
+  }
+
+  public static LoanType buildLoanType(Item item) {
+    return new LoanType()
+      .withId(item.getPermanentLoanTypeId())
+      .withName("Reading Room");
   }
 }
