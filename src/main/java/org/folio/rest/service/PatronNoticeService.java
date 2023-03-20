@@ -258,7 +258,7 @@ public class PatronNoticeService {
       .map(item -> firstNonBlank(item.getTemporaryLoanTypeId(), item.getPermanentLoanTypeId()))
       .orElse(null);
 
-    return validateId(loanTypeId,LoanType.class)
+    return validateId(loanTypeId, LoanType.class)
       .compose(inventoryClient::getLoanTypeById)
       .otherwise(t -> captureError(t, context))
       .map(context::withLoanType);
