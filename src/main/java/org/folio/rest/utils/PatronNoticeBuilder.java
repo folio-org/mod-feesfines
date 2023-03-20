@@ -149,7 +149,7 @@ public class PatronNoticeBuilder {
       writeIfDoesNotExist(itemContext, EFFECTIVE_LOCATION_SPECIFIC, account.getLocation());
     }
 
-    if(loanType != null){
+    if (loanType != null) {
       itemContext.put("loanType", loanType.getName());
     }
 

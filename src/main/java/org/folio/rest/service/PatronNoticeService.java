@@ -255,8 +255,9 @@ public class PatronNoticeService {
 
   private Future<FeeFineNoticeContext> fetchLoanType(FeeFineNoticeContext context) {
     String loanTypeId = ofNullable(context.getItem())
-      .map(item -> firstNonBlank(item.getTemporaryLoanTypeId(),item.getPermanentLoanTypeId()))
+      .map(item -> firstNonBlank(item.getTemporaryLoanTypeId(), item.getPermanentLoanTypeId()))
       .orElse(null);
+
     return validateId(loanTypeId,LoanType.class)
       .compose(inventoryClient::getLoanTypeById)
       .otherwise(t -> captureError(t, context))

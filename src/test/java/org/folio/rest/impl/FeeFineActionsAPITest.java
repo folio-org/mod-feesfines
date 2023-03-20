@@ -37,7 +37,7 @@ import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH
 import static org.folio.test.support.matcher.constant.ServicePath.INSTITUTIONS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.ITEMS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LIBRARIES_PATH;
-import static org.folio.test.support.matcher.constant.ServicePath.LOAN_TYPE_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.LOAN_TYPES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LOCATIONS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.OWNERS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.PATRON_NOTICE_PATH;
@@ -176,7 +176,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     patronNoticeStub = getOkapi()
       .stubFor(WireMock.post(urlPathMatching(PATRON_NOTICE_PATH))
         .willReturn(aResponse().withStatus(200)));
-    loanTypeStub = createStub(LOAN_TYPE_PATH, loanType, loanType.getId());
+    loanTypeStub = createStub(LOAN_TYPES_PATH, loanType, loanType.getId());
   }
 
   @Test
@@ -307,7 +307,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     verify(exactly(0), getRequestedFor(urlPathMatching(INSTITUTIONS_PATH + "/*")));
     verify(exactly(0), getRequestedFor(urlPathMatching(CAMPUSES_PATH + "/*")));
     verify(exactly(0), getRequestedFor(urlPathMatching(LIBRARIES_PATH + "/*")));
-    verify(exactly(0), getRequestedFor(urlPathMatching(LOAN_TYPE_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(LOAN_TYPES_PATH + "/*")));
   }
 
   @Test
@@ -425,6 +425,19 @@ public class FeeFineActionsAPITest extends ApiTests {
     postAction(action);
     checkResult(expectedActionContext);
     assertThatPublishedLogRecordsCountIsEqualTo(4);
+    assertThatLogPayloadIsValid(expectedNoticeLogContext, extractLastLogRecordPayloadOfType(NOTICE));
+    assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
+
+    final String temporaryLoanTypeId = UUID.randomUUID().toString();
+
+    item.withTemporaryLoanTypeId(temporaryLoanTypeId);
+    loanType.withId(temporaryLoanTypeId).withName("Can Circulate");
+    itemStub = createStub(ITEMS_PATH, item, item.getId());
+    loanTypeStub = createStub(LOAN_TYPES_PATH, loanType, loanType.getId());
+
+    postAction(action);
+    checkResult(expectedActionContext);
+    assertThatPublishedLogRecordsCountIsEqualTo(6);
     assertThatLogPayloadIsValid(expectedNoticeLogContext, extractLastLogRecordPayloadOfType(NOTICE));
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
   }
