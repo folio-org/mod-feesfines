@@ -1,3 +1,6 @@
+## 18.2.1 2023-03-22
+* Add error handling for invalid configuration to financial reports (MODFEE-327)
+
 ## 18.2.0 2023-02-15
 * Upgrade to RMB 35.0.2 and Vertx 4.3.4 (MODFEE-299, MODFEE-262)
 * Actual cost record cancelling API (MODFEE-298)
