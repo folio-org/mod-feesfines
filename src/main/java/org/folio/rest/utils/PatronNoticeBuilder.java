@@ -123,6 +123,7 @@ public class PatronNoticeBuilder {
 
     if (location != null) {
       itemContext.put(EFFECTIVE_LOCATION_SPECIFIC, location.getName());
+      itemContext.put("effectiveLocationDiscoveryDisplayName", location.getDiscoveryDisplayName());
 
       if (location.getLibrary() != null) {
         itemContext.put("effectiveLocationLibrary",

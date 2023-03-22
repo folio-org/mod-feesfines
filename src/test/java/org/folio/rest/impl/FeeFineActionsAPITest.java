@@ -345,6 +345,7 @@ public class FeeFineActionsAPITest extends ApiTests {
           .put("primaryContributor", PRIMARY_CONTRIBUTOR_NAME)
           .put("allContributors", PRIMARY_CONTRIBUTOR_NAME + "; " + NON_PRIMARY_CONTRIBUTOR_NAME)
           .put("effectiveLocationSpecific", location.getName())
+          .put("effectiveLocationDiscoveryDisplayName",location.getDiscoveryDisplayName())
           .put("effectiveLocationLibrary", getNameFromProperties(library.getAdditionalProperties()))
           .put("effectiveLocationInstitution", getNameFromProperties(institution.getAdditionalProperties()))
           .put("effectiveLocationCampus", getNameFromProperties(campus.getAdditionalProperties()))
