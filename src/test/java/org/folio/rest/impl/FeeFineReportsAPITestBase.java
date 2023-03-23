@@ -122,15 +122,23 @@ public class FeeFineReportsAPITestBase extends ApiTests {
       staffInfo, patronInfo, txInfo, null, null);
   }
 
-  Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
+  Feefineaction buildAction(String userId, int actionCounter, Account account, String dateTime,
     String type, String method, double amount, double balance, String staffInfo,
     String patronInfo, String txInfo, String createdAt, String source) {
 
-    Feefineaction action = EntityBuilder.buildFeeFineAction(userId, account.getId(),
+    return EntityBuilder.buildFeeFineAction(userId, account.getId(),
       type, method, new MonetaryValue(amount), new MonetaryValue(balance),
       parseDateTimeUTC(dateTime),
       addSuffix(staffInfo, actionCounter), addSuffix(patronInfo, actionCounter), txInfo, createdAt,
       source);
+  }
+
+  Feefineaction createAction(String userId, int actionCounter, Account account, String dateTime,
+    String type, String method, double amount, double balance, String staffInfo,
+    String patronInfo, String txInfo, String createdAt, String source) {
+
+    Feefineaction action = buildAction(userId, actionCounter, account, dateTime, type, method,
+      amount, balance, staffInfo, patronInfo, txInfo, createdAt, source);
 
     createActionEntity(action);
 
