@@ -223,6 +223,7 @@ public class EntityBuilder {
     return new Location()
       .withId(randomId())
       .withName("Specific")
+      .withDiscoveryDisplayName("DiscoveryDisplayName")
       .withCampusId(String.valueOf(campus.getAdditionalProperties().get(KEY_ID)))
       .withLibraryId(String.valueOf(library.getAdditionalProperties().get(KEY_ID)))
       .withInstitutionId(String.valueOf(institution.getAdditionalProperties().get(KEY_ID)));
