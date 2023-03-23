@@ -31,6 +31,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Library;
+import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Owner;
@@ -69,6 +70,7 @@ public class PatronNoticeBuilderTest {
     final Feefineaction action = createAction();
     final Feefineaction chargeAction = createChargeAction();
     final Instance instance = createInstance();
+    final LoanType loanType = createLoanType();
 
     final FeeFineNoticeContext sourceContext = new FeeFineNoticeContext()
       .withUser(createUser())
@@ -80,7 +82,8 @@ public class PatronNoticeBuilderTest {
       .withFeefine(feefine)
       .withAccount(account)
       .withAction(action)
-      .withCharge(chargeAction);
+      .withCharge(chargeAction)
+      .withLoanType(loanType);
 
     final PatronNotice patronNotice = buildNotice(sourceContext);
 
@@ -109,6 +112,7 @@ public class PatronNoticeBuilderTest {
     assertEquals(item.getCopyNumber(), itemContext.getString("copy"));
     assertEquals(item.getNumberOfPieces(), itemContext.getString("numberOfPieces"));
     assertEquals(item.getDescriptionOfPieces(), itemContext.getString("descriptionOfPieces"));
+    assertEquals(loanType.getName(), itemContext.getString("loanType"));
 
     final EffectiveCallNumberComponents callNumberComponents =
       item.getEffectiveCallNumberComponents();
@@ -323,6 +327,12 @@ public class PatronNoticeBuilderTest {
     return new Owner()
       .withDefaultActionNoticeId(UUID.randomUUID().toString())
       .withDefaultChargeNoticeId(UUID.randomUUID().toString());
+  }
+
+  private static LoanType createLoanType() {
+    return new LoanType()
+      .withId(UUID.randomUUID().toString())
+      .withName("Can circulate");
   }
 
   static String dateToString(Date date) {

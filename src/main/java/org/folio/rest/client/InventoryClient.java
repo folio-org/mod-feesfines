@@ -27,6 +27,7 @@ import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Library;
+import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.ServicePoint;
 
@@ -161,5 +162,9 @@ public class InventoryClient extends OkapiClient {
 
   public Future<Collection<ServicePoint>> getServicePointsByIds(Collection<String> ids) {
     return getByIds("/service-points", ids, ServicePoint.class, "servicepoints");
+  }
+
+  public Future<LoanType> getLoanTypeById(String id) {
+    return getById("/loan-types", id, LoanType.class);
   }
 }

@@ -23,6 +23,7 @@ import static org.folio.test.support.EntityBuilder.buildInstance;
 import static org.folio.test.support.EntityBuilder.buildInstitution;
 import static org.folio.test.support.EntityBuilder.buildItem;
 import static org.folio.test.support.EntityBuilder.buildLibrary;
+import static org.folio.test.support.EntityBuilder.buildLoanType;
 import static org.folio.test.support.EntityBuilder.buildLocation;
 import static org.folio.test.support.EntityBuilder.buildUser;
 import static org.folio.test.support.matcher.LogEventMatcher.noticeErrorLogRecord;
@@ -36,6 +37,7 @@ import static org.folio.test.support.matcher.constant.ServicePath.INSTANCES_PATH
 import static org.folio.test.support.matcher.constant.ServicePath.INSTITUTIONS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.ITEMS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LIBRARIES_PATH;
+import static org.folio.test.support.matcher.constant.ServicePath.LOAN_TYPES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.LOCATIONS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.OWNERS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.PATRON_NOTICE_PATH;
@@ -66,6 +68,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Library;
+import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.PaymentStatus;
@@ -119,7 +122,7 @@ public class FeeFineActionsAPITest extends ApiTests {
   private Institution institution;
   private Campus campus;
   private Library library;
-
+  private LoanType loanType;
   private StubMapping userStub;
   private StubMapping itemStub;
   private StubMapping instanceStub;
@@ -129,6 +132,7 @@ public class FeeFineActionsAPITest extends ApiTests {
   private StubMapping campusStub;
   private StubMapping libraryStub;
   private StubMapping patronNoticeStub;
+  private StubMapping loanTypeStub;
 
   @BeforeEach
   public void setUp() {
@@ -154,6 +158,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     account = createAccount(user, item, feefine, owner, instance, holdingsRecord);
     action = createAction(user, account, true);
     charge = createCharge(user, account, true);
+    loanType = buildLoanType(item);
 
     createEntity(OWNERS_PATH, owner);
     createEntity(FEEFINES_PATH, feefine);
@@ -171,6 +176,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     patronNoticeStub = getOkapi()
       .stubFor(WireMock.post(urlPathMatching(PATRON_NOTICE_PATH))
         .willReturn(aResponse().withStatus(200)));
+    loanTypeStub = createStub(LOAN_TYPES_PATH, loanType, loanType.getId());
   }
 
   @Test
@@ -225,7 +231,8 @@ public class FeeFineActionsAPITest extends ApiTests {
       "\"Item " + item.getId() + " was not found\", " +
       "\"HoldingsRecord " + holdingsRecord.getId() + " was not found\", " +
       "\"Instance " + instance.getId() + " was not found\", " +
-      "\"Invalid Location ID: null\"";
+      "\"Invalid Location ID: null\", " +
+      "\"Invalid LoanType ID: null\"";
 
     assertThatNoticeErrorEventWasPublished(charge, expectedErrorMessage);
 
@@ -300,6 +307,7 @@ public class FeeFineActionsAPITest extends ApiTests {
     verify(exactly(0), getRequestedFor(urlPathMatching(INSTITUTIONS_PATH + "/*")));
     verify(exactly(0), getRequestedFor(urlPathMatching(CAMPUSES_PATH + "/*")));
     verify(exactly(0), getRequestedFor(urlPathMatching(LIBRARIES_PATH + "/*")));
+    verify(exactly(0), getRequestedFor(urlPathMatching(LOAN_TYPES_PATH + "/*")));
   }
 
   @Test
@@ -340,7 +348,8 @@ public class FeeFineActionsAPITest extends ApiTests {
           .put("effectiveLocationLibrary", getNameFromProperties(library.getAdditionalProperties()))
           .put("effectiveLocationInstitution", getNameFromProperties(institution.getAdditionalProperties()))
           .put("effectiveLocationCampus", getNameFromProperties(campus.getAdditionalProperties()))
-          .put("materialType", account.getMaterialType()))
+          .put("materialType", account.getMaterialType())
+          .put("loanType", loanType.getName()))
         .put("feeCharge", new JsonObject()
           .put("owner", account.getFeeFineOwner())
           .put("type", account.getFeeFineType())
@@ -416,6 +425,19 @@ public class FeeFineActionsAPITest extends ApiTests {
     postAction(action);
     checkResult(expectedActionContext);
     assertThatPublishedLogRecordsCountIsEqualTo(4);
+    assertThatLogPayloadIsValid(expectedNoticeLogContext, extractLastLogRecordPayloadOfType(NOTICE));
+    assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
+
+    final String temporaryLoanTypeId = UUID.randomUUID().toString();
+
+    item.withTemporaryLoanTypeId(temporaryLoanTypeId);
+    loanType.withId(temporaryLoanTypeId).withName("Can Circulate");
+    itemStub = createStub(ITEMS_PATH, item, item.getId());
+    loanTypeStub = createStub(LOAN_TYPES_PATH, loanType, loanType.getId());
+
+    postAction(action);
+    checkResult(expectedActionContext);
+    assertThatPublishedLogRecordsCountIsEqualTo(6);
     assertThatLogPayloadIsValid(expectedNoticeLogContext, extractLastLogRecordPayloadOfType(NOTICE));
     assertThatLogPayloadIsValid(expectedFeeFineLogContext, extractLastLogRecordPayloadOfType(FEE_FINE));
   }
