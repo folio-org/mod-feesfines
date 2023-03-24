@@ -140,6 +140,11 @@
       "run": "after",
       "snippetPath": "add-lost-fee-for-actual-cost.sql",
       "fromModuleVersion": "15.10.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "rename_non_uuid_created_at.sql",
+      "fromModuleVersion": "18.3.0"
     }
   ]
 }

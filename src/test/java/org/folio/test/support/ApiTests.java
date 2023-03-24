@@ -91,6 +91,7 @@ public class ApiTests {
   protected final ResourceClient feeFinesClient = buildFeeFinesClient();
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
+  protected static PostgresClient pgClient;
 
   @BeforeAll
   public static void deployVerticle() {
@@ -138,8 +139,19 @@ public class ApiTests {
     tenantAPI.postTenant(attributes, headers, responseAsyncResult -> {
       assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
       assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
+      pgClient = PostgresClient.getInstance(vertx, TENANT_NAME);
       future.complete(null);
     }, vertx.getOrCreateContext());
+  }
+
+  public static void postTenant(String moduleFrom, String moduleTo) {
+    TenantAttributes tenantAttributes = getTenantAttributes()
+      .withModuleFrom(moduleFrom)
+      .withModuleTo(moduleTo);
+
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    createTenant(tenantAttributes, future);
+    get(future);
   }
 
   protected static TenantAttributes getTenantAttributes() {
@@ -297,7 +309,7 @@ public class ApiTests {
 
     JsonObject response = new JsonObject()
       .put(collectionName, results)
-      .put("totalRecords", returnObjects.stream());
+      .put("totalRecords", returnObjects.size());
 
     return createStubForPathMatching(url, aResponse().withBody(response.encodePrettily()));
   }
