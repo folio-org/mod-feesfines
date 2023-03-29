@@ -127,6 +127,7 @@ public class PatronNoticeBuilderTest {
       itemContext.getString("allContributors"));
 
     assertEquals(location.getName(), itemContext.getString("effectiveLocationSpecific"));
+    assertEquals(location.getDiscoveryDisplayName(), itemContext.getString("effectiveLocationDiscoveryDisplayName"));
     assertEquals(location.getLibrary().getAdditionalProperties().get(NAME),
       itemContext.getString("effectiveLocationLibrary"));
     assertEquals(location.getInstitution().getAdditionalProperties().get(NAME),
@@ -291,6 +292,7 @@ public class PatronNoticeBuilderTest {
   private static Location createLocation() {
     return new Location()
       .withName("Specific")
+      .withDiscoveryDisplayName("DiscoveryDisplayName")
       .withLibrary(new Library().withAdditionalProperty(NAME, "Library"))
       .withInstitution(new Institution().withAdditionalProperty(NAME, "Institution"))
       .withCampus(new Campus().withAdditionalProperty(NAME, "Campus"));
