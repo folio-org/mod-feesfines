@@ -38,6 +38,7 @@ public class PatronNoticeBuilder {
   public static final String TITLE = "title";
   public static final String CALL_NUMBER = "callNumber";
   public static final String EFFECTIVE_LOCATION_SPECIFIC = "effectiveLocationSpecific";
+  public static final String EFFECTIVE_LOCATION_DISCOVERY_DISPLAY_NAME = "effectiveLocationDiscoveryDisplayName";
 
   private PatronNoticeBuilder() {
     throw new UnsupportedOperationException("Utility class");
@@ -123,7 +124,7 @@ public class PatronNoticeBuilder {
 
     if (location != null) {
       itemContext.put(EFFECTIVE_LOCATION_SPECIFIC, location.getName());
-      itemContext.put("effectiveLocationDiscoveryDisplayName", location.getDiscoveryDisplayName());
+      itemContext.put(EFFECTIVE_LOCATION_DISCOVERY_DISPLAY_NAME, location.getDiscoveryDisplayName());
 
       if (location.getLibrary() != null) {
         itemContext.put("effectiveLocationLibrary",
