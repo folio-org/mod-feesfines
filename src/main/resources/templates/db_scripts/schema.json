@@ -64,6 +64,14 @@
           "fieldName" : "userId",
           "tOps" : "ADD"
         }
+      ],
+      "fullTextIndex": [
+        {
+          "fieldName" : "typeAction",
+          "tOps" : "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
       ]
     },
     {
