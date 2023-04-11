@@ -63,6 +63,10 @@
         {
           "fieldName" : "userId",
           "tOps" : "ADD"
+        },
+        {
+          "fieldName" : "typeAction",
+          "tOps" : "ADD"
         }
       ]
     },
