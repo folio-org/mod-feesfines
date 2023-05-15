@@ -44,6 +44,11 @@
       "javaType": "org.folio.rest.domain.MonetaryValue",
       "type": "number"
     },
+    "reminderFeesPolicy" : {
+      "description": "Rules and schedule for reminders with associated fees",
+      "type": "object",
+      "$ref": "reminder-fees-policy.json"
+    },
     "metadata": {
       "description": "Metadata about creation to overdue fine policy, provided by the server",
       "type": "object",
