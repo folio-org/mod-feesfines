@@ -189,6 +189,10 @@ public class RefundReportService {
     log.info("Processing fee/fine action {}, account {}", feeFineAction.getId(), accountId);
 
     AccountContextData accountData = ctx.accounts.get(accountId);
+    if (accountData == null) {
+      log.error("processAccountAction:: accountData is null");
+      return;
+    }
     AccountProcessingContext accountCtx = accountData.processingContext;
 
     if (actionIsOfType(feeFineAction, PAY)) {
@@ -224,11 +228,15 @@ public class RefundReportService {
       reportEntry
         .withFeeFineId(accountId)
         .withRefundDate(formatDate(feeFineAction.getDateAction(), ctx.timeZone))
-        .withRefundAmount(feeFineAction.getAmountAction().toString())
         .withRefundAction(feeFineAction.getTypeAction())
         .withRefundReason(feeFineAction.getPaymentMethod())
         .withStaffInfo(getStaffInfoFromComment(feeFineAction))
         .withPatronInfo(getPatronInfoFromComment(feeFineAction));
+
+      var amountAction = feeFineAction.getAmountAction();
+      if (amountAction != null) {
+        reportEntry = reportEntry.withRefundAmount(amountAction.toString());
+      }
 
       if (user != null) {
         reportEntry
