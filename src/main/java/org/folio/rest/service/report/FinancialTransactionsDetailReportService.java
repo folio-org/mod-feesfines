@@ -132,7 +132,6 @@ public class FinancialTransactionsDetailReportService extends
 
       entry = entry
         .withAction(ACTION_NAMES.get(feeFineAction.getTypeAction()))
-        .withActionAmount(feeFineAction.getAmountAction().toString())
         .withActionDate(formatDate(feeFineAction.getDateAction()))
         .withActionCreatedAt(createdAt)
         .withActionSource(feeFineAction.getSource())
@@ -145,6 +144,11 @@ public class FinancialTransactionsDetailReportService extends
         .withWaiveReason(getPaymentMethod(WAIVE, feeFineAction))
         .withRefundReason(getPaymentMethod(REFUND, feeFineAction))
         .withTransferAccount(getPaymentMethod(TRANSFER, feeFineAction));
+
+      var amountAction = feeFineAction.getAmountAction();
+      if (amountAction != null) {
+        entry = entry.withActionAmount(amountAction.toString());
+      }
 
       Account account = ctx.actionsToAccounts.get(feeFineAction);
       if (account != null) {
