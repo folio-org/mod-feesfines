@@ -1,0 +1,50 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "title": "Reminder fees policy schema",
+  "description": "Reminder fee policy as part of overdue fine policy",
+  "type": "object",
+  "properties": {
+    "reminderSchedule" : {
+      "description": "Ordered list of reminder notices",
+      "type": "array",
+      "items": {
+        "description": "Scheduled reminder notice with associated fee",
+        "type": "object",
+        "properties": {
+          "interval": {
+            "description": "Number of units of time before notice should be sent",
+            "type": "integer"
+          },
+          "timeUnitId": {
+            "description": "Time unit of interval",
+            "type": "string",
+            "enum":[
+              "day",
+              "week"
+            ]
+          },
+          "reminderFee": {
+            "description": "Fee amount accrued by reminder notice",
+            "javaType": "org.folio.rest.domain.MonetaryValue",
+            "type": "number"
+          },
+          "noticeMethodId": {
+            "description": "Method of sending notice",
+            "type": "string",
+            "enum": [
+              "email",
+              "mail"
+            ]
+          },
+          "noticeTemplateId": {
+            "description": "Id of reminder notice template",
+            "$ref": "raml-util/schemas/uuid.schema"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["interval", "timeUnitId", "reminderFee", "noticeMethodId", "noticeTemplateId"]
+      }
+    }
+  },
+  "additionalProperties": false
+}
