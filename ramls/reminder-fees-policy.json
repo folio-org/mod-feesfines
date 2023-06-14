@@ -51,6 +51,10 @@
           "noticeTemplateId": {
             "description": "Id of reminder notice template",
             "$ref": "raml-util/schemas/uuid.schema"
+          },
+          "blockTemplateId": {
+            "description": "Id of block reminder template",
+            "$ref": "raml-util/schemas/uuid.schema"
           }
         },
         "additionalProperties": false,
