@@ -12,6 +12,14 @@
       "description": "Ignore grace period for recall",
       "type": "boolean"
     },
+    "ignoreGracePeriodHolds": {
+      "description": "Ignore grace period for holds",
+      "type": "boolean"
+    },
+    "allowRenewalOfItemsWithReminderFees": {
+      "description": "Allow renewal of items with reminder fee(s)",
+      "type": "boolean"
+    },
     "clearPatronBlockWhenPaid": {
       "description": "Clear patron block when paid",
       "type": "boolean"
@@ -45,7 +53,8 @@
             "type": "string",
             "enum": [
               "email",
-              "mail"
+              "mail",
+              "none"
             ]
           },
           "noticeTemplateId": {
