@@ -21,7 +21,7 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
   private static final String MIGRATION_SCRIPT_18_2_TO_18_3 = loadMigrationScript18_2to18_3();
 
   @Test
-  public void lostItemFeeForActualCostIsAddedWhenMigratingFrom15_9To15_10() {
+  void lostItemFeeForActualCostIsAddedWhenMigratingFrom15_9To15_10() {
     // module was enabled in @BeforeAll with moduleTo=current_version
     // we must downgrade to 15.9.0 first if we want to rerun the migration script (see RMB-937)
     createTenant(getModuleVersion(), "15.9.0");
@@ -37,7 +37,7 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
   }
 
   @Test
-  public void reminderFeeIsAddedWhenMigratingFrom18_2To18_3() {
+  void reminderFeeIsAddedWhenMigratingFrom18_2To18_3() {
     // module was enabled in @BeforeAll with moduleTo=current_version
     // we must downgrade to 18.2.0 first if we want to rerun the migration script (see RMB-937)
     createTenant(getModuleVersion(), "18.2.0");
@@ -62,7 +62,7 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
   }
 
   @Test
-  public void subsequentRunOfMigrationsDoesNotCauseIssues() {
+  void subsequentRunOfMigrationsDoesNotCauseIssues() {
     executeMigration_15_9_to_15_10();
 
     feeFinesClient.getAll().then()
