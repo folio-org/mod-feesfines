@@ -139,11 +139,16 @@
       ]
     }
   ],
-  "scripts":[
+  "scripts": [
     {
       "run": "after",
       "snippetPath": "add-lost-fee-for-actual-cost.sql",
       "fromModuleVersion": "15.10.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "add-reminder-fee.sql",
+      "fromModuleVersion": "18.3.0"
     },
     {
       "run": "after",

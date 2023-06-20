@@ -10,7 +10,8 @@ public enum AutomaticFeeFineType {
   REPLACEMENT_PROCESSING_FEE("d20df2fb-45fd-4184-b238-0d25747ffdd9"),
   LOST_ITEM_FEE("cf238f9f-7018-47b7-b815-bb2db798e19f"),
   LOST_ITEM_PROCESSING_FEE("c7dede15-aa48-45ed-860b-f996540180e0"),
-  LOST_FEE_FOR_ACTUAL_COST("73785370-d3bd-4d92-942d-ae2268e02ded");
+  LOST_FEE_FOR_ACTUAL_COST("73785370-d3bd-4d92-942d-ae2268e02ded"),
+  REMINDER_FEE("6b830703-f828-4e38-a0bb-ee81deacbd03");
 
   private final String id;
   private static final Map<String, AutomaticFeeFineType> idIndex = new HashMap<>(AutomaticFeeFineType.values().length);
