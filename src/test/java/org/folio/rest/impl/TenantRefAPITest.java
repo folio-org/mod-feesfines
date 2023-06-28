@@ -6,7 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
-import static org.folio.test.support.matcher.FeeFineMatchers.hasAllAutomaticFeeFineTypes;
+import static org.folio.test.support.matcher.FeeFineMatchers.hasAllAutomaticFeeFineTypesFor18_3;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -89,7 +89,7 @@ public class TenantRefAPITest extends ApiTests {
   public void feesFinesAreLoaded() {
     // these are default fees/fines, see resources/templates/db_scripts/populate-feefines.sql
     client.get("/feefines").then()
-      .body(hasAllAutomaticFeeFineTypes());
+      .body(hasAllAutomaticFeeFineTypesFor18_3());
   }
 
   @Test
