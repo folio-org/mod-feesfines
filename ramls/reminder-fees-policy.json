@@ -4,6 +4,26 @@
   "description": "Reminder fee policy as part of overdue fine policy",
   "type": "object",
   "properties": {
+    "countClosed": {
+      "description": "A flag to determine if a reminder fee should take closed days into account",
+      "type": "boolean"
+    },
+    "ignoreGracePeriodRecall": {
+      "description": "Ignore grace period for recall",
+      "type": "boolean"
+    },
+    "ignoreGracePeriodHolds": {
+      "description": "Ignore grace period for holds",
+      "type": "boolean"
+    },
+    "allowRenewalOfItemsWithReminderFees": {
+      "description": "Allow renewal of items with reminder fee(s)",
+      "type": "boolean"
+    },
+    "clearPatronBlockWhenPaid": {
+      "description": "Clear patron block when paid",
+      "type": "boolean"
+    },
     "reminderSchedule" : {
       "description": "Ordered list of reminder notices",
       "type": "array",
@@ -33,11 +53,16 @@
             "type": "string",
             "enum": [
               "email",
-              "mail"
+              "mail",
+              "none"
             ]
           },
           "noticeTemplateId": {
             "description": "Id of reminder notice template",
+            "$ref": "raml-util/schemas/uuid.schema"
+          },
+          "blockTemplateId": {
+            "description": "Id of block reminder template",
             "$ref": "raml-util/schemas/uuid.schema"
           }
         },

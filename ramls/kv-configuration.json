@@ -1,34 +1,43 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "tbd",
   "properties": {
     "id": {
       "type": "string",
       "$ref": "raml-util/schemas/uuid.schema"
     },
     "module": {
-      "type": "string"
+      "type": "string",
+      "description": "tbd"
     },
     "configName": {
-      "type": "string"
+      "type": "string",
+      "description": "tbd"
     },
     "code": {
-      "type": "string"
+      "type": "string",
+      "description": "tbd"
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "description": "tbd"
     },
     "default": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "tbd"
     },
     "enabled": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "tbd"
     },
     "value": {
-      "type": "string"
+      "type": "string",
+      "description": "tbd"
     },
     "userId": {
-      "type": "string"
+      "type": "string",
+      "description": "tbd"
     },
     "metadata": {
       "$ref": "raml-util/schemas/metadata.schema",
