@@ -1,21 +1,26 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "tbd",
   "properties": {
     "id": {
       "type": "string"
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "tbd"
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "description": "tbd"
     },
     "loanable": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "tbd"
     },
     "loansPolicy": {
       "type": "object",
+      "description": "tbd",
       "additionalProperties": true,
       "properties": {
         "profileId": {
@@ -59,6 +64,7 @@
     },
     "renewalsPolicy": {
       "type": "object",
+      "description": "tbd",
       "properties": {
         "unlimited": {
           "type": "boolean",
@@ -89,10 +95,12 @@
     },
     "requestManagement": {
       "type": "object",
+      "description": "tbd",
       "additionalProperties": true,
       "properties": {
         "recalls": {
           "type": "object",
+          "description": "tbd",
           "additionalProperties": true,
           "properties": {
             "alternateGracePeriod": {
@@ -124,6 +132,7 @@
         },
         "holds": {
           "type": "object",
+          "description": "tbd",
           "additionalProperties": true,
           "properties": {
             "alternateCheckoutLoanPeriod": {
@@ -144,6 +153,7 @@
         },
         "pages": {
           "type": "object",
+          "description": "tbd",
           "additionalProperties": true,
           "properties": {
             "alternateCheckoutLoanPeriod": {

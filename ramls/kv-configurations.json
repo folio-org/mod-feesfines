@@ -1,10 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "tbd",
   "properties": {
     "configs": {
       "id": "configurationData",
       "type": "array",
+      "description": "tbd",
       "items": {
         "type": "object",
         "$ref": "kv-configuration.json"
