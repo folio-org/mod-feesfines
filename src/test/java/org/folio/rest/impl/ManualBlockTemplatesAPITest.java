@@ -4,7 +4,8 @@ import static io.restassured.http.ContentType.JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
+import java.util.Objects;
+
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.ManualBlockTemplate;
 import org.folio.rest.jaxrs.model.ManualBlockTemplateCollection;
@@ -27,16 +28,14 @@ public class ManualBlockTemplatesAPITest extends ApiTests {
       .response()
       .as(ManualBlockTemplate.class);
 
-    assertTrue(EqualsBuilder
-      .reflectionEquals(createdTemplate, initialTemplate, false, null, true, "metadata"));
+    assertTrue(areManualBlockTemplatesEqual(createdTemplate, initialTemplate));
 
     // get all templates
     ManualBlockTemplateCollection createTemplateCollection = manualBlockTemplatesClient.getAll()
       .as(ManualBlockTemplateCollection.class);
     assertEquals(1, createTemplateCollection.getTotalRecords().intValue());
-    assertTrue(EqualsBuilder
-      .reflectionEquals(createTemplateCollection.getManualBlockTemplates().get(0), initialTemplate,
-        false, null, true, "metadata"));
+    assertTrue(areManualBlockTemplatesEqual(
+      createTemplateCollection.getManualBlockTemplates().get(0), initialTemplate));
 
     // update template
     ManualBlockTemplate initalTemplateChanged = initialTemplate
@@ -50,9 +49,7 @@ public class ManualBlockTemplatesAPITest extends ApiTests {
     ManualBlockTemplate changedTemplate = manualBlockTemplatesClient
       .getById(initialTemplate.getId())
       .as(ManualBlockTemplate.class);
-    assertTrue(EqualsBuilder
-      .reflectionEquals(changedTemplate, initalTemplateChanged,
-        false, null, true, "metadata"));
+    assertTrue(areManualBlockTemplatesEqual(changedTemplate, initalTemplateChanged));
 
     // delete template
     manualBlockTemplatesClient.delete(initialTemplate.getId())
@@ -64,5 +61,20 @@ public class ManualBlockTemplatesAPITest extends ApiTests {
     assertEquals(0, emptyCollection.getTotalRecords().intValue());
   }
 
+  private boolean areManualBlockTemplatesEqual(ManualBlockTemplate createdTemplate,
+    ManualBlockTemplate initialTemplate) {
 
+    var createdBlockTemplate = createdTemplate.getBlockTemplate();
+    var initialBlockTemplate = initialTemplate.getBlockTemplate();
+
+    return Objects.equals(createdTemplate.getName(), initialTemplate.getName())
+      && Objects.equals(createdTemplate.getCode(), initialTemplate.getCode())
+      && Objects.equals(createdTemplate.getDesc(), initialTemplate.getDesc())
+      && Objects.equals(createdTemplate.getId(), initialTemplate.getId())
+      && Objects.equals(createdBlockTemplate.getDesc(), initialBlockTemplate.getDesc())
+      && Objects.equals(createdBlockTemplate.getPatronMessage(), initialBlockTemplate.getPatronMessage())
+      && Objects.equals(createdBlockTemplate.getBorrowing(), initialBlockTemplate.getBorrowing())
+      && Objects.equals(createdBlockTemplate.getRenewals(), initialBlockTemplate.getRenewals())
+      && Objects.equals(createdBlockTemplate.getRequests(), initialBlockTemplate.getRequests());
+  }
 }
