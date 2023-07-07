@@ -48,6 +48,18 @@
         {
           "fieldName": "ownerId",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "status.name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "itemId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ]
     },
