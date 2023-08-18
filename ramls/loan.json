@@ -76,12 +76,12 @@
       "type": "string"
     },
     "checkoutServicePointId": {
-      "description": "ID of the Service Point where the last checkout occured",
+      "description": "ID of the Service Point where the last checkout occurred",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
       "type": "string"
     },
     "checkinServicePointId": {
-      "description": "ID of the Service Point where the last checkin occured",
+      "description": "ID of the Service Point where the last checkin occurred",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
       "type": "string"
     },
