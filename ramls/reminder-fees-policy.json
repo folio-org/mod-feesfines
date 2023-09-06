@@ -40,7 +40,8 @@
             "type": "string",
             "enum":[
               "day",
-              "week"
+              "week",
+              "minute"
             ]
           },
           "reminderFee": {
@@ -48,13 +49,13 @@
             "javaType": "org.folio.rest.domain.MonetaryValue",
             "type": "number"
           },
-          "noticeMethodId": {
+          "noticeFormat": {
             "description": "Method of sending notice",
             "type": "string",
             "enum": [
-              "email",
-              "mail",
-              "none"
+              "Email",
+              "Print",
+              "None"
             ]
           },
           "noticeTemplateId": {
