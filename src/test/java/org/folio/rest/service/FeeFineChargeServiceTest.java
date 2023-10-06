@@ -14,6 +14,7 @@ import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.PaymentStatus;
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.test.support.ApiTests;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -99,6 +100,7 @@ class FeeFineChargeServiceTest extends ApiTests {
     return new Account()
       .withAmount(new MonetaryValue(9.99))
       .withRemaining(new MonetaryValue(9.99))
+      .withStatus(new Status().withName("Open"))
       .withPaymentStatus(new PaymentStatus().withName(PaymentStatus.Name.OUTSTANDING))
       .withUserId(randomId())
       .withFeeFineId(randomId())
