@@ -1,3 +1,19 @@
+## 19.0.0 2023-10-11
+* Enable UUID-validation for `createdAt` (MODFEE-315)
+* Add error handling for invalid configuration to financial reports (MODFEE-327)
+* Add support for token `item.loanType` in patron notices (MODFEE-329)
+* Add support for token `item.effectiveLocationDiscoveryDisplayName` in patron notices (MODFEE-328)
+* Add indices to `feefineactions` table (MODFEE-331)
+* Add support for reminder fees in Overdue Fine Policy (MODFEE-345)
+* Update copyright year (FOLIO-1021)
+* Use API-related Workflows (FOLIO-3678)
+* Fix potential NPE in Financial Transaction and Refund reports (MODFEE-355)
+* Extend reminder fee policy schema (MODFEE-356)
+* Add new automated fee/fine type `Reminder fee` (MODFEE-358)
+* Migrate to Java 17 (MODFEE-357)
+* Add indices to `accounts` table (MODFEE-319)
+* Update enums in reminder fee policy schema (MODFEE-365)
+
 ## 18.2.0 2023-02-15
 * Upgrade to RMB 35.0.2 and Vertx 4.3.4 (MODFEE-299, MODFEE-262)
 * Actual cost record cancelling API (MODFEE-298)
