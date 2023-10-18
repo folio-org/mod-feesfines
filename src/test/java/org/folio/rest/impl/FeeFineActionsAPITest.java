@@ -27,8 +27,6 @@ import static org.folio.test.support.EntityBuilder.buildLoanType;
 import static org.folio.test.support.EntityBuilder.buildLocation;
 import static org.folio.test.support.EntityBuilder.buildUser;
 import static org.folio.test.support.matcher.LogEventMatcher.noticeErrorLogRecord;
-import static org.folio.test.support.matcher.constant.DbTable.ACCOUNTS_TABLE;
-import static org.folio.test.support.matcher.constant.DbTable.FEE_FINE_ACTIONS_TABLE;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.CAMPUSES_PATH;
 import static org.folio.test.support.matcher.constant.ServicePath.FEEFINES_PATH;
@@ -72,6 +70,7 @@ import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.jaxrs.model.PaymentStatus;
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.service.LogEventPublisher.LogEventPayloadType;
 import org.folio.test.support.ApiTests;
@@ -473,6 +472,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
+      .put("status", new Status().withName("Open"))
       .put("paymentStatus", new PaymentStatus().withName(OUTSTANDING))
       .put("remaining", 10.0)
       .put("amount", 10.0));
@@ -529,6 +529,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .put("materialTypeId", randomId())
       .put("feeFineId", feeFineId)
       .put("ownerId", ownerId)
+      .put("status", new Status().withName("Open"))
       .put("paymentStatus", new PaymentStatus().withName(OUTSTANDING))
       .put("remaining", 10.0)
       .put("amount", 10.0));
@@ -699,6 +700,7 @@ public class FeeFineActionsAPITest extends ApiTests {
       .withTitle("Account-level title")
       .withCallNumber("Account-level call number")
       .withLocation("Account-level location")
+      .withStatus(new Status().withName("Open"))
       .withPaymentStatus(new PaymentStatus().withName(PAID_PARTIALLY))
       .withFeeFineType(feefine.getFeeFineType())
       .withMaterialType("book")
