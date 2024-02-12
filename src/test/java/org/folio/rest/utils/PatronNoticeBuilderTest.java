@@ -108,6 +108,7 @@ public class PatronNoticeBuilderTest {
     assertEquals(item.getEnumeration(), itemContext.getString("enumeration"));
     assertEquals(item.getVolume(), itemContext.getString("volume"));
     assertEquals(item.getChronology(), itemContext.getString("chronology"));
+    assertEquals(item.getDisplaySummary(), itemContext.getString("displaySummary"));
     assertEquals("2001; 2000", itemContext.getString("yearCaption"));
     assertEquals(item.getCopyNumber(), itemContext.getString("copy"));
     assertEquals(item.getNumberOfPieces(), itemContext.getString("numberOfPieces"));
