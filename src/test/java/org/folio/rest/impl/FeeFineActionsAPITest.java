@@ -333,7 +333,6 @@ public class FeeFineActionsAPITest extends ApiTests {
           .put("enumeration", item.getEnumeration())
           .put("volume", item.getVolume())
           .put("chronology", item.getChronology())
-          .put("displaySummary", item.getDisplaySummary())
           .put("yearCaption", "2000")
           .put("copy", item.getCopyNumber())
           .put("numberOfPieces", item.getNumberOfPieces())
