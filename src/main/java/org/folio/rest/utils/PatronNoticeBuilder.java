@@ -101,6 +101,7 @@ public class PatronNoticeBuilder {
         .put("enumeration", item.getEnumeration())
         .put("volume", item.getVolume())
         .put("chronology", item.getChronology())
+        .put("displaySummary", item.getDisplaySummary())
         .put("yearCaption", String.join(LIST_VALUES_SEPARATOR, item.getYearCaption()))
         .put("copy", getCopyNumber(item, holdingsRecord))
         .put("numberOfPieces", item.getNumberOfPieces())
