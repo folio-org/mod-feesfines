@@ -6,9 +6,9 @@ import io.vertx.core.Handler;
 
 import java.util.Map;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
