@@ -1,3 +1,9 @@
+## 19.1.0 2024-03-21
+* Upgrade to RMB 35.2.0, Vertx 4.5.5 (MODFEE-375)
+* Make `status` property mandatory in account schema (MODFEE-337)
+* Add `displaySummary` property to item schema (MODFEE-370)
+* Use actions/checkout v4 (FOLIO-3944)
+
 ## 19.0.0 2023-10-11
 * Enable UUID-validation for `createdAt` (MODFEE-315)
 * Add error handling for invalid configuration to financial reports (MODFEE-327)
