@@ -17,7 +17,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.ActionRequest;
@@ -95,18 +94,8 @@ public abstract class ActionService {
       .compose(this::createFeeFineActions)
       .compose(this::publishLogEvents)
       .compose(this::updateAccounts)
-      .compose(this::publishLoanRelatedFeeFineClosedEvent)
-      .compose(this::sendPatronNotice);
-  }
-
-  private Future<ActionContext> publishLoanRelatedFeeFineClosedEvent(ActionContext actionContext) {
-    actionContext.getAccounts().values().stream()
-      .filter(accountUpdateService::isFeeFineWithLoanClosed)
-      .map(Account::getLoanId)
-      .collect(Collectors.toSet())
-      .forEach(accountUpdateService::publishLoanRelatedFeeFineClosedEvent);
-
-    return succeededFuture(actionContext);
+      .compose(this::sendPatronNotice)
+      .onSuccess(accountUpdateService::publishLoanRelatedFeeFineClosedEvent);
   }
 
   private Future<ActionContext> findAccounts(ActionContext context) {

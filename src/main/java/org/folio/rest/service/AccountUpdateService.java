@@ -17,6 +17,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.repository.AccountRepository;
+import org.folio.rest.service.action.context.ActionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,11 +75,15 @@ public class AccountUpdateService {
       .onSuccess(a -> eventPublisher.publishAccountBalanceChangeEvent(account));
   }
 
-  public void publishLoanRelatedFeeFineClosedEvent(String loanId) {
-    eventPublisher.publishLoanRelatedFeeFineClosedEvent(loanId);
+  public void publishLoanRelatedFeeFineClosedEvent(ActionContext actionContext) {
+    actionContext.getAccounts().values().stream()
+      .filter(this::isFeeFineWithLoanClosed)
+      .map(Account::getLoanId)
+      .distinct()
+      .forEach(eventPublisher::publishLoanRelatedFeeFineClosedEvent);
   }
 
-  public boolean isFeeFineWithLoanClosed(Account feeFine) {
+  private boolean isFeeFineWithLoanClosed(Account feeFine) {
     return isFeeFineAssociatedToLoan(feeFine) && isClosedAndHasZeroRemainingAmount(feeFine);
   }
 
