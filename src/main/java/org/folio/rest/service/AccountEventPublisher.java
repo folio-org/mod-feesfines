@@ -3,7 +3,6 @@ package org.folio.rest.service;
 import static org.folio.rest.domain.EventType.FEE_FINE_BALANCE_CHANGED;
 import static org.folio.rest.domain.EventType.LOAN_RELATED_FEE_FINE_CLOSED;
 import static org.folio.rest.domain.LoanRelatedFeeFineClosedEvent.forActualCostRecord;
-import static org.folio.rest.domain.LoanRelatedFeeFineClosedEvent.forFeeFine;
 import static org.folio.rest.utils.JsonHelper.write;
 
 import java.math.BigDecimal;
@@ -43,11 +42,6 @@ public class AccountEventPublisher {
       .withRemaining(new MonetaryValue(BigDecimal.ZERO));
 
     publishAccountBalanceChangeEvent(account);
-  }
-
-  public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(Account feeFine) {
-    return eventPublisher.publishEvent(LOAN_RELATED_FEE_FINE_CLOSED,
-      forFeeFine(feeFine).toJsonString());
   }
 
   public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(String loanId) {

@@ -55,7 +55,7 @@ public class AccountUpdateService {
       eventPublisher.publishAccountBalanceChangeEvent(account);
 
       if (isFeeFineWithLoanClosed(account)) {
-        return eventPublisher.publishLoanRelatedFeeFineClosedEvent(account)
+        return eventPublisher.publishLoanRelatedFeeFineClosedEvent(account.getLoanId())
           .thenApply(notUsed -> responseResult);
       }
 
