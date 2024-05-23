@@ -330,8 +330,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
       .put("loanId", account2.getLoanId()));
 
     verifyThatEventWasSent(EventType.LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
-      .put("loanId", account2.getLoanId())
-      .put("feeFineId", account2.getId()));
+      .put("loanId", account2.getLoanId()));
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS);
 
@@ -398,7 +397,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/pubsub/publish"))
+      .untilAsserted(() -> getOkapi().verify(1, postRequestedFor(urlPathEqualTo("/pubsub/publish"))
         .withRequestBody(equalToJson(toJson(event), true, true))
       ));
   }

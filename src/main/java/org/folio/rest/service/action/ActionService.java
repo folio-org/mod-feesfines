@@ -94,7 +94,8 @@ public abstract class ActionService {
       .compose(this::createFeeFineActions)
       .compose(this::publishLogEvents)
       .compose(this::updateAccounts)
-      .compose(this::sendPatronNotice);
+      .compose(this::sendPatronNotice)
+      .onSuccess(accountUpdateService::publishLoanRelatedFeeFineClosedEvent);
   }
 
   private Future<ActionContext> findAccounts(ActionContext context) {

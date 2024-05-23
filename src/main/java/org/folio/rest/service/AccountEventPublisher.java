@@ -3,13 +3,13 @@ package org.folio.rest.service;
 import static org.folio.rest.domain.EventType.FEE_FINE_BALANCE_CHANGED;
 import static org.folio.rest.domain.EventType.LOAN_RELATED_FEE_FINE_CLOSED;
 import static org.folio.rest.domain.LoanRelatedFeeFineClosedEvent.forActualCostRecord;
-import static org.folio.rest.domain.LoanRelatedFeeFineClosedEvent.forFeeFine;
 import static org.folio.rest.utils.JsonHelper.write;
 
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.folio.rest.domain.LoanRelatedFeeFineClosedEvent;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ActualCostRecord;
@@ -44,9 +44,9 @@ public class AccountEventPublisher {
     publishAccountBalanceChangeEvent(account);
   }
 
-  public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(Account feeFine) {
+  public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(String loanId) {
     return eventPublisher.publishEvent(LOAN_RELATED_FEE_FINE_CLOSED,
-      forFeeFine(feeFine).toJsonString());
+      new LoanRelatedFeeFineClosedEvent(loanId).toJsonString());
   }
 
   public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(
