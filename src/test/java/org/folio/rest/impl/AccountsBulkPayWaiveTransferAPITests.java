@@ -397,7 +397,7 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/pubsub/publish"))
+      .untilAsserted(() -> getOkapi().verify(1, postRequestedFor(urlPathEqualTo("/pubsub/publish"))
         .withRequestBody(equalToJson(toJson(event), true, true))
       ));
   }
