@@ -15,10 +15,10 @@ import static org.folio.test.support.matcher.AccountMatchers.isPaidFully;
 import static org.folio.test.support.matcher.AccountMatchers.singleAccountMatcher;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
@@ -37,12 +37,11 @@ import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
-import org.folio.rest.jaxrs.model.ItemStatus;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
-import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.matcher.TypeMappingMatcher;
 import org.hamcrest.Matcher;
@@ -172,9 +171,7 @@ public class AccountsAPITest extends ApiTests {
 
     assertThat(event, isFeeFineClosedEventPublished());
     assertThat(event.getEventPayload(), allOf(
-      hasJsonPath("loanId", is(loanId)),
-      hasJsonPath("feeFineId", is(accountId))
-    ));
+      hasJsonPath("loanId", is(loanId))));
   }
 
   @Test

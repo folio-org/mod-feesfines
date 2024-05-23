@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.folio.rest.domain.LoanRelatedFeeFineClosedEvent;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ActualCostRecord;
@@ -47,6 +48,11 @@ public class AccountEventPublisher {
   public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(Account feeFine) {
     return eventPublisher.publishEvent(LOAN_RELATED_FEE_FINE_CLOSED,
       forFeeFine(feeFine).toJsonString());
+  }
+
+  public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(String loanId) {
+    return eventPublisher.publishEvent(LOAN_RELATED_FEE_FINE_CLOSED,
+      new LoanRelatedFeeFineClosedEvent(loanId).toJsonString());
   }
 
   public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(

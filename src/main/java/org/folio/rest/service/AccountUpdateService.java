@@ -9,17 +9,20 @@ import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.utils.AccountHelper.isClosedAndHasZeroRemainingAmount;
 import static org.folio.rest.utils.MetadataHelper.populateMetadata;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.repository.AccountRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 
 public class AccountUpdateService {
   private static final Logger log = LoggerFactory.getLogger(AccountUpdateService.class);
@@ -68,15 +71,14 @@ public class AccountUpdateService {
     populateMetadata(account, headers);
 
     return accountRepository.update(account)
-      .onSuccess(a -> {
-        eventPublisher.publishAccountBalanceChangeEvent(account);
-        if (isFeeFineWithLoanClosed(account)) {
-          eventPublisher.publishLoanRelatedFeeFineClosedEvent(account);
-        }
-      });
+      .onSuccess(a -> eventPublisher.publishAccountBalanceChangeEvent(account));
   }
 
-  private boolean isFeeFineWithLoanClosed(Account feeFine) {
+  public void publishLoanRelatedFeeFineClosedEvent(String loanId) {
+    eventPublisher.publishLoanRelatedFeeFineClosedEvent(loanId);
+  }
+
+  public boolean isFeeFineWithLoanClosed(Account feeFine) {
     return isFeeFineAssociatedToLoan(feeFine) && isClosedAndHasZeroRemainingAmount(feeFine);
   }
 

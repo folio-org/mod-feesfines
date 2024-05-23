@@ -312,8 +312,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
 
     if (terminalAction && account.getLoanId() != null) {
       verifyThatEventWasSent(EventType.LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
-        .put("loanId", account.getLoanId())
-        .put("feeFineId", account.getId()));
+        .put("loanId", account.getLoanId()));
     }
 
     assertThat(fetchLogEventPayloads(getOkapi()).get(0),

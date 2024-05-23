@@ -7,19 +7,13 @@ import io.vertx.core.json.JsonObject;
 
 public final class LoanRelatedFeeFineClosedEvent {
   private final String loanId;
-  private final String feeFineId;
 
-  public LoanRelatedFeeFineClosedEvent(String loanId, String feeFineId) {
+  public LoanRelatedFeeFineClosedEvent(String loanId) {
     this.loanId = loanId;
-    this.feeFineId = feeFineId;
   }
 
   public String getLoanId() {
     return loanId;
-  }
-
-  public String getFeeFineId() {
-    return feeFineId;
   }
 
   public String toJsonString() {
@@ -27,10 +21,10 @@ public final class LoanRelatedFeeFineClosedEvent {
   }
 
   public static LoanRelatedFeeFineClosedEvent forFeeFine(Account feeFine) {
-    return new LoanRelatedFeeFineClosedEvent(feeFine.getLoanId(), feeFine.getId());
+    return new LoanRelatedFeeFineClosedEvent(feeFine.getLoanId());
   }
 
   public static LoanRelatedFeeFineClosedEvent forActualCostRecord(ActualCostRecord actualCostRecord) {
-    return new LoanRelatedFeeFineClosedEvent(actualCostRecord.getLoan().getId(), null);
+    return new LoanRelatedFeeFineClosedEvent(actualCostRecord.getLoan().getId());
   }
 }
