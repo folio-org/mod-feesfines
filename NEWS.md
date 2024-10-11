@@ -1,3 +1,6 @@
+## 19.2.0
+* Upgrade `holdings-storage` to 8.0 (MODFEE-387)
+
 ## 19.1.0 2024-03-21
 * Upgrade to RMB 35.2.0, Vertx 4.5.5 (MODFEE-375)
 * Make `status` property mandatory in account schema (MODFEE-337)
