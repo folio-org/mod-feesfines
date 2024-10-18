@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -48,8 +50,10 @@ public class OwnersAPI implements Owners {
 
   @Validate
   @Override
-  public void getOwners(String query, String orderBy, OwnersGetOrder order, int offset, int limit, String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getOwners(String query, String orderBy, OwnersGetOrder order, String totalRecords,
+    int offset, int limit, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
     try {
@@ -92,7 +96,7 @@ public class OwnersAPI implements Owners {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetOwnersResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -107,7 +111,7 @@ public class OwnersAPI implements Owners {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetOwnersResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -115,8 +119,9 @@ public class OwnersAPI implements Owners {
 
   @Validate
   @Override
-  public void postOwners(String lang, Owner entity, Map<String, String> okapiHeaders,
+  public void postOwners(Owner entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (entity.getId() == null) {
       entity.setId(UUID.randomUUID().toString());
     }
@@ -141,7 +146,7 @@ public class OwnersAPI implements Owners {
                   postgresClient.rollbackTx(beginTx, rollback -> {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PostOwnersResponse.respond400WithTextPlain(
-                        messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
                   });
                 }
               } catch (Exception e) {
@@ -164,15 +169,16 @@ public class OwnersAPI implements Owners {
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostOwnersResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
 
   }
 
   @Validate
   @Override
-  public void getOwnersByOwnerId(String ownerId, String lang, Map<String, String> okapiHeaders,
+  public void getOwnersByOwnerId(String ownerId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -190,19 +196,19 @@ public class OwnersAPI implements Owners {
                 logger.error(getReply.result());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetOwnersByOwnerIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Owner> ownerList = getReply.result().getResults();
                 if (ownerList.isEmpty()) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetOwnersByOwnerIdResponse.respond404WithTextPlain("Owner"
-                      + messages.getMessage(lang,
+                      + messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.ObjectDoesNotExist))));
                 } else if (ownerList.size() > 1) {
                   logger.error("Multiple owners found with the same id");
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetOwnersByOwnerIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
@@ -214,21 +220,21 @@ public class OwnersAPI implements Owners {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetOwnersResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
 
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetOwnersResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
 
   }
 
   @Validate
   @Override
-  public void deleteOwnersByOwnerId(String ownerId, String lang, Map<String, String> okapiHeaders,
+  public void deleteOwnersByOwnerId(String ownerId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       vertxContext.runOnContext(v -> {
@@ -257,7 +263,7 @@ public class OwnersAPI implements Owners {
                 logger.error(error, deleteReply.cause());
                 if (error == null) {
                   asyncResultHandler.handle(Future.succeededFuture(DeleteOwnersByOwnerIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))
                   ));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(DeleteOwnersByOwnerIdResponse.respond400WithTextPlain(error)
@@ -271,7 +277,7 @@ public class OwnersAPI implements Owners {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeleteOwnersByOwnerIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
 
@@ -280,14 +286,14 @@ public class OwnersAPI implements Owners {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeleteOwnersByOwnerIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putOwnersByOwnerId(String ownerId, String lang, Owner entity, Map<String, String> okapiHeaders,
+  public void putOwnersByOwnerId(String ownerId, Owner entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       if (ownerId == null) {
@@ -311,7 +317,7 @@ public class OwnersAPI implements Owners {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutOwnersByOwnerIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -327,7 +333,7 @@ public class OwnersAPI implements Owners {
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    PutOwnersByOwnerIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                    PutOwnersByOwnerIdResponse.respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
                 }
               } else if (getReply.result().getResults().isEmpty()) {
@@ -342,7 +348,7 @@ public class OwnersAPI implements Owners {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutOwnersByOwnerIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
 
@@ -350,7 +356,7 @@ public class OwnersAPI implements Owners {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutOwnersByOwnerIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
 
   }

@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -47,10 +49,10 @@ public class CommentsAPI implements Comments {
 
   @Validate
   @Override
-  public void getComments(String query, String orderBy, CommentsGetOrder order, int offset, int limit, List<String> facets,
-    String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getComments(String query, String orderBy, CommentsGetOrder order, String totalRecords,
+    int offset, int limit, List<String> facets, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
     List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
     try {
@@ -93,7 +95,7 @@ public class CommentsAPI implements Comments {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetCommentsResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -107,7 +109,7 @@ public class CommentsAPI implements Comments {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetCommentsResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -115,7 +117,7 @@ public class CommentsAPI implements Comments {
 
   @Validate
   @Override
-  public void postComments(String lang, Comment entity, Map<String, String> okapiHeaders,
+  public void postComments(Comment entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     if (entity.getId() == null) {
       entity.setId(UUID.randomUUID().toString());
@@ -141,7 +143,7 @@ public class CommentsAPI implements Comments {
                   postgresClient.rollbackTx(beginTx, rollback -> {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PostCommentsResponse.respond400WithTextPlain(
-                        messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
                   });
                 }
               } catch (Exception e) {
@@ -162,13 +164,13 @@ public class CommentsAPI implements Comments {
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostCommentsResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void getCommentsByCommentId(String commentId, String lang, Map<String, String> okapiHeaders,
+  public void getCommentsByCommentId(String commentId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       vertxContext.runOnContext(v -> {
@@ -187,19 +189,19 @@ public class CommentsAPI implements Comments {
                 logger.error(getReply.result());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetCommentsByCommentIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Comment> commentList = getReply.result().getResults();
                 if (commentList.isEmpty()) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetCommentsByCommentIdResponse.respond404WithTextPlain("Comment"
-                      + messages.getMessage(lang,
+                      + messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.ObjectDoesNotExist))));
                 } else if (commentList.size() > 1) {
                   logger.error("Multiple comments found with the same id");
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetCommentsByCommentIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
@@ -211,19 +213,19 @@ public class CommentsAPI implements Comments {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetCommentsResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetCommentsResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void deleteCommentsByCommentId(String commentId, String lang, Map<String, String> okapiHeaders,
+  public void deleteCommentsByCommentId(String commentId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       vertxContext.runOnContext(v -> {
@@ -251,7 +253,7 @@ public class CommentsAPI implements Comments {
                 logger.error(error, deleteReply.cause());
                 if (error == null) {
                   asyncResultHandler.handle(Future.succeededFuture(DeleteCommentsByCommentIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(DeleteCommentsByCommentIdResponse.respond400WithTextPlain(error)));
@@ -263,7 +265,7 @@ public class CommentsAPI implements Comments {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeleteCommentsByCommentIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
       });
@@ -272,15 +274,17 @@ public class CommentsAPI implements Comments {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeleteCommentsByCommentIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putCommentsByCommentId(String commentId, String lang, Comment entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putCommentsByCommentId(String commentId, Comment entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     try {
       if (commentId == null) {
         logger.error("commentId is missing");
@@ -304,7 +308,7 @@ public class CommentsAPI implements Comments {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutCommentsByCommentIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -321,7 +325,7 @@ public class CommentsAPI implements Comments {
                 } catch (Exception e) {
                   logger.error(e.getLocalizedMessage(), e);
                   asyncResultHandler.handle(Future.succeededFuture(
-                    PutCommentsByCommentIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                    PutCommentsByCommentIdResponse.respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
                 }
               } else if (getReply.result().getResults().isEmpty()) {
@@ -336,14 +340,14 @@ public class CommentsAPI implements Comments {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutCommentsByCommentIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutCommentsByCommentIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 }

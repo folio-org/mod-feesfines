@@ -6,6 +6,7 @@ import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 
 import java.util.List;
 import java.util.Map;
@@ -126,10 +127,10 @@ public class AccountsAPI implements Accounts {
 
   @Validate
   @Override
-  public void getAccounts(String query, String orderBy, AccountsGetOrder order, int offset, int limit, List<String> facets,
-    String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getAccounts(String query, String orderBy, AccountsGetOrder order, String totalRecords,
+    int offset, int limit, List<String> facets, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
     List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
     try {
@@ -176,7 +177,7 @@ public class AccountsAPI implements Accounts {
           } else {
             asyncResultHandler.handle(succeededFuture(
               GetAccountsResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -190,7 +191,7 @@ public class AccountsAPI implements Accounts {
       } else {
         asyncResultHandler.handle(succeededFuture(
           GetAccountsResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -198,11 +199,8 @@ public class AccountsAPI implements Accounts {
 
   @Validate
   @Override
-  public void postAccounts(String lang,
-    Account entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void postAccounts(Account entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.post(ACCOUNTS_TABLE, entity, okapiHeaders, vertxContext,
       PostAccountsResponse.class, post -> {
@@ -216,8 +214,9 @@ public class AccountsAPI implements Accounts {
 
   @Validate
   @Override
-  public void getAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
+  public void getAccountsByAccountId(String accountId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -235,19 +234,19 @@ public class AccountsAPI implements Accounts {
                 logger.error(getReply.result());
                 asyncResultHandler.handle(succeededFuture(
                   GetAccountsByAccountIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Account> accountList = getReply.result().getResults();
                 if (accountList.isEmpty()) {
                   asyncResultHandler.handle(succeededFuture(
                     GetAccountsByAccountIdResponse.respond404WithTextPlain("Account"
-                      + messages.getMessage(lang,
+                      + messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.ObjectDoesNotExist))));
                 } else if (accountList.size() > 1) {
                   logger.error("Multiple accounts found with the same id");
                   asyncResultHandler.handle(succeededFuture(
                     GetAccountsByAccountIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   setAdditionalFields(vertxContext.owner(), okapiHeaders, accountList)
@@ -262,20 +261,21 @@ public class AccountsAPI implements Accounts {
           logger.error(e.getMessage());
           asyncResultHandler.handle(succeededFuture(
             GetAccountsResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(succeededFuture(
         GetAccountsResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void deleteAccountsByAccountId(String accountId, String lang, Map<String, String> okapiHeaders,
+  public void deleteAccountsByAccountId(String accountId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -304,7 +304,7 @@ public class AccountsAPI implements Accounts {
                 logger.error(error, deleteReply.cause());
                 if (error == null) {
                   asyncResultHandler.handle(succeededFuture(DeleteAccountsByAccountIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(succeededFuture(DeleteAccountsByAccountIdResponse.respond400WithTextPlain(error)));
                 }
@@ -315,7 +315,7 @@ public class AccountsAPI implements Accounts {
           asyncResultHandler.handle(
             succeededFuture(
               DeleteAccountsByAccountIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
       });
@@ -324,16 +324,16 @@ public class AccountsAPI implements Accounts {
       asyncResultHandler.handle(
         succeededFuture(
           DeleteAccountsByAccountIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putAccountsByAccountId(String accountId, String lang,
-    Account entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putAccountsByAccountId(String accountId, Account entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     new AccountUpdateService(okapiHeaders, vertxContext)
       .updateAccount(accountId, entity)

@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -46,10 +48,11 @@ public class TransfersAPI implements Transfers {
 
   @Validate
   @Override
-  public void getTransfers(String query, String orderBy, TransfersGetOrder order, int offset, int limit, List<String> facets,
-    String lang,
+  public void getTransfers(String query, String orderBy, TransfersGetOrder order,
+    String totalRecords, int offset, int limit, List<String> facets,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
     List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
     try {
@@ -92,7 +95,7 @@ public class TransfersAPI implements Transfers {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetTransfersResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -106,7 +109,7 @@ public class TransfersAPI implements Transfers {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetTransfersResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -114,8 +117,9 @@ public class TransfersAPI implements Transfers {
 
   @Validate
   @Override
-  public void postTransfers(String lang, Transfer entity, Map<String, String> okapiHeaders,
+  public void postTransfers(Transfer entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (entity.getId() == null) {
       entity.setId(UUID.randomUUID().toString());
     }
@@ -140,7 +144,7 @@ public class TransfersAPI implements Transfers {
                   postgresClient.rollbackTx(beginTx, rollback -> {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PostTransfersResponse.respond400WithTextPlain(
-                        messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
                   });
                 }
               } catch (Exception e) {
@@ -161,14 +165,15 @@ public class TransfersAPI implements Transfers {
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostTransfersResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void getTransfersByTransferId(String transferId, String lang, Map<String, String> okapiHeaders,
+  public void getTransfersByTransferId(String transferId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -186,19 +191,19 @@ public class TransfersAPI implements Transfers {
                 logger.error(getReply.result());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetTransfersByTransferIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Transfer> transferList = getReply.result().getResults();
                 if (transferList.isEmpty()) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetTransfersByTransferIdResponse.respond404WithTextPlain("Transfer"
-                      + messages.getMessage(lang,
+                      + messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.ObjectDoesNotExist))));
                 } else if (transferList.size() > 1) {
                   logger.error("Multiple transfers found with the same id");
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetTransfersByTransferIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
@@ -210,20 +215,21 @@ public class TransfersAPI implements Transfers {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetTransfersResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetTransfersResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void deleteTransfersByTransferId(String transferId, String lang, Map<String, String> okapiHeaders,
+  public void deleteTransfersByTransferId(String transferId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -250,7 +256,7 @@ public class TransfersAPI implements Transfers {
                 logger.error(error, deleteReply.cause());
                 if (error == null) {
                   asyncResultHandler.handle(Future.succeededFuture(DeleteTransfersByTransferIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(DeleteTransfersByTransferIdResponse.respond400WithTextPlain(error)));
@@ -262,7 +268,7 @@ public class TransfersAPI implements Transfers {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeleteTransfersByTransferIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
       });
@@ -271,15 +277,17 @@ public class TransfersAPI implements Transfers {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeleteTransfersByTransferIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putTransfersByTransferId(String transferId, String lang, Transfer entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putTransfersByTransferId(String transferId, Transfer entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     try {
       if (transferId == null) {
         logger.error("transferId is missing");
@@ -303,7 +311,7 @@ public class TransfersAPI implements Transfers {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutTransfersByTransferIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -319,7 +327,7 @@ public class TransfersAPI implements Transfers {
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    PutTransfersByTransferIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                    PutTransfersByTransferIdResponse.respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
                 }
               } else if (getReply.result().getResults().isEmpty()) {
@@ -334,14 +342,14 @@ public class TransfersAPI implements Transfers {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutTransfersByTransferIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutTransfersByTransferIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 }

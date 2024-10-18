@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.jaxrs.resource.Feefines.PostFeefinesResponse.respond422WithApplicationJson;
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 import static org.folio.rest.utils.ErrorHelper.createErrors;
 
 import java.io.IOException;
@@ -57,8 +58,10 @@ public class FeeFinesAPI implements Feefines {
 
   @Validate
   @Override
-  public void getFeefines(String query, String orderBy, FeefinesGetOrder order, int offset, int limit, List<String> facets,
-    String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getFeefines(String query, String orderBy, FeefinesGetOrder order, String totalRecords,
+    int offset, int limit, List<String> facets, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
     List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
     try {
@@ -102,7 +105,7 @@ public class FeeFinesAPI implements Feefines {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetFeefinesResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -117,7 +120,7 @@ public class FeeFinesAPI implements Feefines {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetFeefinesResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -125,8 +128,9 @@ public class FeeFinesAPI implements Feefines {
 
   @Validate
   @Override
-  public void postFeefines(String lang, Feefine entity, Map<String, String> okapiHeaders,
+  public void postFeefines(Feefine entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (entity.getId() == null) {
       entity.setId(UUID.randomUUID().toString());
     }
@@ -156,7 +160,7 @@ public class FeeFinesAPI implements Feefines {
                   postgresClient.rollbackTx(beginTx, rollback -> {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PostFeefinesResponse.respond400WithTextPlain(
-                        messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
                   });
                 }
               } catch (Exception e) {
@@ -178,14 +182,15 @@ public class FeeFinesAPI implements Feefines {
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostFeefinesResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void getFeefinesByFeefineId(String feefineId, String lang, Map<String, String> okapiHeaders,
+  public void getFeefinesByFeefineId(String feefineId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -202,19 +207,19 @@ public class FeeFinesAPI implements Feefines {
               if (getReply.failed()) {
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetFeefinesByFeefineIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Feefine> feefineList = getReply.result().getResults();
                 if (feefineList.isEmpty()) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetFeefinesByFeefineIdResponse.respond404WithTextPlain("Feefine"
-                      + messages.getMessage(lang,
+                      + messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.ObjectDoesNotExist))));
                 } else if (feefineList.size() > 1) {
                   logger.error("Multiple feefines found with the same id");
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetFeefinesByFeefineIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
@@ -226,24 +231,22 @@ public class FeeFinesAPI implements Feefines {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetFeefinesResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
 
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetFeefinesResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void deleteFeefinesByFeefineId(String feefineId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void deleteFeefinesByFeefineId(String feefineId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         // Automatic fee/fine types can't be deleted
@@ -276,7 +279,7 @@ public class FeeFinesAPI implements Feefines {
                 logger.error(error, deleteReply.cause());
                 if (error == null) {
                   asyncResultHandler.handle(Future.succeededFuture(DeleteFeefinesByFeefineIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(DeleteFeefinesByFeefineIdResponse.respond400WithTextPlain(error)));
@@ -288,7 +291,7 @@ public class FeeFinesAPI implements Feefines {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeleteFeefinesByFeefineIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
 
@@ -298,17 +301,15 @@ public class FeeFinesAPI implements Feefines {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeleteFeefinesByFeefineIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putFeefinesByFeefineId(String feefineId,
-    String lang, Feefine entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void putFeefinesByFeefineId(String feefineId, Feefine entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     try {
@@ -339,7 +340,7 @@ public class FeeFinesAPI implements Feefines {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutFeefinesByFeefineIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -355,7 +356,7 @@ public class FeeFinesAPI implements Feefines {
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    PutFeefinesByFeefineIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                    PutFeefinesByFeefineIdResponse.respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
                 }
               } else if (getReply.result().getResults().isEmpty()) {
@@ -370,14 +371,14 @@ public class FeeFinesAPI implements Feefines {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutFeefinesByFeefineIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutFeefinesByFeefineIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 

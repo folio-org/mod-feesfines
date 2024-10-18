@@ -32,13 +32,9 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
   @Validate
   @Override
-  public void getLostItemFeesPolicies(String query,
-    String orderBy,
-    LostItemFeesPoliciesGetOrder order,
-    int offset, int limit,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void getLostItemFeesPolicies(String query, String orderBy,
+    LostItemFeesPoliciesGetOrder order, String totalRecords, int offset, int limit,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     PgUtil.get(TABLE_NAME, LostItemFeePolicy.class, LostItemFeePolicies.class, query, offset, limit, okapiHeaders, vertxContext,
@@ -47,11 +43,8 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
 
   @Validate
   @Override
-  public void postLostItemFeesPolicies(String lang,
-    LostItemFeePolicy entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void postLostItemFeesPolicies(LostItemFeePolicy entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     if (refuseWhenLostItemProcessingFeeIsNegative(entity, asyncResultHandler)) {
       return;
@@ -72,9 +65,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
   @Validate
   @Override
   public void getLostItemFeesPoliciesByLostItemFeePolicyId(String lostItemFeePolicyId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     PgUtil.getById(TABLE_NAME, LostItemFeePolicy.class, lostItemFeePolicyId, okapiHeaders, vertxContext,
@@ -84,9 +75,7 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
   @Validate
   @Override
   public void deleteLostItemFeesPoliciesByLostItemFeePolicyId(String lostItemFeePolicyId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     PgUtil.deleteById(TABLE_NAME, lostItemFeePolicyId, okapiHeaders, vertxContext,
@@ -96,11 +85,8 @@ public class LostItemFeePoliciesAPI implements LostItemFeesPolicies {
   @Validate
   @Override
   public void putLostItemFeesPoliciesByLostItemFeePolicyId(String lostItemFeePolicyId,
-    String lang,
-    LostItemFeePolicy entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+    LostItemFeePolicy entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     if (refuseWhenLostItemProcessingFeeIsNegative(entity, asyncResultHandler)) {
       return;
