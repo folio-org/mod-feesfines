@@ -33,14 +33,9 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
 
   @Validate
   @Override
-  public void getOverdueFinesPolicies(String query,
-    String orderBy,
-    OverdueFinesPoliciesGetOrder order,
-    int offset, int limit,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getOverdueFinesPolicies(String query, String orderBy, OverdueFinesPoliciesGetOrder order,
+    String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.get(TABLE_NAME, OverdueFinePolicy.class, OverdueFinePolicies.class, query, offset, limit, okapiHeaders, vertxContext,
       GetOverdueFinesPoliciesResponse.class, asyncResultHandler);
@@ -48,11 +43,8 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
 
   @Validate
   @Override
-  public void postOverdueFinesPolicies(String lang,
-    OverdueFinePolicy entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void postOverdueFinesPolicies(OverdueFinePolicy entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     if (containsNegativeQuantity(entity)) {
       ImmutablePair<String, String> errorInformation = getErrorInformation(entity);
@@ -77,9 +69,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
   @Validate
   @Override
   public void getOverdueFinesPoliciesByOverdueFinePolicyId(String overdueFinePolicyId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     PgUtil.getById(TABLE_NAME, OverdueFinePolicy.class, overdueFinePolicyId, okapiHeaders, vertxContext,
@@ -89,9 +79,7 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
   @Validate
   @Override
   public void deleteOverdueFinesPoliciesByOverdueFinePolicyId(String overdueFinePolicyId,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     PgUtil.deleteById(TABLE_NAME, overdueFinePolicyId, okapiHeaders, vertxContext,
@@ -101,11 +89,8 @@ public class OverdueFinePoliciesAPI implements OverdueFinesPolicies {
   @Validate
   @Override
   public void putOverdueFinesPoliciesByOverdueFinePolicyId(String overdueFinePolicyId,
-    String lang,
-    OverdueFinePolicy entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+    OverdueFinePolicy entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     if (containsNegativeQuantity(entity)) {
       ImmutablePair<String, String> errorInformation = getErrorInformation(entity);

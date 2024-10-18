@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.MANUAL_BLOCK_CREATED;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.MANUAL_BLOCK_DELETED;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.MANUAL_BLOCK_MODIFIED;
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 
 import java.io.IOException;
 import java.util.List;
@@ -56,8 +57,10 @@ public class ManualBlocksAPI implements Manualblocks {
 
   @Validate
   @Override
-  public void getManualblocks(String query, String orderBy, ManualblocksGetOrder order, int offset, int limit, String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getManualblocks(String query, String orderBy, ManualblocksGetOrder order,
+    String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
     try {
@@ -100,7 +103,7 @@ public class ManualBlocksAPI implements Manualblocks {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetManualblocksResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -115,7 +118,7 @@ public class ManualBlocksAPI implements Manualblocks {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetManualblocksResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -123,8 +126,9 @@ public class ManualBlocksAPI implements Manualblocks {
 
   @Validate
   @Override
-  public void postManualblocks(String lang, Manualblock entity, Map<String, String> okapiHeaders,
+  public void postManualblocks(Manualblock entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (entity.getId() == null) {
       entity.setId(UUID.randomUUID().toString());
     }
@@ -153,7 +157,7 @@ public class ManualBlocksAPI implements Manualblocks {
                   postgresClient.rollbackTx(beginTx, rollback -> {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PostManualblocksResponse.respond400WithTextPlain(
-                        messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
                   });
                 }
               } catch (Exception e) {
@@ -176,15 +180,16 @@ public class ManualBlocksAPI implements Manualblocks {
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostManualblocksResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
 
   }
 
   @Validate
   @Override
-  public void getManualblocksByManualblockId(String manualblockId, String lang, Map<String, String> okapiHeaders,
+  public void getManualblocksByManualblockId(String manualblockId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -202,19 +207,19 @@ public class ManualBlocksAPI implements Manualblocks {
                 logger.error(getReply.result());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetManualblocksByManualblockIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Manualblock> manualblockList = getReply.result().getResults();
                 if (manualblockList.isEmpty()) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetManualblocksByManualblockIdResponse.respond404WithTextPlain("Manualblock"
-                      + messages.getMessage(lang,
+                      + messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.ObjectDoesNotExist))));
                 } else if (manualblockList.size() > 1) {
                   logger.error("Multiple manualblocks found with the same id");
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetManualblocksByManualblockIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
@@ -226,22 +231,23 @@ public class ManualBlocksAPI implements Manualblocks {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetManualblocksResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
 
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetManualblocksResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
 
   }
 
   @Validate
   @Override
-  public void deleteManualblocksByManualblockId(String manualblockId, String lang, Map<String, String> okapiHeaders,
+  public void deleteManualblocksByManualblockId(String manualblockId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -282,7 +288,7 @@ public class ManualBlocksAPI implements Manualblocks {
                       if (error == null) {
                         asyncResultHandler.handle(
                           Future.succeededFuture(DeleteManualblocksByManualblockIdResponse.respond500WithTextPlain(
-                            messages.getMessage(lang, MessageConsts.InternalServerError))
+                            messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))
                           ));
                       } else {
                         asyncResultHandler.handle(
@@ -304,7 +310,7 @@ public class ManualBlocksAPI implements Manualblocks {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeleteManualblocksByManualblockIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
 
@@ -313,15 +319,17 @@ public class ManualBlocksAPI implements Manualblocks {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeleteManualblocksByManualblockIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putManualblocksByManualblockId(String manualblockId, String lang, Manualblock entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putManualblocksByManualblockId(String manualblockId, Manualblock entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     try {
       if (manualblockId == null) {
         logger.error("manualblockId is missing ");
@@ -344,7 +352,7 @@ public class ManualBlocksAPI implements Manualblocks {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutManualblocksByManualblockIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -362,7 +370,7 @@ public class ManualBlocksAPI implements Manualblocks {
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    PutManualblocksByManualblockIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                    PutManualblocksByManualblockIdResponse.respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
                 }
               } else if (getReply.result().getResults().isEmpty()) {
@@ -377,7 +385,7 @@ public class ManualBlocksAPI implements Manualblocks {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutManualblocksByManualblockIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
 
@@ -385,7 +393,7 @@ public class ManualBlocksAPI implements Manualblocks {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutManualblocksByManualblockIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
 
   }
