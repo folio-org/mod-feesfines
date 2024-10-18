@@ -8,6 +8,8 @@ import java.util.Map;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
@@ -24,9 +26,11 @@ public class ManualBlockTemplatesAPI implements ManualBlockTemplates {
   @Override
   @Validate
   public void getManualBlockTemplates(String query, String orderBy,
-    ManualBlockTemplatesGetOrder order, String totalRecords, @Min(0) @Max(2147483647) int offset,
-    @Min(0) @Max(2147483647) int limit, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    ManualBlockTemplatesGetOrder order,
+    @Pattern(regexp = "exact|estimated|none|auto") String totalRecords,
+    @Min(0) @Max(2147483647) int offset, @Min(0) @Max(2147483647) int limit,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     PgUtil
       .get(TEMPLATES_TABLE, ManualBlockTemplate.class, ManualBlockTemplateCollection.class, query,
