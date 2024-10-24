@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -46,10 +48,10 @@ public class WaivesAPI implements Waives {
 
   @Validate
   @Override
-  public void getWaives(String query, String orderBy, WaivesGetOrder order, int offset, int limit, List<String> facets,
-    String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getWaives(String query, String orderBy, WaivesGetOrder order, String totalRecords,
+    int offset, int limit, List<String> facets, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
     List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
     try {
@@ -92,7 +94,7 @@ public class WaivesAPI implements Waives {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetWaivesResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -106,7 +108,7 @@ public class WaivesAPI implements Waives {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetWaivesResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -114,8 +116,9 @@ public class WaivesAPI implements Waives {
 
   @Validate
   @Override
-  public void postWaives(String lang, Waiver entity, Map<String, String> okapiHeaders,
+  public void postWaives(Waiver entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (entity.getId() == null) {
       entity.setId(UUID.randomUUID().toString());
     }
@@ -139,7 +142,7 @@ public class WaivesAPI implements Waives {
                   postgresClient.rollbackTx(beginTx, rollback -> {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PostWaivesResponse.respond400WithTextPlain(
-                        messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
                   });
                 }
               } catch (Exception e) {
@@ -160,14 +163,15 @@ public class WaivesAPI implements Waives {
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostWaivesResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void getWaivesByWaiveId(String waiveId, String lang, Map<String, String> okapiHeaders,
+  public void getWaivesByWaiveId(String waiveId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -185,19 +189,19 @@ public class WaivesAPI implements Waives {
                 logger.error(getReply.result());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetWaivesByWaiveIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Waiver> waiveList = getReply.result().getResults();
                 if (waiveList.isEmpty()) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetWaivesByWaiveIdResponse.respond404WithTextPlain("Waive"
-                      + messages.getMessage(lang,
+                      + messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.ObjectDoesNotExist))));
                 } else if (waiveList.size() > 1) {
                   logger.error("Multiple waives found with the same id");
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetWaivesByWaiveIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
@@ -209,20 +213,21 @@ public class WaivesAPI implements Waives {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetWaivesResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetWaivesResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void deleteWaivesByWaiveId(String waiveId, String lang, Map<String, String> okapiHeaders,
+  public void deleteWaivesByWaiveId(String waiveId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -249,7 +254,7 @@ public class WaivesAPI implements Waives {
                 logger.error(error, deleteReply.cause());
                 if (error == null) {
                   asyncResultHandler.handle(Future.succeededFuture(DeleteWaivesByWaiveIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(DeleteWaivesByWaiveIdResponse.respond400WithTextPlain(error)));
                 }
@@ -260,7 +265,7 @@ public class WaivesAPI implements Waives {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeleteWaivesByWaiveIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
       });
@@ -269,15 +274,16 @@ public class WaivesAPI implements Waives {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeleteWaivesByWaiveIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putWaivesByWaiveId(String waiveId, String lang, Waiver entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putWaivesByWaiveId(String waiveId, Waiver entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       if (waiveId == null) {
         logger.error("waiveId is missing");
@@ -301,7 +307,7 @@ public class WaivesAPI implements Waives {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutWaivesByWaiveIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -317,7 +323,7 @@ public class WaivesAPI implements Waives {
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    PutWaivesByWaiveIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                    PutWaivesByWaiveIdResponse.respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
                 }
               }
@@ -326,14 +332,14 @@ public class WaivesAPI implements Waives {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutWaivesByWaiveIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutWaivesByWaiveIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 }

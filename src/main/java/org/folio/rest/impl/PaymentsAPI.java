@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -46,10 +48,10 @@ public class PaymentsAPI implements Payments {
 
   @Validate
   @Override
-  public void getPayments(String query, String orderBy, PaymentsGetOrder order, int offset, int limit, List<String> facets,
-    String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getPayments(String query, String orderBy, PaymentsGetOrder order, String totalRecords,
+    int offset, int limit, List<String> facets, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
     List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
     try {
@@ -92,7 +94,7 @@ public class PaymentsAPI implements Payments {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetPaymentsResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -106,7 +108,7 @@ public class PaymentsAPI implements Payments {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetPaymentsResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -114,8 +116,9 @@ public class PaymentsAPI implements Payments {
 
   @Validate
   @Override
-  public void postPayments(String lang, Payment entity, Map<String, String> okapiHeaders,
+  public void postPayments(Payment entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (entity.getId() == null) {
       entity.setId(UUID.randomUUID().toString());
     }
@@ -140,7 +143,7 @@ public class PaymentsAPI implements Payments {
                   postgresClient.rollbackTx(beginTx, rollback -> {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PostPaymentsResponse.respond400WithTextPlain(
-                        messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
                   });
                 }
               } catch (Exception e) {
@@ -161,14 +164,15 @@ public class PaymentsAPI implements Payments {
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostPaymentsResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void getPaymentsByPaymentId(String paymentId, String lang, Map<String, String> okapiHeaders,
+  public void getPaymentsByPaymentId(String paymentId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -186,19 +190,19 @@ public class PaymentsAPI implements Payments {
                 logger.error(getReply.result());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetPaymentsByPaymentIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Payment> paymentList = getReply.result().getResults();
                 if (paymentList.isEmpty()) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetPaymentsByPaymentIdResponse.respond404WithTextPlain("Payment"
-                      + messages.getMessage(lang,
+                      + messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.ObjectDoesNotExist))));
                 } else if (paymentList.size() > 1) {
                   logger.error("Multiple payments found with the same id");
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetPaymentsByPaymentIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
@@ -210,20 +214,21 @@ public class PaymentsAPI implements Payments {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetPaymentsResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetPaymentsResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void deletePaymentsByPaymentId(String paymentId, String lang, Map<String, String> okapiHeaders,
+  public void deletePaymentsByPaymentId(String paymentId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -250,7 +255,7 @@ public class PaymentsAPI implements Payments {
                 logger.error(error, deleteReply.cause());
                 if (error == null) {
                   asyncResultHandler.handle(Future.succeededFuture(DeletePaymentsByPaymentIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(DeletePaymentsByPaymentIdResponse.respond400WithTextPlain(error)));
@@ -262,7 +267,7 @@ public class PaymentsAPI implements Payments {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeletePaymentsByPaymentIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
       });
@@ -271,15 +276,17 @@ public class PaymentsAPI implements Payments {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeletePaymentsByPaymentIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putPaymentsByPaymentId(String paymentId, String lang, Payment entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putPaymentsByPaymentId(String paymentId, Payment entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     try {
       if (paymentId == null) {
         logger.error("paymentId is missing");
@@ -303,7 +310,7 @@ public class PaymentsAPI implements Payments {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutPaymentsByPaymentIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -319,7 +326,7 @@ public class PaymentsAPI implements Payments {
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    PutPaymentsByPaymentIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                    PutPaymentsByPaymentIdResponse.respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
                 }
               } else if (getReply.result().getResults().isEmpty()) {
@@ -334,14 +341,14 @@ public class PaymentsAPI implements Payments {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutPaymentsByPaymentIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutPaymentsByPaymentIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 }

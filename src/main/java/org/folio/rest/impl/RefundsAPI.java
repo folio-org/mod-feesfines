@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -46,10 +48,10 @@ public class RefundsAPI implements Refunds {
 
   @Validate
   @Override
-  public void getRefunds(String query, String orderBy, RefundsGetOrder order, int offset, int limit, List<String> facets,
-    String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getRefunds(String query, String orderBy, RefundsGetOrder order, String totalRecords,
+    int offset, int limit, List<String> facets, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
     List<FacetField> facetList = FacetManager.convertFacetStrings2FacetFields(facets, "jsonb");
     try {
@@ -92,7 +94,7 @@ public class RefundsAPI implements Refunds {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetRefundsResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -106,7 +108,7 @@ public class RefundsAPI implements Refunds {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetRefundsResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -114,8 +116,9 @@ public class RefundsAPI implements Refunds {
 
   @Validate
   @Override
-  public void postRefunds(String lang, Refund entity, Map<String, String> okapiHeaders,
+  public void postRefunds(Refund entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (entity.getId() == null) {
       entity.setId(UUID.randomUUID().toString());
     }
@@ -139,7 +142,7 @@ public class RefundsAPI implements Refunds {
                   postgresClient.rollbackTx(beginTx, rollback -> {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PostRefundsResponse.respond400WithTextPlain(
-                        messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
                   });
                 }
               } catch (Exception e) {
@@ -160,14 +163,15 @@ public class RefundsAPI implements Refunds {
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostRefundsResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void getRefundsByRefundId(String refundId, String lang, Map<String, String> okapiHeaders,
+  public void getRefundsByRefundId(String refundId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -185,19 +189,19 @@ public class RefundsAPI implements Refunds {
                 logger.error(getReply.result());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetRefundsByRefundIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Refund> refundList = getReply.result().getResults();
                 if (refundList.isEmpty()) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetRefundsByRefundIdResponse.respond404WithTextPlain("Refund"
-                      + messages.getMessage(lang,
+                      + messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.ObjectDoesNotExist))));
                 } else if (refundList.size() > 1) {
                   logger.error("Multiple refunds found with the same id");
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetRefundsByRefundIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
@@ -209,20 +213,21 @@ public class RefundsAPI implements Refunds {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetRefundsResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetRefundsResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void deleteRefundsByRefundId(String refundId, String lang, Map<String, String> okapiHeaders,
+  public void deleteRefundsByRefundId(String refundId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -249,7 +254,7 @@ public class RefundsAPI implements Refunds {
                 logger.error(error, deleteReply.cause());
                 if (error == null) {
                   asyncResultHandler.handle(Future.succeededFuture(DeleteRefundsByRefundIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(DeleteRefundsByRefundIdResponse.respond400WithTextPlain(error)));
@@ -261,7 +266,7 @@ public class RefundsAPI implements Refunds {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeleteRefundsByRefundIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
       });
@@ -270,15 +275,16 @@ public class RefundsAPI implements Refunds {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeleteRefundsByRefundIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putRefundsByRefundId(String refundId, String lang, Refund entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putRefundsByRefundId(String refundId, Refund entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       if (refundId == null) {
         logger.error("refundId is missing");
@@ -302,7 +308,7 @@ public class RefundsAPI implements Refunds {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutRefundsByRefundIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -318,7 +324,7 @@ public class RefundsAPI implements Refunds {
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    PutRefundsByRefundIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                    PutRefundsByRefundIdResponse.respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
                 }
               } else if (getReply.result().getResults().isEmpty()) {
@@ -333,14 +339,14 @@ public class RefundsAPI implements Refunds {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutRefundsByRefundIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutRefundsByRefundIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 }

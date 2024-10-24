@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -48,8 +50,10 @@ public class TransferCriteriaAPI implements TransferCriterias {
 
   @Validate
   @Override
-  public void getTransferCriterias(String query, String orderBy, TransferCriteriasGetOrder order, int offset, int limit,
-    String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getTransferCriterias(String query, String orderBy, TransferCriteriasGetOrder order,
+    String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
 
     try {
@@ -92,7 +96,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetTransferCriteriasResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -107,7 +111,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetTransferCriteriasResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -115,8 +119,9 @@ public class TransferCriteriaAPI implements TransferCriterias {
 
   @Validate
   @Override
-  public void postTransferCriterias(String lang, TransferCriteria entity, Map<String, String> okapiHeaders,
+  public void postTransferCriterias(TransferCriteria entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (entity.getId() == null) {
       entity.setId(UUID.randomUUID().toString());
     }
@@ -142,7 +147,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
                   postgresClient.rollbackTx(beginTx, rollback -> {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PostTransferCriteriasResponse.respond400WithTextPlain(
-                        messages.getMessage(lang, MessageConsts.UnableToProcessRequest))));
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
                   });
                 }
               } catch (Exception e) {
@@ -165,14 +170,16 @@ public class TransferCriteriaAPI implements TransferCriterias {
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostTransferCriteriasResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void getTransferCriteriasByTransferCriteriaId(String transferCriteriaId, String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getTransferCriteriasByTransferCriteriaId(String transferCriteriaId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -191,19 +198,19 @@ public class TransferCriteriaAPI implements TransferCriterias {
                   logger.error(getReply.result());
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang, MessageConsts.InternalServerError))));
+                      messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 } else {
                   List<TransferCriteria> transferCriteriaList = getReply.result().getResults();
                   if (transferCriteriaList.isEmpty()) {
                     asyncResultHandler.handle(Future.succeededFuture(
                       GetTransferCriteriasByTransferCriteriaIdResponse.respond404WithTextPlain("TransferCriteria"
-                        + messages.getMessage(lang,
+                        + messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.ObjectDoesNotExist))));
                   } else if (transferCriteriaList.size() > 1) {
                     logger.error("Multiple transferCriterias found with the same id");
                     asyncResultHandler.handle(Future.succeededFuture(
                       GetTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
-                        messages.getMessage(lang,
+                        messages.getMessage(DEFAULT_LANGUAGE,
                           MessageConsts.InternalServerError))));
                   } else {
                     asyncResultHandler.handle(Future.succeededFuture(
@@ -216,21 +223,23 @@ public class TransferCriteriaAPI implements TransferCriterias {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetTransferCriteriasResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
 
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetTransferCriteriasResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void deleteTransferCriteriasByTransferCriteriaId(String transferCriteriaId, String lang,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteTransferCriteriasByTransferCriteriaId(String transferCriteriaId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -259,7 +268,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
                 if (error == null) {
                   asyncResultHandler.handle(
                     Future.succeededFuture(DeleteTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang, MessageConsts.InternalServerError))
+                      messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))
                     ));
                 } else {
                   asyncResultHandler.handle(
@@ -274,7 +283,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeleteTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
 
@@ -283,15 +292,17 @@ public class TransferCriteriaAPI implements TransferCriterias {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeleteTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putTransferCriteriasByTransferCriteriaId(String transferCriteriaId, String lang, TransferCriteria entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putTransferCriteriasByTransferCriteriaId(String transferCriteriaId,
+    TransferCriteria entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     try {
       if (transferCriteriaId == null) {
         logger.error("transferCriteriaId is missing ");
@@ -314,7 +325,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -331,7 +342,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(messages.getMessage(lang,
+                    PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
                 }
               } else if (getReply.result().getResults().isEmpty()) {
@@ -346,7 +357,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
 
@@ -354,7 +365,7 @@ public class TransferCriteriaAPI implements TransferCriterias {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutTransferCriteriasByTransferCriteriaIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 

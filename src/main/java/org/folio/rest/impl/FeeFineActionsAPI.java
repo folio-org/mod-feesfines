@@ -1,8 +1,8 @@
 package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
-import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 
 import java.io.IOException;
 import java.util.List;
@@ -61,7 +61,7 @@ public class FeeFineActionsAPI implements Feefineactions {
   @Validate
   @Override
   public void getFeefineactions(String query, String orderBy, FeefineactionsGetOrder order,
-    int offset, int limit, String lang, Map<String, String> okapiHeaders,
+    String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
@@ -112,7 +112,7 @@ public class FeeFineActionsAPI implements Feefineactions {
           } else {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetFeefineactionsResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
           }
         }
@@ -130,7 +130,7 @@ public class FeeFineActionsAPI implements Feefineactions {
       } else {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           GetFeefineactionsResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
       }
     }
@@ -138,9 +138,8 @@ public class FeeFineActionsAPI implements Feefineactions {
 
   @Validate
   @Override
-  public void postFeefineactions(String lang, Feefineaction entity,
-    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void postFeefineactions(Feefineaction entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     Promise<Response> postCompleted = Promise.promise();
     PgUtil.post(FEEFINEACTIONS_TABLE, entity, okapiHeaders, vertxContext,
@@ -172,7 +171,7 @@ public class FeeFineActionsAPI implements Feefineactions {
 
   @Validate
   @Override
-  public void getFeefineactionsByFeefineactionId(String feefineactionId, String lang,
+  public void getFeefineactionsByFeefineactionId(String feefineactionId,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -192,19 +191,19 @@ public class FeeFineActionsAPI implements Feefineactions {
                 logger.error(getReply.result());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               } else {
                 List<Feefineaction> feefineactionList = getReply.result().getResults();
                 if (feefineactionList.isEmpty()) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetFeefineactionsByFeefineactionIdResponse.respond404WithTextPlain(
-                      "Feefineaction" + messages.getMessage(lang,
+                      "Feefineaction" + messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.ObjectDoesNotExist))));
                 } else if (feefineactionList.size() > 1) {
                   logger.error("Multiple feefineactions found with the same id");
                   asyncResultHandler.handle(Future.succeededFuture(
                     GetFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang,
+                      messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
@@ -217,19 +216,19 @@ public class FeeFineActionsAPI implements Feefineactions {
           logger.error(e.getMessage());
           asyncResultHandler.handle(Future.succeededFuture(
             GetFeefineactionsResponse.respond500WithTextPlain(messages.getMessage(
-              lang, MessageConsts.InternalServerError))));
+              DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         GetFeefineactionsResponse.respond500WithTextPlain(messages.getMessage(
-          lang, MessageConsts.InternalServerError))));
+          DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void deleteFeefineactionsByFeefineactionId(String feefineactionId, String lang,
+  public void deleteFeefineactionsByFeefineactionId(String feefineactionId,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -262,7 +261,7 @@ public class FeeFineActionsAPI implements Feefineactions {
                 if (error == null) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     DeleteFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
-                      messages.getMessage(lang, MessageConsts.InternalServerError))));
+                      messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
                     DeleteFeefineactionsByFeefineactionIdResponse.respond400WithTextPlain(error)));
@@ -274,7 +273,7 @@ public class FeeFineActionsAPI implements Feefineactions {
           asyncResultHandler.handle(
             Future.succeededFuture(
               DeleteFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
-                messages.getMessage(lang,
+                messages.getMessage(DEFAULT_LANGUAGE,
                   MessageConsts.InternalServerError))));
         }
 
@@ -284,16 +283,16 @@ public class FeeFineActionsAPI implements Feefineactions {
       asyncResultHandler.handle(
         Future.succeededFuture(
           DeleteFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
-            messages.getMessage(lang,
+            messages.getMessage(DEFAULT_LANGUAGE,
               MessageConsts.InternalServerError))));
     }
   }
 
   @Validate
   @Override
-  public void putFeefineactionsByFeefineactionId(String feefineactionId, String lang,
-    Feefineaction entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putFeefineactionsByFeefineactionId(String feefineactionId, Feefineaction entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
     try {
       if (feefineactionId == null) {
@@ -318,7 +317,7 @@ public class FeeFineActionsAPI implements Feefineactions {
                 logger.error(getReply.cause().getLocalizedMessage());
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
-                    messages.getMessage(lang,
+                    messages.getMessage(DEFAULT_LANGUAGE,
                       MessageConsts.InternalServerError))));
               } else if (getReply.result().getResults().size() == 1) {
                 try {
@@ -336,7 +335,7 @@ public class FeeFineActionsAPI implements Feefineactions {
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     PutFeefineactionsByFeefineactionIdResponse
-                      .respond500WithTextPlain(messages.getMessage(lang,
+                      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
                         MessageConsts.InternalServerError))));
                 }
               } else if (getReply.result().getResults().isEmpty()) {
@@ -353,14 +352,14 @@ public class FeeFineActionsAPI implements Feefineactions {
           logger.error(e.getLocalizedMessage(), e);
           asyncResultHandler.handle(Future.succeededFuture(
             PutFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
         }
       });
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutFeefineactionsByFeefineactionIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
     }
   }
 }
