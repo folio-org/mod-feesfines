@@ -143,7 +143,7 @@
           ],
           "pathPattern":"/owners/{id}",
           "permissionsRequired":[
-          "feesfines.owners.item.delete"
+            "feesfines.owners.item.delete"
           ]
         },
         {
@@ -152,7 +152,7 @@
           ],
           "pathPattern":"/accounts",
           "permissionsRequired":[
-          "feesfines.accounts.collection.get"
+            "feesfines.accounts.collection.get"
           ]
         },
         {
@@ -161,7 +161,7 @@
           ],
           "pathPattern":"/accounts/{id}",
           "permissionsRequired":[
-          "feesfines.accounts.item.get"
+            "feesfines.accounts.item.get"
           ]
         },
         {
@@ -170,7 +170,7 @@
           ],
           "pathPattern":"/accounts",
           "permissionsRequired":[
-          "feesfines.accounts.item.post"
+            "feesfines.accounts.item.post"
           ],
           "modulePermissions": [
             "patron-notice.post",
@@ -183,7 +183,7 @@
           ],
           "pathPattern":"/accounts/{id}",
           "permissionsRequired":[
-          "feesfines.accounts.item.put"
+            "feesfines.accounts.item.put"
           ],
           "modulePermissions": [
             "patron-notice.post",
