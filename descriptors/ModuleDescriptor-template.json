@@ -62,7 +62,7 @@
           ],
           "pathPattern":"/feefines",
           "permissionsRequired":[
-            "feesfines.feefines.collection.get"
+            "feefines.collection.get"
           ]
         },
         {
@@ -71,7 +71,7 @@
           ],
           "pathPattern":"/feefines/{id}",
           "permissionsRequired":[
-            "feesfines.feefines.item.get"
+            "feefines.item.get"
           ]
         },
         {
@@ -80,7 +80,7 @@
           ],
           "pathPattern":"/feefines",
           "permissionsRequired":[
-            "feesfines.feefines.item.post"
+            "feefines.item.post"
           ]
         },
         {
@@ -89,7 +89,7 @@
           ],
           "pathPattern":"/feefines/{id}",
           "permissionsRequired":[
-            "feesfines.feefines.item.put"
+            "feefines.item.put"
           ]
         },
         {
@@ -98,7 +98,7 @@
           ],
           "pathPattern":"/feefines/{id}",
           "permissionsRequired":[
-            "feesfines.feefines.item.delete"
+            "feefines.item.delete"
           ]
         },
         {
@@ -107,7 +107,7 @@
           ],
           "pathPattern":"/owners",
           "permissionsRequired":[
-            "feesfines.owners.collection.get"
+            "owners.collection.get"
           ]
         },
         {
@@ -116,7 +116,7 @@
           ],
           "pathPattern":"/owners/{id}",
           "permissionsRequired":[
-            "feesfines.owners.item.get"
+            "owners.item.get"
           ]
         },
         {
@@ -125,7 +125,7 @@
           ],
           "pathPattern":"/owners",
           "permissionsRequired":[
-            "feesfines.owners.item.post"
+            "owners.item.post"
           ]
         },
         {
@@ -134,7 +134,7 @@
           ],
           "pathPattern":"/owners/{id}",
           "permissionsRequired":[
-            "feesfines.owners.item.put"
+            "owners.item.put"
           ]
         },
         {
@@ -143,7 +143,7 @@
           ],
           "pathPattern":"/owners/{id}",
           "permissionsRequired":[
-            "feesfines.owners.item.delete"
+            "owners.item.delete"
           ]
         },
         {
@@ -152,7 +152,7 @@
           ],
           "pathPattern":"/accounts",
           "permissionsRequired":[
-            "feesfines.accounts.collection.get"
+            "accounts.collection.get"
           ]
         },
         {
@@ -161,7 +161,7 @@
           ],
           "pathPattern":"/accounts/{id}",
           "permissionsRequired":[
-            "feesfines.accounts.item.get"
+            "accounts.item.get"
           ]
         },
         {
@@ -170,7 +170,7 @@
           ],
           "pathPattern":"/accounts",
           "permissionsRequired":[
-            "feesfines.accounts.item.post"
+            "accounts.item.post"
           ],
           "modulePermissions": [
             "patron-notice.post",
@@ -183,7 +183,7 @@
           ],
           "pathPattern":"/accounts/{id}",
           "permissionsRequired":[
-            "feesfines.accounts.item.put"
+            "accounts.item.put"
           ],
           "modulePermissions": [
             "patron-notice.post",
@@ -196,7 +196,7 @@
           ],
           "pathPattern":"/accounts/{id}",
           "permissionsRequired": [
-            "feesfines.accounts.item.delete"
+            "accounts.item.delete"
           ],
           "modulePermissions": [
             "pubsub.publish.post"
@@ -1049,94 +1049,79 @@
   ],
   "permissionSets":[
     {
-      "permissionName":"feesfines.feefines.collection.get",
+      "permissionName":"feefines.collection.get",
       "displayName":"feefines collection get",
-      "description":"Get a collection of feefines records",
-      "replaces": ["feefines.collection.get"]
+      "description":"Get a collection of feefines records"
     },
     {
-      "permissionName":"feesfines.feefines.item.get",
+      "permissionName":"feefines.item.get",
       "displayName":"feefines item get",
-      "description":"Read an individual record in the Feefine module",
-      "replaces": ["feefines.item.get"]
+      "description":"Read an individual record in the Feefine module"
     },
     {
-      "permissionName":"feesfines.feefines.item.post",
+      "permissionName":"feefines.item.post",
       "displayName":"feefines item post",
-      "description":"Create new records in the Feefine module",
-      "replaces": ["feefines.item.post"]
+      "description":"Create new records in the Feefine module"
     },
     {
-      "permissionName":"feesfines.feefines.item.put",
+      "permissionName":"feefines.item.put",
       "displayName":"feefines item put",
-      "description":"Edit existing records in the Feefine module",
-      "replaces": ["feefines.item.put"]
+      "description":"Edit existing records in the Feefine module"
     },
     {
-      "permissionName":"feesfines.feefines.item.delete",
+      "permissionName":"feefines.item.delete",
       "displayName":"feefines item delete",
-      "description":"Delete records from the Feefine module",
-      "replaces": ["feefines.item.delete"]
+      "description":"Delete records from the Feefine module"
     },
     {
-      "permissionName":"feesfines.owners.collection.get",
+      "permissionName":"owners.collection.get",
       "displayName":"owners collection get",
-      "description":"Get a list of owner records",
-      "replaces": ["owners.collection.get"]
+      "description":"Get a list of owner records"
     },
     {
-      "permissionName":"feesfines.owners.item.get",
+      "permissionName":"owners.item.get",
       "displayName":"owners item get",
-      "description":"Get a single owner item",
-      "replaces": ["owners.item.get"]
+      "description":"Get a single owner item"
     },
     {
-      "permissionName":"feesfines.owners.item.post",
+      "permissionName":"owners.item.post",
       "displayName":"owners item post",
-      "description":"Create new Owners",
-      "replaces": ["owners.item.post"]
+      "description":"Create new Owners"
     },
     {
-      "permissionName":"feesfines.owners.item.put",
+      "permissionName":"owners.item.put",
       "displayName":"owners item put",
-      "description":"Edit existing Owners",
-      "replaces": ["owners.item.put"]
+      "description":"Edit existing Owners"
     },
     {
-      "permissionName":"feesfines.owners.item.delete",
+      "permissionName":"owners.item.delete",
       "displayName":"owners item delete",
-      "description":"Delete Owners",
-      "replaces": ["owners.item.delete"]
+      "description":"Delete Owners"
     },
     {
-      "permissionName":"feesfines.accounts.collection.get",
+      "permissionName":"accounts.collection.get",
       "displayName":"accounts collection get",
-      "description":"Get a list of account records",
-      "replaces": ["accounts.collection.get"]
+      "description":"Get a list of account records"
     },
     {
-      "permissionName":"feesfines.accounts.item.get",
+      "permissionName":"accounts.item.get",
       "displayName":"accounts item get",
-      "description":"Get a single account record",
-      "replaces": ["accounts.item.get"]
+      "description":"Get a single account record"
     },
     {
-      "permissionName":"feesfines.accounts.item.post",
+      "permissionName":"accounts.item.post",
       "displayName":"accounts item post",
-      "description":"Create a new account record",
-      "replaces": ["accounts.item.post"]
+      "description":"Create a new account record"
     },
     {
-      "permissionName":"feesfines.accounts.item.put",
+      "permissionName":"accounts.item.put",
       "displayName":"accounts item put",
-      "description":"Edit an account record",
-      "replaces": ["accounts.item.put"]
+      "description":"Edit an account record"
     },
     {
-      "permissionName":"feesfines.accounts.item.delete",
+      "permissionName":"accounts.item.delete",
       "displayName":"accounts item delete",
-      "description":"Delete an account record",
-      "replaces": ["accounts.item.delete"]
+      "description":"Delete an account record"
     },
     {
       "permissionName":"feesfines.accounts.check-pay.item.post",
