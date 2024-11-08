@@ -1535,13 +1535,13 @@
       "description":"Load a refund report"
     },
     {
-      "permissionName":"feesfines.feefine-reports.cash-drawer-reconciliation.item.post",
+      "permissionName":"feesfines.feefine-reports.cash-drawer-reconciliation.post",
       "displayName":"module permissions for loading cash drawer reconciliation report",
       "description":"Load a cash drawer reconciliation report",
       "replaces": ["feefine-reports.cash-drawer-reconciliation.post"]
     },
     {
-      "permissionName":"feesfines.feefine-reports.cash-drawer-reconciliation-source.item.post",
+      "permissionName":"feesfines.feefine-reports.cash-drawer-reconciliation-source.post",
       "displayName":"module permissions for loading cash drawer reconciliation source report",
       "description":"Load a cash drawer reconciliation source report"
     },
