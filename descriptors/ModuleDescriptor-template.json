@@ -999,7 +999,7 @@
           ],
           "pathPattern":"/feefine-reports/cash-drawer-reconciliation",
           "permissionsRequired":[
-            "feesfines.feefine-reports.cash-drawer-reconciliation.item.post"
+            "feesfines.feefine-reports.cash-drawer-reconciliation.post"
           ],
           "modulePermissions": [
             "configuration.entries.collection.get"
@@ -1011,7 +1011,7 @@
           ],
           "pathPattern":"/feefine-reports/cash-drawer-reconciliation/sources",
           "permissionsRequired":[
-            "feesfines.feefine-reports.cash-drawer-reconciliation-source.item.post"
+            "feesfines.feefine-reports.cash-drawer-reconciliation-source.post"
           ]
         },
         {
