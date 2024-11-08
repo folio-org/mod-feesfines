@@ -54,7 +54,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version": "19.0",
+      "version": "19.1",
       "handlers":[
         {
           "methods":[
@@ -975,7 +975,7 @@
     },
     {
       "id" : "feefine-reports",
-      "version" : "2.2",
+      "version" : "2.3",
       "handlers": [
         {
           "methods":[
