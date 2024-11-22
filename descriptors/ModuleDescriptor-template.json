@@ -54,7 +54,7 @@
   "provides":[
     {
       "id":"feesfines",
-      "version": "19.0",
+      "version": "19.1",
       "handlers":[
         {
           "methods":[
@@ -208,7 +208,7 @@
           ],
           "pathPattern":"/accounts/{id}/check-pay",
           "permissionsRequired":[
-            "accounts.check-pay.post"
+            "feesfines.accounts.check-pay.post"
           ]
         },
         {
@@ -217,7 +217,7 @@
           ],
           "pathPattern":"/accounts/{id}/check-waive",
           "permissionsRequired":[
-            "accounts.check-waive.post"
+            "feesfines.accounts.check-waive.post"
           ]
         },
         {
@@ -226,7 +226,7 @@
           ],
           "pathPattern":"/accounts/{id}/check-transfer",
           "permissionsRequired":[
-            "accounts.check-transfer.post"
+            "feesfines.accounts.check-transfer.post"
           ]
         },
         {
@@ -235,7 +235,7 @@
           ],
           "pathPattern":"/accounts/{id}/check-refund",
           "permissionsRequired":[
-            "accounts.check-refund.post"
+            "feesfines.accounts.check-refund.post"
           ]
         },
         {
@@ -244,7 +244,7 @@
           ],
           "pathPattern":"/accounts/{id}/pay",
           "permissionsRequired":[
-            "accounts.pay.post"
+            "feesfines.accounts.pay.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -257,7 +257,7 @@
           ],
           "pathPattern":"/accounts/{id}/waive",
           "permissionsRequired":[
-            "accounts.waive.post"
+            "feesfines.accounts.waive.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -270,7 +270,7 @@
           ],
           "pathPattern":"/accounts/{id}/transfer",
           "permissionsRequired":[
-            "accounts.transfer.post"
+            "feesfines.accounts.transfer.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -283,7 +283,7 @@
           ],
           "pathPattern":"/accounts/{id}/cancel",
           "permissionsRequired":[
-            "accounts.cancel.post"
+            "feesfines.accounts.cancel.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -296,7 +296,7 @@
           ],
           "pathPattern":"/accounts/{id}/refund",
           "permissionsRequired":[
-            "accounts.refund.post"
+            "feesfines.accounts.refund.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -309,7 +309,7 @@
           ],
           "pathPattern":"/accounts-bulk/check-pay",
           "permissionsRequired":[
-            "accounts.check-pay.post"
+            "feesfines.accounts-bulk.check-pay.post"
           ]
         },
         {
@@ -318,7 +318,7 @@
           ],
           "pathPattern":"/accounts-bulk/check-transfer",
           "permissionsRequired":[
-            "accounts.check-transfer.post"
+            "feesfines.accounts-bulk.check-transfer.post"
           ]
         },
         {
@@ -327,7 +327,7 @@
           ],
           "pathPattern":"/accounts-bulk/check-refund",
           "permissionsRequired":[
-            "accounts.check-refund.post"
+            "feesfines.accounts-bulk.check-refund.post"
           ]
         },
         {
@@ -336,7 +336,7 @@
           ],
           "pathPattern":"/accounts-bulk/check-waive",
           "permissionsRequired":[
-            "accounts.check-waive.post"
+            "feesfines.accounts-bulk.check-waive.post"
           ]
         },
         {
@@ -345,7 +345,7 @@
           ],
           "pathPattern":"/accounts-bulk/pay",
           "permissionsRequired":[
-            "accounts.pay.post"
+            "feesfines.accounts-bulk.pay.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -358,7 +358,7 @@
           ],
           "pathPattern":"/accounts-bulk/waive",
           "permissionsRequired":[
-            "accounts.waive.post"
+            "feesfines.accounts-bulk.waive.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -371,7 +371,7 @@
           ],
           "pathPattern":"/accounts-bulk/transfer",
           "permissionsRequired":[
-            "accounts.transfer.post"
+            "feesfines.accounts-bulk.transfer.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -384,7 +384,7 @@
           ],
           "pathPattern":"/accounts-bulk/cancel",
           "permissionsRequired":[
-            "accounts.cancel.post"
+            "feesfines.accounts-bulk.cancel.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -397,7 +397,7 @@
           ],
           "pathPattern":"/accounts-bulk/refund",
           "permissionsRequired":[
-            "accounts.refund.post"
+            "feesfines.accounts-bulk.refund.post"
           ],
           "modulePermissions": [
             "pubsub.publish.post",
@@ -975,7 +975,7 @@
     },
     {
       "id" : "feefine-reports",
-      "version" : "2.2",
+      "version" : "2.3",
       "handlers": [
         {
           "methods":[
@@ -999,7 +999,7 @@
           ],
           "pathPattern":"/feefine-reports/cash-drawer-reconciliation",
           "permissionsRequired":[
-            "feefine-reports.cash-drawer-reconciliation.post"
+            "feesfines.feefine-reports.cash-drawer-reconciliation.post"
           ],
           "modulePermissions": [
             "configuration.entries.collection.get"
@@ -1011,7 +1011,7 @@
           ],
           "pathPattern":"/feefine-reports/cash-drawer-reconciliation/sources",
           "permissionsRequired":[
-            "feefine-reports.cash-drawer-reconciliation.post"
+            "feesfines.feefine-reports.cash-drawer-reconciliation-source.post"
           ]
         },
         {
@@ -1124,49 +1124,103 @@
       "description":"Delete an account record"
     },
     {
-      "permissionName":"accounts.check-pay.post",
+      "permissionName":"feesfines.accounts.check-pay.post",
       "displayName":"accounts payment check post",
-      "description":"Checks if payment is allowed"
+      "description":"Checks if payment is allowed",
+      "replaces": ["accounts.check-pay.post"]
     },
     {
-      "permissionName":"accounts.check-waive.post",
+      "permissionName":"feesfines.accounts-bulk.check-pay.post",
+      "displayName":"accounts bulk payment check post",
+      "description":"Checks if payment is allowed as bulk"
+    },
+    {
+      "permissionName":"feesfines.accounts.check-waive.post",
       "displayName":"accounts waiver check post",
-      "description":"Checks if waiver is allowed"
+      "description":"Checks if waiver is allowed",
+      "replaces": ["accounts.check-waive.post"]
     },
     {
-      "permissionName":"accounts.check-transfer.post",
+      "permissionName":"feesfines.accounts-bulk.check-waive.post",
+      "displayName":"accounts bulk waiver check post",
+      "description":"Checks if waiver is allowed as bulk"
+    },
+    {
+      "permissionName":"feesfines.accounts.check-transfer.post",
       "displayName":"accounts transfer check post",
-      "description":"Checks if transfer is allowed"
+      "description":"Checks if transfer is allowed",
+      "replaces": ["accounts.check-transfer.post"]
     },
     {
-      "permissionName":"accounts.check-refund.post",
+      "permissionName":"feesfines.accounts-bulk.check-transfer.post",
+      "displayName":"accounts bulk transfer check post",
+      "description":"Checks if transfer is allowed as bulk"
+    },
+    {
+      "permissionName":"feesfines.accounts.check-refund.post",
       "displayName":"accounts refund check post",
-      "description":"Checks if refund is allowed"
+      "description":"Checks if refund is allowed",
+      "replaces": ["accounts.check-refund.post"]
     },
     {
-      "permissionName":"accounts.pay.post",
+      "permissionName":"feesfines.accounts-bulk.check-refund.post",
+      "displayName":"accounts bulk refund check post",
+      "description":"Checks if refund is allowed as bulk"
+    },
+    {
+      "permissionName":"feesfines.accounts.pay.post",
       "displayName":"accounts payment post",
-      "description":"Makes payment for an account"
+      "description":"Makes payment for an account",
+      "replaces": ["accounts.pay.post"]
     },
     {
-      "permissionName":"accounts.waive.post",
+      "permissionName":"feesfines.accounts-bulk.pay.post",
+      "displayName":"accounts bulk payment post",
+      "description":"Makes payment for an account bulk"
+    },
+    {
+      "permissionName":"feesfines.accounts.waive.post",
       "displayName":"accounts waiver post",
-      "description":"Waives an account"
+      "description":"Waives an account",
+      "replaces": ["accounts.waive.post"]
     },
     {
-      "permissionName":"accounts.transfer.post",
+      "permissionName":"feesfines.accounts-bulk.waive.post",
+      "displayName":"accounts bulk waiver post",
+      "description":"Waives an account bulk"
+    },
+    {
+      "permissionName":"feesfines.accounts.transfer.post",
       "displayName":"accounts transfer post",
-      "description":"Transfers an account"
+      "description":"Transfers an account",
+      "replaces": ["accounts.transfer.post"]
     },
     {
-      "permissionName":"accounts.cancel.post",
+      "permissionName":"feesfines.accounts-bulk.transfer.post",
+      "displayName":"accounts bulk transfer post",
+      "description":"Transfers an account bulk"
+    },
+    {
+      "permissionName":"feesfines.accounts.cancel.post",
       "displayName":"accounts cancel post",
-      "description":"Cancels an account"
+      "description":"Cancels an account",
+      "replaces": ["accounts.cancel.post"]
     },
     {
-      "permissionName":"accounts.refund.post",
+      "permissionName":"feesfines.accounts-bulk.cancel.post",
+      "displayName":"accounts bulk cancel post",
+      "description":"Cancels an account bulk"
+    },
+    {
+      "permissionName":"feesfines.accounts.refund.post",
       "displayName":"accounts refund post",
-      "description":"Refunds an account"
+      "description":"Refunds an account",
+      "replaces": ["accounts.refund.post"]
+    },
+    {
+      "permissionName":"feesfines.accounts-bulk.refund.post",
+      "displayName":"accounts bulk refund post",
+      "description":"Refunds an account bulk"
     },
     {
       "permissionName":"feefineactions.collection.get",
@@ -1481,9 +1535,15 @@
       "description":"Load a refund report"
     },
     {
-      "permissionName":"feefine-reports.cash-drawer-reconciliation.post",
+      "permissionName":"feesfines.feefine-reports.cash-drawer-reconciliation.post",
       "displayName":"module permissions for loading cash drawer reconciliation report",
-      "description":"Load a cash drawer reconciliation report"
+      "description":"Load a cash drawer reconciliation report",
+      "replaces": ["feefine-reports.cash-drawer-reconciliation.post"]
+    },
+    {
+      "permissionName":"feesfines.feefine-reports.cash-drawer-reconciliation-source.post",
+      "displayName":"module permissions for loading cash drawer reconciliation source report",
+      "description":"Load a cash drawer reconciliation source report"
     },
     {
       "permissionName":"feefine-reports.financial-transactions-detail.post",
