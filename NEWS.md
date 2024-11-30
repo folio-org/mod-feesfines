@@ -1,3 +1,7 @@
+## 19.2.1 2024-11-30
+
+* Review and cleanup Module Descriptor (MODFEE-385)
+
 ## 19.2.0 2024-10-30
 * Upgrade to RMB 35.3.0 (MODFEE-391)
 * Upgrade `holdings-storage` to 8.0 (MODFEE-387)
