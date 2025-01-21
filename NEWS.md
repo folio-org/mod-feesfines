@@ -1,3 +1,7 @@
+## 19.2.2 2025-01-21
+
+* Add missing required interfaces (MODFEE-399)
+
 ## 19.2.1 2024-11-30
 
 * Review and cleanup Module Descriptor (MODFEE-385)
