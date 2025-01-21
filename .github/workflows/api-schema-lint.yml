@@ -23,6 +23,7 @@ on:
   pull_request:
     paths:
       - 'ramls/**'
+  workflow_dispatch:
 
 jobs:
   api-schema-lint:
