@@ -1,5 +1,8 @@
-## 19.2.0
+## 19.2.0 2024-10-30
+* Upgrade to RMB 35.3.0 (MODFEE-391)
 * Upgrade `holdings-storage` to 8.0 (MODFEE-387)
+* Upgrade `holdings-storage` to 7.0, `instance-storage` to 11.0 (MODFEE-381)
+* Update `LOAN_RELATED_FEE_FINE_CLOSED` event publishing (MODFEE-380)
 
 ## 19.1.0 2024-03-21
 * Upgrade to RMB 35.2.0, Vertx 4.5.5 (MODFEE-375)

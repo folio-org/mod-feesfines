@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-feesfines</artifactId>
-  <version>19.2.0-SNAPSHOT</version>
+  <version>19.3.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <licenses>
@@ -25,6 +25,9 @@
     <postgres.port>5433</postgres.port>
     <sonar.exclusions>**/impl/**</sonar.exclusions>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
+
+    <!--Folio dependencies properties-->
+    <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
   </properties>
 
   <dependencyManagement>
@@ -183,6 +186,7 @@
       <groupId>org.folio</groupId>
       <artifactId>postgres-testing</artifactId>
       <version>${raml-module-builder.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -481,6 +485,19 @@
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.folio</groupId>
+        <artifactId>folio-module-descriptor-validator</artifactId>
+        <version>${folio-module-descriptor-validator.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>validate</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
