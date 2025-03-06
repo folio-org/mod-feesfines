@@ -381,6 +381,7 @@ class ActualCostFeeFineAPITest extends ApiTests {
         .withChronology("chronology")
         .withCopyNumber("copy number")
         .withEnumeration("enumeration")
+        .withDisplaySummary("display summary")
         .withVolume("volume"))
       .withInstance(new ActualCostRecordInstance()
         .withId(INSTANCE_ID)
