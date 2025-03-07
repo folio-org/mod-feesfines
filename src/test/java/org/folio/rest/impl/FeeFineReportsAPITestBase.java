@@ -39,7 +39,7 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   static final DateTimeFormatter DATE_TIME_JSON_FORMATTER = DateTimeFormat.forPattern(
     DATE_TIME_JSON_FORMAT);
   static final DateTimeFormatter DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern(
-    "M/d/yy, h:mm a");
+    "M/d/yy h:mm a");
   static final DateTimeFormatter LOAN_DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern(
     LOAN_DATE_TIME_JSON_FORMAT);
   static final DateTimeFormatter LOAN_RETURN_DATE_TIME_REPORT_FORMATTER = DateTimeFormat.forPattern(
