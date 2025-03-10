@@ -574,7 +574,7 @@ public class FinancialTransactionDetailReportTest extends FeeFineReportsAPITestB
     requestReport(START_DATE, END_DATE, singletonList(CREATED_AT_ID_1), OWNER_ID_1)
       .then()
       .statusCode(HttpStatus.SC_OK)
-      .body("reportData[0].loanDate", equalTo("1/12/20, 8:23 PM"));
+      .body("reportData[0].loanDate", equalTo("1/12/20 8:23 PM"));
   }
 
   @Test
