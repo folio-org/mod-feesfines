@@ -1,6 +1,6 @@
 {
   "srvcId": "${artifactId}-${version}",
-  "nodeId": "10.0.2.15",
+  "nodeId": "localhost",
   "descriptor": {
     "exec": "java -jar ../mod-feesfines/target/mod-feesfines-fat.jar -Dhttp.port=%p"
   }
