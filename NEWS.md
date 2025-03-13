@@ -1,3 +1,10 @@
+## 19.3.0 2025-03-13
+* Update to mod-feesfines Java 21 (MODFEE-407)
+* Fix actual-cost-record schema (MODFEE-408)
+* Add missing required interfaces (MODFEE-399)
+* Enable workflow_dispatch for API-related Workflows (FOLIO-3944)
+* Review and cleanup Module Descriptor (MODFEE-385)
+
 ## 19.2.0 2024-10-30
 * Upgrade to RMB 35.3.0 (MODFEE-391)
 * Upgrade `holdings-storage` to 8.0 (MODFEE-387)
