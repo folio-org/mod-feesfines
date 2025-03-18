@@ -1,3 +1,7 @@
+## 19.2.3 2025-03-18
+
+* Allow display summary and additional properties in actual cost record schema (MODFEE-408)
+
 ## 19.2.2 2025-01-21
 
 * Add missing required interfaces (MODFEE-399)
