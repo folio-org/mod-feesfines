@@ -62,11 +62,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "lastName"
-      ]
+      "additionalProperties": true
     },
     "loan": {
       "description": "Loan info",
@@ -79,10 +75,7 @@
           "$ref": "raml-util/schemas/uuid.schema"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ]
+      "additionalProperties": true
     },
     "item": {
       "description": "Item info",
@@ -156,7 +149,7 @@
               "description": "Effective Call Number Suffix is the suffix of the identifier assigned to an item or its holding and associated with the item."
             }
           },
-          "additionalProperties": false
+          "additionalProperties": true
         },
         "volume": {
           "type": "string",
@@ -170,20 +163,16 @@
           "type": "string",
           "description": "Chronology is the descriptive information for the dating scheme of a serial."
         },
+        "displaySummary": {
+          "description": "Display summary about the item",
+          "type": "string"
+        },
         "copyNumber": {
           "type": "string",
           "description": "Copy number is the piece identifier. The copy number reflects if the library has a copy of a single-volume monograph; one copy of a multi-volume, (e.g. Copy 1, or C.7.)"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "materialTypeId",
-        "materialType",
-        "loanTypeId",
-        "loanType",
-        "holdingsRecordId"
-      ]
+      "additionalProperties": true
     },
     "instance": {
       "description": "Instance info",
@@ -221,12 +210,7 @@
                 "$ref": "raml-util/schemas/uuid.schema"
               }
             },
-            "additionalProperties": false,
-            "required": [
-              "value",
-              "identifierType",
-              "identifierTypeId"
-            ]
+            "additionalProperties": true
           }
         },
         "contributors": {
@@ -241,18 +225,11 @@
                 "description": "Contributor name"
               }
             },
-            "additionalProperties": false,
-            "required": [
-              "name"
-            ]
+            "additionalProperties": true
           }
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "title"
-      ]
+      "additionalProperties": true
     },
     "feeFine": {
       "description": "Fee/fine info",
@@ -289,13 +266,7 @@
           "type": "string"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "ownerId",
-        "owner",
-        "typeId",
-        "type"
-      ]
+      "additionalProperties": true
     },
     "status": {
       "description": "Status of the actual cost record",
@@ -322,16 +293,5 @@
       "$ref": "raml-util/schemas/metadata.schema"
     }
   },
-  "additionalProperties": false,
-  "required": [
-    "lossType",
-    "lossDate",
-    "expirationDate",
-    "user",
-    "loan",
-    "item",
-    "instance",
-    "feeFine",
-    "status"
-  ]
+  "additionalProperties": true
 }
