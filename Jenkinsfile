@@ -1,4 +1,4 @@
-@Library(jenkins_pipeline_libs@test-sonar-maven-update') _
+@Library('jenkins_pipeline_libs@test-sonar-maven-update') _
 
 buildMvn {
   publishModDescriptor = 'yes'
