@@ -347,7 +347,7 @@ public class FeeFineActionsAPITest extends ApiTests {
           .put("primaryContributor", PRIMARY_CONTRIBUTOR_NAME)
           .put("allContributors", PRIMARY_CONTRIBUTOR_NAME + "; " + NON_PRIMARY_CONTRIBUTOR_NAME)
           .put("physicalDescriptions", "Hardback; Green")
-          .put("editions", "1st; 2nd")
+          .put("editions", "1st")
           .put("datesOfPublication", "2024; 2025")
           .put("administrativeNotes", "admin note")
           .put("effectiveLocationSpecific", location.getName())

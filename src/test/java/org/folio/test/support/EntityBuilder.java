@@ -217,7 +217,7 @@ public class EntityBuilder {
       .withPublication(Arrays.asList(
         new Publication().withDateOfPublication("2024"),
         new Publication().withDateOfPublication("2025")))
-      .withEditions(new HashSet<>(Arrays.asList("1st", "2nd")))
+      .withEditions(new HashSet<>(List.of("1st")))
       .withAdministrativeNotes(List.of("admin note"));
   }
 
