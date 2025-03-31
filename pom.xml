@@ -38,7 +38,6 @@
     <joda-time.version>2.13.1</joda-time.version>
     <mod-pubsub-client.version>2.15.4</mod-pubsub-client.version>
     <rest-assured.version>5.5.1</rest-assured.version>
-    <wiremock.version>2.27.2</wiremock.version>
     <awaitility.version>4.3.0</awaitility.version>
     <json-path-assert.version>2.9.0</json-path-assert.version>
     <JUnitParams.version>1.1.1</JUnitParams.version>
@@ -157,18 +156,6 @@
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
       <version>${rest-assured.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.github.tomakehurst</groupId>
-      <artifactId>wiremock</artifactId>
-      <version>${wiremock.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>net.sf.jopt-simple</groupId>
-          <artifactId>jopt-simple</artifactId>
-        </exclusion>
-      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>
