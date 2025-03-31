@@ -19,6 +19,7 @@
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <argLine>-Djava.locale.providers=COMPAT</argLine>
 
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
@@ -513,7 +514,6 @@
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
-          <argLine>-Djava.locale.providers=COMPAT</argLine>
         </configuration>
       </plugin>
 
