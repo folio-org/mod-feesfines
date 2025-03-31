@@ -19,12 +19,13 @@
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <argLine>-Djava.locale.providers=COMPAT</argLine>
 
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
     <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->
     <postgres.port>5433</postgres.port>
-    <sonar.exclusions>**/impl/**</sonar.exclusions>
+    <sonar.exclusions>target/generated-sources/**</sonar.exclusions>
 
     <!-- Dependency Management -->
     <vertx.version>4.5.13</vertx.version>
@@ -513,7 +514,6 @@
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <useSystemClassLoader>false</useSystemClassLoader>
-          <argLine>-Djava.locale.providers=COMPAT</argLine>
         </configuration>
       </plugin>
 
