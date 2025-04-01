@@ -10,6 +10,7 @@ import static org.folio.rest.utils.JsonHelper.writeIfDoesNotExist;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.domain.FeeFineNoticeContext;
@@ -26,6 +27,7 @@ import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.PatronNotice;
 import org.folio.rest.jaxrs.model.Personal;
+import org.folio.rest.jaxrs.model.Publication;
 import org.folio.rest.jaxrs.model.User;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -105,7 +107,8 @@ public class PatronNoticeBuilder {
         .put("yearCaption", String.join(LIST_VALUES_SEPARATOR, item.getYearCaption()))
         .put("copy", getCopyNumber(item, holdingsRecord))
         .put("numberOfPieces", item.getNumberOfPieces())
-        .put("descriptionOfPieces", item.getDescriptionOfPieces());
+        .put("descriptionOfPieces", item.getDescriptionOfPieces())
+        .put("accessionNumber", item.getAccessionNumber());
 
       EffectiveCallNumberComponents callNumberComponents = item.getEffectiveCallNumberComponents();
       if (callNumberComponents != null) {
@@ -119,8 +122,13 @@ public class PatronNoticeBuilder {
     if (instance != null) {
       itemContext
         .put(TITLE, instance.getTitle())
+        .put("instanceHrid", instance.getHrid())
         .put("primaryContributor", getPrimaryContributor(instance))
-        .put("allContributors", getAllContributors(instance));
+        .put("allContributors", getAllContributors(instance))
+        .put("physicalDescriptions", String.join(LIST_VALUES_SEPARATOR, instance.getPhysicalDescriptions()))
+        .put("editions", String.join(LIST_VALUES_SEPARATOR, instance.getEditions()))
+        .put("datesOfPublication", getDatesOfPublication(instance))
+        .put("administrativeNotes", String.join(LIST_VALUES_SEPARATOR, instance.getAdministrativeNotes()));
     }
 
     if (location != null) {
@@ -233,6 +241,12 @@ public class PatronNoticeBuilder {
     return instance.getContributors().stream()
       .map(Contributor::getName)
       .collect(joining(LIST_VALUES_SEPARATOR));
+  }
+
+  private static String getDatesOfPublication(Instance instance) {
+    return instance.getPublication().stream()
+      .map(Publication::getDateOfPublication)
+      .collect(Collectors.joining(LIST_VALUES_SEPARATOR));
   }
 
   private static String getCopyNumber(Item item, HoldingsRecord holdingsRecord) {

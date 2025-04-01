@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
 import static org.folio.test.support.ApiTests.randomId;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -36,6 +35,7 @@ import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
+import org.folio.rest.jaxrs.model.Publication;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
 import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.jaxrs.model.Status;
@@ -194,7 +194,8 @@ public class EntityBuilder {
           .withCallNumber("ABC.123.DEF")
           .withPrefix("PREFIX")
           .withSuffix("SUFFIX"))
-      .withPermanentLoanTypeId(randomId());
+      .withPermanentLoanTypeId(randomId())
+      .withAccessionNumber("555");
   }
 
   public static HoldingsRecord buildHoldingsRecord(Instance instance) {
@@ -208,9 +209,16 @@ public class EntityBuilder {
     return new Instance()
       .withId(randomId())
       .withTitle("Instance title")
+      .withHrid("IN-001")
+      .withPhysicalDescriptions(Arrays.asList("Hardback", "Green"))
       .withContributors(Arrays.asList(
         new Contributor().withName(PRIMARY_CONTRIBUTOR_NAME).withPrimary(true),
-        new Contributor().withName(NON_PRIMARY_CONTRIBUTOR_NAME).withPrimary(false)));
+        new Contributor().withName(NON_PRIMARY_CONTRIBUTOR_NAME).withPrimary(false)))
+      .withPublication(Arrays.asList(
+        new Publication().withDateOfPublication("2024"),
+        new Publication().withDateOfPublication("2025")))
+      .withEditions(new HashSet<>(List.of("1st")))
+      .withAdministrativeNotes(List.of("admin note"));
   }
 
   public static Location buildLocation(String name) {
