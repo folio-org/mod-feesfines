@@ -1,3 +1,6 @@
+## 19.3.1 2025-04-01
+* Add template tokens to item context (MODFEE-409)
+
 ## 19.3.0 2025-03-13
 * Update to mod-feesfines Java 21 (MODFEE-407)
 * Fix actual-cost-record schema (MODFEE-408)
