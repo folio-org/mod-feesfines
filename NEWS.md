@@ -1,3 +1,8 @@
+## 19.3.2 2025-04-23
+* Fix argLine jacoco code coverage configuration (MODFEE-413)
+* Sonar doesn't analyze files in the impl package (MODFEE-414)
+* Upgrade wiremock from 2.35.0 to 3.12.1 (MODFEE-415)
+
 ## 19.3.1 2025-04-01
 * Add template tokens to item context (MODFEE-409)
 
