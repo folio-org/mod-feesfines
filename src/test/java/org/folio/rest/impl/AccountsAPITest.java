@@ -311,6 +311,7 @@ public class AccountsAPITest extends ApiTests {
 
   @Test
   public void canCreateAccountWithoutOptionalReferencedEntityId() {
+    assertAccountCreationSuccess(buildAccount().withId(null));
     assertAccountCreationSuccess(buildAccount().withLoanId(null));
     assertAccountCreationSuccess(buildAccount().withItemId(null));
     assertAccountCreationSuccess(buildAccount().withInstanceId(null));
@@ -323,7 +324,6 @@ public class AccountsAPITest extends ApiTests {
 
   @Test
   public void canNotCreateAccountWithoutRequiredReferencedEntityId() {
-    assertAccountCreationFailure(buildAccount().withId(null));
     assertAccountCreationFailure(buildAccount().withFeeFineId(null));
     assertAccountCreationFailure(buildAccount().withUserId(null));
     assertAccountCreationFailure(buildAccount().withOwnerId(null));
