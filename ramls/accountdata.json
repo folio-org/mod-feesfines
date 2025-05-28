@@ -188,7 +188,6 @@
     "paymentStatus",
     "userId",
     "feeFineId",
-    "ownerId",
-    "id"
+    "ownerId"
    ]
 }
