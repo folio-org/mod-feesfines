@@ -150,6 +150,7 @@
       "description": "List of contributors",
       "minItems": 0,
       "items": {
+        "type": "object",
         "javaType": "org.folio.rest.jaxrs.model.ContributorData",
         "properties": {
           "name": {
