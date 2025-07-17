@@ -2,8 +2,6 @@
   "fqm.entityType.accounts": "Fee/fine accounts",
   "fqm.entityType.accounts.amount": "Amount",
   "fqm.entityType.accounts.remaining": "Remaining",
-  "fqm.entityType.accounts.date_created": "Date created",
-  "fqm.entityType.accounts.date_updated": "Date updated",
   "fqm.entityType.accounts.status_name": "Status name",
   "fqm.entityType.accounts.payment_status_name": "Payment status name",
   "fqm.entityType.accounts.fee_fine_type": "Fee/fine type",
