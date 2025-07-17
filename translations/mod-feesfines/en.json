@@ -56,7 +56,7 @@
   "fqm.entityType.feefine_actions.amount_action": "Amount action",
   "fqm.entityType.feefine_actions.balance": "Balance",
   "fqm.entityType.feefine_actions.transaction_information": "Transaction information",
-  "fqm.entityType.feefine_actions.created_at": "Created at",
+  "fqm.entityType.feefine_actions.created_at": "Created at service point",
   "fqm.entityType.feefine_actions.original_created_at": "Original created at",
   "fqm.entityType.feefine_actions.source": "Source",
   "fqm.entityType.feefine_actions.payment_method": "Payment method",
