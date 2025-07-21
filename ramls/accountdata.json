@@ -30,7 +30,11 @@
       "properties": {
         "name": {
           "description": "Name of the status (values used are Open and Closed)",
-          "type": "string"
+          "type": "string",
+          "x-fqm-values": [
+            { "value": "Open", "label": "Open" },
+            { "value": "Closed", "label": "Closed" }
+          ]
         }
       },
       "required": [
