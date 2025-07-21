@@ -11,6 +11,7 @@
     },
     "typeAction": {
       "description": "Type of activity including the type of transaction",
+      "type": "string",
       "x-fqm-values": [
         { "value": "Paid partially", "label": "Paid partially" },
         { "value": "Paid fully", "label": "Paid fully" },
@@ -23,8 +24,7 @@
         { "value": "Credited partially", "label": "Credited partially" },
         { "value": "Credited fully", "label": "Credited fully" },
         { "value": "Cancelled as error", "label": "Cancelled as error" }
-      ],
-      "type": "string"
+      ]
     },
     "comments": {
       "description": "Additional information entered as part of the activity or on this screen as a 'Staff info only' activity",
