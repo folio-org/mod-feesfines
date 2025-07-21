@@ -11,6 +11,19 @@
     },
     "typeAction": {
       "description": "Type of activity including the type of transaction",
+      "x-fqm-values": [
+        { "value": "Paid partially", "label": "Paid partially" },
+        { "value": "Paid fully", "label": "Paid fully" },
+        { "value": "Waived partially", "label": "Waived partially" },
+        { "value": "Waived fully", "label": "Waived fully" },
+        { "value": "Transferred partially", "label": "Transferred partially" },
+        { "value": "Transferred fully", "label": "Transferred fully" },
+        { "value": "Refunded partially", "label": "Refunded partially" },
+        { "value": "Refunded fully", "label": "Refunded fully" },
+        { "value": "Credited partially", "label": "Credited partially" },
+        { "value": "Credited fully", "label": "Credited fully" },
+        { "value": "Cancelled as error", "label": "Cancelled as error" }
+      ],
       "type": "string"
     },
     "comments": {
