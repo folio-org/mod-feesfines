@@ -1,7 +1,7 @@
 package org.folio.rest.impl;
 
 import static java.lang.String.format;
-import static org.folio.test.support.EntityBuilder.buildLocaleSettingsConfigurations;
+import static org.folio.test.support.EntityBuilder.buildLocaleSettings;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 
 import java.util.Date;
@@ -9,10 +9,10 @@ import java.util.Date;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefineaction;
-import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
+import org.folio.rest.jaxrs.model.Settings;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.constant.ServicePath;
@@ -22,6 +22,8 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+
+import io.vertx.core.json.JsonObject;
 
 public class FeeFineReportsAPITestBase extends ApiTests {
   static final String PAID_PARTIALLY = "Paid partially";
@@ -55,15 +57,19 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   }
 
   void createLocaleSettingsStub() {
-    final KvConfigurations localeSettingsConfigurations = buildLocaleSettingsConfigurations(
-      "{\"locale\":\"en-US\",\"timezone\":\"America/New_York\",\"currency\":\"USD\"}");
-    localeSettingsStubMapping = createStubForPath(ServicePath.CONFIGURATION_ENTRIES,
-      localeSettingsConfigurations, ".*");
+    final Settings localeSettings = buildLocaleSettings(new JsonObject()
+      .put("locale", "en-US")
+      .put("timezone", "America/New_York")
+      .put("currency", "USD"));
+    localeSettingsStubMapping = createStubForPath(ServicePath.SETTINGS_PATH, localeSettings, ".*");
   }
 
   void createLocaleSettingsStubWithoutCurrency() {
-    localeSettingsStubMapping = createStubForPath(ServicePath.CONFIGURATION_ENTRIES,
-      buildLocaleSettingsConfigurations("{\"locale\":\"en-US\",\"timezone\":\"America/New_York\"}"), ".*");
+    JsonObject localeSettings = new JsonObject()
+      .put("locale", "en-US")
+      .put("timezone", "America/New_York");
+    localeSettingsStubMapping = createStubForPath(ServicePath.SETTINGS_PATH,
+      buildLocaleSettings(localeSettings), ".*");
   }
 
   void removeLocaleSettingsStub() {

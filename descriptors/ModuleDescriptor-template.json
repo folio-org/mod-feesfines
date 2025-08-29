@@ -53,6 +53,10 @@
     {
       "id": "loan-types",
       "version": "2.3"
+    },
+    {
+      "id": "settings",
+      "version": "1.2"
     }
   ],
   "provides":[

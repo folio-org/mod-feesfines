@@ -9,13 +9,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.BlockTemplate;
 import org.folio.rest.jaxrs.model.Campus;
 import org.folio.rest.jaxrs.model.CashDrawerReconciliationReportEntry;
-import org.folio.rest.jaxrs.model.Config;
 import org.folio.rest.jaxrs.model.Contributor;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Feefineaction;
@@ -23,7 +23,6 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Institution;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.KvConfigurations;
 import org.folio.rest.jaxrs.model.Library;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LoanPolicy;
@@ -37,10 +36,15 @@ import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.Publication;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
+import org.folio.rest.jaxrs.model.ResultInfo;
 import org.folio.rest.jaxrs.model.ServicePoint;
+import org.folio.rest.jaxrs.model.Setting;
+import org.folio.rest.jaxrs.model.Settings;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
+
+import io.vertx.core.json.JsonObject;
 
 public class EntityBuilder {
   private static final String KEY_NAME = "name";
@@ -255,15 +259,14 @@ public class EntityBuilder {
       .withAdditionalProperty(KEY_NAME, "Institution");
   }
 
-  public static KvConfigurations buildLocaleSettingsConfigurations(String value) {
-    return new KvConfigurations()
-      .withConfigs(List.of(new Config()
-        .withId(randomId())
-        .withModule("ORG")
-        .withConfigName("localeSettings")
-        .withEnabled(true)
+  public static Settings buildLocaleSettings(JsonObject value) {
+    return new Settings()
+      .withItems(List.of(new Setting()
+        .withId(UUID.randomUUID())
+        .withScope("stripes-core.prefs.manage")
+        .withKey("tenantLocaleSettings")
         .withValue(value)))
-      .withTotalRecords(1);
+      .withResultInfo(new ResultInfo().withTotalRecords(1));
   }
 
   public static Loan buildLoan(String loanDate, Date dueDate, String returnDate, String itemId,

@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.client.ConfigurationClient;
+import org.folio.rest.client.SettingsClient;
 import org.folio.rest.domain.Action;
 import org.folio.rest.domain.LocaleSettings;
 import org.folio.rest.domain.MonetaryValue;
@@ -71,7 +71,7 @@ public class RefundReportService {
     new LocaleSettings(Locale.US.toLanguageTag(), UTC.getID(),
       Currency.getInstance(Locale.US).getCurrencyCode());
 
-  private final ConfigurationClient configurationClient;
+  private final SettingsClient settingsClient;
   private final FeeFineActionRepository feeFineActionRepository;
   private final AccountRepository accountRepository;
 
@@ -82,7 +82,7 @@ public class RefundReportService {
   private Currency currency;
 
   public RefundReportService(Map<String, String> headers, Context context) {
-    configurationClient = new ConfigurationClient(context.owner(), headers);
+    settingsClient = new SettingsClient(context.owner(), headers);
     feeFineActionRepository = new FeeFineActionRepository(headers, context);
     accountRepository = new AccountRepository(context, headers);
 
@@ -92,7 +92,7 @@ public class RefundReportService {
   public Future<RefundReport> buildReport(DateTime startDate, DateTime endDate,
     List<String> ownerIds) {
 
-    return configurationClient.getLocaleSettings()
+    return settingsClient.getLocaleSettings()
       .recover(throwable -> succeededFuture(FALLBACK_LOCALE_SETTINGS))
       .compose(localeSettings -> buildReportWithLocale(startDate, endDate, ownerIds,
         localeSettings));

@@ -1,0 +1,54 @@
+{
+  "description": "Common result set information for streaming response",
+  "type": "object",
+  "properties": {
+    "totalRecords": {
+      "description": "Total number of entries in response",
+      "type": "integer"
+    },
+    "diagnostics": {
+      "description": "Diagnostics for response",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "description": "single diagnostic message",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "facets": {
+      "type": "array",
+      "description": "Array of facets",
+      "items": {
+        "type": "object",
+        "description": "A facet",
+        "properties": {
+          "facetValues": {
+            "type": "array",
+            "description": "Array of facet values",
+            "items": {
+              "type": "object",
+              "description": "A facet value",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "description": "Count of facet values"
+                },
+                "value": {
+                  "description": "Value Object"
+                }
+              }
+            }
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of facet"
+          }
+        }
+      }
+    }
+  }
+}
