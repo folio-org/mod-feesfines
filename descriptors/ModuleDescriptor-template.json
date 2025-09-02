@@ -994,7 +994,8 @@
             "feefine-reports.refund.post"
           ],
           "modulePermissions": [
-            "configuration.entries.collection.get",
+            "mod-settings.entries.item.get",
+            "mod-settings.entries.collection.get",
             "users.item.get",
             "usergroups.item.get",
             "inventory-storage.holdings.item.get",
@@ -1010,7 +1011,8 @@
             "feesfines.feefine-reports.cash-drawer-reconciliation.post"
           ],
           "modulePermissions": [
-            "configuration.entries.collection.get"
+            "mod-settings.entries.item.get",
+            "mod-settings.entries.collection.get"
           ]
         },
         {
@@ -1031,7 +1033,8 @@
             "feefine-reports.financial-transactions-detail.post"
           ],
           "modulePermissions": [
-            "configuration.entries.collection.get",
+            "mod-settings.entries.item.get",
+            "mod-settings.entries.collection.get",
             "inventory-storage.service-points.item.get",
             "inventory-storage.service-points.collection.get",
             "users.item.get",
