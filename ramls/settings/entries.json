@@ -7,7 +7,6 @@
       "type": "array",
       "items": {
         "type": "object",
-        "title": "SettingsItem",
         "$ref": "entry.json"
       }
     },
