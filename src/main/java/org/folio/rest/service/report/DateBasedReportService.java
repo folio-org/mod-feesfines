@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
-import org.folio.rest.client.ConfigurationClient;
+import org.folio.rest.client.SettingsClient;
 import org.folio.rest.domain.LocaleSettings;
 import org.folio.rest.service.report.parameters.DateBasedReportParameters;
 import org.joda.time.DateTime;
@@ -25,14 +25,14 @@ public abstract class DateBasedReportService<T, P> {
     new LocaleSettings(Locale.US.toLanguageTag(), UTC.getID(),
       Currency.getInstance(Locale.US).getCurrencyCode());
 
-  private final ConfigurationClient configurationClient;
+  private final SettingsClient settingsClient;
 
   DateTimeZone timeZone;
   DateTimeFormatter dateTimeFormatter;
   Currency currency;
 
   public DateBasedReportService(Map<String, String> headers, Context context) {
-    configurationClient = new ConfigurationClient(context.owner(), headers);
+    settingsClient = new SettingsClient(context.owner(), headers);
   }
 
   public abstract Future<T> build(P params);
@@ -45,7 +45,7 @@ public abstract class DateBasedReportService<T, P> {
   }
 
   public Future<Void> adjustDates(DateBasedReportParameters params) {
-    return configurationClient.getLocaleSettings()
+    return settingsClient.getLocaleSettings()
       .recover(throwable -> succeededFuture(FALLBACK_LOCALE_SETTINGS))
       .onSuccess(localeSettings -> adjustDates(params, localeSettings))
       .mapEmpty();

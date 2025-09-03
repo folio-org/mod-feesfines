@@ -11,12 +11,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.LocaleSettings;
 import org.folio.rest.exception.http.HttpException;
-import org.folio.rest.jaxrs.model.Config;
-import org.folio.rest.jaxrs.model.KvConfigurations;
+import org.folio.rest.jaxrs.model.Setting;
+import org.folio.rest.jaxrs.model.Settings;
 import org.folio.util.StringUtil;
-import org.joda.time.DateTimeZone;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -25,43 +22,45 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 
-public class ConfigurationClient extends OkapiClient {
-  private static final Logger log = LogManager.getLogger(ConfigurationClient.class);
+public class SettingsClient extends OkapiClient {
+  private static final Logger log = LogManager.getLogger(SettingsClient.class);
 
-  public ConfigurationClient(Vertx vertx, Map<String, String> okapiHeaders) {
+  public SettingsClient(Vertx vertx, Map<String, String> okapiHeaders) {
     super(vertx, okapiHeaders);
   }
 
   public Future<LocaleSettings> getLocaleSettings() {
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
 
-    String query = cqlAnd(cqlExactMatch("module", "ORG"),
-      cqlExactMatch("configName", "localeSettings"));
+    String query = cqlAnd(cqlExactMatch("scope", "stripes-core.prefs.manage"),
+      cqlExactMatch("key", "tenantLocaleSettings"));
 
-    String url = format("/configurations/entries?query=%s", StringUtil.urlEncode(query));
+    String url = format("/settings/entries?query=%s", StringUtil.urlEncode(query));
     okapiGetAbs(url).send(promise);
 
     return promise.future().compose(response -> {
       int responseStatus = response.statusCode();
       if (responseStatus != 200) {
         String errorMessage = String.format(
-          "Failed to find locale configuration. Response: %d %s", responseStatus,
+          "Failed to find locale settings. Response: %d %s", responseStatus,
           response.bodyAsString());
         log.error(errorMessage);
         return failedFuture(new HttpException(GET, url, response));
       } else {
         try {
-          KvConfigurations kvConfigurations = objectMapper.readValue(response.bodyAsString(),
-            KvConfigurations.class);
+          Settings settings = objectMapper.readValue(response.bodyAsString(), Settings.class);
 
-          JsonObject localeSettingsJsonObject = kvConfigurations.getConfigs().stream()
+          JsonObject localeSettingsJsonObject = settings.getItems()
+            .stream()
             .findFirst()
-            .map(Config::getValue)
+            .map(Setting::getValue)
+            .filter(Map.class::isInstance)
+            .map(Map.class::cast)
             .map(JsonObject::new)
             .orElse(null);
 
           if (localeSettingsJsonObject == null) {
-            return failedFuture("Failed to find locale configuration");
+            return failedFuture("Failed to find locale settings");
           } else {
             return succeededFuture(new LocaleSettings(
               localeSettingsJsonObject.getString("locale"),

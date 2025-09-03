@@ -14,7 +14,7 @@ public class ServicePath {
   public static final String LIBRARIES_PATH = "/location-units/libraries";
   public static final String USERS_PATH = "/users";
   public static final String USERS_GROUPS_PATH = "/groups";
-  public static final String CONFIGURATION_ENTRIES = "/configurations/entries";
+  public static final String SETTINGS_PATH = "/settings/entries";
   public static final String LOAN_POLICIES_PATH = "/loan-policy-storage/loan-policies";
   public static final String LOST_ITEM_FEE_POLICIES_PATH = "/lost-item-fees-policies";
   public static final String OVERDUE_FINE_POLICIES_PATH = "/overdue-fines-policies";
