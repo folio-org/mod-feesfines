@@ -4,7 +4,6 @@ import org.folio.rest.jaxrs.model.Owner;
 import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 
 public class OwnerRepository {
 
@@ -17,9 +16,7 @@ public class OwnerRepository {
   }
 
   public Future<Owner> getById(String id) {
-    Promise<Owner> promise = Promise.promise();
-    pgClient.getById(OWNERS_TABLE, id, Owner.class, promise);
-    return promise.future();
+    return pgClient.getById(OWNERS_TABLE, id, Owner.class);
   }
 
 }

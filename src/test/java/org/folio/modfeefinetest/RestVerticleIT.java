@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -70,31 +69,33 @@ public class RestVerticleIT {
 
     @BeforeClass
     public static void setup(TestContext context) throws SQLException {
-        vertx = Vertx.vertx();
+      vertx = Vertx.vertx();
 
-        initDatabase(context);
+      initDatabase(context);
 
-        Async async = context.async();
-        port = NetworkUtils.nextFreePort();
-        TenantClient tenantClient = new TenantClient("localhost", port, "diku", "diku");
-        DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
-        vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-            try {
-                tenantClient.postTenant(null, res2 -> {
-                    async.complete();
-                });
-            } catch (Exception e) {
-                context.fail(e);
-            }
+      Async async = context.async();
+      port = NetworkUtils.nextFreePort();
+      TenantClient tenantClient = new TenantClient("localhost", port, "diku", "diku");
+      DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
+      vertx.deployVerticle(RestVerticle.class.getName(), options)
+        .onSuccess(res -> {
+          try {
+            tenantClient.postTenant(null, res2 -> {
+              async.complete();
+            });
+          } catch (Exception e) {
+            context.fail(e);
+          }
         });
     }
 
     @AfterClass
     public static void teardown(TestContext context) {
-        Async async = context.async();
-        vertx.close(context.asyncAssertSuccess(res -> {
-            PostgresClient.stopPostgresTester();
-            async.complete();
+      Async async = context.async();
+      vertx.close()
+        .onSuccess(ignored -> context.asyncAssertSuccess(res -> {
+          PostgresClient.stopPostgresTester();
+          async.complete();
         }));
     }
 
@@ -131,7 +132,7 @@ public class RestVerticleIT {
     }
 
     private void send(String url, HttpMethod method, String content,
-            String contentType, Handler<AsyncResult<HttpResponse<Buffer>>> handler) {
+            String contentType, Handler<HttpResponse<Buffer>> handler) {
 
       WebClient client = WebClient.create(vertx);
       var request = client.requestAbs(Objects.requireNonNullElse(method, HttpMethod.PUT), url);
@@ -143,10 +144,11 @@ public class RestVerticleIT {
       request.putHeader("X-Okapi-Tenant", "diku");
       request.putHeader("accept", "application/json,text/plain");
       request.putHeader("content-type", "application/json");
-      request.sendBuffer(buffer, handler);
+      request.sendBuffer(buffer)
+        .onSuccess(handler);
     }
 
-    class HTTPResponseHandler implements Handler<AsyncResult<HttpResponse<Buffer>>> {
+    class HTTPResponseHandler implements Handler<HttpResponse<Buffer>> {
 
         CompletableFuture<Response> event;
 
@@ -155,11 +157,10 @@ public class RestVerticleIT {
         }
 
       @Override
-      public void handle(AsyncResult<HttpResponse<Buffer>> httpResponseAsyncResult) {
-        var responseResult = httpResponseAsyncResult.result();
+      public void handle(HttpResponse<Buffer> response) {
         var r = new Response();
-        r.code = responseResult.statusCode();
-        r.body = responseResult.bodyAsJsonObject();
+        r.code = response.statusCode();
+        r.body = response.bodyAsJsonObject();
         event.complete(r);
       }
     }

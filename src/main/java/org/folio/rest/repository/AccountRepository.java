@@ -13,8 +13,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 
 public class AccountRepository extends AbstractRepository {
   private static final String ACCOUNTS_TABLE = "accounts";
@@ -36,14 +34,12 @@ public class AccountRepository extends AbstractRepository {
   }
 
   public Future<Account> getAccountById(String accountId) {
-    Promise<Account> promise = Promise.promise();
-    pgClient.getById(ACCOUNTS_TABLE, accountId, Account.class, promise);
-    return promise.future();
+    return pgClient.getById(ACCOUNTS_TABLE, accountId, Account.class);
   }
 
   public Future<Map<String, Account>> getAccountsById(List<String> accountIds) {
     Promise<Map<String, Account>> promise = Promise.promise();
-    pgClient.getById(ACCOUNTS_TABLE, new JsonArray(accountIds), Account.class, promise);
+    pgClient.getById(ACCOUNTS_TABLE, new JsonArray(accountIds), Account.class, promise::handle);
     return promise.future();
   }
 
@@ -56,9 +52,8 @@ public class AccountRepository extends AbstractRepository {
   }
 
   public Future<Account> update(Account account) {
-    Promise<RowSet<Row>> promise = Promise.promise();
-    pgClient.update(ACCOUNTS_TABLE, account, account.getId(), promise);
-    return promise.future().map(account);
+    return pgClient.update(ACCOUNTS_TABLE, account, account.getId())
+      .map(account);
   }
 
 }

@@ -1,14 +1,9 @@
 package org.folio.rest.repository;
 
-import java.util.Optional;
-
-import org.folio.rest.domain.FeeFineNoticeContext;
-import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Feefine;
 import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 
 public class FeeFineRepository {
 
@@ -21,8 +16,6 @@ public class FeeFineRepository {
   }
 
   public Future<Feefine> getById(String id) {
-    Promise<Feefine> promise = Promise.promise();
-    pgClient.getById(FEEFINES_TABLE, id, Feefine.class, promise);
-    return promise.future();
+    return pgClient.getById(FEEFINES_TABLE, id, Feefine.class);
   }
 }

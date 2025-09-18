@@ -38,7 +38,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 
 public class FeeFineActionsAPI implements Feefineactions {
 
@@ -141,11 +140,7 @@ public class FeeFineActionsAPI implements Feefineactions {
   public void postFeefineactions(Feefineaction entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    Promise<Response> postCompleted = Promise.promise();
-    PgUtil.post(FEEFINEACTIONS_TABLE, entity, okapiHeaders, vertxContext,
-      PostFeefineactionsResponse.class, postCompleted);
-
-    postCompleted.future()
+    PgUtil.post(FEEFINEACTIONS_TABLE, entity, okapiHeaders, vertxContext, PostFeefineactionsResponse.class)
       .onSuccess(r -> publishLogEvent(entity, okapiHeaders, vertxContext))
       .onSuccess(r -> sendPatronNoticeIfNeedBe(entity, okapiHeaders, vertxContext))
       .onComplete(asyncResultHandler);

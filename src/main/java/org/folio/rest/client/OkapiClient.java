@@ -32,13 +32,11 @@ import org.folio.rest.exception.http.HttpNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class OkapiClient {
@@ -89,13 +87,10 @@ public class OkapiClient {
     }
 
     final String url = resourcePath + "/" + id;
-    Promise<HttpResponse<Buffer>> promise = Promise.promise();
-
     long start = currentTimeMillis();
 
-    okapiGetAbs(url).send(promise);
-
-    return promise.future().compose(response -> {
+    return okapiGetAbs(url).send()
+      .compose(response -> {
       int responseStatus = response.statusCode();
       log.debug("[{} {}ms] GET {}", responseStatus, currentTimeMillis() - start, resourcePath);
       if (responseStatus != 200) {

@@ -34,31 +34,26 @@ public class FeeFinePubSubClient {
   public CompletableFuture<Void> publishEvent(Event event) {
     final CompletableFuture<HttpResponse<Buffer>> sendResult = new CompletableFuture<>();
 
-    okapiClient.okapiPostAbs("/pubsub/publish")
-      .sendJson(event, response -> {
-        if (response.failed()) {
-          sendResult.completeExceptionally(response.cause());
-        } else {
-          sendResult.complete(response.result());
+    return okapiClient.okapiPostAbs("/pubsub/publish")
+      .sendJson(event)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .thenCompose(response -> {
+        if (response.statusCode() == HTTP_NO_CONTENT.toInt()) {
+          return completedFuture(null);
         }
+
+        if (isEventHasNoSubscribersResponse(response)) {
+          log.warn("No subscribers available for event type [{}]", event.getEventType());
+          return completedFuture(null);
+        }
+
+        log.error("Error publishing event [{}]", response.bodyAsString());
+
+        final CompletableFuture<Void> failureFuture = new CompletableFuture<>();
+        failureFuture.completeExceptionally(new InternalServerErrorException(response.bodyAsString()));
+        return failureFuture;
       });
-
-    return sendResult.thenCompose(response -> {
-      if (response.statusCode() == HTTP_NO_CONTENT.toInt()) {
-        return completedFuture(null);
-      }
-
-      if (isEventHasNoSubscribersResponse(response)) {
-        log.warn("No subscribers available for event type [{}]", event.getEventType());
-        return completedFuture(null);
-      }
-
-      log.error("Error publishing event [{}]", response.bodyAsString());
-
-      final CompletableFuture<Void> failureFuture = new CompletableFuture<>();
-      failureFuture.completeExceptionally(new InternalServerErrorException(response.bodyAsString()));
-      return failureFuture;
-    });
   }
 
   private boolean isEventHasNoSubscribersResponse(HttpResponse<Buffer> response) {

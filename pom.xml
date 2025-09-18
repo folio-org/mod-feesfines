@@ -28,7 +28,7 @@
     <sonar.exclusions>target/generated-sources/**</sonar.exclusions>
 
     <!-- Dependency Management -->
-    <vertx.version>4.5.13</vertx.version>
+    <vertx.version>5.0.4</vertx.version>
     <log4j-bom.version>2.24.3</log4j-bom.version>
 
     <!-- Dependencies -->

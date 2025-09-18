@@ -30,6 +30,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -103,22 +104,18 @@ public class ApiTests {
 
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
-    vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions(),
-      res -> createTenant(getTenantAttributes(), future));
+    vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions())
+      .onSuccess(res -> createTenant(getTenantAttributes(), future));
 
     get(future);
   }
 
   @AfterAll
   public static void undeployEnvironment() {
-    final CompletableFuture<Void> future = new CompletableFuture<>();
+    Future<Void> future = vertx.close()
+      .onSuccess(ignored -> PostgresClient.stopPostgresTester());
 
-    vertx.close(notUsed -> {
-      PostgresClient.stopPostgresTester();
-      future.complete(null);
-    });
-
-    get(future);
+    get(future.toCompletionStage().toCompletableFuture());
     okapiDeployment.resetAll();
   }
 
