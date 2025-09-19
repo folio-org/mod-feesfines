@@ -57,6 +57,14 @@
     {
       "id": "settings",
       "version": "1.2"
+    },
+    {
+      "id": "service-points",
+      "version": "3.4"
+    },
+    {
+      "id": "loan-storage",
+      "version": "7.3"
     }
   ],
   "provides":[
