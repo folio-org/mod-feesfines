@@ -229,5 +229,18 @@
     "fqm.entityType.waives.metadata_updated_by_user_id": "Update door gebruiker UUID",
     "fqm.entityType.waives.account_id": "UUID rekening",
     "fqm.entityType.waives.id": "UUID",
-    "fqm.entityType.waives.jsonb": "JSONB"
+    "fqm.entityType.waives.jsonb": "JSONB",
+    "fqm.entityType.accounts._description": "Simple entity type for fee/fine account data.",
+    "fqm.entityType.comment_requirements._description": "Simple entity type for fee/fine comment requirements data.",
+    "fqm.entityType.feefine_actions._description": "Simple entity type for fee/fine action data.",
+    "fqm.entityType.feefines._description": "Simple entity type for fee/fine data.",
+    "fqm.entityType.lost_item_fee_policy._description": "Simple entity type for fee/fine lost item policy data.",
+    "fqm.entityType.manual_block_templates._description": "Simple entity type for fee/fine manual block template data.",
+    "fqm.entityType.manual_blocks._description": "Simple entity type for fee/fine manual block data.",
+    "fqm.entityType.overdue_fine_policies._description": "Simple entity type for fee/fine overdue fine policy data.",
+    "fqm.entityType.owners._description": "Simple entity type for fee/fine owner data.",
+    "fqm.entityType.payments._description": "Simple entity type for fee/fine payment data.",
+    "fqm.entityType.refunds._description": "Simple entity type for fee/fine refund data.",
+    "fqm.entityType.transfers._description": "Simple entity type for fee/fine transfer data.",
+    "fqm.entityType.waives._description": "Simple entity type for fee/fine waive data."
 }
