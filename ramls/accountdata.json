@@ -113,15 +113,45 @@
     },
     "loanId": {
       "description": "ID of the loan",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "00349126-c923-4045-a29f-3b6db4c6bea9",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        }
+      ]
     },
     "userId": {
       "description": "ID of the user",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "bb058933-cd06-4539-bd3a-6f248ff98ee2",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        },
+        {
+          "targetId": "f2615ea6-450b-425d-804d-6a495afd9308",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        }
+      ]
     },
     "itemId": {
       "description": "ID of the item",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "372e025a-9444-473a-9ffd-fa0f63db1674",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        }
+      ]
     },
     "materialTypeId": {
       "description": "ID of the materialType",
