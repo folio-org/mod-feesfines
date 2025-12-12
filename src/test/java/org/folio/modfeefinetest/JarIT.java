@@ -56,7 +56,7 @@ public class JarIT {
   @Test
   public void jar(TestContext context) throws Exception {
     // invoke the jar packaged by maven
-    Process process = new ProcessBuilder("java", "-jar", "target/mod-feesfines-fat.jar", "version")
+    Process process = new ProcessBuilder("java", "-version", "-jar", "target/mod-feesfines-fat.jar")
         .redirectErrorStream(true).start();
     InputStreamCollector inputStreamCollector = new InputStreamCollector(process.getInputStream());
     new Thread(inputStreamCollector, "inputStreamCollector").start();

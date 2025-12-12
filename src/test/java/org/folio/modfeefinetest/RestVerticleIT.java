@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
@@ -56,14 +57,10 @@ public class RestVerticleIT {
         String sql = "drop schema if exists diku_mod_feesfines cascade;\n"
                 + "drop role if exists diku_mod_feesfines;\n";
         Async async = context.async();
-        PostgresClient.getInstance(vertx).runSQLFile(sql, true, result -> {
-            if (result.failed()) {
-                context.fail(result.cause());
-            } else if (!result.result().isEmpty()) {
-                context.fail("runSQLFile failed with: " + result.result().stream().collect(Collectors.joining(" ")));
-            }
-            async.complete();
-        });
+        PostgresClient.getInstance(vertx).runSqlFile(sql)
+          .onFailure(context::fail)
+          .onSuccess(v -> async.complete());
+
         async.await();
     }
 
@@ -80,23 +77,22 @@ public class RestVerticleIT {
       vertx.deployVerticle(RestVerticle.class.getName(), options)
         .onSuccess(res -> {
           try {
-            tenantClient.postTenant(null, res2 -> {
-              async.complete();
-            });
+            tenantClient.postTenant(new TenantAttributes(), res2 -> async.complete());
           } catch (Exception e) {
             context.fail(e);
           }
         });
+      async.await();
     }
 
     @AfterClass
     public static void teardown(TestContext context) {
       Async async = context.async();
       vertx.close()
-        .onSuccess(ignored -> context.asyncAssertSuccess(res -> {
+        .onSuccess(ignored -> {
           PostgresClient.stopPostgresTester();
           async.complete();
-        }));
+        });
     }
 
     @Test
