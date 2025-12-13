@@ -37,7 +37,7 @@
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <wiremock.version>3.12.1</wiremock.version>
     <joda-time.version>2.13.1</joda-time.version>
-    <mod-pubsub-client.version>2.18.0</mod-pubsub-client.version>
+    <mod-pubsub-client.version>2.17.0-SNAPSHOT</mod-pubsub-client.version>
     <rest-assured.version>5.5.1</rest-assured.version>
     <awaitility.version>4.3.0</awaitility.version>
     <json-path-assert.version>2.9.0</json-path-assert.version>
