@@ -166,7 +166,7 @@
     "fqm.entityType.overdue_fine_policies.reminder_fees_policy_reminder_schedule.reminder_fee._qualified": "Reminder fees policy reminder schedule reminder fee",
     "fqm.entityType.overdue_fine_policies.reminder_fees_policy_reminder_schedule.time_unit_id": "Jednostka czasu",
     "fqm.entityType.overdue_fine_policies.reminder_fees_policy_reminder_schedule.time_unit_id._qualified": "Reminder fees policy reminder schedule time unit",
-    "fqm.entityType.overdue_fine_policies.reminder_fees_policy_reminder_schedule.interval": "Częstotliwość",
+    "fqm.entityType.overdue_fine_policies.reminder_fees_policy_reminder_schedule.interval": "Interwał",
     "fqm.entityType.overdue_fine_policies.reminder_fees_policy_reminder_schedule.interval._qualified": "Reminder fees policy reminder schedule interval",
     "fqm.entityType.overdue_fine_policies.metadata_created_date": "Utworzono w",
     "fqm.entityType.overdue_fine_policies.metadata_created_by_user_id": "Utworzone przez użytkownika UUID",
