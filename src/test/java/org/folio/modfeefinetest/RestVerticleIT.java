@@ -42,7 +42,6 @@ import io.vertx.junit5.VertxTestContext;
 @Timeout(value = 15, timeUnit = TimeUnit.SECONDS)
 class RestVerticleIT {
 
-    private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
     private static final String MANUAL_BLOCK = "{\"type\": \"Manual\",\"desc\": \"Show not expiration!\",\"borrowing\": true,\"renewals\": true,\"requests\": true,\"userId\": \"9d68864b-ee65-4ab0-9d2d-1677f8503f64\"}";
 
     private static Vertx vertx;
