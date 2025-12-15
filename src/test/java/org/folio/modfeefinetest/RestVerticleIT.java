@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.HttpURLConnection;
-import java.sql.SQLException;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -41,7 +40,7 @@ import io.vertx.junit5.VertxTestContext;
 
 @ExtendWith(VertxExtension.class)
 @Timeout(value = 15, timeUnit = TimeUnit.SECONDS)
-public class RestVerticleIT {
+class RestVerticleIT {
 
     private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
     private static final String MANUAL_BLOCK = "{\"type\": \"Manual\",\"desc\": \"Show not expiration!\",\"borrowing\": true,\"renewals\": true,\"requests\": true,\"userId\": \"9d68864b-ee65-4ab0-9d2d-1677f8503f64\"}";
@@ -51,7 +50,7 @@ public class RestVerticleIT {
     private static WebClient webClient;
 
     @BeforeAll
-    static void setup(VertxTestContext context) throws SQLException {
+    static void setup(VertxTestContext context) {
       port = NetworkUtils.nextFreePort();
       vertx = Vertx.vertx();
       webClient = WebClient.create(vertx);
@@ -84,7 +83,7 @@ public class RestVerticleIT {
   }
 
   @Test
-  public void testManualBlock(VertxTestContext context) {
+  void testManualBlock(VertxTestContext context) {
     try {
       String manualBlockURL = "http://localhost:" + port + "/manualblocks";
 
@@ -93,8 +92,7 @@ public class RestVerticleIT {
        */
       CompletableFuture<Response> addManualBlockCF = new CompletableFuture();
       String addManualBlockURL = manualBlockURL;
-      send(addManualBlockURL, HttpMethod.POST, MANUAL_BLOCK,
-        SUPPORTED_CONTENT_TYPE_JSON_DEF, new HTTPResponseHandler(addManualBlockCF));
+      send(addManualBlockURL, HttpMethod.POST, MANUAL_BLOCK, new HTTPResponseHandler(addManualBlockCF));
       Response addManualBlockResponse = addManualBlockCF.get(5, TimeUnit.SECONDS);
       assertEquals(HttpURLConnection.HTTP_CREATED, addManualBlockResponse.code);
 
@@ -102,8 +100,7 @@ public class RestVerticleIT {
        * get all manualBlocks in manualBlocks table - should return 200
        */
       CompletableFuture<Response> getAllManualBlocksCF = new CompletableFuture<>();
-      send(manualBlockURL, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
-        new HTTPResponseHandler(getAllManualBlocksCF));
+      send(manualBlockURL, HttpMethod.GET, null, new HTTPResponseHandler(getAllManualBlocksCF));
       Response getAllManualBlocksResponse = getAllManualBlocksCF.get(5, TimeUnit.SECONDS);
       assertEquals(HttpURLConnection.HTTP_OK, getAllManualBlocksResponse.code);
       assertTrue(isSizeMatch(getAllManualBlocksResponse, 1));
@@ -116,7 +113,7 @@ public class RestVerticleIT {
   }
 
     private void send(String url, HttpMethod method, String content,
-            String contentType, Handler<HttpResponse<Buffer>> handler) {
+            Handler<HttpResponse<Buffer>> handler) {
 
       var request = webClient.requestAbs(Objects.requireNonNullElse(method, HttpMethod.PUT), url);
       if (content == null) {
