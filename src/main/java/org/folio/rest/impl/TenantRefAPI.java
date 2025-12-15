@@ -26,47 +26,40 @@ public class TenantRefAPI extends TenantAPI {
     Map<String, String> headers,
     Handler<AsyncResult<Response>> handler, Context context) {
 
-    log.info("postTenant:: tenant attributes: {}", JsonObject.mapFrom(tenantAttributes));
+    log.info("postTenant");
+    log.info("Tenant attributes: {}", JsonObject.mapFrom(tenantAttributes));
 
     Vertx vertx = context.owner();
-    super.postTenantSync(tenantAttributes, headers, context)
-      .onFailure(t -> handleException(t, handler))
-      .onSuccess(postTenantResponse -> {
-        if (postTenantResponse.getStatus() != 204) {
-          handler.handle(succeededFuture(postTenantResponse));
-          return;
-        }
+    super.postTenantSync(tenantAttributes, headers, res -> {
+      if (res.failed()) {
+        handler.handle(res);
+        return;
+      }
 
-        TenantLoading tenantLoading = new TenantLoading();
-        tenantLoading.withKey("loadReference").withLead("reference-data")
-          .withIdContent()
-          .add("lost-item-fees-policies")
-          .add("overdue-fines-policies")
-          .perform(tenantAttributes, headers, vertx, performResponse -> {
-            if (performResponse.failed()) {
-              log.error("postTenant:: failed to load reference data", performResponse.cause());
+      TenantLoading tenantLoading = new TenantLoading();
+      tenantLoading.withKey("loadReference").withLead("reference-data")
+        .withIdContent()
+        .add("lost-item-fees-policies")
+        .add("overdue-fines-policies")
+        .perform(tenantAttributes, headers, vertx, performResponse -> {
+          if (performResponse.failed()) {
+            log.error("postTenant failure", performResponse.cause());
+            handler.handle(succeededFuture(PostTenantResponse
+              .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
+            return;
+          }
+
+          vertx.executeBlocking(() -> new PubSubRegistrationService(vertx, headers).registerModule()
+            .onSuccess(v -> {
+              log.info("postTenant executed successfully");
+              handler.handle(res);
+            })
+            .onFailure(t -> {
+              log.error("postTenant failure", t);
               handler.handle(succeededFuture(PostTenantResponse
-                .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
-              return;
-            }
-
-            vertx.executeBlocking(() -> new PubSubRegistrationService(vertx, headers).registerModule()
-              .onSuccess(v -> {
-                log.info("postTenant:: module successfully registered in mod-pubsub");
-                handler.handle(succeededFuture(postTenantResponse));
-              })
-              .onFailure(t -> {
-                log.error("postTenant:: failed to register in mod-pubsub", t);
-                handler.handle(succeededFuture(PostTenantResponse
-                  .respond500WithTextPlain(t.getLocalizedMessage())));
-              }));
-          });
-      });
-  }
-
-  private static void handleException(Throwable t, Handler<AsyncResult<Response>> handler) {
-    log.error("handleException:: postTenant failure", t);
-    handler.handle(succeededFuture(PostTenantResponse
-      .respond500WithTextPlain(t.getLocalizedMessage())));
+                .respond500WithTextPlain(t.getLocalizedMessage())));
+            }));
+        });
+    }, context);
   }
 }
