@@ -33,7 +33,6 @@ public class TenantRefAPI extends TenantAPI {
 
     Vertx vertx = context.owner();
     super.postTenantSync(tenantAttributes, headers, context)
-      .onFailure(t -> System.out.println(t.getMessage()))
       .onSuccess(res -> {
           AsyncResult<Response> asyncResponse = new AsyncResponseResult().map(res);
           if (res.getStatus() != HttpStatus.HTTP_NO_CONTENT.toInt()) {
@@ -48,10 +47,12 @@ public class TenantRefAPI extends TenantAPI {
             .add("overdue-fines-policies")
             .perform(tenantAttributes, headers, vertx, performResponse -> {
               if (performResponse.failed()) {
-                log.error("postTenant failure", performResponse.cause());
+                log.error("postTenant:: postTenant failure", performResponse.cause());
                 handler.handle(succeededFuture(PostTenantResponse
                   .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
                 return;
+              } else {
+                log.info("postTenant:: reference data loaded successfully");
               }
 
               vertx.executeBlocking(() -> new PubSubRegistrationService(vertx, headers).registerModule()

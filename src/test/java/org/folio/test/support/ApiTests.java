@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
@@ -50,6 +51,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,10 +68,15 @@ import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import lombok.SneakyThrows;
 
+@ExtendWith(VertxExtension.class)
 public class ApiTests {
   public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   public static final String TENANT_NAME = "test_tenant";
@@ -95,28 +102,28 @@ public class ApiTests {
   protected static PostgresClient pgClient;
 
   @BeforeAll
-  public static void deployVerticle() {
+  static void deployVerticle(VertxTestContext context) {
     vertx = Vertx.vertx();
     okapiDeployment.start();
     okapiDeployment.setUpMapping();
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
 
-    final CompletableFuture<Void> future = new CompletableFuture<>();
-
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions())
-      .onSuccess(res -> createTenant(getTenantAttributes(), future));
-
-    get(future);
+      .compose(ignored -> createTenantAsync(getTenantAttributes()))
+      .onSuccess(ignored -> pgClient = PostgresClient.getInstance(vertx, TENANT_NAME))
+      .onComplete(context.succeedingThenComplete());
   }
 
   @AfterAll
-  public static void undeployEnvironment() {
-    Future<Void> future = vertx.close()
-      .onSuccess(ignored -> PostgresClient.stopPostgresTester());
-
-    get(future.toCompletionStage().toCompletableFuture());
-    okapiDeployment.resetAll();
+  static void undeployEnvironment(VertxTestContext context) {
+    vertx.close()
+      .onFailure(context::failNow)
+      .onSuccess(ignored -> {
+        PostgresClient.stopPostgresTester();
+        okapiDeployment.resetAll();
+        context.completeNow();
+      });
   }
 
   @BeforeEach
@@ -124,7 +131,15 @@ public class ApiTests {
     okapiDeployment.setUpMapping();
   }
 
-  public static void createTenant(TenantAttributes attributes, CompletableFuture<Void> future) {
+  @SneakyThrows
+  protected static Response createTenant(TenantAttributes attributes) {
+    return createTenantAsync(attributes)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get(10, TimeUnit.SECONDS);
+  }
+
+  protected static Future<Response> createTenantAsync(TenantAttributes attributes) {
     TenantRefAPI tenantAPI = new TenantRefAPI();
     Map<String, String> headers = new CaseInsensitiveMap<>();
 
@@ -132,23 +147,22 @@ public class ApiTests {
     headers.put("Accept", "application/json,text/plain");
     headers.put("x-okapi-tenant", TENANT_NAME);
     headers.put(OKAPI_URL_HEADER, getOkapiUrl());
-
+    Promise<Response> promise = Promise.promise();
     tenantAPI.postTenant(attributes, headers, responseAsyncResult -> {
       assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
       assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
-      pgClient = PostgresClient.getInstance(vertx, TENANT_NAME);
-      future.complete(null);
+      promise.handle(responseAsyncResult);
     }, vertx.getOrCreateContext());
+
+    return promise.future();
   }
 
-  public static void postTenant(String moduleFrom, String moduleTo) {
+  public static Response postTenant(String moduleFrom, String moduleTo) {
     TenantAttributes tenantAttributes = getTenantAttributes()
       .withModuleFrom(moduleFrom)
       .withModuleTo(moduleTo);
 
-    CompletableFuture<Void> future = new CompletableFuture<>();
-    createTenant(tenantAttributes, future);
-    get(future);
+    return createTenant(tenantAttributes);
   }
 
   protected static TenantAttributes getTenantAttributes() {
@@ -182,8 +196,7 @@ public class ApiTests {
         criterion.addCriterion(createFeeFineExclusionCriteria(type.getId()), "AND");
       }
     }
-    PostgresClient.getInstance(vertx, TENANT_NAME)
-      .delete(tableName, criterion, result -> future.complete(null));
+    pgClient .delete(tableName, criterion, result -> future.complete(null));
 
     get(future);
   }

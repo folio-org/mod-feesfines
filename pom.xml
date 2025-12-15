@@ -33,7 +33,6 @@
 
     <!-- Dependencies -->
     <raml-module-builder.version>36.0.0-SNAPSHOT</raml-module-builder.version>
-    <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <wiremock.version>3.12.1</wiremock.version>
     <joda-time.version>2.13.1</joda-time.version>
@@ -85,12 +84,6 @@
   </dependencyManagement>
 
   <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <optional>true</optional>
-    </dependency>
     <dependency>
       <groupId>org.wiremock</groupId>
       <artifactId>wiremock</artifactId>
