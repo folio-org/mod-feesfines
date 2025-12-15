@@ -228,8 +228,8 @@ public class FeeFineActionsAPITest extends ApiTests {
     String expectedErrorMessage = "Following errors may result in missing token values: " +
       "\"User " + user.getId() + " was not found\", " +
       "\"Item " + item.getId() + " was not found\", " +
-      "\"HoldingsRecord " + holdingsRecord.getId() + " was not found\", " +
-      "\"Instance " + instance.getId() + " was not found\", " +
+      "\"Invalid HoldingsRecord ID: null\", " +
+      "\"Invalid Instance ID: null\", " +
       "\"Invalid Location ID: null\", " +
       "\"Invalid LoanType ID: null\"";
 

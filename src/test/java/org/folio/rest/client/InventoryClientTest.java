@@ -1,19 +1,20 @@
 package org.folio.rest.client;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 
-@RunWith(VertxUnitRunner.class)
+@ExtendWith(VertxExtension.class)
 public class InventoryClientTest extends BaseClientTest {
   private final InventoryClient inventoryClient;
   {
@@ -21,9 +22,9 @@ public class InventoryClientTest extends BaseClientTest {
   }
 
   public static final String HOLDINGS_URL = "/holdings-storage/holdings";
+
   @Test
-  public void shouldSucceedWhenGettingHoldingsRecords(TestContext context) {
-    Async async = context.async();
+  void shouldSucceedWhenGettingHoldingsRecords(VertxTestContext context) {
 
     String holdingsRecordId = UUID.randomUUID().toString();
     HoldingsRecords holdingsRecords = new HoldingsRecords()
@@ -32,45 +33,37 @@ public class InventoryClientTest extends BaseClientTest {
     createStub(HOLDINGS_URL, HttpStatus.SC_OK, holdingsRecords);
 
     inventoryClient.getHoldingsById(List.of(holdingsRecordId))
-      .onSuccess(records -> {
-        context.assertEquals(holdingsRecords.getHoldingsRecords().get(0).getId(),
+      .onComplete(context.succeeding(records -> {
+        assertEquals(holdingsRecords.getHoldingsRecords().get(0).getId(),
           records.getHoldingsRecords().get(0).getId());
-        context.assertEquals(holdingsRecords.getTotalRecords(), records.getTotalRecords());
-        async.complete();
-      })
-      .onFailure(throwable -> context.fail("Should have succeeded"));
+        assertEquals(holdingsRecords.getTotalRecords(), records.getTotalRecords());
+        context.completeNow();
+      }));
   }
 
   @Test
-  public void shouldFailWhenReceivingErrorResponse(TestContext context) {
-    Async async = context.async();
-
+  void shouldFailWhenReceivingErrorResponse(VertxTestContext context) {
     String holdingsRecordId = UUID.randomUUID().toString();
     createStub(HOLDINGS_URL, HttpStatus.SC_INTERNAL_SERVER_ERROR, "Internal server error, contact administrator");
 
     inventoryClient.getHoldingsById(List.of(holdingsRecordId))
-      .onSuccess(throwable -> context.fail("Should have failed"))
-      .onFailure(failure -> {
-        context.assertEquals("Failed to get holdings by IDs. Response status code: 500",
-          failure.getMessage());
-        async.complete();
-      });
+      .onComplete(context.failing(failure -> {
+        assertEquals("Failed to get holdings by IDs. Response status code: 500", failure.getMessage());
+        context.completeNow();
+      }));
   }
 
   @Test
-  public void shouldFailWhenReceivingIncorrectJSON(TestContext context) {
-    Async async = context.async();
-
+  void shouldFailWhenReceivingIncorrectJSON(VertxTestContext context) {
     String holdingsRecordId = UUID.randomUUID().toString();
     String incorrectResponse = "{";
     createStub(HOLDINGS_URL, HttpStatus.SC_OK, incorrectResponse);
 
     inventoryClient.getHoldingsById(List.of(holdingsRecordId))
-      .onSuccess(throwable -> context.fail("Should have failed"))
-      .onFailure(failure -> {
-        context.assertEquals("Failed to parse request. Response body: {", failure.getMessage());
-        async.complete();
-      });
+      .onComplete(context.failing(failure -> {
+        assertEquals("Failed to parse request. Response body: {", failure.getMessage());
+        context.completeNow();
+      }));
   }
 
 }

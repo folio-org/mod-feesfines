@@ -135,48 +135,28 @@ public class ManualBlocksAPI implements Manualblocks {
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_HEADER_TENANT));
-        PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-
-        postgresClient.startTx(beginTx -> {
-          try {
-
-            postgresClient.save(beginTx, MANUALBLOCKS_TABLE, entity.getId(), entity, reply -> {
-              try {
-                if (reply.succeeded()) {
-                  final Manualblock manualblock = entity;
-                  manualblock.setId(entity.getId());
-                  logger.debug("ID API" + entity.getId());
-                  postgresClient.endTx(beginTx, done
-                    -> asyncResultHandler.handle(
-                    Future.succeededFuture(PostManualblocksResponse.respond201WithApplicationJson(manualblock,
-                      PostManualblocksResponse.headersFor201().withLocation(reply.result())))));
-
+        PostgresClient.getInstance(vertxContext.owner(), tenantId)
+          .withTrans(conn -> {
+            try {
+              return conn.saveAndReturnUpdatedEntity(MANUALBLOCKS_TABLE, entity.getId(), entity)
+                .onSuccess(block -> {
+                  asyncResultHandler.handle(
+                    Future.succeededFuture(PostManualblocksResponse.respond201WithApplicationJson(block,
+                      PostManualblocksResponse.headersFor201())));
                   CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
                     .publishLogEvent(JsonObject.mapFrom(entity), MANUAL_BLOCK_CREATED));
-                } else {
-                  postgresClient.rollbackTx(beginTx, rollback -> {
-                    asyncResultHandler.handle(Future.succeededFuture(
-                      PostManualblocksResponse.respond400WithTextPlain(
-                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest))));
-                  });
-                }
-              } catch (Exception e) {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  PostManualblocksResponse.respond500WithTextPlain(
-                    e.getMessage())));
-              }
-            });
-          } catch (Exception e) {
-            postgresClient.rollbackTx(beginTx, rollback -> {
+                })
+                .onFailure(t -> asyncResultHandler.handle(Future.succeededFuture(
+                  PostManualblocksResponse.respond400WithTextPlain(
+                    messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.UnableToProcessRequest)))))
+                .mapEmpty();
+            } catch (Exception e) {
               asyncResultHandler.handle(Future.succeededFuture(
-                PostManualblocksResponse.respond500WithTextPlain(
-                  e.getMessage())));
-            });
-          }
-        });
-
+                PostManualblocksResponse.respond500WithTextPlain(e.getMessage())));
+            }
+            return Future.succeededFuture();
+          });
       });
-
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PostManualblocksResponse.respond500WithTextPlain(

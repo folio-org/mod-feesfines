@@ -1,7 +1,9 @@
 package org.folio.modfeefinetest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.net.HttpURLConnection;
-import java.sql.SQLException;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -10,131 +12,109 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Timeout;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.junit5.Timeout;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 
-@RunWith(VertxUnitRunner.class)
-public class RestVerticleIT {
+@ExtendWith(VertxExtension.class)
+@Timeout(value = 15, timeUnit = TimeUnit.SECONDS)
+class RestVerticleIT {
 
-    private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-
-   private static final String MANUAL_BLOCK = "{\"type\": \"Manual\",\"desc\": \"Show not expiration!\",\"borrowing\": true,\"renewals\": true,\"requests\": true,\"userId\": \"9d68864b-ee65-4ab0-9d2d-1677f8503f64\"}";
+    private static final String MANUAL_BLOCK = "{\"type\": \"Manual\",\"desc\": \"Show not expiration!\",\"borrowing\": true,\"renewals\": true,\"requests\": true,\"userId\": \"9d68864b-ee65-4ab0-9d2d-1677f8503f64\"}";
 
     private static Vertx vertx;
-    static int port;
+    private static int port;
+    private static WebClient webClient;
 
-    @Rule
-    public Timeout rule = Timeout.seconds(15);
+    @BeforeAll
+    static void setup(VertxTestContext context) {
+      port = NetworkUtils.nextFreePort();
+      vertx = Vertx.vertx();
+      webClient = WebClient.create(vertx);
 
-    public static void initDatabase(TestContext context) {
-        PostgresClient.setPostgresTester(new PostgresTesterContainer());
+      TenantClient tenantClient = new TenantClient("http://localhost:" + port, "diku", "diku", webClient);
+      DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
 
-        String sql = "drop schema if exists diku_mod_feesfines cascade;\n"
-                + "drop role if exists diku_mod_feesfines;\n";
-        Async async = context.async();
-        PostgresClient.getInstance(vertx).runSQLFile(sql, true, result -> {
-            if (result.failed()) {
-                context.fail(result.cause());
-            } else if (!result.result().isEmpty()) {
-                context.fail("runSQLFile failed with: " + result.result().stream().collect(Collectors.joining(" ")));
-            }
-            async.complete();
-        });
-        async.await();
+      initDatabase()
+        .compose(ignored -> vertx.deployVerticle(RestVerticle.class.getName(), options))
+        .compose(ignored -> tenantClient.postTenant(new TenantAttributes()))
+        .onComplete(context.succeedingThenComplete());
     }
 
-    @BeforeClass
-    public static void setup(TestContext context) throws SQLException {
-        vertx = Vertx.vertx();
-
-        initDatabase(context);
-
-        Async async = context.async();
-        port = NetworkUtils.nextFreePort();
-        TenantClient tenantClient = new TenantClient("localhost", port, "diku", "diku");
-        DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
-        vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-            try {
-                tenantClient.postTenant(null, res2 -> {
-                    async.complete();
-                });
-            } catch (Exception e) {
-                context.fail(e);
-            }
+    @AfterAll
+    static void teardown(VertxTestContext context) {
+      vertx.close()
+        .onFailure(context::failNow)
+        .onSuccess(ignored -> {
+          PostgresClient.stopPostgresTester();
+          context.completeNow();
         });
     }
 
-    @AfterClass
-    public static void teardown(TestContext context) {
-        Async async = context.async();
-        vertx.close(context.asyncAssertSuccess(res -> {
-            PostgresClient.stopPostgresTester();
-            async.complete();
-        }));
+  private static Future<Void> initDatabase() {
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
+
+    String sql = "drop schema if exists diku_mod_feesfines cascade;\n"
+      + "drop role if exists diku_mod_feesfines;\n";
+    return PostgresClient.getInstance(vertx).runSqlFile(sql);
+  }
+
+  @Test
+  void testManualBlock(VertxTestContext context) {
+    try {
+      String manualBlockURL = "http://localhost:" + port + "/manualblocks";
+
+      /**
+       * add a manualblock - should return 201
+       */
+      CompletableFuture<Response> addManualBlockCF = new CompletableFuture();
+      String addManualBlockURL = manualBlockURL;
+      send(addManualBlockURL, HttpMethod.POST, MANUAL_BLOCK, new HTTPResponseHandler(addManualBlockCF));
+      Response addManualBlockResponse = addManualBlockCF.get(5, TimeUnit.SECONDS);
+      assertEquals(HttpURLConnection.HTTP_CREATED, addManualBlockResponse.code);
+
+      /**
+       * get all manualBlocks in manualBlocks table - should return 200
+       */
+      CompletableFuture<Response> getAllManualBlocksCF = new CompletableFuture<>();
+      send(manualBlockURL, HttpMethod.GET, null, new HTTPResponseHandler(getAllManualBlocksCF));
+      Response getAllManualBlocksResponse = getAllManualBlocksCF.get(5, TimeUnit.SECONDS);
+      assertEquals(HttpURLConnection.HTTP_OK, getAllManualBlocksResponse.code);
+      assertTrue(isSizeMatch(getAllManualBlocksResponse, 1));
+      context.completeNow();
+    } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+      Logger.getLogger(RestVerticleIT.class.getName()).log(Level.SEVERE, null, ex);
+      context.failNow(ex);
     }
 
-    @Test
-    public void testManualBlock(TestContext context) {
-        try {
-            String manualBlockURL = "http://localhost:" + port + "/manualblocks";
-
-            /**
-             * add a manualblock - should return 201
-             */
-            CompletableFuture<Response> addManualBlockCF = new CompletableFuture();
-            String addManualBlockURL = manualBlockURL;
-            send(addManualBlockURL, HttpMethod.POST, MANUAL_BLOCK,
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, new HTTPResponseHandler(addManualBlockCF));
-            Response addManualBlockResponse = addManualBlockCF.get(5, TimeUnit.SECONDS);
-            context.assertEquals(addManualBlockResponse.code, HttpURLConnection.HTTP_CREATED);
-            String manualBlockId = addManualBlockResponse.body.getString("id");
-
-            /**
-             * get all manualBlocks in manualBlocks table - should return 200
-             */
-            CompletableFuture<Response> getAllManualBlocksCF = new CompletableFuture();
-            String getAllManualBlocksURL = manualBlockURL;
-            send(getAllManualBlocksURL, HttpMethod.GET, null,
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, new HTTPResponseHandler(getAllManualBlocksCF));
-            Response getAllManualBlocksResponse = getAllManualBlocksCF.get(5, TimeUnit.SECONDS);
-            context.assertEquals(getAllManualBlocksResponse.code, HttpURLConnection.HTTP_OK);
-            context.assertTrue(isSizeMatch(getAllManualBlocksResponse, 1));
-        } catch (InterruptedException | ExecutionException | TimeoutException ex) {
-            Logger.getLogger(RestVerticleIT.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
+  }
 
     private void send(String url, HttpMethod method, String content,
-            String contentType, Handler<AsyncResult<HttpResponse<Buffer>>> handler) {
+            Handler<HttpResponse<Buffer>> handler) {
 
-      WebClient client = WebClient.create(vertx);
-      var request = client.requestAbs(Objects.requireNonNullElse(method, HttpMethod.PUT), url);
+      var request = webClient.requestAbs(Objects.requireNonNullElse(method, HttpMethod.PUT), url);
       if (content == null) {
         content = "";
       }
@@ -143,10 +123,11 @@ public class RestVerticleIT {
       request.putHeader("X-Okapi-Tenant", "diku");
       request.putHeader("accept", "application/json,text/plain");
       request.putHeader("content-type", "application/json");
-      request.sendBuffer(buffer, handler);
+      request.sendBuffer(buffer)
+        .onSuccess(handler);
     }
 
-    class HTTPResponseHandler implements Handler<AsyncResult<HttpResponse<Buffer>>> {
+    class HTTPResponseHandler implements Handler<HttpResponse<Buffer>> {
 
         CompletableFuture<Response> event;
 
@@ -155,11 +136,10 @@ public class RestVerticleIT {
         }
 
       @Override
-      public void handle(AsyncResult<HttpResponse<Buffer>> httpResponseAsyncResult) {
-        var responseResult = httpResponseAsyncResult.result();
+      public void handle(HttpResponse<Buffer> response) {
         var r = new Response();
-        r.code = responseResult.statusCode();
-        r.body = responseResult.bodyAsJsonObject();
+        r.code = response.statusCode();
+        r.body = response.bodyAsJsonObject();
         event.complete(r);
       }
     }

@@ -49,19 +49,16 @@ public class TenantRefAPI extends TenantAPI {
             return;
           }
 
-          vertx.executeBlocking(
-            promise -> new PubSubRegistrationService(vertx, headers).registerModule(promise),
-            registration -> {
-              if (registration.failed()) {
-                log.error("postTenant failure", registration.cause());
-                handler.handle(succeededFuture(PostTenantResponse
-                  .respond500WithTextPlain(registration.cause().getLocalizedMessage())));
-              } else {
-                log.info("postTenant executed successfully");
-                handler.handle(res);
-              }
-            }
-          );
+          vertx.executeBlocking(() -> new PubSubRegistrationService(vertx, headers).registerModule()
+            .onSuccess(v -> {
+              log.info("postTenant executed successfully");
+              handler.handle(res);
+            })
+            .onFailure(t -> {
+              log.error("postTenant failure", t);
+              handler.handle(succeededFuture(PostTenantResponse
+                .respond500WithTextPlain(t.getLocalizedMessage())));
+            }));
         });
     }, context);
   }

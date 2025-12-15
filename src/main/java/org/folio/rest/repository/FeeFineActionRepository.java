@@ -71,9 +71,8 @@ public class FeeFineActionRepository extends AbstractRepository {
   }
 
   public Future<List<Feefineaction>> get(Criterion criterion) {
-    Promise<Results<Feefineaction>> promise = Promise.promise();
-    pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, true, promise);
-    return promise.future().map(Results::getResults);
+    return pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, true)
+      .map(Results::getResults);
   }
 
   public Future<List<Feefineaction>> findActionsForAccount(String accountId) {
@@ -86,10 +85,7 @@ public class FeeFineActionRepository extends AbstractRepository {
       .setOperation("=")
       .setVal(accountId));
 
-    Promise<Results<Feefineaction>> promise = Promise.promise();
-    pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, false, promise);
-
-    return promise.future()
+    return pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, false)
       .map(Results::getResults);
   }
 
@@ -120,10 +116,7 @@ public class FeeFineActionRepository extends AbstractRepository {
       .setVal(accountId))
       .addGroupOfCriterias(typeCriterias);
 
-    Promise<Results<Feefineaction>> promise = Promise.promise();
-    pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, false, promise);
-
-    return promise.future()
+    return pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, false)
       .map(Results::getResults);
   }
 
@@ -156,10 +149,7 @@ public class FeeFineActionRepository extends AbstractRepository {
       .addGroupOfCriterias(accountIdsCriterias)
       .setLimit(new Limit(ACTIONS_LIMIT));
 
-    Promise<Results<Feefineaction>> promise = Promise.promise();
-    pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, false, promise);
-
-    return promise.future()
+    return pgClient.get(ACTIONS_TABLE, Feefineaction.class, criterion, false)
       .map(Results::getResults);
   }
 
@@ -228,7 +218,7 @@ public class FeeFineActionRepository extends AbstractRepository {
       orderBy);
 
     Promise<RowSet<Row>> promise = Promise.promise();
-    pgClient.select(query, params, promise);
+    pgClient.select(query, params, promise::handle);
 
     return promise.future().map(this::mapToFeeFineActionsAndAccounts);
   }
@@ -255,7 +245,7 @@ public class FeeFineActionRepository extends AbstractRepository {
       getSchemaName(), ACTIONS_TABLE, ACTIONS_TABLE_ALIAS);
 
     Promise<RowSet<Row>> promise = Promise.promise();
-    pgClient.select(query, params, promise);
+    pgClient.select(query, params, promise::handle);
 
     return promise.future().map(this::mapToListOfStrings);
   }

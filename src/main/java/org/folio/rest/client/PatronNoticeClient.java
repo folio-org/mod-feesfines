@@ -9,7 +9,6 @@ import java.util.Map;
 import org.folio.rest.jaxrs.model.PatronNotice;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
@@ -21,10 +20,8 @@ public class PatronNoticeClient extends OkapiClient {
   }
 
   public Future<Void> postPatronNotice(PatronNotice notice) {
-    Promise<HttpResponse<Buffer>> promise = Promise.promise();
-    okapiPostAbs("/patron-notice").sendJson(notice, promise);
-
-    return promise.future()
+    return okapiPostAbs("/patron-notice")
+      .sendJson(notice)
       .compose(this::interpretResponse);
   }
 

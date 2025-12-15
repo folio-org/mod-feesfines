@@ -1,6 +1,6 @@
 package org.folio.rest.service.action;
 
-import static io.vertx.core.CompositeFuture.all;
+import static io.vertx.core.Future.all;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;

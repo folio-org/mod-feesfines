@@ -5,13 +5,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +24,11 @@ import org.folio.rest.jaxrs.model.LoanType;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.ServicePoint;
 
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpRequest;
+
 public class InventoryClient extends OkapiClient {
 
   private static final String ITEMS_LIMIT = "1000";
@@ -47,8 +45,6 @@ public class InventoryClient extends OkapiClient {
         .withTotalRecords(0));
     }
 
-    Promise<HttpResponse<Buffer>> promise = Promise.promise();
-
     HttpRequest<Buffer> request = okapiGetAbs("/item-storage/items");
     if (!itemIds.isEmpty()) {
       request.addQueryParam("query", String.format("(id==(%s))",
@@ -57,22 +53,22 @@ public class InventoryClient extends OkapiClient {
             .collect(Collectors.joining(" or "))))
         .addQueryParam("limit", ITEMS_LIMIT);
     }
-    request.send(promise);
 
-    return promise.future().compose(response -> {
-      if (response.statusCode() != 200) {
-        return failedFuture("Failed to get items by IDs. Response status code: "
-          + response.statusCode());
-      } else {
-        try {
-          Items items = objectMapper.readValue(response.bodyAsString(), Items.class);
-          return succeededFuture(items);
-        } catch (IOException ioException) {
-          return failedFuture("Failed to parse response. Response body: "
-            + response.bodyAsString());
+    return request.send()
+      .compose(response -> {
+        if (response.statusCode() != 200) {
+          return failedFuture("Failed to get items by IDs. Response status code: "
+            + response.statusCode());
+        } else {
+          try {
+            Items items = objectMapper.readValue(response.bodyAsString(), Items.class);
+            return succeededFuture(items);
+          } catch (IOException ioException) {
+            return failedFuture("Failed to parse response. Response body: "
+              + response.bodyAsString());
+          }
         }
-      }
-    });
+      });
   }
 
   public Future<HoldingsRecords> getHoldingsById(List<String> holdingIds) {
@@ -82,8 +78,6 @@ public class InventoryClient extends OkapiClient {
         .withTotalRecords(0));
     }
 
-    Promise<HttpResponse<Buffer>> promise = Promise.promise();
-
     HttpRequest<Buffer> request = okapiGetAbs("/holdings-storage/holdings");
     if (!holdingIds.isEmpty()) {
       request.addQueryParam("query", String.format("(id==(%s))",
@@ -92,24 +86,24 @@ public class InventoryClient extends OkapiClient {
             .collect(Collectors.joining(" or "))))
         .addQueryParam("limit", HOLDINGS_LIMIT);
     }
-    request.putHeader(ACCEPT, APPLICATION_JSON);
-    request.send(promise);
 
-    return promise.future().compose(response -> {
-      if (response.statusCode() != 200) {
-        return failedFuture("Failed to get holdings by IDs. Response status code: "
-          + response.statusCode());
-      } else {
-        try {
-          HoldingsRecords holdingsRecords = objectMapper.readValue(response.bodyAsString(),
-            HoldingsRecords.class);
-          return succeededFuture(holdingsRecords);
-        } catch (IOException ioException) {
-          return failedFuture("Failed to parse request. Response body: "
-            + response.bodyAsString());
+    return request.putHeader(ACCEPT, APPLICATION_JSON)
+      .send()
+      .compose(response -> {
+        if (response.statusCode() != 200) {
+          return failedFuture("Failed to get holdings by IDs. Response status code: "
+            + response.statusCode());
+        } else {
+          try {
+            HoldingsRecords holdingsRecords = objectMapper.readValue(response.bodyAsString(),
+              HoldingsRecords.class);
+            return succeededFuture(holdingsRecords);
+          } catch (IOException ioException) {
+            return failedFuture("Failed to parse request. Response body: "
+              + response.bodyAsString());
+          }
         }
-      }
-    });
+      });
   }
 
   public Future<Item> getItemById(String id) {

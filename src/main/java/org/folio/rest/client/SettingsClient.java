@@ -16,11 +16,8 @@ import org.folio.rest.jaxrs.model.Settings;
 import org.folio.util.StringUtil;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
 
 public class SettingsClient extends OkapiClient {
   private static final Logger log = LogManager.getLogger(SettingsClient.class);
@@ -30,50 +27,47 @@ public class SettingsClient extends OkapiClient {
   }
 
   public Future<LocaleSettings> getLocaleSettings() {
-    Promise<HttpResponse<Buffer>> promise = Promise.promise();
-
     String query = cqlAnd(cqlExactMatch("scope", "stripes-core.prefs.manage"),
       cqlExactMatch("key", "tenantLocaleSettings"));
 
     String url = format("/settings/entries?query=%s", StringUtil.urlEncode(query));
-    okapiGetAbs(url).send(promise);
+    return okapiGetAbs(url).send()
+      .compose(response -> {
+        int responseStatus = response.statusCode();
+        if (responseStatus != 200) {
+          String errorMessage = String.format(
+            "Failed to find locale settings. Response: %d %s", responseStatus,
+            response.bodyAsString());
+          log.error(errorMessage);
+          return failedFuture(new HttpException(GET, url, response));
+        } else {
+          try {
+            Settings settings = objectMapper.readValue(response.bodyAsString(), Settings.class);
 
-    return promise.future().compose(response -> {
-      int responseStatus = response.statusCode();
-      if (responseStatus != 200) {
-        String errorMessage = String.format(
-          "Failed to find locale settings. Response: %d %s", responseStatus,
-          response.bodyAsString());
-        log.error(errorMessage);
-        return failedFuture(new HttpException(GET, url, response));
-      } else {
-        try {
-          Settings settings = objectMapper.readValue(response.bodyAsString(), Settings.class);
+            JsonObject localeSettingsJsonObject = settings.getItems()
+              .stream()
+              .findFirst()
+              .map(Setting::getValue)
+              .filter(Map.class::isInstance)
+              .map(Map.class::cast)
+              .map(JsonObject::new)
+              .orElse(null);
 
-          JsonObject localeSettingsJsonObject = settings.getItems()
-            .stream()
-            .findFirst()
-            .map(Setting::getValue)
-            .filter(Map.class::isInstance)
-            .map(Map.class::cast)
-            .map(JsonObject::new)
-            .orElse(null);
-
-          if (localeSettingsJsonObject == null) {
-            return failedFuture("Failed to find locale settings");
-          } else {
-            return succeededFuture(new LocaleSettings(
-              localeSettingsJsonObject.getString("locale"),
-              localeSettingsJsonObject.getString("timezone"),
-              localeSettingsJsonObject.getString("currency")
-            ));
+            if (localeSettingsJsonObject == null) {
+              return failedFuture("Failed to find locale settings");
+            } else {
+              return succeededFuture(new LocaleSettings(
+                localeSettingsJsonObject.getString("locale"),
+                localeSettingsJsonObject.getString("timezone"),
+                localeSettingsJsonObject.getString("currency")
+              ));
+            }
+          } catch (Exception e) {
+            log.error("Failed to parse response: {}", response.bodyAsString(), e);
+            return failedFuture(e);
           }
-        } catch (Exception e) {
-          log.error("Failed to parse response: {}", response.bodyAsString(), e);
-          return failedFuture(e);
         }
-      }
-    });
+      });
   }
 
   private String cqlExactMatch(String index, String value) {

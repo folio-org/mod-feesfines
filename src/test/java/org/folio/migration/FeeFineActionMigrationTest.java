@@ -67,11 +67,11 @@ class FeeFineActionMigrationTest extends ApiTests {
   private static void runMigration() {
     postTenant(OLDER_VERSION, MIGRATION_VERSION);
   }
-  
+
   private String createAction(String createdAt) {
     Feefineaction action = buildAction(createdAt);
     get(pgClient.save(FEE_FINE_ACTIONS_TABLE, action.getId(), action));
-    
+
     return action.getId();
   }
 

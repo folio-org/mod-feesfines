@@ -9,8 +9,8 @@ import static org.folio.rest.domain.FeeFineStatus.OPEN;
 import static org.folio.rest.jaxrs.model.PaymentStatus.Name.fromValue;
 import static org.folio.rest.utils.FeeFineActionHelper.getTotalAmount;
 import static org.folio.rest.utils.FeeFineActionHelper.getTotalAmounts;
-import static org.folio.rest.utils.FeeFineActionHelper.groupTransferredAmountsByTransferAccount;
 import static org.folio.rest.utils.FeeFineActionHelper.groupFeeFineActionsByAccountId;
+import static org.folio.rest.utils.FeeFineActionHelper.groupTransferredAmountsByTransferAccount;
 
 import java.util.Date;
 import java.util.List;
@@ -25,7 +25,6 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.service.action.context.ActionContext;
 import org.folio.rest.service.action.validation.RefundActionValidationService;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
@@ -54,7 +53,7 @@ public class RefundActionService extends ActionService {
     Map<String, MonetaryValue> refundAmountsByAccountId =
       distributeRefundAmount(context.getRequestedAmount(), refundableAmountsByAccountId);
 
-    return CompositeFuture.all(
+    return Future.all(
         context.getAccounts()
           .values()
           .stream()
@@ -98,7 +97,7 @@ public class RefundActionService extends ActionService {
   private Future<ActionContext> refundTransfers(ActionContext ctx, Account account, Action action,
     boolean isFullRefund, Map<String, MonetaryValue> refundAmountByTransferAccount) {
 
-    return CompositeFuture.all(
+    return Future.all(
         refundAmountByTransferAccount.keySet().stream()
           .map(transferAccount -> refundTransfer(ctx, account, action,
             refundAmountByTransferAccount.get(transferAccount), isFullRefund, transferAccount))
