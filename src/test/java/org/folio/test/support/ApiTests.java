@@ -111,8 +111,10 @@ public class ApiTests {
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions())
       .compose(ignored -> createTenantAsync(getTenantAttributes()))
-      .onSuccess(ignored -> pgClient = PostgresClient.getInstance(vertx, TENANT_NAME))
-      .onComplete(context.succeedingThenComplete());
+      .onComplete(context.succeeding(ignored -> {
+        pgClient = PostgresClient.getInstance(vertx, TENANT_NAME);
+        context.completeNow();
+      }));
   }
 
   @AfterAll
