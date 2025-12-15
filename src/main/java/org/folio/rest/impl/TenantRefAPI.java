@@ -33,6 +33,11 @@ public class TenantRefAPI extends TenantAPI {
 
     Vertx vertx = context.owner();
     super.postTenantSync(tenantAttributes, headers, context)
+      .onFailure(t -> {
+        log.error("postTenant:: postTenant failure", t);
+        handler.handle(succeededFuture(PostTenantResponse
+          .respond500WithTextPlain(t.getLocalizedMessage())));
+      })
       .onSuccess(res -> {
           AsyncResult<Response> asyncResponse = new AsyncResponseResult().map(res);
           if (res.getStatus() != HttpStatus.HTTP_NO_CONTENT.toInt()) {

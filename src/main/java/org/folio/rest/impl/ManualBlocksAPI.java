@@ -154,7 +154,7 @@ public class ManualBlocksAPI implements Manualblocks {
               asyncResultHandler.handle(Future.succeededFuture(
                 PostManualblocksResponse.respond500WithTextPlain(e.getMessage())));
             }
-            return null;
+            return Future.succeededFuture();
           });
       });
     } catch (Exception e) {

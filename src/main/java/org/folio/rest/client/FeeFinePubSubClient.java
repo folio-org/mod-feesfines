@@ -32,7 +32,6 @@ public class FeeFinePubSubClient {
    * occurred.
    */
   public CompletableFuture<Void> publishEvent(Event event) {
-    final CompletableFuture<HttpResponse<Buffer>> sendResult = new CompletableFuture<>();
 
     return okapiClient.okapiPostAbs("/pubsub/publish")
       .sendJson(event)
