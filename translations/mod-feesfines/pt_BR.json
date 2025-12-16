@@ -229,5 +229,18 @@
     "fqm.entityType.waives.metadata_updated_by_user_id": "Atualizado pelo usuário de UUID",
     "fqm.entityType.waives.account_id": "UUID da conta",
     "fqm.entityType.waives.id": "UUID",
-    "fqm.entityType.waives.jsonb": "JSONB"
+    "fqm.entityType.waives.jsonb": "JSONB",
+    "fqm.entityType.accounts._description": "Tipo de entidade simples para dados de contas de taxas/multas.",
+    "fqm.entityType.comment_requirements._description": "Tipo de entidade simples para dados de requisitos de comentários de taxas/multas.",
+    "fqm.entityType.feefine_actions._description": "Tipo de entidade simples para dados de cobrança de taxas/multas.",
+    "fqm.entityType.feefines._description": "Tipo de entidade simples para dados de taxas/multas.",
+    "fqm.entityType.lost_item_fee_policy._description": "Tipo de entidade simples para dados de política de taxa/multa por item perdido.",
+    "fqm.entityType.manual_block_templates._description": "Tipo de entidade simples para dados de modelo de bloqueio manual de taxa/multa.",
+    "fqm.entityType.manual_blocks._description": "Tipo de entidade simples para dados de bloqueio manual de taxa/multa.",
+    "fqm.entityType.overdue_fine_policies._description": "Tipo de entidade simples para dados de política de taxa/multa em atraso.",
+    "fqm.entityType.owners._description": "Tipo de entidade simples para dados do proprietário de taxas/multas.",
+    "fqm.entityType.payments._description": "Tipo de entidade simples para dados de pagamento de taxas/multas.",
+    "fqm.entityType.refunds._description": "Tipo de entidade simples para dados de reembolso de taxas/multas.",
+    "fqm.entityType.transfers._description": "Tipo de entidade simples para dados de transferência de taxas/multas.",
+    "fqm.entityType.waives._description": "Tipo de entidade simples para dados de isenção de taxas/multas."
 }
