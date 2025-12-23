@@ -1,3 +1,7 @@
+## 19.2.4 2025-12-23
+
+* Upgrade to RMB 35.3.2 and Vertx 4.5.23 (MODFEE-438)
+
 ## 19.2.3 2025-03-18
 
 * Allow display summary and additional properties in actual cost record schema (MODFEE-408)
