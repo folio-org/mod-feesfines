@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-feesfines</artifactId>
-  <version>19.2.4-SNAPSHOT</version>
+  <version>19.2.5-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <licenses>
@@ -17,8 +17,8 @@
     <powermock.version>2.0.7</powermock.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <vertx.version>4.5.5</vertx.version>
-    <raml-module-builder.version>35.3.0</raml-module-builder.version>
+    <vertx.version>4.5.23</vertx.version>
+    <raml-module-builder.version>35.3.2</raml-module-builder.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <postgresrunner.port>5434</postgresrunner.port>
     <!-- Postgres port for Jenkins CI build environment https://issues.folio.org/browse/METADATA-10 -->
