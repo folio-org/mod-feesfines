@@ -145,7 +145,7 @@ public class ManualBlocksAPI implements Manualblocks {
                 if (reply.succeeded()) {
                   final Manualblock manualblock = entity;
                   manualblock.setId(entity.getId());
-                  logger.debug("ID API" + entity.getId());
+                  logger.debug("ID API {}", entity.getId());
                   postgresClient.endTx(beginTx, done
                     -> asyncResultHandler.handle(
                     Future.succeededFuture(PostManualblocksResponse.respond201WithApplicationJson(manualblock,

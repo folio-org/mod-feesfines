@@ -94,7 +94,7 @@ public class ApiTests {
   protected static PostgresClient pgClient;
 
   @BeforeAll
-  public static void deployVerticle() {
+  static void deployVerticle() {
     vertx = Vertx.vertx();
     okapiDeployment.start();
     okapiDeployment.setUpMapping();
@@ -110,7 +110,7 @@ public class ApiTests {
   }
 
   @AfterAll
-  public static void undeployEnvironment() {
+  static void undeployEnvironment() {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
     vertx.close(notUsed -> {

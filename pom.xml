@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-feesfines</artifactId>
-  <version>19.3.3-SNAPSHOT</version>
+  <version>19.3.4-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <licenses>
@@ -28,11 +28,11 @@
     <sonar.exclusions>target/generated-sources/**</sonar.exclusions>
 
     <!-- Dependency Management -->
-    <vertx.version>4.5.13</vertx.version>
+    <vertx.version>4.5.23</vertx.version>
     <log4j-bom.version>2.24.3</log4j-bom.version>
 
     <!-- Dependencies -->
-    <raml-module-builder.version>35.4.0</raml-module-builder.version>
+    <raml-module-builder.version>35.4.2</raml-module-builder.version>
     <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.8.2</junit.jupiter.version>
     <wiremock.version>3.12.1</wiremock.version>
