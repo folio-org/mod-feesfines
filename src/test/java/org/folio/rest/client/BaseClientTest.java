@@ -1,19 +1,8 @@
 package org.folio.rest.client;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.folio.rest.jaxrs.model.User;
-import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.Before;
-import org.junit.Rule;
-
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import io.vertx.core.Vertx;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -24,6 +13,17 @@ import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.test.support.ApiTests.OKAPI_TOKEN;
 import static org.folio.test.support.ApiTests.TENANT_NAME;
+
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.folio.rest.tools.utils.NetworkUtils;
+import org.junit.Before;
+import org.junit.Rule;
+
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+
+import io.vertx.core.Vertx;
 
 public abstract class BaseClientTest {
   public static final String OKAPI_URL_HEADER = "x-okapi-url";

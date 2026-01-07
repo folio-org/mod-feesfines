@@ -41,8 +41,6 @@ import io.vertx.ext.web.client.WebClient;
 @RunWith(VertxUnitRunner.class)
 public class RestVerticleIT {
 
-    private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-
    private static final String MANUAL_BLOCK = "{\"type\": \"Manual\",\"desc\": \"Show not expiration!\",\"borrowing\": true,\"renewals\": true,\"requests\": true,\"userId\": \"9d68864b-ee65-4ab0-9d2d-1677f8503f64\"}";
 
     private static Vertx vertx;
@@ -109,10 +107,9 @@ public class RestVerticleIT {
             CompletableFuture<Response> addManualBlockCF = new CompletableFuture();
             String addManualBlockURL = manualBlockURL;
             send(addManualBlockURL, HttpMethod.POST, MANUAL_BLOCK,
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, new HTTPResponseHandler(addManualBlockCF));
+              new HTTPResponseHandler(addManualBlockCF));
             Response addManualBlockResponse = addManualBlockCF.get(5, TimeUnit.SECONDS);
             context.assertEquals(addManualBlockResponse.code, HttpURLConnection.HTTP_CREATED);
-            String manualBlockId = addManualBlockResponse.body.getString("id");
 
             /**
              * get all manualBlocks in manualBlocks table - should return 200
@@ -120,7 +117,7 @@ public class RestVerticleIT {
             CompletableFuture<Response> getAllManualBlocksCF = new CompletableFuture();
             String getAllManualBlocksURL = manualBlockURL;
             send(getAllManualBlocksURL, HttpMethod.GET, null,
-                    SUPPORTED_CONTENT_TYPE_JSON_DEF, new HTTPResponseHandler(getAllManualBlocksCF));
+              new HTTPResponseHandler(getAllManualBlocksCF));
             Response getAllManualBlocksResponse = getAllManualBlocksCF.get(5, TimeUnit.SECONDS);
             context.assertEquals(getAllManualBlocksResponse.code, HttpURLConnection.HTTP_OK);
             context.assertTrue(isSizeMatch(getAllManualBlocksResponse, 1));
@@ -131,7 +128,7 @@ public class RestVerticleIT {
     }
 
     private void send(String url, HttpMethod method, String content,
-            String contentType, Handler<AsyncResult<HttpResponse<Buffer>>> handler) {
+      Handler<AsyncResult<HttpResponse<Buffer>>> handler) {
 
       WebClient client = WebClient.create(vertx);
       var request = client.requestAbs(Objects.requireNonNullElse(method, HttpMethod.PUT), url);
