@@ -1,3 +1,6 @@
+## 19.3.3 2026-01-07
+* Upgrade to Vert.x 4.5.23 and RMB 35.4.2 (MODFEE-439)
+
 ## 19.3.2 2025-04-23
 * Fix argLine jacoco code coverage configuration (MODFEE-413)
 * Sonar doesn't analyze files in the impl package (MODFEE-414)
