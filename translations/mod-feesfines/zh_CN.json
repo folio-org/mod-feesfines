@@ -229,5 +229,18 @@
     "fqm.entityType.waives.metadata_updated_by_user_id": "由用户UUID更新",
     "fqm.entityType.waives.account_id": "账户UUID",
     "fqm.entityType.waives.id": "UUID",
-    "fqm.entityType.waives.jsonb": "JSONB"
+    "fqm.entityType.waives.jsonb": "JSONB",
+    "fqm.entityType.accounts._description": "用于费用/罚款账户数据的简单实体类型。",
+    "fqm.entityType.comment_requirements._description": "用于费用/罚款备注要求数据的简单实体类型。",
+    "fqm.entityType.feefine_actions._description": "用于费用/罚款操作数据的简单实体类型。",
+    "fqm.entityType.feefines._description": "用于费用/罚款数据的简单实体类型。",
+    "fqm.entityType.lost_item_fee_policy._description": "用于费用/罚款遗失单件政策数据的简单实体类型。",
+    "fqm.entityType.manual_block_templates._description": "用于费用/罚款人工冻结模板数据的简单实体类型。",
+    "fqm.entityType.manual_blocks._description": "用于费用/罚款人工冻结数据的简单实体类型。",
+    "fqm.entityType.overdue_fine_policies._description": "用于费用/罚款逾期罚款政策的简单实体类型。",
+    "fqm.entityType.owners._description": "用于费用/罚款缴费处数据的简单实体类型。",
+    "fqm.entityType.payments._description": "用于费用/罚款支付数据的简单实体类型。",
+    "fqm.entityType.refunds._description": "用于费用/罚款退款数据的简单实体类型。",
+    "fqm.entityType.transfers._description": "用于费用/罚款转移数据的简单实体类型。",
+    "fqm.entityType.waives._description": "用于费用/罚款豁免数据的简单实体类型。"
 }
