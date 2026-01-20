@@ -9,7 +9,7 @@ table = "accounts"
 
 [[entityTypes]]
 name = "accounts"
-private = true
+private = false
 schema = "./ramls/accountdata.json"
 permissions = ["accounts.collection.get"]
 source = "accounts"
@@ -29,7 +29,7 @@ table = "comments"
 
 [[entityTypes]]
 name = "comment_requirements"
-private = true
+private = false
 schema = "./ramls/commentdata.json"
 permissions = ["comments.collection.get"]
 source = "comments"
@@ -46,7 +46,7 @@ table = "feefineactions"
 
 [[entityTypes]]
 name = "feefine_actions"
-private = true
+private = false
 schema = "./ramls/feefineactiondata.json"
 permissions = ["feefineactions.collection.get"]
 source = "feefineactions"
@@ -59,7 +59,7 @@ table = "feefines"
 
 [[entityTypes]]
 name = "feefines"
-private = true
+private = false
 schema = "./ramls/feefinedata.json"
 permissions = ["feefines.collection.get"]
 source = "feefines"
@@ -77,7 +77,7 @@ table = "lost_item_fee_policy"
 
 [[entityTypes]]
 name = "lost_item_fee_policy"
-private = true
+private = false
 schema = "./ramls/lost-item-fee-policy.json"
 permissions = ["lost-item-fees-policies.collection.get"]
 source = "lost_item_fee_policy"
@@ -95,7 +95,7 @@ table = "manual_block_templates"
 
 [[entityTypes]]
 name = "manual_block_templates"
-private = true
+private = false
 schema = "./ramls/manual-block-template.json"
 permissions = ["manual-block-templates.collection.get"]
 source = "manual_block_templates"
@@ -113,7 +113,7 @@ table = "manualblocks"
 
 [[entityTypes]]
 name = "manual_blocks"
-private = true
+private = false
 schema = "./ramls/manualblockdata.json"
 permissions = ["manualblocks.collection.get"]
 source = "manualblocks"
@@ -131,7 +131,7 @@ table = "overdue_fine_policy"
 
 [[entityTypes]]
 name = "overdue_fine_policies"
-private = true
+private = false
 schema = "./ramls/overdue-fine-policy.json"
 permissions = ["overdue-fines-policies.collection.get"]
 source = "overdue_fine_policy"
@@ -149,7 +149,7 @@ table = "owners"
 
 [[entityTypes]]
 name = "owners"
-private = true
+private = false
 schema = "./ramls/ownerdata.json"
 permissions = ["owners.collection.get"]
 source = "owners"
@@ -166,7 +166,7 @@ table = "payments"
 
 [[entityTypes]]
 name = "payments"
-private = true
+private = false
 schema = "./ramls/paymentdata.json"
 permissions = ["payments.collection.get"]
 source = "payments"
@@ -183,7 +183,7 @@ table = "refunds"
 
 [[entityTypes]]
 name = "refunds"
-private = true
+private = false
 schema = "./ramls/refunddata.json"
 permissions = ["refunds.collection.get"]
 source = "refunds"
@@ -200,7 +200,7 @@ table = "transfers"
 
 [[entityTypes]]
 name = "transfers"
-private = true
+private = false
 schema = "./ramls/transferdata.json"
 permissions = ["transfers.collection.get"]
 source = "transfers"
@@ -217,7 +217,7 @@ table = "waives"
 
 [[entityTypes]]
 name = "waives"
-private = true
+private = false
 schema = "./ramls/waivedata.json"
 permissions = ["waives.collection.get"]
 source = "waives"
