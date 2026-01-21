@@ -6,11 +6,13 @@
   "properties": {
     "name": {
       "description": "Lost item fee policy name, is a required field",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true
     },
     "description": {
       "description": "Lost item fee policy description",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true
     },
     "itemAgedLostOverdue": {
       "description": "Items aged to lost after overdue entered, must be 0 or > 0 and, if > 0 must have interval selected",
@@ -40,7 +42,8 @@
     "lostItemProcessingFee": {
       "description": "Lost item processing fee, must be = 0 or > 0",
       "javaType": "org.folio.rest.domain.MonetaryValue",
-      "type": "number"
+      "type": "number",
+      "x-fqm-visible-by-default": true
     },
     "chargeAmountItemPatron": {
       "description": "A flag to determine charge lost item processing fee if item declared lost by patron must be Yes or No, with default set to Yes",
@@ -61,12 +64,14 @@
     },
     "replacedLostItemProcessingFee": {
       "description": "A flag to determine if lost item replaced, remove lost item processing fee",
-      "type": "boolean"
+      "type": "boolean",
+      "x-fqm-visible-by-default": true
     },
     "replacementProcessingFee": {
       "description": "Amount for replacement process fee",
       "javaType": "org.folio.rest.domain.MonetaryValue",
-      "type": "number"
+      "type": "number",
+      "x-fqm-visible-by-default": true
     },
     "replacementAllowed": {
       "description": "A flag to determine replacement allowed",
