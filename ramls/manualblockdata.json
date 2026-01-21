@@ -10,11 +10,15 @@
     },
     "desc": {
       "description": "Patron block description",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "code": {
       "description": "Code of the template if block is defined based on a template (optional)",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "staffInformation": {
       "description": "Additional information to staff (optional)",
@@ -31,15 +35,18 @@
     },
     "borrowing": {
       "description": "A flag to determine borrowing block action",
-      "type": "boolean"
+      "type": "boolean",
+      "x-fqm-essential": true
     },
     "renewals": {
       "description": "A flag to determine renewal block action",
-      "type": "boolean"
+      "type": "boolean",
+      "x-fqm-essential": true
     },
     "requests": {
       "description": "A flag to determine request block action",
-      "type": "boolean"
+      "type": "boolean",
+      "x-fqm-essential": true
     },
     "userId": {
       "description": "ID of the user",
