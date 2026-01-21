@@ -6,7 +6,9 @@
   "properties": {
     "accountName": {
       "description": "Transfer account name",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "desc": {
       "description": "Transfer account description",
@@ -19,7 +21,9 @@
     },
     "ownerId": {
       "description": "ID of the owner",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "id": {
       "description": "Transfer account id, UUID",
