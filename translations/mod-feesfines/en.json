@@ -72,7 +72,7 @@
   "fqm.entityType.feefines.default_amount": "Default amount",
   "fqm.entityType.feefines.charge_notice_id": "Charge notice UUID",
   "fqm.entityType.feefines.action_notice_id": "Action notice UUID",
-  "fqm.entityType.feefines.owner_id": "Owner UUID",
+  "fqm.entityType.feefines.owner_id": "Fee/fine owner",
   "fqm.entityType.feefines.metadata_created_date": "Created at",
   "fqm.entityType.feefines.metadata_created_by_user_id": "Created by user UUID",
   "fqm.entityType.feefines.metadata_updated_date": "Updated at",
