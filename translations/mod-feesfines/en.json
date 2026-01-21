@@ -229,7 +229,7 @@
   "fqm.entityType.transfers.metadata_created_by_user_id": "Created by user UUID",
   "fqm.entityType.transfers.metadata_updated_date": "Updated at",
   "fqm.entityType.transfers.metadata_updated_by_user_id": "Updated by user UUID",
-  "fqm.entityType.transfers.owner_id": "Owner UUID",
+  "fqm.entityType.transfers.owner_id": "Fee/fine owner UUID",
   "fqm.entityType.transfers.id": "UUID",
   "fqm.entityType.transfers.jsonb": "JSONB",
   "fqm.entityType.waives": "Fee/fine waives",
