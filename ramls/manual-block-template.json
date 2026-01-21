@@ -6,11 +6,13 @@
   "properties": {
     "name": {
       "description": "Name of the template",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true
     },
     "code": {
       "description": "Code of the template. Can be a shorthand of the name (e.g. an acronym).",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visibility": "results-only"
     },
     "desc": {
       "description": "Description of this template",
@@ -26,19 +28,26 @@
         },
         "patronMessage": {
           "description": "Message to patron (optional)",
-          "type": "string"
+          "type": "string",
+          "x-fqm-visibility": "results-only"
         },
         "borrowing": {
           "description": "A flag to determine borrowing block action",
-          "type": "boolean"
+          "type": "boolean",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-essential": true
         },
         "renewals": {
           "description": "A flag to determine renewal block action",
-          "type": "boolean"
+          "type": "boolean",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-essential": true
         },
         "requests": {
           "description": "A flag to determine request block action",
-          "type": "boolean"
+          "type": "boolean",
+          "x-fqm-visible-by-default": true,
+          "x-fqm-essential": true
         }
       }
     },
@@ -49,7 +58,8 @@
     },
     "id": {
       "description": "Template id, UUID",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true
     }
   },
   "additionalProperties": false,

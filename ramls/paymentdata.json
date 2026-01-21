@@ -6,11 +6,14 @@
   "properties": {
     "nameMethod": {
       "description": "Payment method name",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true
     },
     "allowedRefundMethod": {
       "description": "A flag to determine if refund method is allowed default at 'Yes'",
-      "type": "boolean"
+      "type": "boolean",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "metadata": {
       "description": "Metadata about creation to payment method, provided by the server",
@@ -19,7 +22,9 @@
     },
     "ownerId": {
       "description": "ID of the owner",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "id": {
       "description": "Payment method id, UUID",

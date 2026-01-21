@@ -148,6 +148,12 @@ fieldExclusions = [
   "metadata_updated_by_username",
 ]
 
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-essential = true
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-essential = true
+
 [[sources]]
 name = "manualblocks"
 table = "manualblocks"
@@ -246,6 +252,18 @@ fieldExclusions = [
   "metadata_created_by_username",
   "metadata_updated_by_username",
 ]
+
+[entityTypes.fieldOverrides.metadata_created_date]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_updated_date]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-visible-by-default = true
 
 [[sources]]
 name = "refunds"
