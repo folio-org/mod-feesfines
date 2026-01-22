@@ -100,9 +100,7 @@ x-fqm-joins-to-raw = [
   { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
   { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
 ]
-
-# workaround key to keep parser happy
-__end = true
+x-fqm-visible-by-default = false
 
 [[sources]]
 name = "lost_item_fee_policy"
