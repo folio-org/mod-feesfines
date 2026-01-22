@@ -178,15 +178,39 @@
       "description": "ID of the materialType",
       "$ref": "raml-util/schemas/uuid.schema",
       "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true
+      "x-fqm-essential": true,
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "8b1f51d6-8795-4113-a72e-3b7dc6cc6dfe",
+          "targetField": "id",
+          "direction": "left",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "feeFineId": {
       "description": "ID of the fee/fine",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "feefines",
+          "targetField": "id",
+          "direction": "left"
+        }
+      ]
     },
     "ownerId": {
       "description": "ID of the owner",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "owners",
+          "targetField": "id",
+          "direction": "left"
+        }
+      ]
     },
     "id": {
       "description": "User fine/fee account id, UUID",
@@ -195,12 +219,28 @@
     "holdingsRecordId": {
       "description": "Item field: item.holdingsRecordId",
       "$ref": "raml-util/schemas/uuid.schema",
-      "readonly": true
+      "readonly": true,
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "30a5cfad-1868-4f46-86b9-a6ef67e2d9bf",
+          "targetField": "id",
+          "direction": "left",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "instanceId": {
       "description": "Holdings record field: holdingsRecord.instanceId",
       "$ref": "raml-util/schemas/uuid.schema",
-      "readonly": true
+      "readonly": true,
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "8fc4a9d2-7ccf-4233-afb8-796911839862",
+          "targetField": "id",
+          "direction": "left",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "contributors": {
       "type": "array",
@@ -228,7 +268,15 @@
     },
     "overdueFinePolicyId": {
       "description": "Overdue fine policy ID",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "overdue_fine_policies",
+          "targetField": "id",
+          "direction": "left"
+        }
+      ]
     },
     "lostItemFeePolicyId": {
       "description": "Lost item fee policy ID",
