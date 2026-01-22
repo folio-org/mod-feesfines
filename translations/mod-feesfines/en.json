@@ -30,7 +30,7 @@
   "fqm.entityType.accounts.instance_id": "Instance UUID",
   "fqm.entityType.accounts.contributors": "Contributors",
   "fqm.entityType.accounts.contributors.name": "Name",
-  "fqm.entityType.accounts.contributors.name._qualified": "Contributors name",
+  "fqm.entityType.accounts.contributors.name._qualified": "Contributors — Name",
   "fqm.entityType.accounts.loan_policy_id": "Loan policy UUID",
   "fqm.entityType.accounts.overdue_fine_policy_id": "Overdue fine policy UUID",
   "fqm.entityType.accounts.lost_item_fee_policy_id": "Lost item fee policy UUID",

@@ -23,6 +23,16 @@ fieldExclusions = [
   "metadata_updated_by_username",
 ]
 
+[entityTypes.fieldOverrides.metadata_created_date]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-joins-to-raw = [
+  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
+  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
+]
+x-fqm-visible-by-default = true
+
 [[sources]]
 name = "comments"
 table = "comments"
