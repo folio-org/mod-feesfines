@@ -7,12 +7,15 @@
     "amount": {
       "description": "Amount of the fine/fee",
       "javaType": "org.folio.rest.domain.MonetaryValue",
-      "type": "number"
+      "type": "number",
+      "x-fqm-visible-by-default": true
     },
     "remaining": {
       "description": "Remaining of the fine/fee",
       "javaType": "org.folio.rest.domain.MonetaryValue",
-      "type": "number"
+      "type": "number",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "dateCreated": {
       "description": "Date and time the account of the fine/fee was created",
@@ -31,6 +34,7 @@
         "name": {
           "description": "Name of the status (values used are Open and Closed)",
           "type": "string",
+          "x-fqm-visible-by-default": true,
           "x-fqm-values": [
             { "value": "Open", "label": "Open" },
             { "value": "Closed", "label": "Closed" }
@@ -48,7 +52,8 @@
         "name": {
           "description": "Name of the status",
           "enum": ["Outstanding", "Paid partially", "Paid fully", "Waived partially", "Waived fully", "Transferred partially", "Transferred fully", "Refunded partially", "Refunded fully", "Credited fully", "Credited partially", "Cancelled item returned", "Cancelled item renewed", "Cancelled item declared lost", "Cancelled as error", "Suspended claim returned"],
-          "type": "string"
+          "type": "string",
+          "x-fqm-visible-by-default": true
         }
       },
       "required": [
@@ -57,15 +62,20 @@
     },
     "feeFineType": {
       "description": "Fee/fine that is up to the desecration of the user",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "feeFineOwner": {
       "description": "Owner of the fee/fine defined by the library and is associated with specific fees/fines",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "title": {
       "description": "The title associated with the item",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true
     },
     "callNumber": {
       "description": "Identifier (Call number) assigned to an item",
@@ -73,11 +83,14 @@
     },
     "barcode": {
       "description": "Text, with input likely validated by the barcode scanner",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "materialType": {
       "description": "Material type what define what type of thing the item is",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visibility": "hidden"
     },
     "itemStatus": {
       "description": "The status of the item",
@@ -85,7 +98,8 @@
       "properties": {
         "name": {
           "description": "Name of the item state",
-          "type": "string"
+          "type": "string",
+          "x-fqm-visibility": "results-only"
         }
       },
       "required": [
@@ -94,7 +108,9 @@
     },
     "location": {
       "description": "Effective location is used to know the current home location for the item",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "metadata": {
       "description": "Metadata about creation to user fine/fee account, provided by the server",
@@ -104,16 +120,20 @@
     "dueDate": {
       "description": "Date time when the item is due to be returned",
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "x-fqm-visible-by-default": true
     },
     "returnedDate": {
       "description": "Date time when the item is returned and the loan ends, if the user does not have a loan associated, hyphen (-) is added as default",
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "loanId": {
       "description": "ID of the loan",
       "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-visibility": "results-only",
       "x-fqm-joins-to-raw": [
         {
           "targetId": "00349126-c923-4045-a29f-3b6db4c6bea9",
@@ -126,6 +146,7 @@
     "userId": {
       "description": "ID of the user",
       "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true,
       "x-fqm-joins-to-raw": [
         {
           "targetId": "bb058933-cd06-4539-bd3a-6f248ff98ee2",
@@ -155,15 +176,41 @@
     },
     "materialTypeId": {
       "description": "ID of the materialType",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true,
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "8b1f51d6-8795-4113-a72e-3b7dc6cc6dfe",
+          "targetField": "id",
+          "direction": "left",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "feeFineId": {
       "description": "ID of the fee/fine",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "feefines",
+          "targetField": "id",
+          "direction": "left"
+        }
+      ]
     },
     "ownerId": {
       "description": "ID of the owner",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "owners",
+          "targetField": "id",
+          "direction": "left"
+        }
+      ]
     },
     "id": {
       "description": "User fine/fee account id, UUID",
@@ -172,12 +219,28 @@
     "holdingsRecordId": {
       "description": "Item field: item.holdingsRecordId",
       "$ref": "raml-util/schemas/uuid.schema",
-      "readonly": true
+      "readonly": true,
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "30a5cfad-1868-4f46-86b9-a6ef67e2d9bf",
+          "targetField": "id",
+          "direction": "left",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "instanceId": {
       "description": "Holdings record field: holdingsRecord.instanceId",
       "$ref": "raml-util/schemas/uuid.schema",
-      "readonly": true
+      "readonly": true,
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "8fc4a9d2-7ccf-4233-afb8-796911839862",
+          "targetField": "id",
+          "direction": "left",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "contributors": {
       "type": "array",
@@ -200,11 +263,20 @@
     },
     "loanPolicyId": {
       "description": "Loan policy ID",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-visibility": "hidden"
     },
     "overdueFinePolicyId": {
       "description": "Overdue fine policy ID",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "overdue_fine_policies",
+          "targetField": "id",
+          "direction": "left"
+        }
+      ]
     },
     "lostItemFeePolicyId": {
       "description": "Lost item fee policy ID",
@@ -212,7 +284,8 @@
     },
     "processId": {
       "description": "Randomly generated UUID added to fees/fines created in scope of the same process (e.g. same check-in or same scheduled Lost Item Fee generation job run)",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-visibility": "hidden-non-queryable"
     }
   },
   "additionalProperties": false,

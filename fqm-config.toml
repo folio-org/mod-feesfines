@@ -9,7 +9,7 @@ table = "accounts"
 
 [[entityTypes]]
 name = "accounts"
-private = true
+private = false
 schema = "./ramls/accountdata.json"
 permissions = ["accounts.collection.get"]
 source = "accounts"
@@ -23,13 +23,23 @@ fieldExclusions = [
   "metadata_updated_by_username",
 ]
 
+[entityTypes.fieldOverrides.metadata_created_date]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-joins-to-raw = [
+  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
+  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
+]
+x-fqm-visible-by-default = true
+
 [[sources]]
 name = "comments"
 table = "comments"
 
 [[entityTypes]]
 name = "comment_requirements"
-private = true
+private = false
 schema = "./ramls/commentdata.json"
 permissions = ["comments.collection.get"]
 source = "comments"
@@ -39,6 +49,14 @@ fieldExclusions = [
   "metadata_created_by_username",
   "metadata_updated_by_username",
 ]
+[entityTypes.fieldOverrides.metadata_created_date]
+x-fqm-visibility = 'hidden-non-queryable'
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-visibility = 'hidden-non-queryable'
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-visibility = 'hidden-non-queryable'
 
 [[sources]]
 name = "feefineactions"
@@ -46,7 +64,7 @@ table = "feefineactions"
 
 [[entityTypes]]
 name = "feefine_actions"
-private = true
+private = false
 schema = "./ramls/feefineactiondata.json"
 permissions = ["feefineactions.collection.get"]
 source = "feefineactions"
@@ -59,7 +77,7 @@ table = "feefines"
 
 [[entityTypes]]
 name = "feefines"
-private = true
+private = false
 schema = "./ramls/feefinedata.json"
 permissions = ["feefines.collection.get"]
 source = "feefines"
@@ -71,13 +89,26 @@ fieldExclusions = [
   "metadata_updated_by_username",
 ]
 
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-joins-to-raw = [
+  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
+  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
+]
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-joins-to-raw = [
+  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
+  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
+]
+x-fqm-visible-by-default = false
+
 [[sources]]
 name = "lost_item_fee_policy"
 table = "lost_item_fee_policy"
 
 [[entityTypes]]
 name = "lost_item_fee_policy"
-private = true
+private = false
 schema = "./ramls/lost-item-fee-policy.json"
 permissions = ["lost-item-fees-policies.collection.get"]
 source = "lost_item_fee_policy"
@@ -89,13 +120,46 @@ fieldExclusions = [
   "metadata_updated_by_username",
 ]
 
+[entityTypes.fieldOverrides.charge_amount_item_amount]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.description]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-joins-to-raw = [
+  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
+  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
+]
+x-fqm-visibility = 'hidden-non-queryable'
+
+[entityTypes.fieldOverrides.metadata_updated_date]
+x-fqm-visibility = 'hidden-non-queryable'
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-joins-to-raw = [
+  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
+  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
+]
+x-fqm-visibility = 'hidden-non-queryable'
+
+[entityTypes.fieldOverrides.patron_billed_after_aged_lost_interval_id]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.patron_billed_after_recalled_item_aged_lost_duration]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.returned_lost_item_processing_fee]
+x-fqm-visible-by-default = true
+
+
 [[sources]]
 name = "manual_block_templates"
 table = "manual_block_templates"
 
 [[entityTypes]]
 name = "manual_block_templates"
-private = true
+private = false
 schema = "./ramls/manual-block-template.json"
 permissions = ["manual-block-templates.collection.get"]
 source = "manual_block_templates"
@@ -107,13 +171,19 @@ fieldExclusions = [
   "metadata_updated_by_username",
 ]
 
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-essential = true
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-essential = true
+
 [[sources]]
 name = "manualblocks"
 table = "manualblocks"
 
 [[entityTypes]]
 name = "manual_blocks"
-private = true
+private = false
 schema = "./ramls/manualblockdata.json"
 permissions = ["manualblocks.collection.get"]
 source = "manualblocks"
@@ -125,13 +195,42 @@ fieldExclusions = [
   "metadata_updated_by_username",
 ]
 
+[entityTypes.fieldOverrides.id]
+x-fqm-visibility = "hidden-non-queryable"
+
+[entityTypes.fieldOverrides.user_id]
+x-fqm-joins-to-raw = [
+  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
+  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
+]
+
+[entityTypes.fieldOverrides.metadata_created_date]
+x-fqm-visibility = "hidden-non-queryable"
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-joins-to-raw = [
+  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
+  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
+]
+x-fqm-visibility = "hidden-non-queryable"
+
+[entityTypes.fieldOverrides.metadata_updated_date]
+x-fqm-visibility = "hidden-non-queryable"
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-joins-to-raw = [
+  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'}, # simple_user
+  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left'} # simple_FOLIO_user
+]
+x-fqm-visibility = "hidden-non-queryable"
+
 [[sources]]
 name = "overdue_fine_policy"
 table = "overdue_fine_policy"
 
 [[entityTypes]]
 name = "overdue_fine_policies"
-private = true
+private = false
 schema = "./ramls/overdue-fine-policy.json"
 permissions = ["overdue-fines-policies.collection.get"]
 source = "overdue_fine_policy"
@@ -149,7 +248,7 @@ table = "owners"
 
 [[entityTypes]]
 name = "owners"
-private = true
+private = false
 schema = "./ramls/ownerdata.json"
 permissions = ["owners.collection.get"]
 source = "owners"
@@ -166,7 +265,7 @@ table = "payments"
 
 [[entityTypes]]
 name = "payments"
-private = true
+private = false
 schema = "./ramls/paymentdata.json"
 permissions = ["payments.collection.get"]
 source = "payments"
@@ -177,13 +276,25 @@ fieldExclusions = [
   "metadata_updated_by_username",
 ]
 
+[entityTypes.fieldOverrides.metadata_created_date]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_updated_date]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-visible-by-default = true
+
 [[sources]]
 name = "refunds"
 table = "refunds"
 
 [[entityTypes]]
 name = "refunds"
-private = true
+private = false
 schema = "./ramls/refunddata.json"
 permissions = ["refunds.collection.get"]
 source = "refunds"
@@ -200,7 +311,7 @@ table = "transfers"
 
 [[entityTypes]]
 name = "transfers"
-private = true
+private = false
 schema = "./ramls/transferdata.json"
 permissions = ["transfers.collection.get"]
 source = "transfers"
@@ -211,13 +322,25 @@ fieldExclusions = [
   "metadata_updated_by_username",
 ]
 
+[entityTypes.fieldOverrides.metadata_created_date]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_created_by_user_id]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_updated_date]
+x-fqm-visible-by-default = true
+
+[entityTypes.fieldOverrides.metadata_updated_by_user_id]
+x-fqm-visible-by-default = true
+
 [[sources]]
 name = "waives"
 table = "waives"
 
 [[entityTypes]]
 name = "waives"
-private = true
+private = false
 schema = "./ramls/waivedata.json"
 permissions = ["waives.collection.get"]
 source = "waives"

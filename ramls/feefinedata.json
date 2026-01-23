@@ -7,16 +7,21 @@
     "automatic": {
       "description": "A flag to indicate that fee/fine was created automatically.",
       "type": "boolean",
-      "default": false
+      "default": false,
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "feeFineType": {
       "description": "Description of fee/fine that is up to the discretion of the user",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "defaultAmount": {
       "description": "Amount of fee or fine, which may be overridden. ",
       "javaType": "org.folio.rest.domain.MonetaryValue",
-      "type": "number"
+      "type": "number",
+      "x-fqm-visible-by-default": true
     },
     "chargeNoticeId": {
       "description": "ID of the charge notice template",
@@ -28,7 +33,17 @@
     },
     "ownerId": {
       "description": "ID of the owner",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true,
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "owners",
+          "targetField": "id",
+          "direction": "left"
+        }
+      ]
     },
     "metadata" : {
       "description": "Metadata about creation to fee/fine, provided by the server",

@@ -6,7 +6,8 @@
   "properties": {
     "owner": {
       "description": "Service desk (known as a fee/fine owner) is library-defined and is associated with specific fees/fines",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true
     },
     "desc": {
       "description": "Owner description",
