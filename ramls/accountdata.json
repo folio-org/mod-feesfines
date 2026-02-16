@@ -214,7 +214,8 @@
     },
     "id": {
       "description": "User fine/fee account id, UUID",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true
     },
     "holdingsRecordId": {
       "description": "Item field: item.holdingsRecordId",
