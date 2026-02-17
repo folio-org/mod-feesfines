@@ -8,7 +8,8 @@
       "description": "Amount of the fine/fee",
       "javaType": "org.folio.rest.domain.MonetaryValue",
       "type": "number",
-      "x-fqm-visible-by-default": true
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "remaining": {
       "description": "Remaining of the fine/fee",
@@ -102,9 +103,7 @@
           "x-fqm-visibility": "results-only"
         }
       },
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "location": {
       "description": "Effective location is used to know the current home location for the item",
@@ -115,7 +114,7 @@
     "metadata": {
       "description": "Metadata about creation to user fine/fee account, provided by the server",
       "type": "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "dueDate": {
       "description": "Date time when the item is due to be returned",
