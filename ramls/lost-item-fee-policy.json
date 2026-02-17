@@ -89,7 +89,7 @@
     "metadata": {
       "description": "Metadata about creation to lost item fee policy, provided by the server",
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "id": {
       "description": "Lost item fee policy id, UUID",
