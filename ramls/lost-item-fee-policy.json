@@ -9,6 +9,11 @@
       "type": "string",
       "x-fqm-visible-by-default": true
     },
+    "description": {
+      "description": "Lost item fee policy description",
+      "type": "string",
+      "x-fqm-visible-by-default": true
+    },
     "itemAgedLostOverdue": {
       "description": "Items aged to lost after overdue entered, must be 0 or > 0 and, if > 0 must have interval selected",
       "type": "object",
@@ -84,7 +89,7 @@
     "metadata": {
       "description": "Metadata about creation to lost item fee policy, provided by the server",
       "type": "object",
-      "$ref": "metadata.json"
+      "$ref": "raml-util/schemas/metadata.schema"
     },
     "id": {
       "description": "Lost item fee policy id, UUID",
@@ -92,5 +97,7 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name"]
+  "required": [
+    "name"
+  ]
 }

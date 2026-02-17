@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema" : "http://json-schema.org/draft-04/schema#",
   "title": "Refund Reasons schema",
   "description": "CRUD Fee/Fine Refund Reasons",
   "type": "object",
@@ -15,7 +15,7 @@
     "metadata": {
       "description": "Metadata about creation to refund reason, provided by the server",
       "type": "object",
-      "$ref": "metadata.json"
+      "$ref" : "raml-util/schemas/metadata.schema"
     },
     "accountId": {
       "description": "ID of the User fine/fee account",
@@ -27,5 +27,7 @@
     }
   },
   "additionalProperties": false,
-  "required": ["nameReason"]
+  "required": [
+    "nameReason"
+  ]
 }

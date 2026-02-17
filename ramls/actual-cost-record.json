@@ -11,7 +11,10 @@
     "lossType": {
       "description": "Type of the item loss",
       "type": "string",
-      "enum": ["Aged to lost", "Declared lost"]
+      "enum": [
+        "Aged to lost",
+        "Declared lost"
+      ]
     },
     "lossDate": {
       "description": "Date and time when the item was lost",
@@ -268,7 +271,12 @@
     "status": {
       "description": "Status of the actual cost record",
       "type": "string",
-      "enum": ["Open", "Billed", "Cancelled", "Expired"],
+      "enum": [
+        "Open",
+        "Billed",
+        "Cancelled",
+        "Expired"
+      ],
       "default": "Open"
     },
     "additionalInfoForStaff": {
@@ -282,7 +290,7 @@
     "metadata": {
       "description": "Metadata about creation and changes, provided by the server (client should not provide)",
       "type": "object",
-      "$ref": "metadata.json"
+      "$ref": "raml-util/schemas/metadata.schema"
     }
   },
   "additionalProperties": true

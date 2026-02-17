@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema" : "http://json-schema.org/draft-04/schema#",
   "title": "Account schema",
   "description": "User fines/fees account",
   "type": "object",
@@ -8,8 +8,7 @@
       "description": "Amount of the fine/fee",
       "javaType": "org.folio.rest.domain.MonetaryValue",
       "type": "number",
-      "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true
+      "x-fqm-visible-by-default": true
     },
     "remaining": {
       "description": "Remaining of the fine/fee",
@@ -42,7 +41,9 @@
           ]
         }
       },
-      "required": ["name"]
+      "required": [
+        "name"
+      ]
     },
     "paymentStatus": {
       "description": "Overall status of the payment/waive/transfer/refund/cancel",
@@ -50,29 +51,14 @@
       "properties": {
         "name": {
           "description": "Name of the status",
-          "enum": [
-            "Outstanding",
-            "Paid partially",
-            "Paid fully",
-            "Waived partially",
-            "Waived fully",
-            "Transferred partially",
-            "Transferred fully",
-            "Refunded partially",
-            "Refunded fully",
-            "Credited fully",
-            "Credited partially",
-            "Cancelled item returned",
-            "Cancelled item renewed",
-            "Cancelled item declared lost",
-            "Cancelled as error",
-            "Suspended claim returned"
-          ],
+          "enum": ["Outstanding", "Paid partially", "Paid fully", "Waived partially", "Waived fully", "Transferred partially", "Transferred fully", "Refunded partially", "Refunded fully", "Credited fully", "Credited partially", "Cancelled item returned", "Cancelled item renewed", "Cancelled item declared lost", "Cancelled as error", "Suspended claim returned"],
           "type": "string",
           "x-fqm-visible-by-default": true
         }
       },
-      "required": ["name"]
+      "required": [
+        "name"
+      ]
     },
     "feeFineType": {
       "description": "Fee/fine that is up to the desecration of the user",
@@ -116,7 +102,9 @@
           "x-fqm-visibility": "results-only"
         }
       },
-      "required": ["name"]
+      "required": [
+        "name"
+      ]
     },
     "location": {
       "description": "Effective location is used to know the current home location for the item",
@@ -127,7 +115,7 @@
     "metadata": {
       "description": "Metadata about creation to user fine/fee account, provided by the server",
       "type": "object",
-      "$ref": "metadata.json"
+      "$ref" : "raml-util/schemas/metadata.schema"
     },
     "dueDate": {
       "description": "Date time when the item is due to be returned",
@@ -269,7 +257,9 @@
           }
         },
         "additionalProperties": false,
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       }
     },
     "loanPolicyId": {
@@ -300,5 +290,13 @@
     }
   },
   "additionalProperties": false,
-  "required": ["amount", "remaining", "status", "paymentStatus", "userId", "feeFineId", "ownerId"]
+  "required": [
+    "amount",
+    "remaining",
+    "status",
+    "paymentStatus",
+    "userId",
+    "feeFineId",
+    "ownerId"
+   ]
 }

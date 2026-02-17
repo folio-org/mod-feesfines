@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema" : "http://json-schema.org/draft-04/schema#",
   "title": "CRUD Fee/Fine Transfer Accounts Settings schema",
   "description": "Allows Fee/Fine Owner to identify accepted locations to which fees/fines are transferred",
   "type": "object",
@@ -17,7 +17,7 @@
     "metadata": {
       "description": "Metadata about creation to transfer account, provided by the server",
       "type": "object",
-      "$ref": "metadata.json"
+      "$ref" : "raml-util/schemas/metadata.schema"
     },
     "ownerId": {
       "description": "ID of the owner",
@@ -31,5 +31,7 @@
     }
   },
   "additionalProperties": false,
-  "required": ["accountName"]
+  "required": [
+    "accountName"
+  ]
 }

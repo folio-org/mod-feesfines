@@ -21,9 +21,11 @@
       "type": "integer"
     },
     "metadata": {
-      "$ref": "metadata.json",
+      "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true
     }
   },
-  "required": ["group"]
+  "required": [
+    "group"
+  ]
 }
