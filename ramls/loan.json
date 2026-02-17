@@ -116,7 +116,7 @@
     "metadata": {
       "description": "Metadata about creation and changes to loan, provided by the server (client should not provide)",
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "agedToLostDelayedBilling": {
       "description": "Aged to Lost Delayed Billing processing",

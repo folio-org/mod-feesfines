@@ -7,7 +7,8 @@
     "owner": {
       "description": "Service desk (known as a fee/fine owner) is library-defined and is associated with specific fees/fines",
       "type": "string",
-      "x-fqm-visible-by-default": true
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "desc": {
       "description": "Owner description",
@@ -44,7 +45,7 @@
     "metadata" : {
       "description": "Metadata about creation to owner, provided by the server",
       "type" : "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "$ref" : "metadata.json"
     },
     "id": {
       "description": "Owner id, UUID",

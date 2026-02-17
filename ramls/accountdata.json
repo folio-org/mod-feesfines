@@ -1,5 +1,5 @@
 {
-  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Account schema",
   "description": "User fines/fees account",
   "type": "object",
@@ -8,7 +8,8 @@
       "description": "Amount of the fine/fee",
       "javaType": "org.folio.rest.domain.MonetaryValue",
       "type": "number",
-      "x-fqm-visible-by-default": true
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "remaining": {
       "description": "Remaining of the fine/fee",
@@ -35,15 +36,14 @@
           "description": "Name of the status (values used are Open and Closed)",
           "type": "string",
           "x-fqm-visible-by-default": true,
+          "x-fqm-essential": true,
           "x-fqm-values": [
             { "value": "Open", "label": "Open" },
             { "value": "Closed", "label": "Closed" }
           ]
         }
       },
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "paymentStatus": {
       "description": "Overall status of the payment/waive/transfer/refund/cancel",
@@ -51,14 +51,30 @@
       "properties": {
         "name": {
           "description": "Name of the status",
-          "enum": ["Outstanding", "Paid partially", "Paid fully", "Waived partially", "Waived fully", "Transferred partially", "Transferred fully", "Refunded partially", "Refunded fully", "Credited fully", "Credited partially", "Cancelled item returned", "Cancelled item renewed", "Cancelled item declared lost", "Cancelled as error", "Suspended claim returned"],
+          "enum": [
+            "Outstanding",
+            "Paid partially",
+            "Paid fully",
+            "Waived partially",
+            "Waived fully",
+            "Transferred partially",
+            "Transferred fully",
+            "Refunded partially",
+            "Refunded fully",
+            "Credited fully",
+            "Credited partially",
+            "Cancelled item returned",
+            "Cancelled item renewed",
+            "Cancelled item declared lost",
+            "Cancelled as error",
+            "Suspended claim returned"
+          ],
           "type": "string",
-          "x-fqm-visible-by-default": true
+          "x-fqm-visible-by-default": true,
+          "x-fqm-essential": true
         }
       },
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "feeFineType": {
       "description": "Fee/fine that is up to the desecration of the user",
@@ -90,21 +106,22 @@
     "materialType": {
       "description": "Material type what define what type of thing the item is",
       "type": "string",
-      "x-fqm-visibility": "hidden"
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "itemStatus": {
       "description": "The status of the item",
       "type": "object",
+      "x-fqm-ignore": true,
       "properties": {
         "name": {
           "description": "Name of the item state",
           "type": "string",
+          "x-fqm-ignore": true,
           "x-fqm-visibility": "results-only"
         }
       },
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "location": {
       "description": "Effective location is used to know the current home location for the item",
@@ -115,13 +132,14 @@
     "metadata": {
       "description": "Metadata about creation to user fine/fee account, provided by the server",
       "type": "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "dueDate": {
       "description": "Date time when the item is due to be returned",
       "type": "string",
       "format": "date-time",
-      "x-fqm-visible-by-default": true
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "returnedDate": {
       "description": "Date time when the item is returned and the loan ends, if the user does not have a loan associated, hyphen (-) is added as default",
@@ -177,8 +195,6 @@
     "materialTypeId": {
       "description": "ID of the materialType",
       "$ref": "raml-util/schemas/uuid.schema",
-      "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true,
       "x-fqm-joins-to-raw": [
         {
           "targetId": "8b1f51d6-8795-4113-a72e-3b7dc6cc6dfe",
@@ -221,6 +237,7 @@
       "description": "Item field: item.holdingsRecordId",
       "$ref": "raml-util/schemas/uuid.schema",
       "readonly": true,
+      "x-fqm-ignore": true,
       "x-fqm-joins-to-raw": [
         {
           "targetId": "30a5cfad-1868-4f46-86b9-a6ef67e2d9bf",
@@ -234,6 +251,7 @@
       "description": "Holdings record field: holdingsRecord.instanceId",
       "$ref": "raml-util/schemas/uuid.schema",
       "readonly": true,
+      "x-fqm-ignore": true,
       "x-fqm-joins-to-raw": [
         {
           "targetId": "8fc4a9d2-7ccf-4233-afb8-796911839862",
@@ -253,19 +271,27 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Personal name, corporate name, meeting name"
+            "description": "Personal name, corporate name, meeting name",
+            "x-fqm-visibility": "hidden"
           }
         },
         "additionalProperties": false,
-        "required": [
-          "name"
-        ]
-      }
+        "required": ["name"]
+      },
+      "x-fqm-visibility": "hidden"
     },
     "loanPolicyId": {
       "description": "Loan policy ID",
       "$ref": "raml-util/schemas/uuid.schema",
-      "x-fqm-visibility": "hidden"
+      "x-fqm-visibility": "hidden",
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "64d7b5fb-2ead-444c-a9bd-b9db831f4132",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        }
+      ]
     },
     "overdueFinePolicyId": {
       "description": "Overdue fine policy ID",
@@ -281,7 +307,15 @@
     },
     "lostItemFeePolicyId": {
       "description": "Lost item fee policy ID",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "lost_item_fee_policy",
+          "targetField": "id",
+          "direction": "left"
+        }
+      ]
     },
     "processId": {
       "description": "Randomly generated UUID added to fees/fines created in scope of the same process (e.g. same check-in or same scheduled Lost Item Fee generation job run)",
@@ -290,13 +324,5 @@
     }
   },
   "additionalProperties": false,
-  "required": [
-    "amount",
-    "remaining",
-    "status",
-    "paymentStatus",
-    "userId",
-    "feeFineId",
-    "ownerId"
-   ]
+  "required": ["amount", "remaining", "status", "paymentStatus", "userId", "feeFineId", "ownerId"]
 }
