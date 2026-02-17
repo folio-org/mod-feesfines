@@ -18,7 +18,7 @@
     "metadata": {
       "description": "Metadata about creation to payment method, provided by the server",
       "type": "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "$ref" : "metadata.json"
     },
     "ownerId": {
       "description": "ID of the owner",

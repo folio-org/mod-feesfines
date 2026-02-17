@@ -54,7 +54,7 @@
     "metadata": {
       "description": "Metadata about creation of the patron block template, provided by the server",
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "id": {
       "description": "Template id, UUID",
