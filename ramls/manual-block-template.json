@@ -7,12 +7,12 @@
     "name": {
       "description": "Name of the template",
       "type": "string",
-      "x-fqm-visible-by-default": true
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "code": {
       "description": "Code of the template. Can be a shorthand of the name (e.g. an acronym).",
-      "type": "string",
-      "x-fqm-visibility": "results-only"
+      "type": "string"
     },
     "desc": {
       "description": "Description of this template",
@@ -28,8 +28,7 @@
         },
         "patronMessage": {
           "description": "Message to patron (optional)",
-          "type": "string",
-          "x-fqm-visibility": "results-only"
+          "type": "string"
         },
         "borrowing": {
           "description": "A flag to determine borrowing block action",
@@ -54,7 +53,7 @@
     "metadata": {
       "description": "Metadata about creation of the patron block template, provided by the server",
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "id": {
       "description": "Template id, UUID",

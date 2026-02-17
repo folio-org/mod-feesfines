@@ -7,7 +7,8 @@
     "nameMethod": {
       "description": "Payment method name",
       "type": "string",
-      "x-fqm-visible-by-default": true
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "allowedRefundMethod": {
       "description": "A flag to determine if refund method is allowed default at 'Yes'",
@@ -18,13 +19,21 @@
     "metadata": {
       "description": "Metadata about creation to payment method, provided by the server",
       "type": "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "$ref" : "metadata.json"
     },
     "ownerId": {
       "description": "ID of the owner",
       "$ref": "raml-util/schemas/uuid.schema",
       "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true
+      "x-fqm-essential": true,
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "owners",
+          "targetField": "id",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "id": {
       "description": "Payment method id, UUID",

@@ -17,13 +17,21 @@
     "metadata": {
       "description": "Metadata about creation to transfer account, provided by the server",
       "type": "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "$ref" : "metadata.json"
     },
     "ownerId": {
       "description": "ID of the owner",
       "$ref": "raml-util/schemas/uuid.schema",
       "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true
+      "x-fqm-essential": true,
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "owners",
+          "targetField": "id",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "id": {
       "description": "Transfer account id, UUID",

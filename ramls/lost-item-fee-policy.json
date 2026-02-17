@@ -7,7 +7,8 @@
     "name": {
       "description": "Lost item fee policy name, is a required field",
       "type": "string",
-      "x-fqm-visible-by-default": true
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "description": {
       "description": "Lost item fee policy description",
@@ -89,7 +90,7 @@
     "metadata": {
       "description": "Metadata about creation to lost item fee policy, provided by the server",
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "id": {
       "description": "Lost item fee policy id, UUID",
