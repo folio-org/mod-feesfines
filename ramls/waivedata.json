@@ -1,5 +1,5 @@
 {
-  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Waive Reasons Settings schema",
   "description": "CRUD Fee/Fine Waive Reasons Settings",
   "type": "object",
@@ -15,7 +15,7 @@
     "metadata": {
       "description": "Metadata about creation to waive reason, provided by the server",
       "type": "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "accountId": {
       "description": "ID of the User fine/fee account",
@@ -27,7 +27,5 @@
     }
   },
   "additionalProperties": false,
-  "required": [
-    "nameReason"
-  ]
+  "required": ["nameReason"]
 }

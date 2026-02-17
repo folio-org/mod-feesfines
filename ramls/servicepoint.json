@@ -9,11 +9,11 @@
     },
     "name": {
       "type": "string",
-      "description" : "service-point name, a required field"
+      "description": "service-point name, a required field"
     },
     "code": {
       "type": "string",
-      "description" : "service-point code, a required field"
+      "description": "service-point code, a required field"
     },
     "discoveryDisplayName": {
       "type": "string",
@@ -21,7 +21,7 @@
     },
     "description": {
       "type": "string",
-      "description" : "description of the service-point"
+      "description": "description of the service-point"
     },
     "shelvingLagTime": {
       "type": "integer",
@@ -31,7 +31,7 @@
       "type": "boolean",
       "description": "indicates whether or not the service point is a pickup location"
     },
-    "holdShelfExpiryPeriod" :{
+    "holdShelfExpiryPeriod": {
       "type": "object",
       "$ref": "time-period.json",
       "description": "expiration period for items on the hold shelf at the service point"
@@ -53,15 +53,12 @@
           }
         },
         "additionalProperties": true,
-        "required": [
-          "id",
-          "printByDefault"
-        ]
+        "required": ["id", "printByDefault"]
       }
     },
     "metadata": {
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     }
   },
   "additionalProperties": true

@@ -28,9 +28,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "value"
-        ]
+        "required": ["value"]
       }
     },
     "defaultChargeNoticeId": {
@@ -41,15 +39,15 @@
       "description": "ID of the fee/fine action template",
       "$ref": "raml-util/schemas/uuid.schema"
     },
-    "metadata" : {
+    "metadata": {
       "description": "Metadata about creation to owner, provided by the server",
-      "type" : "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "type": "object",
+      "$ref": "metadata.json"
     },
     "id": {
       "description": "Owner id, UUID",
       "$ref": "raml-util/schemas/uuid.schema"
-     }
-    },
+    }
+  },
   "additionalProperties": false
 }

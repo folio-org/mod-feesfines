@@ -1,5 +1,5 @@
 {
-  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Comment required Settings schema",
   "description": "Comment required for additional information on fees/fine transactions",
   "type": "object",
@@ -23,7 +23,7 @@
     "metadata": {
       "description": "Metadata about creation to comment required, provided by the server",
       "type": "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "id": {
       "description": "Comment required id, UUID",

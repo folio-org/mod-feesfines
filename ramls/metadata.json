@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "metadata.schema",
+  "title": "Metadata Schema",
+  "description": "Adapted from raml-util's metadata schema",
+  "type": "object",
+  "properties": {
+    "createdDate": {
+      "description": "Date and time when the record was created",
+      "type": "string",
+      "format": "date-time",
+      "x-fqm-essential": true,
+      "x-fqm-visible-by-default": true
+    },
+    "createdByUserId": {
+      "description": "ID of the user who created the record (when available)",
+      "type": "string",
+      "format": "uuid",
+      "x-fqm-essential": false,
+      "x-fqm-visible-by-default": false,
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "bb058933-cd06-4539-bd3a-6f248ff98ee2",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        },
+        {
+          "targetId": "f2615ea6-450b-425d-804d-6a495afd9308",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        }
+      ]
+    },
+    "updatedDate": {
+      "description": "Date and time when the record was last updated",
+      "type": "string",
+      "format": "date-time",
+      "x-fqm-essential": true,
+      "x-fqm-visible-by-default": true
+    },
+    "updatedByUserId": {
+      "description": "ID of the user who last updated the record (when available)",
+      "type": "string",
+      "format": "uuid",
+      "x-fqm-essential": false,
+      "x-fqm-visible-by-default": false,
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "bb058933-cd06-4539-bd3a-6f248ff98ee2",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        },
+        {
+          "targetId": "f2615ea6-450b-425d-804d-6a495afd9308",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": ["createdDate"]
+}

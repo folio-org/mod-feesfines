@@ -1,5 +1,5 @@
 {
-  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "CRUD Payments Methods Settings schema",
   "description": "CRUD Fee/Fine Payment Methods Settings",
   "type": "object",
@@ -18,7 +18,7 @@
     "metadata": {
       "description": "Metadata about creation to payment method, provided by the server",
       "type": "object",
-      "$ref" : "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "ownerId": {
       "description": "ID of the owner",
@@ -32,7 +32,5 @@
     }
   },
   "additionalProperties": false,
-  "required": [
-    "nameMethod"
-  ]
+  "required": ["nameMethod"]
 }

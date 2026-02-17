@@ -9,7 +9,7 @@
       "type": "string"
     },
     "id": {
-      "description" : "A globally unique (UUID) identifier for the user",
+      "description": "A globally unique (UUID) identifier for the user",
       "type": "string"
     },
     "externalSystemId": {
@@ -37,10 +37,10 @@
       "type": "object"
     },
     "proxyFor": {
-      "description" : "Deprecated",
+      "description": "Deprecated",
       "type": "array",
       "items": {
-      "type": "string"
+        "type": "string"
       }
     },
     "personal": {
@@ -133,9 +133,7 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "lastName"
-      ]
+      "required": ["lastName"]
     },
     "enrollmentDate": {
       "description": "The date in which the user joined the organization",
@@ -159,13 +157,13 @@
     },
     "metadata": {
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema"
+      "$ref": "metadata.json"
     },
     "tags": {
       "type": "object",
       "$ref": "raml-util/schemas/tags.schema"
     },
-    "customFields" : {
+    "customFields": {
       "description": "Object that contains custom field",
       "type": "object",
       "additionalProperties": true
