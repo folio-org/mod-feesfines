@@ -112,10 +112,12 @@
     "itemStatus": {
       "description": "The status of the item",
       "type": "object",
+      "x-fqm-ignore": true,
       "properties": {
         "name": {
           "description": "Name of the item state",
           "type": "string",
+          "x-fqm-ignore": true,
           "x-fqm-visibility": "results-only"
         }
       },
@@ -235,6 +237,7 @@
       "description": "Item field: item.holdingsRecordId",
       "$ref": "raml-util/schemas/uuid.schema",
       "readonly": true,
+      "x-fqm-ignore": true,
       "x-fqm-joins-to-raw": [
         {
           "targetId": "30a5cfad-1868-4f46-86b9-a6ef67e2d9bf",
@@ -248,6 +251,7 @@
       "description": "Holdings record field: holdingsRecord.instanceId",
       "$ref": "raml-util/schemas/uuid.schema",
       "readonly": true,
+      "x-fqm-ignore": true,
       "x-fqm-joins-to-raw": [
         {
           "targetId": "8fc4a9d2-7ccf-4233-afb8-796911839862",
@@ -267,12 +271,14 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Personal name, corporate name, meeting name"
+            "description": "Personal name, corporate name, meeting name",
+            "x-fqm-visibility": "hidden"
           }
         },
         "additionalProperties": false,
         "required": ["name"]
-      }
+      },
+      "x-fqm-visibility": "hidden"
     },
     "loanPolicyId": {
       "description": "Loan policy ID",
