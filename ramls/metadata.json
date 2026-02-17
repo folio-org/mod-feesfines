@@ -33,6 +33,11 @@
         }
       ]
     },
+    "createdByUsername": {
+      "description": "Username of the user who created the record (when available)",
+      "type": "string",
+      "x-fqm-ignore": true
+    },
     "updatedDate": {
       "description": "Date and time when the record was last updated",
       "type": "string",
@@ -60,6 +65,11 @@
           "direction": "left"
         }
       ]
+    },
+    "updatedByUsername": {
+      "description": "Username of the user who last updated the record (when available)",
+      "type": "string",
+      "x-fqm-ignore": true
     }
   },
   "additionalProperties": false,
