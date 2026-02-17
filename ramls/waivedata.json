@@ -1,12 +1,14 @@
 {
-  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Waive Reasons Settings schema",
   "description": "CRUD Fee/Fine Waive Reasons Settings",
   "type": "object",
   "properties": {
     "nameReason": {
       "description": "Waive reason name",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "description": {
       "description": "Waive reason description",
@@ -15,11 +17,19 @@
     "metadata": {
       "description": "Metadata about creation to waive reason, provided by the server",
       "type": "object",
-      "$ref" : "metadata.json"
+      "$ref": "metadata.json"
     },
     "accountId": {
       "description": "ID of the User fine/fee account",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "accounts",
+          "targetField": "id",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "id": {
       "description": "Waive reason id, UUID",
@@ -27,7 +37,5 @@
     }
   },
   "additionalProperties": false,
-  "required": [
-    "nameReason"
-  ]
+  "required": ["nameReason"]
 }

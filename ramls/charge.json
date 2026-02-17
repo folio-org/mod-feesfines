@@ -10,7 +10,8 @@
     "amount": {
       "description": "Charge amount for item may be Actual cost or an amount",
       "javaType": "org.folio.rest.domain.MonetaryValue",
-      "type": "number"
+      "type": "number",
+      "x-fqm-visible-by-default": true
     }
   },
   "additionalProperties": false

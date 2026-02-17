@@ -6,7 +6,9 @@
   "properties": {
     "name": {
       "description": "Overdue fine policy name",
-      "type": "string"
+      "type": "string",
+      "x-fqm-visible-by-default": true,
+      "x-fqm-essential": true
     },
     "description": {
       "description": "Overdue fine policy description",

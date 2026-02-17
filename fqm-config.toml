@@ -69,9 +69,6 @@ source = "lost_item_fee_policy"
 sort = ["id", "ASC"]
 useRmbIndexStyle = true
 
-[entityTypes.fieldOverrides.charge_amount_item_amount]
-x-fqm-visible-by-default = true
-
 [entityTypes.fieldOverrides.patron_billed_after_aged_lost_interval_id]
 x-fqm-visible-by-default = true
 
@@ -106,15 +103,6 @@ permissions = ["manualblocks.collection.get"]
 source = "manualblocks"
 sort = ["id", "ASC"]
 useRmbIndexStyle = true
-
-[entityTypes.fieldOverrides.id]
-x-fqm-visibility = "hidden-non-queryable"
-
-[entityTypes.fieldOverrides.user_id]
-x-fqm-joins-to-raw = [
-  { targetId = 'bb058933-cd06-4539-bd3a-6f248ff98ee2', targetField = 'id', type = 'equality-cast-uuid', direction = 'left' }, # simple_user
-  { targetId = 'f2615ea6-450b-425d-804d-6a495afd9308', targetField = 'id', type = 'equality-cast-uuid', direction = 'left' }, # simple_FOLIO_user
-]
 
 [[sources]]
 name = "overdue_fine_policy"

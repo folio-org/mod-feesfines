@@ -1,5 +1,5 @@
 {
-  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Refund Reasons schema",
   "description": "CRUD Fee/Fine Refund Reasons",
   "type": "object",
@@ -15,11 +15,19 @@
     "metadata": {
       "description": "Metadata about creation to refund reason, provided by the server",
       "type": "object",
-      "$ref" : "metadata.json"
+      "$ref": "metadata.json"
     },
     "accountId": {
       "description": "ID of the User fine/fee account",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to": [
+        {
+          "targetModule": "mod-feesfines",
+          "targetEntity": "accounts",
+          "targetField": "id",
+          "type": "equality-cast-uuid"
+        }
+      ]
     },
     "id": {
       "description": "Refund reason id, UUID",
@@ -27,7 +35,5 @@
     }
   },
   "additionalProperties": false,
-  "required": [
-    "nameReason"
-  ]
+  "required": ["nameReason"]
 }

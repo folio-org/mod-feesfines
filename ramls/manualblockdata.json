@@ -1,5 +1,5 @@
 {
-  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Manual patron block schema",
   "description": "Allows institution to manually block a patron from borrowing, renewing, and/or requesting until specified issue is resolved",
   "type": "object",
@@ -22,16 +22,19 @@
     },
     "staffInformation": {
       "description": "Additional information to staff (optional)",
-      "type": "string"
+      "type": "string",
+      "x-fqm-essential": true
     },
     "patronMessage": {
       "description": "Message to patron (optional)",
-      "type": "string"
+      "type": "string",
+      "x-fqm-essential": true
     },
     "expirationDate": {
       "description": "Date and time the patron block expiration if is provided the patron block should be automatically removed on that date",
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "x-fqm-essential": true
     },
     "borrowing": {
       "description": "A flag to determine borrowing block action",
@@ -50,11 +53,25 @@
     },
     "userId": {
       "description": "ID of the user",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-joins-to-raw": [
+        {
+          "targetId": "bb058933-cd06-4539-bd3a-6f248ff98ee2",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        },
+        {
+          "targetId": "f2615ea6-450b-425d-804d-6a495afd9308",
+          "targetField": "id",
+          "type": "equality-cast-uuid",
+          "direction": "left"
+        }
+      ]
     },
-    "metadata" : {
+    "metadata": {
       "description": "Metadata about creation to patron block, provided by the server",
-      "$ref" : "metadata.json"
+      "$ref": "metadata.json"
     },
     "id": {
       "description": "Patron block id, UUID",
@@ -62,8 +79,5 @@
     }
   },
   "additionalProperties": false,
-  "required": [
-    "desc",
-    "userId"
-   ]
+  "required": ["desc", "userId"]
 }
