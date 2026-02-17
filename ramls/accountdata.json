@@ -106,7 +106,7 @@
     "materialType": {
       "description": "Material type what define what type of thing the item is",
       "type": "string",
-      "x-fqm-visibile-by-default": true,
+      "x-fqm-visible-by-default": true,
       "x-fqm-essential": true
     },
     "itemStatus": {
