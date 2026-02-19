@@ -40,8 +40,6 @@ import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
 
-import io.vertx.core.json.JsonObject;
-
 public class EntityBuilder {
   private static final String KEY_NAME = "name";
   private static final String KEY_ID = "id";
