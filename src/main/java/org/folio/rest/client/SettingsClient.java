@@ -17,14 +17,14 @@ import io.vertx.core.json.JsonObject;
 
 public class SettingsClient extends OkapiClient {
   private static final Logger log = LogManager.getLogger(SettingsClient.class);
+  public static final String LOCALE_URL = "/locale";
 
   public SettingsClient(Vertx vertx, Map<String, String> okapiHeaders) {
     super(vertx, okapiHeaders);
   }
 
   public Future<LocaleSettings> getLocaleSettings() {
-    String url = "/locale";
-    return okapiGetAbs(url).send()
+    return okapiGetAbs(LOCALE_URL).send()
       .compose(response -> {
         int responseStatus = response.statusCode();
         if (responseStatus != 200) {
@@ -32,11 +32,12 @@ public class SettingsClient extends OkapiClient {
             "Failed to find locale settings. Response: %d %s", responseStatus,
             response.bodyAsString());
           log.error(errorMessage);
-          return failedFuture(new HttpException(GET, url, response));
+          return failedFuture(new HttpException(GET, LOCALE_URL, response));
         } else {
           try {
             String localSettings = response.bodyAsString();
             if (localSettings == null) {
+              log.warn("Locale settings response body is null");
               return failedFuture("Failed to find locale settings");
             }
 
@@ -46,6 +47,8 @@ public class SettingsClient extends OkapiClient {
             String timezone = localeSettingsJsonObject.getString("timezone");
             String currency = localeSettingsJsonObject.getString("currency");
             String numberingSystem = localeSettingsJsonObject.getString("numberingSystem");
+            log.info("Locale settings found: locale: {}, timezone: {}, currency: {}, numberingSystem: {}",
+              locale, timezone, currency, numberingSystem);
 
             return succeededFuture(new LocaleSettings(locale, timezone, currency, numberingSystem));
           } catch (Exception e) {
