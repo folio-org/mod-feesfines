@@ -37,7 +37,7 @@ public class SettingsClient extends OkapiClient {
           try {
             String localSettings = response.bodyAsString();
             if (localSettings == null) {
-              log.warn("Locale settings response body is null");
+              log.warn("getLocaleSettings:: locale settings response body is null");
               return failedFuture("Failed to find locale settings");
             }
 
@@ -47,12 +47,12 @@ public class SettingsClient extends OkapiClient {
             String timezone = localeSettingsJsonObject.getString("timezone");
             String currency = localeSettingsJsonObject.getString("currency");
             String numberingSystem = localeSettingsJsonObject.getString("numberingSystem");
-            log.info("Locale settings found: locale: {}, timezone: {}, currency: {}, numberingSystem: {}",
+            log.info("getLocaleSettings:: locale settings found: locale: {}, timezone: {}, currency: {}, numberingSystem: {}",
               locale, timezone, currency, numberingSystem);
 
             return succeededFuture(new LocaleSettings(locale, timezone, currency, numberingSystem));
           } catch (Exception e) {
-            log.error("Failed to parse response: {}", response.bodyAsString(), e);
+            log.error("getLocaleSettings:: failed to parse response: {}", response.bodyAsString(), e);
             return failedFuture(e);
           }
         }
