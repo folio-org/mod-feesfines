@@ -1,7 +1,6 @@
 package org.folio.rest.impl;
 
 import static java.lang.String.format;
-import static org.folio.test.support.EntityBuilder.buildLocaleSettings;
 import static org.folio.test.support.matcher.constant.ServicePath.ACCOUNTS_PATH;
 
 import java.util.Date;
@@ -12,7 +11,6 @@ import org.folio.rest.jaxrs.model.Feefineaction;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
-import org.folio.rest.jaxrs.model.Settings;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.constant.ServicePath;
@@ -57,10 +55,10 @@ public class FeeFineReportsAPITestBase extends ApiTests {
   }
 
   void createLocaleSettingsStub() {
-    final Settings localeSettings = buildLocaleSettings(new JsonObject()
+    final JsonObject localeSettings = new JsonObject()
       .put("locale", "en-US")
       .put("timezone", "America/New_York")
-      .put("currency", "USD"));
+      .put("currency", "USD");
     localeSettingsStubMapping = createStubForPath(ServicePath.SETTINGS_PATH, localeSettings, ".*");
   }
 
@@ -69,7 +67,7 @@ public class FeeFineReportsAPITestBase extends ApiTests {
       .put("locale", "en-US")
       .put("timezone", "America/New_York");
     localeSettingsStubMapping = createStubForPath(ServicePath.SETTINGS_PATH,
-      buildLocaleSettings(localeSettings), ".*");
+      localeSettings, ".*");
   }
 
   void removeLocaleSettingsStub() {

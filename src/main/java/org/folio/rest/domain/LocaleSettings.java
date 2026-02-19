@@ -16,6 +16,11 @@ public class LocaleSettings {
   private final String timezone;
   @NonNull
   private final String currency;
+  private final String numberingSystem;
+
+  public LocaleSettings(String locale, String timezone, String currency) {
+    this(locale, timezone, currency, null);
+  }
 
   public DateTimeZone getDateTimeZone() {
     return StringUtils.isBlank(timezone)

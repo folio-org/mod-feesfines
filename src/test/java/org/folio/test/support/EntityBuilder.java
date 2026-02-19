@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
 
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
@@ -36,10 +35,7 @@ import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Personal;
 import org.folio.rest.jaxrs.model.Publication;
 import org.folio.rest.jaxrs.model.ReportTotalsEntry;
-import org.folio.rest.jaxrs.model.ResultInfo;
 import org.folio.rest.jaxrs.model.ServicePoint;
-import org.folio.rest.jaxrs.model.Setting;
-import org.folio.rest.jaxrs.model.Settings;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.jaxrs.model.UserGroup;
@@ -257,16 +253,6 @@ public class EntityBuilder {
     return new Institution()
       .withAdditionalProperty(KEY_ID, randomId())
       .withAdditionalProperty(KEY_NAME, "Institution");
-  }
-
-  public static Settings buildLocaleSettings(JsonObject value) {
-    return new Settings()
-      .withItems(List.of(new Setting()
-        .withId(UUID.randomUUID())
-        .withScope("stripes-core.prefs.manage")
-        .withKey("tenantLocaleSettings")
-        .withValue(value)))
-      .withResultInfo(new ResultInfo().withTotalRecords(1));
   }
 
   public static Loan buildLoan(String loanDate, Date dueDate, String returnDate, String itemId,
