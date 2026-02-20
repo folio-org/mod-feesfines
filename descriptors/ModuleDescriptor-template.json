@@ -1004,6 +1004,7 @@
           "modulePermissions": [
             "mod-settings.entries.item.get",
             "mod-settings.entries.collection.get",
+            "locale.item.get",
             "users.item.get",
             "usergroups.item.get",
             "inventory-storage.holdings.item.get",
@@ -1020,7 +1021,8 @@
           ],
           "modulePermissions": [
             "mod-settings.entries.item.get",
-            "mod-settings.entries.collection.get"
+            "mod-settings.entries.collection.get",
+            "locale.item.get"
           ]
         },
         {
@@ -1043,6 +1045,7 @@
           "modulePermissions": [
             "mod-settings.entries.item.get",
             "mod-settings.entries.collection.get",
+            "locale.item.get",
             "inventory-storage.service-points.item.get",
             "inventory-storage.service-points.collection.get",
             "users.item.get",
