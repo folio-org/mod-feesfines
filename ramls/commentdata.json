@@ -27,7 +27,8 @@
     },
     "id": {
       "description": "Comment required id, UUID",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true
     }
   },
   "additionalProperties": false
