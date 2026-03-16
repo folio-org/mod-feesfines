@@ -37,7 +37,8 @@
     },
     "id": {
       "description": "Payment method id, UUID",
-      "$ref": "raml-util/schemas/uuid.schema"
+      "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true
     }
   },
   "additionalProperties": false,
