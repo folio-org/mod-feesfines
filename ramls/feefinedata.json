@@ -15,7 +15,13 @@
       "description": "Description of fee/fine that is up to the discretion of the user",
       "type": "string",
       "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true
+      "x-fqm-essential": true,
+      "x-fqm-id-column": "id",
+      "x-fqm-value-source-api": {
+        "path": "feefines",
+        "labelJsonPath": "$.feefines.*.feeFineType",
+        "valueJsonPath": "$.feefines.*.id"
+      }
     },
     "defaultAmount": {
       "description": "Amount of fee or fine, which may be overridden. ",
