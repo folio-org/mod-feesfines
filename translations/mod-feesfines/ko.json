@@ -1,5 +1,5 @@
 {
-    "fqm.entityType.accounts": "Fee/fine accounts (test)",
+    "fqm.entityType.accounts": "수수료/벌금 계정 (test)",
     "fqm.entityType.accounts.amount": "Amount",
     "fqm.entityType.accounts.remaining": "Remaining",
     "fqm.entityType.accounts.status_name": "Status name",
