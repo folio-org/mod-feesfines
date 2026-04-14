@@ -47,7 +47,7 @@ public class FeeFinePubSubClient {
           return completedFuture(null);
         }
 
-        log.error("Error publishing event, response status: [{}]", response.statusCode());
+        log.error("Error publishing event [{}]", response.bodyAsString());
 
         final CompletableFuture<Void> failureFuture = new CompletableFuture<>();
         failureFuture.completeExceptionally(new InternalServerErrorException(response.bodyAsString()));
