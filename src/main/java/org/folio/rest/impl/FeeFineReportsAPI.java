@@ -167,11 +167,11 @@ public class FeeFineReportsAPI implements FeefineReports {
     } else if (asyncResult.failed()) {
       final Throwable cause = asyncResult.cause();
       if (cause instanceof FailedValidationException) {
-        log.error("Report parameters validation failed: " + cause.getLocalizedMessage());
+        log.error("Report parameters validation failed: {}", cause.getLocalizedMessage());
         asyncResultHandler.handle(succeededFuture(FeefineReports.PostFeefineReportsRefundResponse
           .respond422WithTextPlain(cause.getLocalizedMessage())));
       } else {
-        log.error("Failed to build report: " + cause.getLocalizedMessage());
+        log.error("Failed to build report: {}", cause.getLocalizedMessage());
         asyncResultHandler.handle(succeededFuture(FeefineReports.PostFeefineReportsRefundResponse
           .respond500WithTextPlain(format("%s. %s", INTERNAL_SERVER_ERROR_MESSAGE,
             cause.getLocalizedMessage()))));

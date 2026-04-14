@@ -68,7 +68,7 @@ public class ActualCostFeeFineBillingService extends ActualCostFeeFineService {
       .compose(this::chargeFeeFine)
       .compose(this::updateRecord)
       .onSuccess(r -> log.info("Fee/fine for actual cost record {} billed successfully", recordId))
-      .onFailure(t -> log.error("Failed to bill fee/fine for actual cost record " + recordId, t));
+      .onFailure(t -> log.error("Failed to bill fee/fine for actual cost record {}", recordId, t));
   }
 
   private Future<BillingContext> fetchActualCostRecord(BillingContext context) {
