@@ -1,3 +1,30 @@
+## 19.4.0 2026-04-14
+* Sensitive data in logs cleanup (MODFEE-404)
+* Make simple fee/fine ETs private (MODFQMMGR-1095)
+* Enable GitHub Maven workflow (MODFEE-443)
+* Mark id fields as essential for FQM (MODFQMMGR-1085)
+* Use GET `/locale` for tenant language & locale (MODFEE-441)
+* Remove extra FQM translations
+* Add test suffix to entity names
+* Update FQM fee/fine entities (MODFQMMGR-1066)
+* Make id field essential for accounts ET (MODFQMMGR-906)
+* Update simple fees/fines ETs per PO feedback, update FQM translations (MODFQMMGR-905)
+* Upgrade to Vert.x 5.0 and RMB 36.0 (MODFEE-431)
+* Add loan, user, and item joins for accounts ET (MODFEE-440)
+* Add descriptions for FQM entity types (MODFQMMGR-973)
+* Remove redundant FQM annotation types (FOLIO-4387)
+* Add missing interface dependencies (MODFEE-432)
+* Migrate from mod-configuration to mod-settings (MODFEE-425)
+* Lokalise translations update
+* Remove unused fields (FQMTOOL-11)
+* Expose fees/fines via FQM, improve query builder dropdown support (FQMTOOL-10)
+* Update `item-storage` interface version (MODFEE-427)
+* Generate random id on POST `/accounts` (MODFEE-296)
+* Upgrade WireMock to 3.12.1 for CVE-2023-41329 (MODFEE-415)
+* Fix Sonar analysis for impl package (MODFEE-414)
+* Fix argLine JaCoCo configuration (MODFEE-413)
+* Add tokens to item context for manual charges/actions (MODFEE-409)
+
 ## 19.3.0 2025-03-13
 * Update to mod-feesfines Java 21 (MODFEE-407)
 * Fix actual-cost-record schema (MODFEE-408)
