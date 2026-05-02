@@ -48,7 +48,7 @@
     "fqm.entityType.feefine_actions.type_action": "Rodzaj akcji",
     "fqm.entityType.feefine_actions.comments": "Komentarze",
     "fqm.entityType.feefine_actions.notify": "Powiadom",
-    "fqm.entityType.feefine_actions.amount_action": "Naliczone",
+    "fqm.entityType.feefine_actions.amount_action": "Naliczono opłatę",
     "fqm.entityType.feefine_actions.balance": "Pozostałe",
     "fqm.entityType.feefine_actions.transaction_information": "Informacje o transakcji",
     "fqm.entityType.feefine_actions.created_at": "Właściciel opłaty/kary",
