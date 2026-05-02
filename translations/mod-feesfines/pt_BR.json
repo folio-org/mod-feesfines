@@ -217,7 +217,7 @@
     "fqm.entityType.transfers.owner_id": "UUID do proprietário da taxa/multa",
     "fqm.entityType.transfers.id": "UUID",
     "fqm.entityType.transfers.jsonb": "JSONB",
-    "fqm.entityType.waives": "Abono de taxas/multas",
+    "fqm.entityType.waives": "Isenção de taxas/multas",
     "fqm.entityType.waives.name_reason": "Motivo",
     "fqm.entityType.waives.description": "Descrição",
     "fqm.entityType.waives.metadata_created_date": "Criado em",
