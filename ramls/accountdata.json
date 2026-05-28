@@ -80,13 +80,33 @@
       "description": "Fee/fine that is up to the desecration of the user",
       "type": "string",
       "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true
+      "x-fqm-essential": true,
+      "x-fqm-source": {
+        "columnName": "fee_fine_type",
+        "entityTypeId": "fccb5cd8-c146-5c0a-8156-837f1bd3f1cc"
+      },
+      "x-fqm-id-column-name": "fee_fine_id",
+      "x-fqm-value-source-api": {
+        "path": "feefines",
+        "valueJsonPath": "$.feefines.*.id",
+        "labelJsonPath": "$.feefines.*.feeFineType"
+      }
     },
     "feeFineOwner": {
       "description": "Owner of the fee/fine defined by the library and is associated with specific fees/fines",
       "type": "string",
       "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true
+      "x-fqm-essential": true,
+      "x-fqm-source": {
+        "columnName": "fee_fine_owner",
+        "entityTypeId": "fccb5cd8-c146-5c0a-8156-837f1bd3f1cc"
+      },
+      "x-fqm-id-column-name": "owner_id",
+      "x-fqm-value-source-api": {
+        "path": "owners",
+        "valueJsonPath": "$.owners.*.id",
+        "labelJsonPath": "$.owners.*.owner"
+      }
     },
     "title": {
       "description": "The title associated with the item",
@@ -107,7 +127,16 @@
       "description": "Material type what define what type of thing the item is",
       "type": "string",
       "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true
+      "x-fqm-essential": true,
+      "x-fqm-source": {
+        "columnName": "material_type",
+        "entityTypeId": "fccb5cd8-c146-5c0a-8156-837f1bd3f1cc"
+      },
+      "x-fqm-value-source-api": {
+        "path": "material-types",
+        "valueJsonPath": "$.mtypes.*.name",
+        "labelJsonPath": "$.mtypes.*.name"
+      }
     },
     "itemStatus": {
       "description": "The status of the item",
@@ -127,7 +156,16 @@
       "description": "Effective location is used to know the current home location for the item",
       "type": "string",
       "x-fqm-visible-by-default": true,
-      "x-fqm-essential": true
+      "x-fqm-essential": true,
+      "x-fqm-source": {
+        "columnName": "location",
+        "entityTypeId": "fccb5cd8-c146-5c0a-8156-837f1bd3f1cc"
+      },
+      "x-fqm-value-source-api": {
+        "path": "locations",
+        "valueJsonPath": "$.locations.*.name",
+        "labelJsonPath": "$.locations.*.name"
+      }
     },
     "metadata": {
       "description": "Metadata about creation to user fine/fee account, provided by the server",
@@ -195,6 +233,7 @@
     "materialTypeId": {
       "description": "ID of the materialType",
       "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true,
       "x-fqm-joins-to-raw": [
         {
           "targetId": "8b1f51d6-8795-4113-a72e-3b7dc6cc6dfe",
@@ -207,6 +246,7 @@
     "feeFineId": {
       "description": "ID of the fee/fine",
       "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true,
       "x-fqm-joins-to": [
         {
           "targetModule": "mod-feesfines",
@@ -219,6 +259,7 @@
     "ownerId": {
       "description": "ID of the owner",
       "$ref": "raml-util/schemas/uuid.schema",
+      "x-fqm-essential": true,
       "x-fqm-joins-to": [
         {
           "targetModule": "mod-feesfines",
