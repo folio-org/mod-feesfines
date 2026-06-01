@@ -81,10 +81,6 @@
       "type": "string",
       "x-fqm-visible-by-default": true,
       "x-fqm-essential": true,
-      "x-fqm-source": {
-        "columnName": "fee_fine_type",
-        "entityTypeId": "fccb5cd8-c146-5c0a-8156-837f1bd3f1cc"
-      },
       "x-fqm-id-column-name": "fee_fine_id",
       "x-fqm-value-source-api": {
         "path": "feefines",
@@ -97,10 +93,6 @@
       "type": "string",
       "x-fqm-visible-by-default": true,
       "x-fqm-essential": true,
-      "x-fqm-source": {
-        "columnName": "fee_fine_owner",
-        "entityTypeId": "fccb5cd8-c146-5c0a-8156-837f1bd3f1cc"
-      },
       "x-fqm-id-column-name": "owner_id",
       "x-fqm-value-source-api": {
         "path": "owners",
@@ -128,10 +120,6 @@
       "type": "string",
       "x-fqm-visible-by-default": true,
       "x-fqm-essential": true,
-      "x-fqm-source": {
-        "columnName": "material_type",
-        "entityTypeId": "fccb5cd8-c146-5c0a-8156-837f1bd3f1cc"
-      },
       "x-fqm-value-source-api": {
         "path": "material-types",
         "valueJsonPath": "$.mtypes.*.name",
@@ -157,10 +145,6 @@
       "type": "string",
       "x-fqm-visible-by-default": true,
       "x-fqm-essential": true,
-      "x-fqm-source": {
-        "columnName": "location",
-        "entityTypeId": "fccb5cd8-c146-5c0a-8156-837f1bd3f1cc"
-      },
       "x-fqm-value-source-api": {
         "path": "locations",
         "valueJsonPath": "$.locations.*.name",
