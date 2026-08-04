@@ -11,24 +11,41 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import javax.ws.rs.core.MediaType;
 
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
+import org.folio.rest.service.KafkaService;
 import org.folio.test.support.ApiTests;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.restassured.RestAssured;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
 @ExtendWith(VertxExtension.class)
 public class TenantRefAPITest extends ApiTests {
+
+  @BeforeEach
+  public void disableKafkaTopicCreation() {
+    TenantRefAPI.setKafkaServiceFactory(TenantRefAPITest::noOpKafkaService);
+  }
+
+  @AfterEach
+  public void resetKafkaTopicCreation() {
+    TenantRefAPI.resetKafkaServiceFactory();
+  }
 
   @Test
   public void overdueFinePolicyLoaded(VertxTestContext context) {
@@ -46,6 +63,49 @@ public class TenantRefAPITest extends ApiTests {
         assertThat(overduePolicy.getId(), is("cd3f6cac-fa17-4079-9fae-2fb28e521412"));
         return context;
       }).onComplete(context.succeedingThenComplete());
+  }
+
+  @Test
+  public void shouldCreateKafkaTopicsDuringTenantInitialization(VertxTestContext context) {
+    AtomicReference<String> tenantIdReference = new AtomicReference<>();
+    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
+      Future.succeededFuture(), tenantIdReference));
+
+    succeededFuture(client.post("/_/tenant", getTenantAttributes()))
+      .map(response -> {
+        assertThat(response.getStatusCode(), is(204));
+        assertThat(tenantIdReference.get(), is(TENANT_NAME));
+        return context;
+      }).onComplete(ar -> {
+        TenantRefAPI.resetKafkaServiceFactory();
+        if (ar.failed()) {
+          context.failNow(ar.cause());
+        } else {
+          context.completeNow();
+        }
+      });
+  }
+
+  @Test
+  public void shouldFailIfCannotCreateKafkaTopics(VertxTestContext context) {
+    String expectedError = "Kafka unavailable";
+    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
+      Future.failedFuture(expectedError), new AtomicReference<>()));
+
+    succeededFuture(client.post("/_/tenant", getTenantAttributes()))
+      .map(response -> {
+        assertThat(response.getStatusCode(), is(500));
+        assertThat(response.getBody().asString(), notNullValue());
+        assertThat(response.getBody().asString().contains(expectedError), is(true));
+        return context;
+      }).onComplete(ar -> {
+        TenantRefAPI.resetKafkaServiceFactory();
+        if (ar.failed()) {
+          context.failNow(ar.cause());
+        } else {
+          context.completeNow();
+        }
+      });
   }
 
   @Test
@@ -106,5 +166,21 @@ public class TenantRefAPITest extends ApiTests {
 
         return context;
       }).onComplete(context.succeedingThenComplete());
+  }
+
+  private static KafkaService noOpKafkaService(Vertx vertx) {
+    return kafkaService(vertx, Future.succeededFuture(), new AtomicReference<>());
+  }
+
+  private static KafkaService kafkaService(Vertx vertx, Future<Void> result,
+    AtomicReference<String> tenantIdReference) {
+
+    return new KafkaService(vertx) {
+      @Override
+      public Future<Void> createTopics(String tenantId) {
+        tenantIdReference.set(tenantId);
+        return result;
+      }
+    };
   }
 }

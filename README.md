@@ -41,6 +41,17 @@ The built artifacts for this module are available.
 See [configuration](https://dev.folio.org/download/artifacts) for repository access,
 and the [Docker image](https://hub.docker.com/r/folioorg/mod-feesfines/).
 
+### Environment variables
+
+Kafka-related launch defaults are declared in `descriptors/ModuleDescriptor-template.json`.
+
+| Name | Default | Description |
+| --- | --- | --- |
+| `KAFKA_HOST` | `kafka` | Kafka broker host used by `folio-kafka-wrapper`. |
+| `KAFKA_PORT` | `9092` | Kafka broker port used by `folio-kafka-wrapper`. |
+| `REPLICATION_FACTOR` | `1` | Replication factor for Kafka topics created during tenant initialization. |
+| `ENV` | `folio` | Kafka environment prefix used in topic names. |
+
 ### Implementation details 
 
 #### Fee/fine amount rounding

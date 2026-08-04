@@ -38,6 +38,7 @@
     <wiremock.version>3.12.1</wiremock.version>
     <joda-time.version>2.13.1</joda-time.version>
     <mod-pubsub-client.version>2.17.0</mod-pubsub-client.version>
+    <folio-kafka-wrapper.version>4.0.0</folio-kafka-wrapper.version>
     <rest-assured.version>5.5.1</rest-assured.version>
     <awaitility.version>4.3.0</awaitility.version>
     <json-path-assert.version>2.9.0</json-path-assert.version>
@@ -129,6 +130,15 @@
       <groupId>org.folio</groupId>
       <artifactId>mod-pubsub-client</artifactId>
       <version>${mod-pubsub-client.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-kafka-wrapper</artifactId>
+      <version>${folio-kafka-wrapper.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-kafka-client</artifactId>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>

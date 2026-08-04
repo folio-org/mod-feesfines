@@ -1,25 +1,39 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.Objects.requireNonNull;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Map;
+import java.util.function.Function;
 
 import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.service.KafkaService;
 import org.folio.rest.service.PubSubRegistrationService;
 import org.folio.rest.tools.utils.TenantLoading;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 public class TenantRefAPI extends TenantAPI {
   private static final Logger log = LogManager.getLogger(TenantRefAPI.class);
+  private static Function<Vertx, KafkaService> kafkaServiceFactory = KafkaService::new;
+
+  static void setKafkaServiceFactory(Function<Vertx, KafkaService> factory) {
+    kafkaServiceFactory = requireNonNull(factory);
+  }
+
+  static void resetKafkaServiceFactory() {
+    kafkaServiceFactory = KafkaService::new;
+  }
 
   @Override
   public void postTenant(TenantAttributes tenantAttributes,
@@ -49,7 +63,8 @@ public class TenantRefAPI extends TenantAPI {
             return;
           }
 
-          vertx.executeBlocking(() -> new PubSubRegistrationService(vertx, headers).registerModule()
+          vertx.executeBlocking(() -> createKafkaTopics(vertx, headers)
+            .compose(v -> new PubSubRegistrationService(vertx, headers).registerModule())
             .onSuccess(v -> {
               log.info("postTenant executed successfully");
               handler.handle(res);
@@ -61,5 +76,13 @@ public class TenantRefAPI extends TenantAPI {
             }));
         });
     }, context);
+  }
+
+  protected KafkaService kafkaService(Vertx vertx) {
+    return kafkaServiceFactory.apply(vertx);
+  }
+
+  private Future<Void> createKafkaTopics(Vertx vertx, Map<String, String> headers) {
+    return kafkaService(vertx).createTopics(tenantId(headers));
   }
 }
