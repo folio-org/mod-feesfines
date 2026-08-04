@@ -22,8 +22,8 @@ class KafkaEventProducerTest {
   void shouldSendPayloadToTopicForEventType() {
     String payload = "{\"balance\":0}";
     AtomicReference<KafkaProducerRecord<String, String>> sentRecord = new AtomicReference<>();
-    KafkaEventProducer producer = new KafkaEventProducer(TENANT_NAME, record -> {
-      sentRecord.set(record);
+    KafkaEventProducer producer = new KafkaEventProducer(TENANT_NAME, producerRecord -> {
+      sentRecord.set(producerRecord);
       return Future.succeededFuture();
     });
 
@@ -40,7 +40,7 @@ class KafkaEventProducerTest {
   void shouldForwardSendFailure() {
     RuntimeException expectedFailure = new RuntimeException("Kafka send failed");
     KafkaEventProducer producer = new KafkaEventProducer(TENANT_NAME,
-      record -> Future.failedFuture(expectedFailure));
+      producerRecord -> Future.failedFuture(expectedFailure));
 
     Future<Void> result = producer.publish(FEE_FINE_BALANCE_CHANGED, "{}");
 
@@ -48,8 +48,8 @@ class KafkaEventProducerTest {
     assertSame(expectedFailure, result.cause());
   }
 
-  private static String tenantHeader(KafkaProducerRecord<String, String> record) {
-    return record.headers().stream()
+  private static String tenantHeader(KafkaProducerRecord<String, String> producerRecord) {
+    return producerRecord.headers().stream()
       .filter(header -> FolioKafkaHeaders.TENANT_ID.equals(header.key()))
       .map(KafkaHeader::value)
       .map(Object::toString)

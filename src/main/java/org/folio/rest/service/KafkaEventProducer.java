@@ -40,11 +40,11 @@ public class KafkaEventProducer {
   }
 
   private KafkaProducerRecord<String, String> createRecord(EventType eventType, String payload) {
-    KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(
+    KafkaProducerRecord<String, String> producerRecord = KafkaProducerRecord.create(
       FeeFineKafkaTopic.from(eventType).fullTopicName(tenantId), eventType.name(), payload);
 
-    record.addHeader(FolioKafkaHeaders.TENANT_ID, tenantId);
-    return record;
+    producerRecord.addHeader(FolioKafkaHeaders.TENANT_ID, tenantId);
+    return producerRecord;
   }
 
   private static Function<KafkaProducerRecord<String, String>, Future<Void>> createSender(Vertx vertx) {
@@ -58,6 +58,6 @@ public class KafkaEventProducer {
     KafkaProducer<String, String> producer = new SimpleKafkaProducerManager(vertx, kafkaConfig)
       .createShared(PRODUCER_NAME);
 
-    return record -> producer.send(record).mapEmpty();
+    return producerRecord -> producer.send(producerRecord).mapEmpty();
   }
 }
