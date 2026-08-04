@@ -78,7 +78,7 @@ import io.vertx.junit5.VertxTestContext;
 import lombok.SneakyThrows;
 
 @ExtendWith(VertxExtension.class)
-class ApiTests {
+public class ApiTests {
   public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   public static final String TENANT_NAME = "test_tenant";
   public static final String OKAPI_URL_HEADER = "x-okapi-url";
