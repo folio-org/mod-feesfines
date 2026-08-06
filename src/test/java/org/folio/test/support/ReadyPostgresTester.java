@@ -1,5 +1,7 @@
 package org.folio.test.support;
 
+import static org.awaitility.Awaitility.await;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -11,8 +13,8 @@ import org.testcontainers.containers.Network;
 
 public class ReadyPostgresTester implements PostgresTester {
   private static final Duration PORT_TIMEOUT = Duration.ofSeconds(15);
+  private static final Duration RETRY_DELAY = Duration.ofMillis(100);
   private static final int CONNECT_TIMEOUT_MS = 200;
-  private static final int RETRY_DELAY_MS = 100;
 
   private final PostgresTester delegate;
 
@@ -67,29 +69,17 @@ public class ReadyPostgresTester implements PostgresTester {
   }
 
   private static void waitUntilConnectable(String host, Integer port) {
-    long deadline = System.nanoTime() + PORT_TIMEOUT.toNanos();
-    IOException lastException = null;
-
-    while (System.nanoTime() < deadline) {
-      try (Socket socket = new Socket()) {
-        socket.connect(new InetSocketAddress(host, port), CONNECT_TIMEOUT_MS);
-        return;
-      } catch (IOException ex) {
-        lastException = ex;
-        sleepBeforeRetry();
-      }
-    }
-
-    throw new IllegalStateException("Timed out waiting for Postgres tester port "
-      + host + ':' + port, lastException);
+    await("Postgres tester port " + host + ':' + port)
+      .pollInterval(RETRY_DELAY)
+      .atMost(PORT_TIMEOUT)
+      .untilAsserted(() -> assertConnectable(host, port));
   }
 
-  private static void sleepBeforeRetry() {
-    try {
-      Thread.sleep(RETRY_DELAY_MS);
-    } catch (InterruptedException ex) {
-      Thread.currentThread().interrupt();
-      throw new IllegalStateException("Interrupted while waiting for Postgres tester port", ex);
+  private static void assertConnectable(String host, Integer port) {
+    try (Socket socket = new Socket()) {
+      socket.connect(new InetSocketAddress(host, port), CONNECT_TIMEOUT_MS);
+    } catch (IOException ex) {
+      throw new AssertionError("Postgres tester port is not connectable: " + host + ':' + port, ex);
     }
   }
 }
