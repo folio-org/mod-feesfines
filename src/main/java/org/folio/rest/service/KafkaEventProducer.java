@@ -6,10 +6,11 @@ import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.fasterxml.jackson.databind.util.RawValue;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.SimpleKafkaProducerManager;
-import org.folio.kafka.headers.FolioKafkaHeaders;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineKafkaTopic;
 
@@ -21,30 +22,33 @@ import io.vertx.kafka.client.producer.KafkaProducerRecord;
 public class KafkaEventProducer {
   private static final String PRODUCER_NAME = "mod-feesfines-events";
 
-  private final String tenantId;
   private final Function<KafkaProducerRecord<String, String>, Future<Void>> sender;
 
-  public KafkaEventProducer(Vertx vertx, Map<String, String> okapiHeaders) {
-    this(tenantId(okapiHeaders), createSender(vertx));
+  public KafkaEventProducer(Vertx vertx) {
+    this(createSender(vertx));
   }
 
-  KafkaEventProducer(String tenantId,
-    Function<KafkaProducerRecord<String, String>, Future<Void>> sender) {
+  KafkaEventProducer(Function<KafkaProducerRecord<String, String>, Future<Void>> sender) {
 
-    this.tenantId = requireNonNull(tenantId);
     this.sender = requireNonNull(sender);
   }
 
-  public Future<Void> publish(EventType eventType, String payload) {
-    return sender.apply(createRecord(eventType, payload));
+  public Future<Void> publish(EventType eventType, String payload, Map<String, String> okapiHeaders) {
+    return sender.apply(createRecord(eventType, payload, okapiHeaders));
   }
 
-  private KafkaProducerRecord<String, String> createRecord(EventType eventType, String payload) {
-    KafkaProducerRecord<String, String> producerRecord = KafkaProducerRecord.create(
-      FeeFineKafkaTopic.from(eventType).fullTopicName(tenantId), eventType.name(), payload);
+  private KafkaProducerRecord<String, String> createRecord(EventType eventType, String payload,
+    Map<String, String> okapiHeaders) {
 
-    producerRecord.addHeader(FolioKafkaHeaders.TENANT_ID, tenantId);
-    return producerRecord;
+    String tenantId = tenantId(okapiHeaders);
+    String kafkaTopic = FeeFineKafkaTopic.from(eventType).fullTopicName(tenantId);
+
+    return new KafkaProducerRecordBuilder<String, Object>(tenantId)
+      .key(eventType.name())
+      .value(new RawValue(payload))
+      .topic(kafkaTopic)
+      .propagateOkapiHeaders(okapiHeaders)
+      .build();
   }
 
   private static Function<KafkaProducerRecord<String, String>, Future<Void>> createSender(Vertx vertx) {
