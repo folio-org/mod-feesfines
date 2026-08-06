@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.Boolean.TRUE;
 import static java.util.Objects.requireNonNull;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
@@ -43,6 +44,20 @@ public class TenantRefAPI extends TenantAPI {
     log.info("postTenant");
     log.info("Tenant attributes: {}", JsonObject.mapFrom(tenantAttributes));
 
+    if (isTenantDisable(tenantAttributes)) {
+      postTenantForDisable(tenantAttributes, headers, handler, context);
+    } else {
+      postTenantForEnableOrUpgrade(tenantAttributes, headers, handler, context);
+    }
+  }
+
+  protected KafkaService kafkaService(Vertx vertx) {
+    return kafkaServiceFactory.apply(vertx);
+  }
+
+  private void postTenantForEnableOrUpgrade(TenantAttributes tenantAttributes,
+    Map<String, String> headers, Handler<AsyncResult<Response>> handler, Context context) {
+
     Vertx vertx = context.owner();
     super.postTenantSync(tenantAttributes, headers, res -> {
       if (res.failed()) {
@@ -57,9 +72,7 @@ public class TenantRefAPI extends TenantAPI {
         .add("overdue-fines-policies")
         .perform(tenantAttributes, headers, vertx, performResponse -> {
           if (performResponse.failed()) {
-            log.error("postTenant failure", performResponse.cause());
-            handler.handle(succeededFuture(PostTenantResponse
-              .respond500WithTextPlain(performResponse.cause().getLocalizedMessage())));
+            handlePostTenantFailure(performResponse.cause(), handler);
             return;
           }
 
@@ -69,20 +82,65 @@ public class TenantRefAPI extends TenantAPI {
               log.info("postTenant executed successfully");
               handler.handle(res);
             })
-            .onFailure(t -> {
-              log.error("postTenant failure", t);
-              handler.handle(succeededFuture(PostTenantResponse
-                .respond500WithTextPlain(t.getLocalizedMessage())));
-            }));
+            .onFailure(t -> handlePostTenantFailure(t, handler)))
+            .onFailure(t -> handlePostTenantFailure(t, handler));
         });
     }, context);
   }
 
-  protected KafkaService kafkaService(Vertx vertx) {
-    return kafkaServiceFactory.apply(vertx);
+  private void postTenantForDisable(TenantAttributes tenantAttributes,
+    Map<String, String> headers, Handler<AsyncResult<Response>> handler, Context context) {
+
+    Vertx vertx = context.owner();
+    // RMB treats disable as absent module_to and rejects blank strings.
+    tenantAttributes.withModuleTo(null);
+    super.postTenantSync(tenantAttributes, headers, res -> {
+      if (res.failed()) {
+        handler.handle(res);
+        return;
+      }
+
+      if (!isPurgeRequested(tenantAttributes)) {
+        handler.handle(res);
+        return;
+      }
+
+      vertx.executeBlocking(() -> deleteKafkaTopics(vertx, headers)
+        .onSuccess(v -> {
+          log.info("postTenant tenant purge executed successfully");
+          handler.handle(res);
+        })
+        .onFailure(t -> handlePostTenantFailure(t, handler)))
+        .onFailure(t -> handlePostTenantFailure(t, handler));
+    }, context);
   }
 
   private Future<Void> createKafkaTopics(Vertx vertx, Map<String, String> headers) {
     return kafkaService(vertx).createTopics(tenantId(headers));
+  }
+
+  private Future<Void> deleteKafkaTopics(Vertx vertx, Map<String, String> headers) {
+    return kafkaService(vertx).deleteTopics(tenantId(headers));
+  }
+
+  private static boolean isTenantDisable(TenantAttributes tenantAttributes) {
+    return isConfigured(tenantAttributes.getModuleFrom())
+      && !isConfigured(tenantAttributes.getModuleTo());
+  }
+
+  private static boolean isPurgeRequested(TenantAttributes tenantAttributes) {
+    return TRUE.equals(tenantAttributes.getPurge());
+  }
+
+  private static boolean isConfigured(String value) {
+    return value != null && !value.isBlank();
+  }
+
+  private static void handlePostTenantFailure(Throwable throwable,
+    Handler<AsyncResult<Response>> handler) {
+
+    log.error("postTenant failure", throwable);
+    handler.handle(succeededFuture(PostTenantResponse
+      .respond500WithTextPlain(throwable.getLocalizedMessage())));
   }
 }

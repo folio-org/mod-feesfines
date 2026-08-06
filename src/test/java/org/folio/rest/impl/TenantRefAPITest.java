@@ -10,6 +10,7 @@ import static org.folio.test.support.matcher.FeeFineMatchers.hasAllAutomaticFeeF
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -28,7 +29,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.restassured.RestAssured;
 import io.restassured.http.Header;
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -109,6 +112,106 @@ public class TenantRefAPITest extends ApiTests {
   }
 
   @Test
+  public void shouldDeleteKafkaTopicsDuringTenantPurge(VertxTestContext context) {
+    AtomicReference<String> tenantIdReference = new AtomicReference<>();
+    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
+      Future.succeededFuture(), new AtomicReference<>(),
+      Future.succeededFuture(), tenantIdReference));
+
+    disableTenant(true)
+      .map(response -> {
+        assertThat(response.getStatusCode(), is(204));
+        assertThat(tenantIdReference.get(), is(TENANT_NAME));
+        return context;
+      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+  }
+
+  @Test
+  public void shouldDeleteKafkaTopicsWhenTenantDisableUsesBlankModuleTo(VertxTestContext context) {
+    AtomicReference<String> tenantIdReference = new AtomicReference<>();
+    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
+      Future.succeededFuture(), new AtomicReference<>(),
+      Future.succeededFuture(), tenantIdReference));
+
+    disableTenant(getTenantDisableAttributes().withModuleTo(" ").withPurge(true))
+      .map(response -> {
+        assertThat(response.getStatusCode(), is(204));
+        assertThat(tenantIdReference.get(), is(TENANT_NAME));
+        return context;
+      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+  }
+
+  @Test
+  public void shouldNotDeleteKafkaTopicsWhenTenantDisableDoesNotPurge(VertxTestContext context) {
+    AtomicReference<String> tenantIdReference = new AtomicReference<>();
+    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
+      Future.succeededFuture(), new AtomicReference<>(),
+      Future.succeededFuture(), tenantIdReference));
+
+    disableTenant(false)
+      .map(response -> {
+        assertThat(response.getStatusCode(), is(204));
+        assertNull(tenantIdReference.get());
+        return context;
+      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+  }
+
+  @Test
+  public void shouldNotDeleteKafkaTopicsWhenTenantDisableOmitsPurge(VertxTestContext context) {
+    AtomicReference<String> tenantIdReference = new AtomicReference<>();
+    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
+      Future.succeededFuture(), new AtomicReference<>(),
+      Future.succeededFuture(), tenantIdReference));
+
+    disableTenant(getTenantDisableAttributes())
+      .map(response -> {
+        assertThat(response.getStatusCode(), is(204));
+        assertNull(tenantIdReference.get());
+        return context;
+      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+  }
+
+  @Test
+  public void shouldFailIfCannotDeleteKafkaTopicsDuringTenantPurge(VertxTestContext context) {
+    String expectedError = "Kafka delete unavailable";
+    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
+      Future.succeededFuture(), new AtomicReference<>(),
+      Future.failedFuture(expectedError), new AtomicReference<>()));
+
+    disableTenant(true)
+      .map(response -> {
+        assertThat(response.getStatusCode(), is(500));
+        assertThat(response.getBody().asString(), notNullValue());
+        assertThat(response.getBody().asString().contains(expectedError), is(true));
+        return context;
+      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+  }
+
+  @Test
+  public void shouldFailIfKafkaTopicDeletionThrowsDuringTenantPurge(VertxTestContext context) {
+    String expectedError = "Kafka delete exception";
+    TenantRefAPI.setKafkaServiceFactory(vertx -> new KafkaService(vertx) {
+      @Override
+      public Future<Void> createTopics(String tenantId) {
+        return Future.succeededFuture();
+      }
+
+      @Override
+      public Future<Void> deleteTopics(String tenantId) {
+        throw new IllegalStateException(expectedError);
+      }
+    });
+
+    disableTenant(true)
+      .map(response -> {
+        assertThat(response.getStatusCode(), is(500));
+        assertThat(response.getBody().asString(), notNullValue());
+        assertThat(response.getBody().asString().contains(expectedError), is(true));
+        return context;
+      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+  }
+
+  @Test
   public void lostItemFeePolicyLoaded(VertxTestContext context) {
     succeededFuture(client.get("/lost-item-fees-policies"))
       .map(response -> response.as(LostItemFeePolicies.class))
@@ -169,17 +272,66 @@ public class TenantRefAPITest extends ApiTests {
   }
 
   private static KafkaService noOpKafkaService(Vertx vertx) {
-    return kafkaService(vertx, Future.succeededFuture(), new AtomicReference<>());
+    return kafkaService(vertx, Future.succeededFuture(), new AtomicReference<>(),
+      Future.succeededFuture(), new AtomicReference<>());
   }
 
-  private static KafkaService kafkaService(Vertx vertx, Future<Void> result,
-    AtomicReference<String> tenantIdReference) {
+  private Future<Response> disableTenant(boolean purge) {
+    return disableTenant(getTenantDisableAttributes().withPurge(purge));
+  }
+
+  private Future<Response> disableTenant(org.folio.rest.jaxrs.model.TenantAttributes attributes) {
+    return succeededFuture(client.post("/_/tenant", attributes));
+  }
+
+  private static org.folio.rest.jaxrs.model.TenantAttributes getTenantDisableAttributes() {
+    org.folio.rest.jaxrs.model.TenantAttributes attributes = getTenantAttributes();
+    return attributes
+      .withModuleFrom(attributes.getModuleTo())
+      .withModuleTo(null);
+  }
+
+  private void recreateTenantAndComplete(VertxTestContext context, AsyncResult<?> testResult) {
+    TenantRefAPI.setKafkaServiceFactory(TenantRefAPITest::noOpKafkaService);
+    succeededFuture(client.post("/_/tenant", getTenantAttributes()))
+      .onComplete(cleanupResult -> {
+        TenantRefAPI.resetKafkaServiceFactory();
+        if (testResult.failed()) {
+          context.failNow(testResult.cause());
+        } else if (cleanupResult.failed()) {
+          context.failNow(cleanupResult.cause());
+        } else if (cleanupResult.result().getStatusCode() != 204) {
+          context.failNow(new AssertionError("Tenant recreation failed with HTTP "
+            + cleanupResult.result().getStatusCode() + ": "
+            + cleanupResult.result().getBody().asString()));
+        } else {
+          context.completeNow();
+        }
+      });
+  }
+
+  private static KafkaService kafkaService(Vertx vertx, Future<Void> createResult,
+    AtomicReference<String> createdTenantIdReference) {
+
+    return kafkaService(vertx, createResult, createdTenantIdReference,
+      Future.succeededFuture(), new AtomicReference<>());
+  }
+
+  private static KafkaService kafkaService(Vertx vertx, Future<Void> createResult,
+    AtomicReference<String> createdTenantIdReference, Future<Void> deleteResult,
+    AtomicReference<String> deletedTenantIdReference) {
 
     return new KafkaService(vertx) {
       @Override
       public Future<Void> createTopics(String tenantId) {
-        tenantIdReference.set(tenantId);
-        return result;
+        createdTenantIdReference.set(tenantId);
+        return createResult;
+      }
+
+      @Override
+      public Future<Void> deleteTopics(String tenantId) {
+        deletedTenantIdReference.set(tenantId);
+        return deleteResult;
       }
     };
   }

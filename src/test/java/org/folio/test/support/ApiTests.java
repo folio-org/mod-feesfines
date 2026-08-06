@@ -36,7 +36,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
-import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.rest.impl.TenantRefAPI;
@@ -108,7 +107,7 @@ public class ApiTests {
     okapiDeployment.start();
     okapiDeployment.setUpMapping();
 
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    PostgresClient.setPostgresTester(new ReadyPostgresTester());
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions())
       .compose(ignored -> createTenantAsync(getTenantAttributes()))
