@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.test.support.matcher.FeeFineMatchers.hasAllAutomaticFeeFineTypesFor18_3;
@@ -31,7 +30,6 @@ import io.restassured.RestAssured;
 import io.restassured.http.Header;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -52,20 +50,20 @@ public class TenantRefAPITest extends ApiTests {
 
   @Test
   public void overdueFinePolicyLoaded(VertxTestContext context) {
-    succeededFuture(client.get("/overdue-fines-policies"))
-      .map(response -> response.as(OverdueFinePolicies.class))
-      .map(policy -> {
-        assertThat(policy.getTotalRecords(), is(1));
+    OverdueFinePolicies policy = client.get("/overdue-fines-policies")
+      .as(OverdueFinePolicies.class);
 
-        final OverdueFinePolicy overduePolicy = policy
-          .getOverdueFinePolicies().get(0);
+    assertThat(policy.getTotalRecords(), is(1));
 
-        // This id is used in mod-circulation-storage
-        // if you're going to change it,
-        // circulation rules must be updated as well
-        assertThat(overduePolicy.getId(), is("cd3f6cac-fa17-4079-9fae-2fb28e521412"));
-        return context;
-      }).onComplete(context.succeedingThenComplete());
+    final OverdueFinePolicy overduePolicy = policy
+      .getOverdueFinePolicies().get(0);
+
+    // This id is used in mod-circulation-storage
+    // if you're going to change it,
+    // circulation rules must be updated as well
+    assertThat(overduePolicy.getId(), is("cd3f6cac-fa17-4079-9fae-2fb28e521412"));
+
+    context.completeNow();
   }
 
   @Test
@@ -74,19 +72,12 @@ public class TenantRefAPITest extends ApiTests {
     TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
       Future.succeededFuture(), tenantIdReference));
 
-    succeededFuture(client.post("/_/tenant", getTenantAttributes()))
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(204));
-        assertThat(tenantIdReference.get(), is(TENANT_NAME));
-        return context;
-      }).onComplete(ar -> {
-        TenantRefAPI.resetKafkaServiceFactory();
-        if (ar.failed()) {
-          context.failNow(ar.cause());
-        } else {
-          context.completeNow();
-        }
-      });
+    var response = client.post("/_/tenant", getTenantAttributes());
+
+    assertThat(response.getStatusCode(), is(204));
+    assertThat(tenantIdReference.get(), is(TENANT_NAME));
+
+    context.completeNow();
   }
 
   @Test
@@ -95,20 +86,13 @@ public class TenantRefAPITest extends ApiTests {
     TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
       Future.failedFuture(expectedError), new AtomicReference<>()));
 
-    succeededFuture(client.post("/_/tenant", getTenantAttributes()))
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(500));
-        assertThat(response.getBody().asString(), notNullValue());
-        assertThat(response.getBody().asString().contains(expectedError), is(true));
-        return context;
-      }).onComplete(ar -> {
-        TenantRefAPI.resetKafkaServiceFactory();
-        if (ar.failed()) {
-          context.failNow(ar.cause());
-        } else {
-          context.completeNow();
-        }
-      });
+    var response = client.post("/_/tenant", getTenantAttributes());
+
+    assertThat(response.getStatusCode(), is(500));
+    assertThat(response.getBody().asString(), notNullValue());
+    assertThat(response.getBody().asString().contains(expectedError), is(true));
+
+    context.completeNow();
   }
 
   @Test
@@ -118,12 +102,17 @@ public class TenantRefAPITest extends ApiTests {
       Future.succeededFuture(), new AtomicReference<>(),
       Future.succeededFuture(), tenantIdReference));
 
-    disableTenant(true)
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(204));
-        assertThat(tenantIdReference.get(), is(TENANT_NAME));
-        return context;
-      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+    Throwable failure = null;
+    try {
+      Response response = disableTenant(true);
+
+      assertThat(response.getStatusCode(), is(204));
+      assertThat(tenantIdReference.get(), is(TENANT_NAME));
+    } catch (Throwable t) {
+      failure = t;
+    }
+
+    recreateTenantAndComplete(context, failure);
   }
 
   @Test
@@ -133,12 +122,17 @@ public class TenantRefAPITest extends ApiTests {
       Future.succeededFuture(), new AtomicReference<>(),
       Future.succeededFuture(), tenantIdReference));
 
-    disableTenant(getTenantDisableAttributes().withModuleTo(" ").withPurge(true))
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(204));
-        assertThat(tenantIdReference.get(), is(TENANT_NAME));
-        return context;
-      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+    Throwable failure = null;
+    try {
+      Response response = disableTenant(getTenantDisableAttributes().withModuleTo(" ").withPurge(true));
+
+      assertThat(response.getStatusCode(), is(204));
+      assertThat(tenantIdReference.get(), is(TENANT_NAME));
+    } catch (Throwable t) {
+      failure = t;
+    }
+
+    recreateTenantAndComplete(context, failure);
   }
 
   @Test
@@ -148,12 +142,17 @@ public class TenantRefAPITest extends ApiTests {
       Future.succeededFuture(), new AtomicReference<>(),
       Future.succeededFuture(), tenantIdReference));
 
-    disableTenant(false)
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(204));
-        assertNull(tenantIdReference.get());
-        return context;
-      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+    Throwable failure = null;
+    try {
+      Response response = disableTenant(false);
+
+      assertThat(response.getStatusCode(), is(204));
+      assertNull(tenantIdReference.get());
+    } catch (Throwable t) {
+      failure = t;
+    }
+
+    recreateTenantAndComplete(context, failure);
   }
 
   @Test
@@ -163,12 +162,17 @@ public class TenantRefAPITest extends ApiTests {
       Future.succeededFuture(), new AtomicReference<>(),
       Future.succeededFuture(), tenantIdReference));
 
-    disableTenant(getTenantDisableAttributes())
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(204));
-        assertNull(tenantIdReference.get());
-        return context;
-      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+    Throwable failure = null;
+    try {
+      Response response = disableTenant(getTenantDisableAttributes());
+
+      assertThat(response.getStatusCode(), is(204));
+      assertNull(tenantIdReference.get());
+    } catch (Throwable t) {
+      failure = t;
+    }
+
+    recreateTenantAndComplete(context, failure);
   }
 
   @Test
@@ -178,13 +182,18 @@ public class TenantRefAPITest extends ApiTests {
       Future.succeededFuture(), new AtomicReference<>(),
       Future.failedFuture(expectedError), new AtomicReference<>()));
 
-    disableTenant(true)
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(500));
-        assertThat(response.getBody().asString(), notNullValue());
-        assertThat(response.getBody().asString().contains(expectedError), is(true));
-        return context;
-      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+    Throwable failure = null;
+    try {
+      Response response = disableTenant(true);
+
+      assertThat(response.getStatusCode(), is(500));
+      assertThat(response.getBody().asString(), notNullValue());
+      assertThat(response.getBody().asString().contains(expectedError), is(true));
+    } catch (Throwable t) {
+      failure = t;
+    }
+
+    recreateTenantAndComplete(context, failure);
   }
 
   @Test
@@ -202,31 +211,33 @@ public class TenantRefAPITest extends ApiTests {
       }
     });
 
-    disableTenant(true)
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(500));
-        assertThat(response.getBody().asString(), notNullValue());
-        assertThat(response.getBody().asString().contains(expectedError), is(true));
-        return context;
-      }).onComplete(ar -> recreateTenantAndComplete(context, ar));
+    Throwable failure = null;
+    try {
+      Response response = disableTenant(true);
+
+      assertThat(response.getStatusCode(), is(500));
+      assertThat(response.getBody().asString(), notNullValue());
+      assertThat(response.getBody().asString().contains(expectedError), is(true));
+    } catch (Throwable t) {
+      failure = t;
+    }
+
+    recreateTenantAndComplete(context, failure);
   }
 
   @Test
   public void lostItemFeePolicyLoaded(VertxTestContext context) {
-    succeededFuture(client.get("/lost-item-fees-policies"))
-      .map(response -> response.as(LostItemFeePolicies.class))
-      .map(policy -> {
-        assertThat(policy.getTotalRecords(), is(1));
+    LostItemFeePolicies policy = client.get("/lost-item-fees-policies")
+      .as(LostItemFeePolicies.class);
 
-        final LostItemFeePolicy lostItemFeePolicy = policy
-          .getLostItemFeePolicies().get(0);
+    assertThat(policy.getTotalRecords(), is(1));
 
-        // This id is used in mod-circulation-storage
-        // if you're going to change it,
-        // circulation rules must be updated as well
-        assertThat(lostItemFeePolicy.getId(), is("ed892c0e-52e0-4cd9-8133-c0ef07b4a709"));
-        return context;
-      }).onComplete(context.succeedingThenComplete());
+    final LostItemFeePolicy lostItemFeePolicy = policy
+      .getLostItemFeePolicies().get(0);
+
+    assertThat(lostItemFeePolicy.getId(), is("ed892c0e-52e0-4cd9-8133-c0ef07b4a709"));
+
+    context.completeNow();
   }
 
   @Test
@@ -238,14 +249,14 @@ public class TenantRefAPITest extends ApiTests {
       .header(new Header(OKAPI_HEADER_TOKEN, OKAPI_TOKEN))
       .body(getTenantAttributes());
 
-    succeededFuture(spec.post("/_/tenant"))
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(500));
-        assertThat(response.getBody().asString(), notNullValue());
-        assertThat(response.getBody().asString()
-          .contains("No X-Okapi-Url header"), is(true));
-        return context;
-      }).onComplete(context.succeedingThenComplete());
+    var response = spec.post("/_/tenant");
+
+    assertThat(response.getStatusCode(), is(500));
+    assertThat(response.getBody().asString(), notNullValue());
+    assertThat(response.getBody().asString()
+      .contains("No X-Okapi-Url header"), is(true));
+
+    context.completeNow();
   }
 
   @Test
@@ -260,15 +271,14 @@ public class TenantRefAPITest extends ApiTests {
     getOkapi().stubFor(post(urlPathMatching("/pubsub/.+"))
       .willReturn(aResponse().withStatus(500).withBody("Pubsub unavailable")));
 
-    succeededFuture(client.post("/_/tenant", getTenantAttributes()))
-      .map(response -> {
-        assertThat(response.getStatusCode(), is(500));
-        assertThat(response.getBody().asString(), notNullValue());
-        assertThat(response.getBody().asString()
-          .contains("EventDescriptor was not registered"), is(true));
+    var response = client.post("/_/tenant", getTenantAttributes());
 
-        return context;
-      }).onComplete(context.succeedingThenComplete());
+    assertThat(response.getStatusCode(), is(500));
+    assertThat(response.getBody().asString(), notNullValue());
+    assertThat(response.getBody().asString()
+      .contains("EventDescriptor was not registered"), is(true));
+
+    context.completeNow();
   }
 
   private static KafkaService noOpKafkaService(Vertx vertx) {
@@ -276,12 +286,12 @@ public class TenantRefAPITest extends ApiTests {
       Future.succeededFuture(), new AtomicReference<>());
   }
 
-  private Future<Response> disableTenant(boolean purge) {
+  private Response disableTenant(boolean purge) {
     return disableTenant(getTenantDisableAttributes().withPurge(purge));
   }
 
-  private Future<Response> disableTenant(org.folio.rest.jaxrs.model.TenantAttributes attributes) {
-    return succeededFuture(client.post("/_/tenant", attributes));
+  private Response disableTenant(org.folio.rest.jaxrs.model.TenantAttributes attributes) {
+    return client.post("/_/tenant", attributes);
   }
 
   private static org.folio.rest.jaxrs.model.TenantAttributes getTenantDisableAttributes() {
@@ -291,23 +301,24 @@ public class TenantRefAPITest extends ApiTests {
       .withModuleTo(null);
   }
 
-  private void recreateTenantAndComplete(VertxTestContext context, AsyncResult<?> testResult) {
+  private void recreateTenantAndComplete(VertxTestContext context, Throwable testFailure) {
     TenantRefAPI.setKafkaServiceFactory(TenantRefAPITest::noOpKafkaService);
-    succeededFuture(client.post("/_/tenant", getTenantAttributes()))
-      .onComplete(cleanupResult -> {
-        TenantRefAPI.resetKafkaServiceFactory();
-        if (testResult.failed()) {
-          context.failNow(testResult.cause());
-        } else if (cleanupResult.failed()) {
-          context.failNow(cleanupResult.cause());
-        } else if (cleanupResult.result().getStatusCode() != 204) {
-          context.failNow(new AssertionError("Tenant recreation failed with HTTP "
-            + cleanupResult.result().getStatusCode() + ": "
-            + cleanupResult.result().getBody().asString()));
-        } else {
-          context.completeNow();
-        }
-      });
+    try {
+      Response cleanupResponse = client.post("/_/tenant", getTenantAttributes());
+      if (testFailure != null) {
+        context.failNow(testFailure);
+      } else if (cleanupResponse.getStatusCode() != 204) {
+        context.failNow(new AssertionError("Tenant recreation failed with HTTP "
+          + cleanupResponse.getStatusCode() + ": "
+          + cleanupResponse.getBody().asString()));
+      } else {
+        context.completeNow();
+      }
+    } catch (Throwable cleanupFailure) {
+      context.failNow(testFailure != null ? testFailure : cleanupFailure);
+    } finally {
+      TenantRefAPI.resetKafkaServiceFactory();
+    }
   }
 
   private static KafkaService kafkaService(Vertx vertx, Future<Void> createResult,
