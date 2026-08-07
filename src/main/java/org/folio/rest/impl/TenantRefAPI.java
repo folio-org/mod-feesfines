@@ -76,14 +76,17 @@ public class TenantRefAPI extends TenantAPI {
             return;
           }
 
-          vertx.executeBlocking(() -> createKafkaTopics(vertx, headers)
-            .compose(v -> new PubSubRegistrationService(vertx, headers).registerModule())
-            .onSuccess(v -> {
-              log.info("postTenant executed successfully");
-              handler.handle(res);
-            })
-              .onFailure(t -> handlePostTenantFailure(t, handler)))
-            .onFailure(t -> handlePostTenantFailure(t, handler));
+          try {
+            createKafkaTopics(vertx, headers)
+              .compose(v -> new PubSubRegistrationService(vertx, headers).registerModule())
+              .onSuccess(v -> {
+                log.info("postTenant executed successfully");
+                handler.handle(res);
+              })
+              .onFailure(t -> handlePostTenantFailure(t, handler));
+          } catch (Exception e) {
+            handlePostTenantFailure(e, handler);
+          }
         });
     }, context);
   }
@@ -105,13 +108,16 @@ public class TenantRefAPI extends TenantAPI {
         return;
       }
 
-      vertx.executeBlocking(() -> deleteKafkaTopics(vertx, headers)
-        .onSuccess(v -> {
-          log.info("postTenant tenant purge executed successfully");
-          handler.handle(res);
-        })
-          .onFailure(t -> handlePostTenantFailure(t, handler)))
-        .onFailure(t -> handlePostTenantFailure(t, handler));
+      try {
+        deleteKafkaTopics(vertx, headers)
+          .onSuccess(v -> {
+            log.info("postTenant tenant purge executed successfully");
+            handler.handle(res);
+          })
+          .onFailure(t -> handlePostTenantFailure(t, handler));
+      } catch (Exception e) {
+        handlePostTenantFailure(e, handler);
+      }
     }, context);
   }
 
