@@ -82,7 +82,8 @@ public class TenantRefAPI extends TenantAPI {
               log.info("postTenant executed successfully");
               handler.handle(res);
             })
-            .onFailure(t -> handlePostTenantFailure(t, handler)));
+              .onFailure(t -> handlePostTenantFailure(t, handler)))
+            .onFailure(t -> handlePostTenantFailure(t, handler));
         });
     }, context);
   }
@@ -109,7 +110,8 @@ public class TenantRefAPI extends TenantAPI {
           log.info("postTenant tenant purge executed successfully");
           handler.handle(res);
         })
-        .onFailure(t -> handlePostTenantFailure(t, handler)));
+          .onFailure(t -> handlePostTenantFailure(t, handler)))
+        .onFailure(t -> handlePostTenantFailure(t, handler));
     }, context);
   }
 
