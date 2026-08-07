@@ -13,11 +13,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.test.support.ReadyPostgresTester;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -74,7 +74,7 @@ class RestVerticleIT {
     }
 
   private static Future<Void> initDatabase() {
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    PostgresClient.setPostgresTester(new ReadyPostgresTester());
 
     String sql = "drop schema if exists diku_mod_feesfines cascade;\n"
       + "drop role if exists diku_mod_feesfines;\n";

@@ -36,7 +36,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
-import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.domain.AutomaticFeeFineType;
 import org.folio.rest.impl.TenantRefAPI;
@@ -45,6 +44,7 @@ import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.service.KafkaService;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
 import org.hamcrest.CoreMatchers;
@@ -107,7 +107,7 @@ public class ApiTests {
     okapiDeployment.start();
     okapiDeployment.setUpMapping();
 
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    PostgresClient.setPostgresTester(new ReadyPostgresTester());
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions())
       .compose(ignored -> createTenantAsync(getTenantAttributes()))
@@ -142,7 +142,17 @@ public class ApiTests {
   }
 
   protected static Future<Response> createTenantAsync(TenantAttributes attributes) {
-    TenantRefAPI tenantAPI = new TenantRefAPI();
+    TenantRefAPI tenantAPI = new TenantRefAPI() {
+      @Override
+      protected KafkaService kafkaService(Vertx vertx) {
+        return new KafkaService(vertx) {
+          @Override
+          public Future<Void> createTopics(String tenantId) {
+            return Future.succeededFuture();
+          }
+        };
+      }
+    };
     Map<String, String> headers = new CaseInsensitiveMap<>();
 
     headers.put("Content-type", "application/json");
