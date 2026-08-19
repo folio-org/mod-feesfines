@@ -1,3 +1,6 @@
+## 19.4.1 2026-08-19
+* Add missing interface dependency declarations (MODFEE-452)
+
 ## 19.4.0 2026-04-14
 * Sensitive data in logs cleanup (MODFEE-404)
 * Make simple fee/fine ETs private (MODFQMMGR-1095)
