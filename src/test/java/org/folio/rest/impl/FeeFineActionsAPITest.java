@@ -758,16 +758,12 @@ public class FeeFineActionsAPITest extends ApiTests {
   private void assertThatPublishedLogRecordsCountIsEqualTo(int count) {
     Awaitility.await()
       .atMost(5, TimeUnit.SECONDS)
-      .until(() -> fetchPublishedLogRecords(getOkapi()).size() == count);
+      .until(() -> fetchPublishedLogRecords(testStartTime).size() == count);
   }
 
   private JsonObject extractLastLogRecordPayloadOfType(LogEventPayloadType type) {
-    return fetchPublishedLogRecords(getOkapi()).stream()
-      .map(json -> json.getString("eventPayload"))
-      .filter(s -> s.contains(type.value()))
-      .map(JsonObject::new)
-      .map(json -> json.getJsonObject("payload").encode())
-      .map(JsonObject::new)
+    return fetchPublishedLogRecords(testStartTime, type).stream()
+      .map(json -> json.getJsonObject("payload"))
       .max(Comparator.comparing(json -> json.getString("date")))
       .orElse(new JsonObject());
   }
@@ -789,7 +785,7 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static void assertThatNoticeErrorEventWasPublished(Feefineaction action,
     String errorMessage) {
 
-    assertThat(fetchFirstLogRecordEventPayload(okapiDeployment, NOTICE_ERROR),
+    assertThat(fetchFirstLogRecordEventPayload(testStartTime, NOTICE_ERROR),
       noticeErrorLogRecord(action, errorMessage));
   }
 
@@ -797,8 +793,8 @@ public class FeeFineActionsAPITest extends ApiTests {
     int expectedEventCount) {
 
     Awaitility.await()
-      .atMost(3, TimeUnit.SECONDS)
-      .until(() -> fetchPublishedLogRecords(okapiDeployment, logRecordType), hasSize(expectedEventCount));
+      .atMost(10, TimeUnit.SECONDS)
+      .until(() -> fetchPublishedLogRecords(testStartTime, logRecordType), hasSize(expectedEventCount));
   }
 
   private static void verifyPatronNoticeRequestCount(int expectedEventCount) {

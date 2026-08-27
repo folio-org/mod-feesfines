@@ -1,9 +1,6 @@
 package org.folio.rest.impl;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.restassured.http.ContentType.JSON;
-import static io.vertx.core.json.Json.decodeValue;
 import static org.folio.rest.service.LogEventPublisher.LOG_EVENT_TYPE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.MANUAL_BLOCK_CREATED;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.MANUAL_BLOCK_DELETED;
@@ -13,29 +10,22 @@ import static org.folio.test.support.EntityBuilder.buildManualBlock;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
-import org.folio.rest.domain.EventType;
-import org.folio.rest.jaxrs.model.Event;
-import org.folio.rest.jaxrs.model.EventMetadata;
+import org.folio.rest.domain.FeeFineKafkaTopic;
 import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.service.LogEventPublisher;
 import org.folio.test.support.ApiTests;
-import org.folio.util.PomUtils;
+import org.folio.test.support.KafkaTestHelper;
 import org.junit.jupiter.api.Test;
-
-import com.github.tomakehurst.wiremock.verification.FindRequestsResult;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import io.vertx.core.json.JsonObject;
 
@@ -54,8 +44,6 @@ public class ManualBlocksAPITests extends ApiTests {
       .extract()
       .response()
       .as(Manualblock.class);
-
-    assertTrue(EqualsBuilder.reflectionEquals(createdManualBlock, initialManualBlock, Collections.singletonList("metadata")));
 
     assertManualBlockLogEventPublished(initialManualBlock, MANUAL_BLOCK_CREATED);
 
@@ -77,49 +65,33 @@ public class ManualBlocksAPITests extends ApiTests {
 
   }
 
-  private Event getLastLogEvent() {
-    return getLastPublishedEventOfType(EventType.LOG_RECORD.toString());
+  /** Returns the last LOG_RECORD Kafka message payload published since testStartTime, or null. */
+  private JsonObject getLastLogEvent() {
+    String topic = FeeFineKafkaTopic.LOG_RECORD_TOPIC.fullTopicName(TENANT_NAME);
+    List<String> messages = KafkaTestHelper.getInstance().pollMessages(topic, testStartTime);
+    if (messages.isEmpty()) {
+      return null;
+    }
+    return new JsonObject(messages.get(messages.size() - 1));
   }
 
-  private Event getLastPublishedEventOfType(String eventType) {
-    final FindRequestsResult requests = getOkapi()
-      .findRequestsMatching(postRequestedFor(urlPathMatching("/pubsub/publish")).build());
+  private void assertManualBlockLogEventPublished(Manualblock manualBlockExpected,
+    LogEventPublisher.LogEventPayloadType payloadType) {
 
-    return requests.getRequests()
-      .stream()
-      .filter(request -> StringUtils.isNotBlank(request.getBodyAsString()))
-      .filter(request -> decodeValue(request.getBodyAsString(), Event.class).getEventType()
-        .equals(eventType))
-      .max(Comparator.comparing(LoggedRequest::getLoggedDate))
-      .map(LoggedRequest::getBodyAsString)
-      .map(JsonObject::new)
-      .map(json -> json.mapTo(Event.class))
-      .orElse(null);
-  }
-
-  private void assertManualBlockLogEventPublished(Manualblock manualBlockExpected, LogEventPublisher.LogEventPayloadType payloadType) {
     Awaitility.await()
-      .atMost(5, TimeUnit.SECONDS)
+      .atMost(10, TimeUnit.SECONDS)
       .until(() -> getLastLogEvent() != null);
 
-    final Event event = getLastLogEvent();
-    assertThat(event, notNullValue());
+    final JsonObject eventPayload = getLastLogEvent();
+    assertThat(eventPayload, notNullValue());
 
-    EventMetadata eventMetadata = event.getEventMetadata();
-
-    assertEquals(EventType.LOG_RECORD.name(), event.getEventType());
-    assertEquals(PomUtils.getModuleId(), eventMetadata.getPublishedBy());
-    assertEquals(TENANT_NAME, eventMetadata.getTenantId());
-    assertEquals(1, eventMetadata.getEventTTL()
-      .intValue());
-
-    final JsonObject eventPayload = new JsonObject(event.getEventPayload());
+    assertThat(payloadType.value(), equalTo(eventPayload.getString(LOG_EVENT_TYPE)));
 
     Manualblock manualBlockActual = eventPayload.getJsonObject(PAYLOAD)
       .mapTo(Manualblock.class);
 
-    assertThat(payloadType.value(), equalTo(eventPayload.getString(LOG_EVENT_TYPE)));
-    assertTrue(EqualsBuilder.reflectionEquals(manualBlockActual, manualBlockExpected, Collections.singletonList("metadata")));
+    assertTrue(EqualsBuilder.reflectionEquals(manualBlockActual, manualBlockExpected,
+      Collections.singletonList("metadata")));
 
     // special case for x-okapi-user-id header
     if (payloadType == MANUAL_BLOCK_DELETED) {

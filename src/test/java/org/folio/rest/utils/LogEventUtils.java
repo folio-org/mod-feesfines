@@ -1,17 +1,14 @@
 package org.folio.rest.utils;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static java.util.stream.Collectors.toList;
+import static org.folio.test.support.ApiTests.TENANT_NAME;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.folio.rest.domain.FeeFineKafkaTopic;
 import org.folio.rest.service.LogEventPublisher.LogEventPayloadType;
-import org.folio.test.support.OkapiDeployment;
-
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import org.folio.test.support.KafkaTestHelper;
 
 import io.vertx.core.json.JsonObject;
 
@@ -19,49 +16,42 @@ public class LogEventUtils {
   private LogEventUtils() {
   }
 
-  public static List<JsonObject> fetchPublishedLogRecords(OkapiDeployment okapiDeployment) {
-    return okapiDeployment
-      .findRequestsMatching(postRequestedFor(urlPathMatching("/pubsub/publish")).build())
-      .getRequests().stream()
-      .map(LoggedRequest::getBodyAsString)
+  public static List<JsonObject> fetchPublishedLogRecords(long fromTimestampMs) {
+    String topic = FeeFineKafkaTopic.LOG_RECORD_TOPIC.fullTopicName(TENANT_NAME);
+    return KafkaTestHelper.getInstance().pollMessages(topic, fromTimestampMs)
+      .stream()
       .map(JsonObject::new)
-      .filter(json -> "LOG_RECORD".equals(json.getString("eventType")))
-      .collect(toList());
+      .toList();
   }
 
-  public static List<JsonObject> fetchPublishedLogRecords(OkapiDeployment okapiDeployment,
+  public static List<JsonObject> fetchPublishedLogRecords(long fromTimestampMs,
     LogEventPayloadType logEventPayloadType) {
 
-    return fetchPublishedLogRecords(okapiDeployment)
+    return fetchPublishedLogRecords(fromTimestampMs)
       .stream()
       .filter(json -> isLogEventOfType(json, logEventPayloadType))
-      .collect(toList());
+      .toList();
   }
 
   private static boolean isLogEventOfType(JsonObject event, LogEventPayloadType logEventType) {
     return Optional.of(event)
-      .map(json -> json.getString("eventPayload"))
-      .map(JsonObject::new)
       .filter(json -> StringUtils.equals(json.getString("logEventType"), logEventType.value()))
       .isPresent();
   }
 
-  public static List<String> fetchLogEventPayloads(OkapiDeployment okapiDeployment) {
-    return fetchPublishedLogRecords(okapiDeployment).stream()
-      .map(json -> json.getString("eventPayload"))
-      .map(JsonObject::new)
+  public static List<String> fetchLogEventPayloads(long fromTimestampMs) {
+    return fetchPublishedLogRecords(fromTimestampMs).stream()
       .map(json -> json.getJsonObject("payload").encodePrettily())
-      .collect(toList());
+      .toList();
   }
 
-  public static String fetchFirstLogRecordEventPayload(OkapiDeployment okapiDeployment,
+  public static String fetchFirstLogRecordEventPayload(long fromTimestampMs,
     LogEventPayloadType logEventPayloadType) {
 
-    return fetchPublishedLogRecords(okapiDeployment, logEventPayloadType)
+    return fetchPublishedLogRecords(fromTimestampMs, logEventPayloadType)
       .stream()
-      .map(json -> json.getString("eventPayload"))
+      .map(json -> json.getJsonObject("payload").encodePrettily())
       .findFirst()
       .orElseThrow(() -> new IllegalStateException("No log records found"));
   }
-
 }

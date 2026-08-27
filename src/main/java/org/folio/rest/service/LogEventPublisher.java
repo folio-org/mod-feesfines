@@ -5,26 +5,37 @@ import static org.folio.rest.utils.JsonHelper.write;
 
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 public class LogEventPublisher {
+  private static final Logger log = LogManager.getLogger(LogEventPublisher.class);
+
   public static final String LOG_EVENT_TYPE = "logEventType";
   public static final String PAYLOAD = "payload";
-  private final EventPublisher eventPublisher;
+
+  private final KafkaEventProducer kafkaEventProducer;
+  private final Map<String, String> headers;
 
   public LogEventPublisher(Context context, Map<String, String> headers) {
     this(context.owner(), headers);
   }
 
   public LogEventPublisher(Vertx vertx, Map<String, String> headers) {
-    eventPublisher = new EventPublisher(vertx, headers);
+    this.kafkaEventProducer = new KafkaEventProducer(vertx);
+    this.headers = headers;
   }
 
   public void publishLogEvent(JsonObject json, LogEventPayloadType logEventPayloadType) {
     final JsonObject payload = createLogRecordPayload(json, logEventPayloadType);
-    eventPublisher.publishEventAsynchronously(LOG_RECORD, payload.encode());
+
+    kafkaEventProducer.publish(LOG_RECORD, payload.encode(), headers)
+      .onFailure(e -> log.error("Failed to publish {} event [type={}]: {}",
+        LOG_RECORD, logEventPayloadType, e.getMessage()));
   }
 
   private JsonObject createLogRecordPayload(JsonObject payload, LogEventPayloadType logEventPayloadType) {

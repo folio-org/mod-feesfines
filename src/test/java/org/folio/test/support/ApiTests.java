@@ -100,9 +100,13 @@ public class ApiTests {
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
   protected static PostgresClient pgClient;
+  protected static long testStartTime;
 
   @BeforeAll
   static void deployVerticle(VertxTestContext context) {
+    // Start Kafka before deploying the verticle so KafkaEventProducer can connect.
+    KafkaTestHelper.getInstance();
+
     vertx = Vertx.vertx();
     okapiDeployment.start();
     okapiDeployment.setUpMapping();
@@ -130,6 +134,7 @@ public class ApiTests {
 
   @BeforeEach
   public void setUpMapping() {
+    testStartTime = System.currentTimeMillis();
     okapiDeployment.setUpMapping();
   }
 

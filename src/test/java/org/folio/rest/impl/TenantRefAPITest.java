@@ -1,8 +1,5 @@
 package org.folio.rest.impl;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.test.support.matcher.FeeFineMatchers.hasAllAutomaticFeeFineTypesFor18_3;
@@ -264,21 +261,6 @@ public class TenantRefAPITest extends ApiTests {
     // these are default fees/fines, see resources/templates/db_scripts/populate-feefines.sql
     client.get("/feefines").then()
       .body(hasAllAutomaticFeeFineTypesFor18_3());
-  }
-
-  @Test
-  public void shouldFailIfCannotRegisterInPubSub(VertxTestContext context) {
-    getOkapi().stubFor(post(urlPathMatching("/pubsub/.+"))
-      .willReturn(aResponse().withStatus(500).withBody("Pubsub unavailable")));
-
-    var response = client.post("/_/tenant", getTenantAttributes());
-
-    assertThat(response.getStatusCode(), is(500));
-    assertThat(response.getBody().asString(), notNullValue());
-    assertThat(response.getBody().asString()
-      .contains("EventDescriptor was not registered"), is(true));
-
-    context.completeNow();
   }
 
   private static KafkaService noOpKafkaService(Vertx vertx) {
