@@ -160,9 +160,9 @@ public final class KafkaTestHelper {
       consumer.subscribe(List.of(topic));
       while (System.currentTimeMillis() < pollDeadline) {
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(200));
-        for (ConsumerRecord<String, String> record : records) {
-          if (record.timestamp() >= fromTimestampMs) {
-            messages.add(record.value());
+        for (ConsumerRecord<String, String> rec : records) {
+          if (rec.timestamp() >= fromTimestampMs) {
+            messages.add(rec.value());
           }
         }
       }

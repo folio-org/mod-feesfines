@@ -15,7 +15,6 @@ import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_PARTIALLY;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE_ERROR;
-import static org.folio.rest.utils.LogEventUtils.fetchFirstLogRecordEventPayload;
 import static org.folio.rest.utils.LogEventUtils.fetchPublishedLogRecords;
 import static org.folio.test.support.EntityBuilder.buildCampus;
 import static org.folio.test.support.EntityBuilder.buildHoldingsRecord;

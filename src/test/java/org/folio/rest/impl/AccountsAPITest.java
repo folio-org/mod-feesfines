@@ -41,7 +41,6 @@ import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
-import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
 
 public class AccountsAPITest extends ApiTests {

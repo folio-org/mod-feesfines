@@ -3,7 +3,6 @@ package org.folio.test.support;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 
 import org.folio.rest.tools.utils.NetworkUtils;
 

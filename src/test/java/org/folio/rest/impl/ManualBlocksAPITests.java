@@ -37,13 +37,10 @@ public class ManualBlocksAPITests extends ApiTests {
     String manualBlockId = initialManualBlock.getId();
 
     // create manual block
-    Manualblock createdManualBlock = manualBlocksClient.create(initialManualBlock)
+    manualBlocksClient.create(initialManualBlock)
       .then()
       .statusCode(HttpStatus.SC_CREATED)
-      .contentType(JSON)
-      .extract()
-      .response()
-      .as(Manualblock.class);
+      .contentType(JSON);
 
     assertManualBlockLogEventPublished(initialManualBlock, MANUAL_BLOCK_CREATED);
 
