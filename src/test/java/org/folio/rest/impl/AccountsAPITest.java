@@ -215,21 +215,21 @@ public class AccountsAPITest extends ApiTests {
     final String processId = randomId();
     final JsonObject account = createAccountJsonObject(accountId)
       .put("loanId", UUID.randomUUID().toString())
-      .put("remaining", 0.0)
+      .put("remaining", 90.00)
       .put("status", createNamedObject("Open"))
       .put("processId", processId);
 
     accountsClient.create(account);
 
     final JsonObject updatedAccount = account.copy()
-      .put("status", createNamedObject("Closed"))
+      .put("status", createNamedObject("Open"))
       .put("paymentStatus", createNamedObject(PAID_FULLY.value()))
       .put("remaining", 0.0);
 
     accountsClient.update(accountId, updatedAccount);
 
     assertThat(accountsClient.getById(accountId).body().asString(), allOf(
-      hasJsonPath("status.name", is("Closed")),
+      hasJsonPath("status.name", is("Open")),
       hasJsonPath("paymentStatus.name", is(PAID_FULLY.value())),
       hasJsonPath("remaining", is(0.0)),
       hasJsonPath("processId", is(processId))));

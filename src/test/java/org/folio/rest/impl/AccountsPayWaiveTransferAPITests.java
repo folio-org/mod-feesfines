@@ -303,7 +303,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .put("userId", account.getUserId())
       .put("feeFineId", account.getId())
       .put("feeFineTypeId", account.getFeeFineId())
-      .put("balance", account.getRemaining())
+      .put("balance", account.getRemaining().toDouble())
       .put("loanId", account.getLoanId()));
 
     if (terminalAction && account.getLoanId() != null) {

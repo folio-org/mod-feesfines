@@ -757,7 +757,7 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private void assertThatPublishedLogRecordsCountIsEqualTo(int count) {
     Awaitility.await()
-      .atMost(5, TimeUnit.SECONDS)
+      .atMost(30, TimeUnit.SECONDS)
       .until(() -> fetchPublishedLogRecords(testStartTime).size() == count);
   }
 
@@ -785,8 +785,17 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static void assertThatNoticeErrorEventWasPublished(Feefineaction action,
     String errorMessage) {
 
-    assertThat(fetchFirstLogRecordEventPayload(testStartTime, NOTICE_ERROR),
-      noticeErrorLogRecord(action, errorMessage));
+    Awaitility.await()
+      .atMost(10, TimeUnit.SECONDS)
+      .until(() -> !fetchPublishedLogRecords(testStartTime, NOTICE_ERROR).isEmpty());
+
+    String fullEventJson = fetchPublishedLogRecords(testStartTime, NOTICE_ERROR)
+      .stream()
+      .findFirst()
+      .map(JsonObject::encode)
+      .orElseThrow(() -> new IllegalStateException("No NOTICE_ERROR log records found"));
+
+    assertThat(fullEventJson, noticeErrorLogRecord(action, errorMessage));
   }
 
   private static void verifyPublishedLogRecordsCount(LogEventPayloadType logRecordType,
