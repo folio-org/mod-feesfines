@@ -7,7 +7,6 @@ import static org.folio.rest.utils.JsonHelper.write;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +17,7 @@ import org.folio.rest.jaxrs.model.ActualCostRecord;
 import org.folio.util.UuidUtil;
 
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
@@ -52,20 +52,16 @@ public class AccountEventPublisher {
     publishAccountBalanceChangeEvent(account);
   }
 
-  public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(String loanId) {
+  public Future<Void> publishLoanRelatedFeeFineClosedEvent(String loanId) {
     return kafkaEventProducer.publish(LOAN_RELATED_FEE_FINE_CLOSED,
-        new LoanRelatedFeeFineClosedEvent(loanId).toJsonString(), headers)
-      .toCompletionStage()
-      .toCompletableFuture();
+      new LoanRelatedFeeFineClosedEvent(loanId).toJsonString(), headers);
   }
 
-  public CompletableFuture<Void> publishLoanRelatedFeeFineClosedEvent(
+  public Future<Void> publishLoanRelatedFeeFineClosedEvent(
     ActualCostRecord actualCostRecord) {
 
     return kafkaEventProducer.publish(LOAN_RELATED_FEE_FINE_CLOSED,
-        forActualCostRecord(actualCostRecord).toJsonString(), headers)
-      .toCompletionStage()
-      .toCompletableFuture();
+      forActualCostRecord(actualCostRecord).toJsonString(), headers);
   }
 
   private String createBalanceChangedPayload(Account account) {
