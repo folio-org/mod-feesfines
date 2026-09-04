@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.databind.util.RawValue;
@@ -29,7 +30,6 @@ public class KafkaEventProducer {
   }
 
   KafkaEventProducer(Function<KafkaProducerRecord<String, String>, Future<Void>> sender) {
-
     this.sender = requireNonNull(sender);
   }
 
@@ -44,7 +44,7 @@ public class KafkaEventProducer {
     String kafkaTopic = FeeFineKafkaTopic.from(eventType).fullTopicName(tenantId);
 
     return new KafkaProducerRecordBuilder<String, Object>(tenantId)
-      .key(eventType.name())
+      .key(UUID.randomUUID().toString())
       .value(new RawValue(payload))
       .topic(kafkaTopic)
       .propagateOkapiHeaders(okapiHeaders)
