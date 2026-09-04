@@ -171,31 +171,6 @@ public final class KafkaTestHelper {
     return messages;
   }
 
-  /**
-   * Waits until at least {@code expectedCount} messages are available on the topic
-   * (with timestamp &gt;= fromTimestampMs), then returns all such messages found
-   * within {@code TIMEOUT_SECONDS}.
-   *
-   * @param topic           Kafka topic name
-   * @param fromTimestampMs only return messages with timestamp &gt;= this value
-   * @param expectedCount   minimum number of messages to wait for
-   * @return list of message values
-   */
-  public List<String> waitForMessages(String topic, long fromTimestampMs, int expectedCount) {
-    List<String>[] result = new List[1];
-
-    await().atMost(TIMEOUT_SECONDS, SECONDS).until(() -> {
-      List<String> messages = pollMessages(topic, fromTimestampMs);
-      if (messages.size() >= expectedCount) {
-        result[0] = messages;
-        return true;
-      }
-      return false;
-    });
-
-    return result[0] != null ? result[0] : List.of();
-  }
-
   public static <T> T waitFor(Future<T> future) {
     try {
       return future.toCompletionStage()

@@ -18,7 +18,6 @@ import org.folio.util.UuidUtil;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 public class AccountEventPublisher {
@@ -28,11 +27,7 @@ public class AccountEventPublisher {
   private final Map<String, String> headers;
 
   public AccountEventPublisher(Context context, Map<String, String> headers) {
-    this(context.owner(), headers);
-  }
-
-  public AccountEventPublisher(Vertx vertx, Map<String, String> headers) {
-    this.kafkaEventProducer = new KafkaEventProducer(vertx);
+    this.kafkaEventProducer = new KafkaEventProducer(context.owner());
     this.headers = headers;
   }
 
