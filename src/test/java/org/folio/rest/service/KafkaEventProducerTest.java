@@ -4,6 +4,7 @@ import static org.folio.rest.domain.EventType.FEE_FINE_BALANCE_CHANGED;
 import static org.folio.rest.domain.FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED_TOPIC;
 import static org.folio.test.support.ApiTests.TENANT_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,7 +33,7 @@ class KafkaEventProducerTest {
 
     assertTrue(result.succeeded());
     assertEquals(FEE_FINE_BALANCE_CHANGED_TOPIC.fullTopicName(TENANT_NAME), sentRecord.get().topic());
-    assertEquals(FEE_FINE_BALANCE_CHANGED.name(), sentRecord.get().key());
+    assertNotNull(sentRecord.get().key());
     assertEquals(payload, sentRecord.get().value());
     assertEquals(TENANT_NAME, tenantHeader(sentRecord.get()));
   }

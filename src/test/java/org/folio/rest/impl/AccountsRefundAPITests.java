@@ -1,8 +1,5 @@
 package org.folio.rest.impl;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
 import static org.apache.http.HttpStatus.SC_CREATED;
@@ -43,13 +40,12 @@ import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
-import org.folio.rest.jaxrs.model.Event;
-import org.folio.rest.jaxrs.model.EventMetadata;
+import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.test.support.KafkaTestHelper;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
 import org.folio.test.support.EntityBuilder;
 import org.folio.test.support.matcher.FeeFineActionMatchers;
-import org.folio.util.PomUtils;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -221,7 +217,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       REFUND.getPartialResult(), expectedFeeFineActions);
 
-    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    List<String> payloads = fetchLogEventPayloads(testStartTime);
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfClosedAccountWithPaymentPayloads())));
     assertThat(payloads, hasSize(4));
   }
@@ -242,7 +238,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       REFUND.getPartialResult(), expectedFeeFineActions);
 
-    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    List<String> payloads = fetchLogEventPayloads(testStartTime);
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfClosedAccountWithTransferPayloads())));
     assertThat(payloads, hasSize(4));
   }
@@ -267,7 +263,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       REFUND.getPartialResult(), expectedFeeFineActions);
 
-    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    List<String> payloads = fetchLogEventPayloads(testStartTime);
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfClosedAccountWithPaymentAndTransferPayloads())));
     assertThat(payloads, hasSize(7));
   }
@@ -288,7 +284,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       REFUND.getPartialResult(), expectedFeeFineActions);
 
-    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    List<String> payloads = fetchLogEventPayloads(testStartTime);
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfOpenAccountWithPaymentPayloads())));
     assertThat(payloads, hasSize(4));
   }
@@ -309,7 +305,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount,
       refundAmount, REFUND.getPartialResult(), expectedFeeFineActions);
 
-    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    List<String> payloads = fetchLogEventPayloads(testStartTime);
     payloads.forEach(
       payload -> assertThat(payload, is(partialRefundOfOpenAccountWithTransferPayloads())));
     assertThat(payloads, hasSize(4));
@@ -335,7 +331,7 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     testSingleAccountRefundSuccess(initialAmount, payAmount, transferAmount, waiveAmount, refundAmount,
       REFUND.getPartialResult(), expectedFeeFineActions);
 
-    List<String> payloads = fetchLogEventPayloads(getOkapi());
+    List<String> payloads = fetchLogEventPayloads(testStartTime);
     payloads.forEach(payload -> assertThat(payload, is(partialRefundOfOpenAccountWithPaymentAndTransferPayloads())));
     assertThat(payloads, hasSize(7));
   }
@@ -916,20 +912,16 @@ public class AccountsRefundAPITests extends ActionsAPITests {
     }
   }
 
-  private void verifyThatEventWasSent(EventType eventType, JsonObject eventPayload) {
-    Event event = new Event()
-      .withEventType(eventType.name())
-      .withEventPayload(eventPayload.encode())
-      .withEventMetadata(new EventMetadata()
-        .withPublishedBy(PomUtils.getModuleId())
-        .withTenantId(TENANT_NAME)
-        .withEventTTL(1));
-
+  private void verifyThatEventWasSent(EventType eventType, JsonObject expectedPayload) {
+    String topic = FeeFineKafkaTopic.from(eventType).fullTopicName(TENANT_NAME);
     Awaitility.await()
-      .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/pubsub/publish"))
-        .withRequestBody(equalToJson(toJson(event), true, true))
-      ));
+      .atMost(10, TimeUnit.SECONDS)
+      .until(() -> KafkaTestHelper.getInstance()
+        .pollMessages(topic, testStartTime)
+        .stream()
+        .map(JsonObject::new)
+        .anyMatch(msg -> expectedPayload.fieldNames().stream()
+          .allMatch(key -> expectedPayload.getValue(key).equals(msg.getValue(key)))));
   }
 
   private static Account createAccount(String accountId, MonetaryValue amount,

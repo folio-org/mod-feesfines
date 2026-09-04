@@ -100,14 +100,22 @@ public class ApiTests {
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
   protected static PostgresClient pgClient;
+  protected static long testStartTime;
 
   @BeforeAll
   static void deployVerticle(VertxTestContext context) {
+    // Start Kafka before deploying the verticle so KafkaEventProducer can connect.
+    KafkaTestHelper.getInstance();
+
+    // Starting Testcontainers from the deployment callback blocks the Vert.x event loop and can
+    // exceed VertxExtension's 30-second lifecycle timeout on a busy Docker host.
+    ReadyPostgresTester postgresTester = new ReadyPostgresTester();
+    postgresTester.start("postgres", "username", "password");
+    PostgresClient.setPostgresTester(postgresTester);
+
     vertx = Vertx.vertx();
     okapiDeployment.start();
     okapiDeployment.setUpMapping();
-
-    PostgresClient.setPostgresTester(new ReadyPostgresTester());
 
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions())
       .compose(ignored -> createTenantAsync(getTenantAttributes()))
@@ -130,6 +138,7 @@ public class ApiTests {
 
   @BeforeEach
   public void setUpMapping() {
+    testStartTime = System.currentTimeMillis();
     okapiDeployment.setUpMapping();
   }
 

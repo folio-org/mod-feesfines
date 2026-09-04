@@ -1,8 +1,5 @@
 package org.folio.rest.impl;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
@@ -39,13 +36,12 @@ import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
-import org.folio.rest.jaxrs.model.Event;
-import org.folio.rest.jaxrs.model.EventMetadata;
+import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.test.support.KafkaTestHelper;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
-import org.folio.util.pubsub.PubSubClientUtils;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -331,10 +327,8 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
 
     verifyThatEventWasSent(EventType.LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
       .put("loanId", account2.getLoanId()));
-    Awaitility.await()
-      .atMost(5, TimeUnit.SECONDS);
 
-    fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
+    fetchLogEventPayloads(testStartTime).forEach(payload -> assertThat(payload,
       is(either(feeFineActionLogEventPayload(account1, request, action.getPartialResult(),
         expectedActionAmount.toDouble(), expectedRemainingAmount1.toDouble()))
         .or(feeFineActionLogEventPayload(account2, request, action.getFullResult(),
@@ -386,19 +380,15 @@ public class AccountsBulkPayWaiveTransferAPITests extends ActionsAPITests {
     return JsonObject.mapFrom(object).encodePrettily();
   }
 
-  private void verifyThatEventWasSent(EventType eventType, JsonObject eventPayload) {
-    Event event = new Event()
-      .withEventType(eventType.name())
-      .withEventPayload(eventPayload.encode())
-      .withEventMetadata(new EventMetadata()
-        .withPublishedBy(PubSubClientUtils.getModuleId())
-        .withTenantId(TENANT_NAME)
-        .withEventTTL(1));
-
+  private void verifyThatEventWasSent(EventType eventType, JsonObject expectedPayload) {
+    String topic = FeeFineKafkaTopic.from(eventType).fullTopicName(TENANT_NAME);
     Awaitility.await()
-      .atMost(5, TimeUnit.SECONDS)
-      .untilAsserted(() -> getOkapi().verify(1, postRequestedFor(urlPathEqualTo("/pubsub/publish"))
-        .withRequestBody(equalToJson(toJson(event), true, true))
-      ));
+      .atMost(10, TimeUnit.SECONDS)
+      .until(() -> KafkaTestHelper.getInstance()
+        .pollMessages(topic, testStartTime)
+        .stream()
+        .map(JsonObject::new)
+        .anyMatch(msg -> expectedPayload.fieldNames().stream()
+          .allMatch(key -> expectedPayload.getValue(key).equals(msg.getValue(key)))));
   }
 }

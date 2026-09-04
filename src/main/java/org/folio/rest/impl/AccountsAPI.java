@@ -337,7 +337,7 @@ public class AccountsAPI implements Accounts {
 
     new AccountUpdateService(okapiHeaders, vertxContext)
       .updateAccount(accountId, entity)
-      .thenAccept(asyncResultHandler::handle);
+      .onSuccess(asyncResultHandler);
   }
 
   @Override
