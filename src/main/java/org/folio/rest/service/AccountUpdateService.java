@@ -1,6 +1,7 @@
 package org.folio.rest.service;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.rest.jaxrs.resource.Accounts.PutAccountsByAccountIdResponse;
 import static org.folio.rest.jaxrs.resource.Accounts.PutAccountsByAccountIdResponse.respond500WithTextPlain;
@@ -9,6 +10,7 @@ import static org.folio.rest.utils.AccountHelper.isClosedAndHasZeroRemainingAmou
 import static org.folio.rest.utils.MetadataHelper.populateMetadata;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import javax.ws.rs.core.Response;
 
@@ -22,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 
 public class AccountUpdateService {
   private static final Logger log = LoggerFactory.getLogger(AccountUpdateService.class);
@@ -40,30 +41,30 @@ public class AccountUpdateService {
     this.eventPublisher = new AccountEventPublisher(context, okapiHeaders);
   }
 
-  public Future<AsyncResult<Response>> updateAccount(String accountId, Account account) {
-    final Promise<AsyncResult<Response>> putCompleted = Promise.promise();
+  public CompletableFuture<AsyncResult<Response>> updateAccount(String accountId, Account account) {
+    final CompletableFuture<AsyncResult<Response>> putCompleted = new CompletableFuture<>();
 
     put(ACCOUNTS_TABLE, account, accountId, okapiHeaders, context,
       PutAccountsByAccountIdResponse.class, putCompleted::complete);
 
-    return putCompleted.future().compose(responseResult -> {
+    return putCompleted.thenCompose(responseResult -> {
       if (!isFeeFineUpdateSucceeded(responseResult)) {
-        return succeededFuture(responseResult);
+        return completedFuture(responseResult);
       }
 
       eventPublisher.publishAccountBalanceChangeEvent(account);
 
       if (isFeeFineWithLoanClosed(account)) {
         return eventPublisher.publishLoanRelatedFeeFineClosedEvent(account.getLoanId())
-          .map(responseResult);
+          .thenApply(notUsed -> responseResult);
       }
 
-      return succeededFuture(responseResult);
-    }).recover(error -> {
+      return completedFuture(responseResult);
+    }).exceptionally(error -> {
       log.error("Cannot publish fee/fine closed event [feeFineId - {}, loanId - {}]" +
         " error occurred {}", account.getLoanId(), account.getId(), error);
 
-      return succeededFuture(succeededFuture(respond500WithTextPlain(error.getMessage())));
+      return succeededFuture(respond500WithTextPlain(error.getMessage()));
     });
   }
 
