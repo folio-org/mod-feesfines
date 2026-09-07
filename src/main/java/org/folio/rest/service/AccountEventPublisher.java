@@ -8,8 +8,6 @@ import static org.folio.rest.utils.JsonHelper.write;
 import java.math.BigDecimal;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.rest.domain.LoanRelatedFeeFineClosedEvent;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
@@ -20,23 +18,16 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
-public class AccountEventPublisher {
-  private static final Logger log = LogManager.getLogger(AccountEventPublisher.class);
-
-  private final KafkaEventProducer kafkaEventProducer;
-  private final Map<String, String> headers;
+public class AccountEventPublisher extends AbstractEventPublisher {
 
   public AccountEventPublisher(Context context, Map<String, String> headers) {
-    this.kafkaEventProducer = new KafkaEventProducer(context.owner());
-    this.headers = headers;
+    super(context, headers);
   }
 
   public void publishAccountBalanceChangeEvent(Account account) {
-    final String payload = createBalanceChangedPayload(account);
-
-    kafkaEventProducer.publish(FEE_FINE_BALANCE_CHANGED, payload, headers)
-      .onFailure(e -> log.error("Failed to publish {} event for account [id={}]: {}",
-        FEE_FINE_BALANCE_CHANGED, account.getId(), e.getMessage()));
+    publish(account.getUserId(), FEE_FINE_BALANCE_CHANGED, createBalanceChangedPayload(account))
+      .onFailure(e -> log.error("Failed to publish {} event for account [id={}]",
+        FEE_FINE_BALANCE_CHANGED, account.getId(), e));
   }
 
   public void publishDeletedAccountBalanceChangeEvent(String accountId) {
@@ -47,19 +38,17 @@ public class AccountEventPublisher {
     publishAccountBalanceChangeEvent(account);
   }
 
-  public Future<Void> publishLoanRelatedFeeFineClosedEvent(String loanId) {
-    return kafkaEventProducer.publish(LOAN_RELATED_FEE_FINE_CLOSED,
-      new LoanRelatedFeeFineClosedEvent(loanId).toJsonString(), headers);
+  public Future<Void> publishLoanRelatedFeeFineClosedEvent(Account account) {
+    return publish(account.getUserId(), LOAN_RELATED_FEE_FINE_CLOSED,
+      new LoanRelatedFeeFineClosedEvent(account.getLoanId()).toJson());
   }
 
-  public Future<Void> publishLoanRelatedFeeFineClosedEvent(
-    ActualCostRecord actualCostRecord) {
-
-    return kafkaEventProducer.publish(LOAN_RELATED_FEE_FINE_CLOSED,
-      forActualCostRecord(actualCostRecord).toJsonString(), headers);
+  public Future<Void> publishLoanRelatedFeeFineClosedEvent(ActualCostRecord actualCostRecord) {
+    return publish(actualCostRecord.getUser().getId(), LOAN_RELATED_FEE_FINE_CLOSED,
+      forActualCostRecord(actualCostRecord).toJson());
   }
 
-  private String createBalanceChangedPayload(Account account) {
+  private static JsonObject createBalanceChangedPayload(Account account) {
     JsonObject payload = new JsonObject();
     write(payload, "userId", account.getUserId());
     write(payload, "feeFineId", account.getId());
@@ -69,6 +58,6 @@ public class AccountEventPublisher {
       write(payload, "loanId", account.getLoanId());
     }
 
-    return payload.toString();
+    return payload;
   }
 }

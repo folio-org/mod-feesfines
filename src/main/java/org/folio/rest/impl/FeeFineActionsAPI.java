@@ -1,7 +1,6 @@
 package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
-import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 
 import java.io.IOException;
@@ -161,7 +160,7 @@ public class FeeFineActionsAPI implements Feefineactions {
     new LogEventService(vertxContext.owner(), okapiHeaders)
       .createFeeFineLogEventPayload(entity)
       .onSuccess(eventPayload -> new LogEventPublisher(vertxContext, okapiHeaders)
-        .publishLogEvent(eventPayload, FEE_FINE));
+        .publishFeeFineActionLogEvent(entity.getAccountId(), eventPayload));
   }
 
   @Validate

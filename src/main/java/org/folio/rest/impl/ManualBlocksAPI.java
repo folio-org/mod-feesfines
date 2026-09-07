@@ -144,7 +144,7 @@ public class ManualBlocksAPI implements Manualblocks {
                     Future.succeededFuture(PostManualblocksResponse.respond201WithApplicationJson(block,
                       PostManualblocksResponse.headersFor201())));
                   CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
-                    .publishLogEvent(JsonObject.mapFrom(entity), MANUAL_BLOCK_CREATED));
+                    .publishManualBlockLogEvent(entity.getUserId(), JsonObject.mapFrom(entity), MANUAL_BLOCK_CREATED));
                 })
                 .onFailure(t -> asyncResultHandler.handle(Future.succeededFuture(
                   PostManualblocksResponse.respond400WithTextPlain(
@@ -239,51 +239,48 @@ public class ManualBlocksAPI implements Manualblocks {
         Criterion criterion = new Criterion(idCrit);
 
         try {
+          PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
 
-          PostgresClient.getInstance(vertxContext.owner(), tenantId).getById(MANUALBLOCKS_TABLE, manualblockId, Manualblock.class,
-            getByIdReply -> {
-              if (getByIdReply.succeeded()) {
-                PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(
-                  MANUALBLOCKS_TABLE, criterion, deleteReply -> {
-                    if (deleteReply.succeeded()) {
-                      if (deleteReply.result().rowCount() == 1) {
+          pgClient.getById(MANUALBLOCKS_TABLE, manualblockId, Manualblock.class)
+            .onSuccess(block -> pgClient.delete(
+              MANUALBLOCKS_TABLE, criterion, deleteReply -> {
+                if (deleteReply.succeeded()) {
+                  if (deleteReply.result().rowCount() == 1) {
 
-                        String source = okapiHeaders.get("x-okapi-user-id");
-                        JsonObject payload = JsonObject.mapFrom(getByIdReply.result());
-                        payload.getJsonObject("metadata").put("updatedByUserId", source);
+                    String source = okapiHeaders.get("x-okapi-user-id");
+                    JsonObject payload = JsonObject.mapFrom(block);
+                    payload.getJsonObject("metadata").put("updatedByUserId", source);
 
-                        CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
-                          .publishLogEvent(JsonObject.mapFrom(payload), MANUAL_BLOCK_DELETED));
+                    CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
+                      .publishManualBlockLogEvent(block.getUserId(), JsonObject.mapFrom(payload), MANUAL_BLOCK_DELETED));
 
-                        asyncResultHandler.handle(Future.succeededFuture(
-                          DeleteManualblocksByManualblockIdResponse.respond204()));
-                      } else {
-                        asyncResultHandler.handle(Future.succeededFuture(
-                          DeleteManualblocksByManualblockIdResponse.respond404WithTextPlain("Record Not Found")));
-                      }
-                    } else {
-                      logger.error(deleteReply.result());
-                      String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
-                      logger.error(error, deleteReply.cause());
-                      if (error == null) {
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(DeleteManualblocksByManualblockIdResponse.respond500WithTextPlain(
-                            messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))
-                          ));
-                      } else {
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(DeleteManualblocksByManualblockIdResponse.respond400WithTextPlain(error)
-                          )
-                        );
-                      }
-                    }
-                  });
-
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteManualblocksByManualblockIdResponse.respond404WithTextPlain("Record Not Found")));
-              }
-            });
+                    asyncResultHandler.handle(Future.succeededFuture(
+                      DeleteManualblocksByManualblockIdResponse.respond204()));
+                  } else {
+                    asyncResultHandler.handle(Future.succeededFuture(
+                      DeleteManualblocksByManualblockIdResponse.respond404WithTextPlain("Record Not Found")));
+                  }
+                } else {
+                  logger.error(deleteReply.result());
+                  String error = PgExceptionUtil.badRequestMessage(deleteReply.cause());
+                  logger.error(error, deleteReply.cause());
+                  if (error == null) {
+                    asyncResultHandler.handle(
+                      Future.succeededFuture(DeleteManualblocksByManualblockIdResponse.respond500WithTextPlain(
+                        messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))
+                      ));
+                  } else {
+                    asyncResultHandler.handle(
+                      Future.succeededFuture(DeleteManualblocksByManualblockIdResponse.respond400WithTextPlain(error)
+                      )
+                    );
+                  }
+                }
+              }))
+            .onFailure(t ->
+              asyncResultHandler.handle(Future.succeededFuture(
+                DeleteManualblocksByManualblockIdResponse.respond404WithTextPlain("Record Not Found")))
+            );
 
         } catch (Exception e) {
           logger.error(e.getMessage());
@@ -343,7 +340,7 @@ public class ManualBlocksAPI implements Manualblocks {
                           PutManualblocksByManualblockIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
                       } else if (putReply.result().rowCount() == 1) {
                         CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
-                          .publishLogEvent(JsonObject.mapFrom(entity), MANUAL_BLOCK_MODIFIED));
+                          .publishManualBlockLogEvent(entity.getUserId(), JsonObject.mapFrom(entity), MANUAL_BLOCK_MODIFIED));
                         asyncResultHandler.handle(Future.succeededFuture(
                           PutManualblocksByManualblockIdResponse.respond204()));
                       }

@@ -9,7 +9,6 @@ import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.FeeFineStatus.CLOSED;
 import static org.folio.rest.jaxrs.model.PaymentStatus.Name.fromValue;
 import static org.folio.rest.persist.PostgresClient.getInstance;
-import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.ArrayList;
@@ -190,7 +189,7 @@ public abstract class ActionService {
       .map(ffa -> logEventService.createFeeFineLogEventPayload(ffa,
           actionContext.getAccounts().get(ffa.getAccountId()))
         .compose(eventPayload -> {
-          logEventPublisher.publishLogEvent(eventPayload, FEE_FINE);
+          logEventPublisher.publishFeeFineActionLogEvent(ffa.getUserId(), eventPayload);
           return succeededFuture();
         }))
       .collect(toList()))

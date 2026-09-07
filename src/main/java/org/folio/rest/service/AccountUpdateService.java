@@ -19,10 +19,8 @@ import org.folio.rest.service.action.context.ActionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 
 public class AccountUpdateService {
   private static final Logger log = LoggerFactory.getLogger(AccountUpdateService.class);
@@ -40,31 +38,27 @@ public class AccountUpdateService {
     this.eventPublisher = new AccountEventPublisher(context, okapiHeaders);
   }
 
-  public Future<AsyncResult<Response>> updateAccount(String accountId, Account account) {
-    final Promise<AsyncResult<Response>> putCompleted = Promise.promise();
+  public Future<Response> updateAccount(String accountId, Account account) {
+    return put(ACCOUNTS_TABLE, account, accountId, okapiHeaders, context, PutAccountsByAccountIdResponse.class)
+      .compose(putResponse -> {
+        if (putResponse.getStatus() != HTTP_NO_CONTENT.toInt()) {
+          return succeededFuture(putResponse);
+        }
 
-    put(ACCOUNTS_TABLE, account, accountId, okapiHeaders, context,
-      PutAccountsByAccountIdResponse.class, putCompleted::complete);
+        eventPublisher.publishAccountBalanceChangeEvent(account);
 
-    return putCompleted.future().compose(responseResult -> {
-      if (!isFeeFineUpdateSucceeded(responseResult)) {
-        return succeededFuture(responseResult);
-      }
+        if (isFeeFineWithLoanClosed(account)) {
+          return eventPublisher.publishLoanRelatedFeeFineClosedEvent(account)
+            .map(putResponse);
+        }
 
-      eventPublisher.publishAccountBalanceChangeEvent(account);
+        return succeededFuture(putResponse);
+      }).recover(error -> {
+        log.error("Cannot publish fee/fine closed event [feeFineId - {}, loanId - {}]",
+          account.getId(), account.getLoanId(), error);
 
-      if (isFeeFineWithLoanClosed(account)) {
-        return eventPublisher.publishLoanRelatedFeeFineClosedEvent(account.getLoanId())
-          .map(responseResult);
-      }
-
-      return succeededFuture(responseResult);
-    }).recover(error -> {
-      log.error("Cannot publish fee/fine closed event [feeFineId - {}, loanId - {}]" +
-        " error occurred {}", account.getLoanId(), account.getId(), error);
-
-      return succeededFuture(succeededFuture(respond500WithTextPlain(error.getMessage())));
-    });
+        return succeededFuture(respond500WithTextPlain(error.getMessage()));
+      });
   }
 
   public Future<Account> updateAccount(Account account, Map<String, String> headers) {
@@ -77,7 +71,6 @@ public class AccountUpdateService {
   public void publishLoanRelatedFeeFineClosedEvent(ActionContext actionContext) {
     actionContext.getAccounts().values().stream()
       .filter(this::isFeeFineWithLoanClosed)
-      .map(Account::getLoanId)
       .distinct()
       .forEach(eventPublisher::publishLoanRelatedFeeFineClosedEvent);
   }
@@ -88,10 +81,5 @@ public class AccountUpdateService {
 
   private boolean isFeeFineAssociatedToLoan(Account feeFine) {
     return StringUtils.isNotBlank(feeFine.getLoanId());
-  }
-
-  private boolean isFeeFineUpdateSucceeded(AsyncResult<Response> responseAsyncResult) {
-    return responseAsyncResult.succeeded()
-      && responseAsyncResult.result().getStatus() == HTTP_NO_CONTENT.toInt();
   }
 }

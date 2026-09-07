@@ -34,4 +34,9 @@ public enum FeeFineKafkaTopic implements KafkaTopic {
   public String topicName() {
     return eventType.name();
   }
+
+  @Override
+  public int numPartitions() {
+    return 10;
+  }
 }
