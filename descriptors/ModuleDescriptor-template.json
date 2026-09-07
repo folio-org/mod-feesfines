@@ -35,6 +35,22 @@
       "version": "15.1 16.0"
     },
     {
+      "id": "pubsub-event-types",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-publishers",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-subscribers",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-publish",
+      "version": "0.1"
+    },
+    {
       "id": "actual-cost-record-storage",
       "version": "0.7"
     },
@@ -181,7 +197,8 @@
             "accounts.item.post"
           ],
           "modulePermissions": [
-            "patron-notice.post"
+            "patron-notice.post",
+            "pubsub.publish.post"
           ]
         },
         {
@@ -193,7 +210,8 @@
             "accounts.item.put"
           ],
           "modulePermissions": [
-            "patron-notice.post"
+            "patron-notice.post",
+            "pubsub.publish.post"
           ]
         },
         {
@@ -204,7 +222,9 @@
           "permissionsRequired": [
             "accounts.item.delete"
           ],
-          "modulePermissions": []
+          "modulePermissions": [
+            "pubsub.publish.post"
+          ]
         },
         {
           "methods":[
@@ -251,6 +271,7 @@
             "feesfines.accounts.pay.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -263,6 +284,7 @@
             "feesfines.accounts.waive.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -275,6 +297,7 @@
             "feesfines.accounts.transfer.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -287,6 +310,7 @@
             "feesfines.accounts.cancel.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -299,6 +323,7 @@
             "feesfines.accounts.refund.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -347,6 +372,7 @@
             "feesfines.accounts-bulk.pay.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -359,6 +385,7 @@
             "feesfines.accounts-bulk.waive.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -371,6 +398,7 @@
             "feesfines.accounts-bulk.transfer.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -383,6 +411,7 @@
             "feesfines.accounts-bulk.cancel.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -395,6 +424,7 @@
             "feesfines.accounts-bulk.refund.post"
           ],
           "modulePermissions": [
+            "pubsub.publish.post",
             "modperms.feesfines.patron-notices.post"
           ]
         },
@@ -425,7 +455,8 @@
             "feefineactions.item.post"
           ],
           "modulePermissions": [
-            "modperms.feesfines.patron-notices.post"
+            "modperms.feesfines.patron-notices.post",
+            "pubsub.publish.post"
           ]
         },
         {
@@ -742,7 +773,9 @@
           "permissionsRequired":[
             "manualblocks.item.post"
           ],
-          "modulePermissions": []
+          "modulePermissions": [
+            "pubsub.publish.post"
+          ]
         },
         {
           "methods":[
@@ -752,7 +785,9 @@
           "permissionsRequired":[
             "manualblocks.item.put"
           ],
-          "modulePermissions": []
+          "modulePermissions": [
+            "pubsub.publish.post"
+          ]
         },
         {
           "methods":[
@@ -762,7 +797,9 @@
           "permissionsRequired":[
             "manualblocks.item.delete"
           ],
-          "modulePermissions": []
+          "modulePermissions": [
+            "pubsub.publish.post"
+          ]
         },
         {
           "methods":[
@@ -916,7 +953,8 @@
           "modulePermissions": [
             "actual-cost-record-storage.actual-cost-records.collection.get",
             "actual-cost-record-storage.actual-cost-records.item.get",
-            "actual-cost-record-storage.actual-cost-records.item.put"
+            "actual-cost-record-storage.actual-cost-records.item.put",
+            "pubsub.publish.post"
           ]
         },
         {
@@ -934,7 +972,8 @@
             "circulation-storage.loans.item.get",
             "circulation-storage.loans.collection.get",
             "users.item.get",
-            "users.collection.get"
+            "users.collection.get",
+            "pubsub.publish.post"
           ]
         }
       ]
@@ -947,7 +986,11 @@
         {
           "methods": ["POST"],
           "pathPattern": "/_/tenant",
-          "modulePermissions": []
+          "modulePermissions": [
+            "pubsub.event-types.post",
+            "pubsub.publishers.post",
+            "pubsub.subscribers.post"
+          ]
         }, {
           "methods": ["GET","DELETE"],
           "pathPattern": "/_/tenant/{id}"

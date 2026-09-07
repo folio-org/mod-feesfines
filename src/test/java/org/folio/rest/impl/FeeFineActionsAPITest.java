@@ -15,6 +15,7 @@ import static org.folio.rest.jaxrs.model.PaymentStatus.Name.PAID_PARTIALLY;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.FEE_FINE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE;
 import static org.folio.rest.service.LogEventPublisher.LogEventPayloadType.NOTICE_ERROR;
+import static org.folio.rest.utils.LogEventUtils.fetchFirstLogRecordEventPayload;
 import static org.folio.rest.utils.LogEventUtils.fetchPublishedLogRecords;
 import static org.folio.test.support.EntityBuilder.buildCampus;
 import static org.folio.test.support.EntityBuilder.buildHoldingsRecord;
@@ -756,13 +757,17 @@ public class FeeFineActionsAPITest extends ApiTests {
 
   private void assertThatPublishedLogRecordsCountIsEqualTo(int count) {
     Awaitility.await()
-      .atMost(30, TimeUnit.SECONDS)
-      .until(() -> fetchPublishedLogRecords(testStartTime).size() == count);
+      .atMost(5, TimeUnit.SECONDS)
+      .until(() -> fetchPublishedLogRecords(getOkapi()).size() == count);
   }
 
   private JsonObject extractLastLogRecordPayloadOfType(LogEventPayloadType type) {
-    return fetchPublishedLogRecords(testStartTime, type).stream()
-      .map(json -> json.getJsonObject("payload"))
+    return fetchPublishedLogRecords(getOkapi()).stream()
+      .map(json -> json.getString("eventPayload"))
+      .filter(s -> s.contains(type.value()))
+      .map(JsonObject::new)
+      .map(json -> json.getJsonObject("payload").encode())
+      .map(JsonObject::new)
       .max(Comparator.comparing(json -> json.getString("date")))
       .orElse(new JsonObject());
   }
@@ -784,25 +789,16 @@ public class FeeFineActionsAPITest extends ApiTests {
   private static void assertThatNoticeErrorEventWasPublished(Feefineaction action,
     String errorMessage) {
 
-    Awaitility.await()
-      .atMost(10, TimeUnit.SECONDS)
-      .until(() -> !fetchPublishedLogRecords(testStartTime, NOTICE_ERROR).isEmpty());
-
-    String fullEventJson = fetchPublishedLogRecords(testStartTime, NOTICE_ERROR)
-      .stream()
-      .findFirst()
-      .map(JsonObject::encode)
-      .orElseThrow(() -> new IllegalStateException("No NOTICE_ERROR log records found"));
-
-    assertThat(fullEventJson, noticeErrorLogRecord(action, errorMessage));
+    assertThat(fetchFirstLogRecordEventPayload(okapiDeployment, NOTICE_ERROR),
+      noticeErrorLogRecord(action, errorMessage));
   }
 
   private static void verifyPublishedLogRecordsCount(LogEventPayloadType logRecordType,
     int expectedEventCount) {
 
     Awaitility.await()
-      .atMost(10, TimeUnit.SECONDS)
-      .until(() -> fetchPublishedLogRecords(testStartTime, logRecordType), hasSize(expectedEventCount));
+      .atMost(3, TimeUnit.SECONDS)
+      .until(() -> fetchPublishedLogRecords(okapiDeployment, logRecordType), hasSize(expectedEventCount));
   }
 
   private static void verifyPatronNoticeRequestCount(int expectedEventCount) {

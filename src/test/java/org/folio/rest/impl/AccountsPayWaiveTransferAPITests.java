@@ -1,5 +1,8 @@
 package org.folio.rest.impl;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
 import static io.restassured.http.ContentType.JSON;
 import static java.lang.String.format;
@@ -34,12 +37,13 @@ import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
-import org.folio.rest.domain.FeeFineKafkaTopic;
-import org.folio.test.support.KafkaTestHelper;
+import org.folio.rest.jaxrs.model.Event;
+import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
+import org.folio.util.PomUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -205,7 +209,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
     verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, expectedRemainingAmount,
       "Closed");
 
-    assertThat(fetchLogEventPayloads(testStartTime).get(0),
+    assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request, action.getFullResult(), 1.0,
         0.0)));
   }
@@ -242,7 +246,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
     verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus, expectedRemainingAmount,
       "Open");
 
-    assertThat(fetchLogEventPayloads(testStartTime).get(0),
+    assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request, action.getPartialResult(),
         1.0,0.24)));
   }
@@ -303,7 +307,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .put("userId", account.getUserId())
       .put("feeFineId", account.getId())
       .put("feeFineTypeId", account.getFeeFineId())
-      .put("balance", account.getRemaining().toDouble())
+      .put("balance", account.getRemaining())
       .put("loanId", account.getLoanId()));
 
     if (terminalAction && account.getLoanId() != null) {
@@ -311,7 +315,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
         .put("loanId", account.getLoanId()));
     }
 
-    assertThat(fetchLogEventPayloads(testStartTime).get(0),
+    assertThat(fetchLogEventPayloads(getOkapi()).get(0),
       is(feeFineActionLogEventPayload(account, request,
         terminalAction ? action.getFullResult() : action.getPartialResult(),
         requestedAmount.toDouble(), expectedAccountBalanceAfter.toDouble())));
@@ -361,15 +365,19 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
     return JsonObject.mapFrom(object).encodePrettily();
   }
 
-  private void verifyThatEventWasSent(EventType eventType, JsonObject expectedPayload) {
-    String topic = FeeFineKafkaTopic.from(eventType).fullTopicName(TENANT_NAME);
+  private void verifyThatEventWasSent(EventType eventType, JsonObject eventPayload) {
+    Event event = new Event()
+      .withEventType(eventType.name())
+      .withEventPayload(eventPayload.encode())
+      .withEventMetadata(new EventMetadata()
+        .withPublishedBy(PomUtils.getModuleId())
+        .withTenantId(TENANT_NAME)
+        .withEventTTL(1));
+
     Awaitility.await()
-      .atMost(10, TimeUnit.SECONDS)
-      .until(() -> KafkaTestHelper.getInstance()
-        .pollMessages(topic, testStartTime)
-        .stream()
-        .map(JsonObject::new)
-        .anyMatch(msg -> expectedPayload.fieldNames().stream()
-          .allMatch(key -> expectedPayload.getValue(key).equals(msg.getValue(key)))));
+      .atMost(5, TimeUnit.SECONDS)
+      .untilAsserted(() -> getOkapi().verify(postRequestedFor(urlPathEqualTo("/pubsub/publish"))
+        .withRequestBody(equalToJson(toJson(event), true, true))
+      ));
   }
 }
