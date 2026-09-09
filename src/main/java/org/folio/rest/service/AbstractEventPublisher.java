@@ -20,11 +20,11 @@ public abstract class AbstractEventPublisher {
   private final KafkaEventProducer kafkaEventProducer;
   private final Map<String, String> headers;
 
-  public AbstractEventPublisher(Context context, Map<String, String> headers) {
+  protected AbstractEventPublisher(Context context, Map<String, String> headers) {
     this(context.owner(), headers);
   }
 
-  public AbstractEventPublisher(Vertx vertx, Map<String, String> headers) {
+  protected AbstractEventPublisher(Vertx vertx, Map<String, String> headers) {
     this.kafkaEventProducer = new KafkaEventProducer(vertx);
     this.headers = headers;
   }
