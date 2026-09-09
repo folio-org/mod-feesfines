@@ -144,7 +144,7 @@ public class ManualBlocksAPI implements Manualblocks {
                     Future.succeededFuture(PostManualblocksResponse.respond201WithApplicationJson(block,
                       PostManualblocksResponse.headersFor201())));
                   CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
-                    .publishLogEvent(JsonObject.mapFrom(entity), MANUAL_BLOCK_CREATED));
+                    .publishManualBlockLogEvent(block.getUserId(), JsonObject.mapFrom(entity), MANUAL_BLOCK_CREATED));
                 })
                 .onFailure(t -> asyncResultHandler.handle(Future.succeededFuture(
                   PostManualblocksResponse.respond400WithTextPlain(
@@ -249,11 +249,12 @@ public class ManualBlocksAPI implements Manualblocks {
                       if (deleteReply.result().rowCount() == 1) {
 
                         String source = okapiHeaders.get("x-okapi-user-id");
-                        JsonObject payload = JsonObject.mapFrom(getByIdReply.result());
+                        Manualblock block = getByIdReply.result();
+                        JsonObject payload = JsonObject.mapFrom(block);
                         payload.getJsonObject("metadata").put("updatedByUserId", source);
 
                         CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
-                          .publishLogEvent(JsonObject.mapFrom(payload), MANUAL_BLOCK_DELETED));
+                          .publishManualBlockLogEvent(block.getUserId(), JsonObject.mapFrom(payload), MANUAL_BLOCK_DELETED));
 
                         asyncResultHandler.handle(Future.succeededFuture(
                           DeleteManualblocksByManualblockIdResponse.respond204()));
@@ -343,7 +344,7 @@ public class ManualBlocksAPI implements Manualblocks {
                           PutManualblocksByManualblockIdResponse.respond500WithTextPlain(putReply.cause().getMessage())));
                       } else if (putReply.result().rowCount() == 1) {
                         CompletableFuture.runAsync(() -> new LogEventPublisher(vertxContext, okapiHeaders)
-                          .publishLogEvent(JsonObject.mapFrom(entity), MANUAL_BLOCK_MODIFIED));
+                          .publishManualBlockLogEvent(entity.getUserId(), JsonObject.mapFrom(entity), MANUAL_BLOCK_MODIFIED));
                         asyncResultHandler.handle(Future.succeededFuture(
                           PutManualblocksByManualblockIdResponse.respond204()));
                       }

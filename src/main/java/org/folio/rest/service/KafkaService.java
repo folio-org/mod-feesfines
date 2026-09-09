@@ -7,7 +7,7 @@ import java.util.function.BooleanSupplier;
 
 import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.kafka.services.KafkaTopic;
-import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.rest.domain.event.FeeFineKafkaTopic;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;

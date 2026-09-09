@@ -14,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.service.KafkaService;
-import org.folio.rest.service.PubSubRegistrationService;
 import org.folio.rest.tools.utils.TenantLoading;
 
 import io.vertx.core.AsyncResult;
@@ -78,7 +77,6 @@ public class TenantRefAPI extends TenantAPI {
 
           try {
             createKafkaTopics(vertx, headers)
-              .compose(v -> new PubSubRegistrationService(vertx, headers).registerModule())
               .onSuccess(v -> {
                 log.info("postTenant executed successfully");
                 handler.handle(res);

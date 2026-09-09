@@ -1,30 +1,45 @@
 package org.folio.rest.service;
 
-import static org.folio.rest.domain.EventType.LOG_RECORD;
+import static org.folio.rest.domain.event.AuditKafkaTopic.LOG_RECORD;
 import static org.folio.rest.utils.JsonHelper.write;
 
 import java.util.Map;
+
 
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-public class LogEventPublisher {
+public class LogEventPublisher extends AbstractEventPublisher {
+
   public static final String LOG_EVENT_TYPE = "logEventType";
   public static final String PAYLOAD = "payload";
-  private final EventPublisher eventPublisher;
 
   public LogEventPublisher(Context context, Map<String, String> headers) {
-    this(context.owner(), headers);
+    super(context, headers);
   }
 
   public LogEventPublisher(Vertx vertx, Map<String, String> headers) {
-    eventPublisher = new EventPublisher(vertx, headers);
+    super(vertx, headers);
   }
 
-  public void publishLogEvent(JsonObject json, LogEventPayloadType logEventPayloadType) {
+  public void publishFeeFineActionLogEvent(String accountId, JsonObject json) {
+    publishLogEvent(accountId, json, LogEventPayloadType.FEE_FINE);
+  }
+
+  public void publishManualBlockLogEvent(String userId, JsonObject json, LogEventPayloadType logEventPayloadType) {
+    publishLogEvent(userId, json, logEventPayloadType);
+  }
+
+  public void publishPatronNoticeLogEvent(String userId, JsonObject json, LogEventPayloadType logEventPayloadType) {
+    publishLogEvent(userId, json, logEventPayloadType);
+  }
+
+  private void publishLogEvent(String key, JsonObject json, LogEventPayloadType logEventPayloadType) {
     final JsonObject payload = createLogRecordPayload(json, logEventPayloadType);
-    eventPublisher.publishEventAsynchronously(LOG_RECORD, payload.encode());
+
+    publish(key, LOG_RECORD, payload)
+      .onFailure(e -> log.error("Failed to publish log record event [type={}]", logEventPayloadType, e));
   }
 
   private JsonObject createLogRecordPayload(JsonObject payload, LogEventPayloadType logEventPayloadType) {
