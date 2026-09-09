@@ -6,19 +6,22 @@ import static org.folio.test.support.matcher.FeeFineMatchers.hasAllAutomaticFeeF
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.core.MediaType;
 
+import org.folio.rest.domain.event.FeeFineKafkaTopic;
 import org.folio.rest.jaxrs.model.LostItemFeePolicies;
 import org.folio.rest.jaxrs.model.LostItemFeePolicy;
 import org.folio.rest.jaxrs.model.OverdueFinePolicies;
 import org.folio.rest.jaxrs.model.OverdueFinePolicy;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.service.KafkaService;
 import org.folio.test.support.ApiTests;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,19 +32,25 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
 @ExtendWith(VertxExtension.class)
 public class TenantRefAPITest extends ApiTests {
 
+  private static final List<String> FEES_FINES_KAFKA_TOPICS = Arrays.stream(FeeFineKafkaTopic.values())
+    .map(topic -> topic.fullTopicName(TENANT_NAME))
+    .toList();
+
   @BeforeEach
-  public void disableKafkaTopicCreation() {
-    TenantRefAPI.setKafkaServiceFactory(TenantRefAPITest::noOpKafkaService);
+  public void beforeEach() {
+    TenantRefAPI.resetKafkaServiceFactory();
   }
 
-  @AfterEach
-  public void resetKafkaTopicCreation() {
+  @AfterAll
+  public static void resetKafkaTopicCreation() {
     TenantRefAPI.resetKafkaServiceFactory();
   }
 
@@ -64,17 +73,15 @@ public class TenantRefAPITest extends ApiTests {
   }
 
   @Test
-  public void shouldCreateKafkaTopicsDuringTenantInitialization(VertxTestContext context) {
-    AtomicReference<String> tenantIdReference = new AtomicReference<>();
-    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
-      Future.succeededFuture(), tenantIdReference));
+  public void shouldManageKafkaTopicsUponTenantCreationAndDeletion() {
+    // topics should have been created upon tenant deployment
+    kafkaTestHelper.verifyTopicsExist(FEES_FINES_KAFKA_TOPICS);
 
-    var response = client.post("/_/tenant", getTenantAttributes());
+    disableTenant(true);
+    kafkaTestHelper.verifyTopicsDoNotExist(FEES_FINES_KAFKA_TOPICS);
 
-    assertThat(response.getStatusCode(), is(204));
-    assertThat(tenantIdReference.get(), is(TENANT_NAME));
-
-    context.completeNow();
+    createTenant();
+    kafkaTestHelper.verifyTopicsExist(FEES_FINES_KAFKA_TOPICS);
   }
 
   @Test
@@ -93,83 +100,21 @@ public class TenantRefAPITest extends ApiTests {
   }
 
   @Test
-  public void shouldDeleteKafkaTopicsDuringTenantPurge(VertxTestContext context) {
-    AtomicReference<String> tenantIdReference = new AtomicReference<>();
-    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
-      Future.succeededFuture(), new AtomicReference<>(),
-      Future.succeededFuture(), tenantIdReference));
+  public void shouldNotDeleteKafkaTopicsWhenTenantDisableDoesNotPurge() {
+    kafkaTestHelper.verifyTopicsExist(FEES_FINES_KAFKA_TOPICS);
+    disableTenant(false);
+    kafkaTestHelper.verifyTopicsExist(FEES_FINES_KAFKA_TOPICS);
 
-    Throwable failure = null;
-    try {
-      Response response = disableTenant(true);
-
-      assertThat(response.getStatusCode(), is(204));
-      assertThat(tenantIdReference.get(), is(TENANT_NAME));
-    } catch (Throwable t) {
-      failure = t;
-    }
-
-    recreateTenantAndComplete(context, failure);
+    createTenant();
   }
 
   @Test
-  public void shouldDeleteKafkaTopicsWhenTenantDisableUsesBlankModuleTo(VertxTestContext context) {
-    AtomicReference<String> tenantIdReference = new AtomicReference<>();
-    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
-      Future.succeededFuture(), new AtomicReference<>(),
-      Future.succeededFuture(), tenantIdReference));
+  public void shouldNotDeleteKafkaTopicsWhenTenantDisableOmitsPurge() {
+    kafkaTestHelper.verifyTopicsExist(FEES_FINES_KAFKA_TOPICS);
+    disableTenant(null);
+    kafkaTestHelper.verifyTopicsExist(FEES_FINES_KAFKA_TOPICS);
 
-    Throwable failure = null;
-    try {
-      Response response = disableTenant(getTenantDisableAttributes().withModuleTo(" ").withPurge(true));
-
-      assertThat(response.getStatusCode(), is(204));
-      assertThat(tenantIdReference.get(), is(TENANT_NAME));
-    } catch (Throwable t) {
-      failure = t;
-    }
-
-    recreateTenantAndComplete(context, failure);
-  }
-
-  @Test
-  public void shouldNotDeleteKafkaTopicsWhenTenantDisableDoesNotPurge(VertxTestContext context) {
-    AtomicReference<String> tenantIdReference = new AtomicReference<>();
-    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
-      Future.succeededFuture(), new AtomicReference<>(),
-      Future.succeededFuture(), tenantIdReference));
-
-    Throwable failure = null;
-    try {
-      Response response = disableTenant(false);
-
-      assertThat(response.getStatusCode(), is(204));
-      assertNull(tenantIdReference.get());
-    } catch (Throwable t) {
-      failure = t;
-    }
-
-    recreateTenantAndComplete(context, failure);
-  }
-
-  @Test
-  public void shouldNotDeleteKafkaTopicsWhenTenantDisableOmitsPurge(VertxTestContext context) {
-    AtomicReference<String> tenantIdReference = new AtomicReference<>();
-    TenantRefAPI.setKafkaServiceFactory(vertx -> kafkaService(vertx,
-      Future.succeededFuture(), new AtomicReference<>(),
-      Future.succeededFuture(), tenantIdReference));
-
-    Throwable failure = null;
-    try {
-      Response response = disableTenant(getTenantDisableAttributes());
-
-      assertThat(response.getStatusCode(), is(204));
-      assertNull(tenantIdReference.get());
-    } catch (Throwable t) {
-      failure = t;
-    }
-
-    recreateTenantAndComplete(context, failure);
+    createTenant();
   }
 
   @Test
@@ -181,11 +126,11 @@ public class TenantRefAPITest extends ApiTests {
 
     Throwable failure = null;
     try {
-      Response response = disableTenant(true);
+      HttpResponse<Buffer> response = disableTenant(true);
 
-      assertThat(response.getStatusCode(), is(500));
-      assertThat(response.getBody().asString(), notNullValue());
-      assertThat(response.getBody().asString().contains(expectedError), is(true));
+      assertThat(response.statusCode(), is(500));
+      assertThat(response.bodyAsString(), notNullValue());
+      assertThat(response.bodyAsString().contains(expectedError), is(true));
     } catch (Throwable t) {
       failure = t;
     }
@@ -210,11 +155,11 @@ public class TenantRefAPITest extends ApiTests {
 
     Throwable failure = null;
     try {
-      Response response = disableTenant(true);
+      HttpResponse<Buffer> response = disableTenant(true);
 
-      assertThat(response.getStatusCode(), is(500));
-      assertThat(response.getBody().asString(), notNullValue());
-      assertThat(response.getBody().asString().contains(expectedError), is(true));
+      assertThat(response.statusCode(), is(500));
+      assertThat(response.bodyAsString(), notNullValue());
+      assertThat(response.bodyAsString().contains(expectedError), is(true));
     } catch (Throwable t) {
       failure = t;
     }
@@ -268,16 +213,12 @@ public class TenantRefAPITest extends ApiTests {
       Future.succeededFuture(), new AtomicReference<>());
   }
 
-  private Response disableTenant(boolean purge) {
-    return disableTenant(getTenantDisableAttributes().withPurge(purge));
-  }
-
-  private Response disableTenant(org.folio.rest.jaxrs.model.TenantAttributes attributes) {
-    return client.post("/_/tenant", attributes);
+  private HttpResponse<Buffer> disableTenant(Boolean purge) {
+    return postTenant(getTenantDisableAttributes().withPurge(purge));
   }
 
   private static org.folio.rest.jaxrs.model.TenantAttributes getTenantDisableAttributes() {
-    org.folio.rest.jaxrs.model.TenantAttributes attributes = getTenantAttributes();
+    TenantAttributes attributes = getTenantAttributes();
     return attributes
       .withModuleFrom(attributes.getModuleTo())
       .withModuleTo(null);
