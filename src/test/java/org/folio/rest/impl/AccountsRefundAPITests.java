@@ -7,6 +7,7 @@ import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.domain.Action.CREDIT;
 import static org.folio.rest.domain.Action.REFUND;
 import static org.folio.rest.domain.FeeFineStatus.OPEN;
+import static org.folio.rest.domain.event.FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED;
 import static org.folio.rest.utils.JsonHelper.write;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountBulkRefundClient;
@@ -35,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
-import org.folio.rest.domain.EventType;
+import org.folio.kafka.services.KafkaTopic;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
@@ -908,16 +909,15 @@ public class AccountsRefundAPITests extends ActionsAPITests {
       write(payload, "balance", account.getRemaining());
       write(payload, "loanId", account.getLoanId());
 
-      verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, payload);
+      verifyThatEventWasSent(FEE_FINE_BALANCE_CHANGED, payload);
     }
   }
 
-  private void verifyThatEventWasSent(EventType eventType, JsonObject expectedPayload) {
-    String topic = FeeFineKafkaTopic.from(eventType).fullTopicName(TENANT_NAME);
+  private void verifyThatEventWasSent(KafkaTopic topic, JsonObject expectedPayload) {
     Awaitility.await()
       .atMost(10, TimeUnit.SECONDS)
       .until(() -> KafkaTestHelper.getInstance()
-        .pollMessages(topic, testStartTime)
+        .pollMessages(topic.fullTopicName(TENANT_NAME), testStartTime)
         .stream()
         .map(JsonObject::new)
         .anyMatch(msg -> expectedPayload.fieldNames().stream()

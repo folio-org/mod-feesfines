@@ -1,16 +1,9 @@
 package org.folio.rest.domain.event;
 
 import org.folio.kafka.services.KafkaTopic;
-import org.folio.rest.domain.EventType;
 
 public enum AuditKafkaTopic implements KafkaTopic {
-  LOG_RECORD_TOPIC(EventType.LOG_RECORD);
-
-  private final EventType eventType;
-
-  AuditKafkaTopic(EventType eventType) {
-    this.eventType = eventType;
-  }
+  LOG_RECORD;
 
   @Override
   public String moduleName() {
@@ -19,7 +12,7 @@ public enum AuditKafkaTopic implements KafkaTopic {
 
   @Override
   public String topicName() {
-    return eventType.name();
+    return name();
   }
 
   @Override

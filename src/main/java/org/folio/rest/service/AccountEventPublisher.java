@@ -1,8 +1,7 @@
 package org.folio.rest.service;
 
-import static org.folio.rest.domain.EventType.FEE_FINE_BALANCE_CHANGED;
 import static org.folio.rest.domain.LoanRelatedFeeFineClosedEvent.forActualCostRecord;
-import static org.folio.rest.domain.event.FeeFineKafkaTopic.LOAN_RELATED_FEE_FINE_CLOSED_TOPIC;
+import static org.folio.rest.domain.event.FeeFineKafkaTopic.LOAN_RELATED_FEE_FINE_CLOSED;
 import static org.folio.rest.utils.JsonHelper.write;
 
 import java.math.BigDecimal;
@@ -26,9 +25,8 @@ public class AccountEventPublisher extends AbstractEventPublisher {
   }
 
   public void publishAccountBalanceChangeEvent(Account account) {
-    publish(account.getUserId(), FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED_TOPIC, createBalanceChangedPayload(account))
-      .onFailure(e -> log.error("Failed to publish {} event for account [id={}]",
-        FEE_FINE_BALANCE_CHANGED, account.getId(), e));
+    publish(account.getUserId(), FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED, createBalanceChangedPayload(account))
+      .onFailure(e -> log.error("Failed to publish log record event for account [id={}]", account.getId(), e));
   }
 
   public void publishDeletedAccountBalanceChangeEvent(String accountId) {
@@ -40,12 +38,12 @@ public class AccountEventPublisher extends AbstractEventPublisher {
   }
 
   public Future<Void> publishLoanRelatedFeeFineClosedEvent(Account account) {
-    return publish(account.getUserId(), LOAN_RELATED_FEE_FINE_CLOSED_TOPIC,
+    return publish(account.getUserId(), LOAN_RELATED_FEE_FINE_CLOSED,
       new LoanRelatedFeeFineClosedEvent(account.getLoanId()).toJson());
   }
 
   public Future<Void> publishLoanRelatedFeeFineClosedEvent(ActualCostRecord actualCostRecord) {
-    return publish(actualCostRecord.getUser().getId(), LOAN_RELATED_FEE_FINE_CLOSED_TOPIC,
+    return publish(actualCostRecord.getUser().getId(), LOAN_RELATED_FEE_FINE_CLOSED,
       forActualCostRecord(actualCostRecord).toJson());
   }
 

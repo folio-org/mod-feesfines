@@ -17,7 +17,7 @@ public class LogEventUtils {
   }
 
   public static List<JsonObject> fetchPublishedLogRecords(long fromTimestampMs) {
-    String topic = AuditKafkaTopic.LOG_RECORD_TOPIC.fullTopicName(TENANT_NAME);
+    String topic = AuditKafkaTopic.LOG_RECORD.fullTopicName(TENANT_NAME);
     return KafkaTestHelper.getInstance().pollMessages(topic, fromTimestampMs)
       .stream()
       .map(JsonObject::new)

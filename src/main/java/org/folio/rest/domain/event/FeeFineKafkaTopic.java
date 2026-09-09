@@ -1,29 +1,12 @@
 package org.folio.rest.domain.event;
 
 import org.folio.kafka.services.KafkaTopic;
-import org.folio.rest.domain.EventType;
 
 public enum FeeFineKafkaTopic implements KafkaTopic {
-  FEE_FINE_BALANCE_CHANGED_TOPIC(EventType.FEE_FINE_BALANCE_CHANGED),
-  LOAN_RELATED_FEE_FINE_CLOSED_TOPIC(EventType.LOAN_RELATED_FEE_FINE_CLOSED);
+  FEE_FINE_BALANCE_CHANGED,
+  LOAN_RELATED_FEE_FINE_CLOSED;
 
   private static final String MODULE_NAME = "feesfines";
-
-  private final EventType eventType;
-
-  FeeFineKafkaTopic(EventType eventType) {
-    this.eventType = eventType;
-  }
-
-  public static FeeFineKafkaTopic from(EventType eventType) {
-    for (FeeFineKafkaTopic topic : values()) {
-      if (topic.eventType == eventType) {
-        return topic;
-      }
-    }
-
-    throw new IllegalArgumentException("No Kafka topic for event type " + eventType);
-  }
 
   @Override
   public String moduleName() {
@@ -32,7 +15,7 @@ public enum FeeFineKafkaTopic implements KafkaTopic {
 
   @Override
   public String topicName() {
-    return eventType.name();
+    return name();
   }
 
   @Override

@@ -7,6 +7,8 @@ import static org.folio.rest.domain.Action.PAY;
 import static org.folio.rest.domain.Action.TRANSFER;
 import static org.folio.rest.domain.Action.WAIVE;
 import static org.folio.rest.domain.MonetaryValue.ZERO;
+import static org.folio.rest.domain.event.FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED;
+import static org.folio.rest.domain.event.FeeFineKafkaTopic.LOAN_RELATED_FEE_FINE_CLOSED;
 import static org.folio.rest.jaxrs.model.PaymentStatus.Name.OUTSTANDING;
 import static org.folio.rest.utils.LogEventUtils.fetchLogEventPayloads;
 import static org.folio.rest.utils.ResourceClients.buildAccountPayClient;
@@ -27,19 +29,18 @@ import java.util.stream.Stream;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
+import org.folio.kafka.services.KafkaTopic;
 import org.folio.rest.domain.Action;
-import org.folio.rest.domain.EventType;
 import org.folio.rest.domain.FeeFineStatus;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ActionFailureResponse;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
-import org.folio.rest.domain.event.FeeFineKafkaTopic;
-import org.folio.test.support.KafkaTestHelper;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;
+import org.folio.test.support.KafkaTestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -299,7 +300,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
     verifyAccountAndGet(accountsClient, ACCOUNT_ID, expectedPaymentStatus,
       expectedAccountBalanceAfter, expectedAccountStatus);
 
-    verifyThatEventWasSent(EventType.FEE_FINE_BALANCE_CHANGED, new JsonObject()
+    verifyThatEventWasSent(FEE_FINE_BALANCE_CHANGED, new JsonObject()
       .put("userId", account.getUserId())
       .put("feeFineId", account.getId())
       .put("feeFineTypeId", account.getFeeFineId())
@@ -307,7 +308,7 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
       .put("loanId", account.getLoanId()));
 
     if (terminalAction && account.getLoanId() != null) {
-      verifyThatEventWasSent(EventType.LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
+      verifyThatEventWasSent(LOAN_RELATED_FEE_FINE_CLOSED, new JsonObject()
         .put("loanId", account.getLoanId()));
     }
 
@@ -361,12 +362,11 @@ public class AccountsPayWaiveTransferAPITests extends ActionsAPITests {
     return JsonObject.mapFrom(object).encodePrettily();
   }
 
-  private void verifyThatEventWasSent(EventType eventType, JsonObject expectedPayload) {
-    String topic = FeeFineKafkaTopic.from(eventType).fullTopicName(TENANT_NAME);
+  private void verifyThatEventWasSent(KafkaTopic topic, JsonObject expectedPayload) {
     Awaitility.await()
       .atMost(10, TimeUnit.SECONDS)
       .until(() -> KafkaTestHelper.getInstance()
-        .pollMessages(topic, testStartTime)
+        .pollMessages(topic.fullTopicName(TENANT_NAME), testStartTime)
         .stream()
         .map(JsonObject::new)
         .anyMatch(msg -> expectedPayload.fieldNames().stream()

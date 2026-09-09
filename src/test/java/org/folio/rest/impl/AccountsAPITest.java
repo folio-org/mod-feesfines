@@ -16,7 +16,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -26,16 +25,15 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
-import org.folio.rest.domain.EventType;
-import org.hamcrest.Matcher;
-import org.folio.rest.domain.event.FeeFineKafkaTopic;
 import org.folio.rest.domain.MonetaryValue;
+import org.folio.rest.domain.event.FeeFineKafkaTopic;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ContributorData;
 import org.folio.rest.jaxrs.model.PaymentStatus;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.test.support.ApiTests;
 import org.folio.test.support.KafkaTestHelper;
+import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -324,7 +322,7 @@ public class AccountsAPITest extends ApiTests {
 
   /** Returns the payload of the most recent LOAN_RELATED_FEE_FINE_CLOSED Kafka message, or null. */
   private JsonObject getLastFeeFineClosedPayload() {
-    String topic = FeeFineKafkaTopic.LOAN_RELATED_FEE_FINE_CLOSED_TOPIC.fullTopicName(TENANT_NAME);
+    String topic = FeeFineKafkaTopic.LOAN_RELATED_FEE_FINE_CLOSED.fullTopicName(TENANT_NAME);
     List<String> messages = KafkaTestHelper.getInstance().pollMessages(topic, testStartTime);
     if (messages.isEmpty()) {
       return null;
@@ -334,7 +332,7 @@ public class AccountsAPITest extends ApiTests {
 
   /** Returns the payload of the most recent FEE_FINE_BALANCE_CHANGED Kafka message, or null. */
   private JsonObject getLastBalanceChangedPayload() {
-    String topic = FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED_TOPIC.fullTopicName(TENANT_NAME);
+    String topic = FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED.fullTopicName(TENANT_NAME);
     List<String> messages = KafkaTestHelper.getInstance().pollMessages(topic, testStartTime);
     if (messages.isEmpty()) {
       return null;
@@ -349,9 +347,6 @@ public class AccountsAPITest extends ApiTests {
 
     final JsonObject payload = getLastBalanceChangedPayload();
     assertThat(payload, notNullValue());
-
-    assertEquals(EventType.FEE_FINE_BALANCE_CHANGED.name(),
-      FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED_TOPIC.topicName());
 
     assertThat(payload.getString("userId"), is(account.getUserId()));
     assertThat(payload.getString("feeFineId"), is(account.getId()));
