@@ -1,9 +1,11 @@
 package org.folio.rest.service;
 
 import static org.folio.rest.domain.EventType.LOG_RECORD;
+import static org.folio.rest.domain.event.AuditKafkaTopic.LOG_RECORD_TOPIC;
 import static org.folio.rest.utils.JsonHelper.write;
 
 import java.util.Map;
+
 
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -37,7 +39,7 @@ public class LogEventPublisher extends AbstractEventPublisher {
   private void publishLogEvent(String key, JsonObject json, LogEventPayloadType logEventPayloadType) {
     final JsonObject payload = createLogRecordPayload(json, logEventPayloadType);
 
-    publish(key, LOG_RECORD, payload)
+    publish(key, LOG_RECORD_TOPIC, payload)
       .onFailure(e -> log.error("Failed to publish {} event [type={}]", LOG_RECORD, logEventPayloadType, e));
   }
 

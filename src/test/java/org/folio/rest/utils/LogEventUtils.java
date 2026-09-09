@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.rest.domain.event.AuditKafkaTopic;
 import org.folio.rest.service.LogEventPublisher.LogEventPayloadType;
 import org.folio.test.support.KafkaTestHelper;
 
@@ -17,7 +17,7 @@ public class LogEventUtils {
   }
 
   public static List<JsonObject> fetchPublishedLogRecords(long fromTimestampMs) {
-    String topic = FeeFineKafkaTopic.LOG_RECORD_TOPIC.fullTopicName(TENANT_NAME);
+    String topic = AuditKafkaTopic.LOG_RECORD_TOPIC.fullTopicName(TENANT_NAME);
     return KafkaTestHelper.getInstance().pollMessages(topic, fromTimestampMs)
       .stream()
       .map(JsonObject::new)

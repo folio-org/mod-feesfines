@@ -28,7 +28,7 @@ import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
 import org.folio.rest.domain.EventType;
 import org.hamcrest.Matcher;
-import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.rest.domain.event.FeeFineKafkaTopic;
 import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.ContributorData;

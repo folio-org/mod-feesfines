@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.http.HttpStatus;
 import org.awaitility.Awaitility;
-import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.rest.domain.event.AuditKafkaTopic;
 import org.folio.rest.jaxrs.model.Manualblock;
 import org.folio.rest.service.LogEventPublisher;
 import org.folio.test.support.ApiTests;
@@ -64,7 +64,7 @@ public class ManualBlocksAPITests extends ApiTests {
 
   /** Returns the last LOG_RECORD Kafka message payload published since testStartTime, or null. */
   private JsonObject getLastLogEvent() {
-    String topic = FeeFineKafkaTopic.LOG_RECORD_TOPIC.fullTopicName(TENANT_NAME);
+    String topic = AuditKafkaTopic.LOG_RECORD_TOPIC.fullTopicName(TENANT_NAME);
     List<String> messages = KafkaTestHelper.getInstance().pollMessages(topic, testStartTime);
     if (messages.isEmpty()) {
       return null;

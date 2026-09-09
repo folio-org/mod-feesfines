@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.domain.EventType;
+import org.folio.kafka.services.KafkaTopic;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -29,8 +29,8 @@ public abstract class AbstractEventPublisher {
     this.headers = headers;
   }
 
-  protected Future<Void> publish(String key, EventType eventType, JsonObject payload) {
-    return kafkaEventProducer.publish(key, eventType, payload.encode(), headers);
+  protected Future<Void> publish(String key, KafkaTopic topic, JsonObject payload) {
+    return kafkaEventProducer.publish(key, topic, payload.encode(), headers);
   }
 
 }

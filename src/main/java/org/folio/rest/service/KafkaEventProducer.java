@@ -10,8 +10,7 @@ import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
-import org.folio.rest.domain.EventType;
-import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.kafka.services.KafkaTopic;
 
 import com.fasterxml.jackson.databind.util.RawValue;
 
@@ -33,15 +32,15 @@ public class KafkaEventProducer {
     this.sender = requireNonNull(sender);
   }
 
-  public Future<Void> publish(String key, EventType eventType, String payload, Map<String, String> okapiHeaders) {
-    return sender.apply(createRecord(key, eventType, payload, okapiHeaders));
+  public Future<Void> publish(String key, KafkaTopic topic, String payload, Map<String, String> okapiHeaders) {
+    return sender.apply(createRecord(key, topic, payload, okapiHeaders));
   }
 
-  private static KafkaProducerRecord<String, String> createRecord(String key, EventType eventType, String payload,
+  private static KafkaProducerRecord<String, String> createRecord(String key, KafkaTopic topic, String payload,
     Map<String, String> okapiHeaders) {
 
     String tenantId = tenantId(okapiHeaders);
-    String kafkaTopic = FeeFineKafkaTopic.from(eventType).fullTopicName(tenantId);
+    String kafkaTopic = topic.fullTopicName(tenantId);
 
     return new KafkaProducerRecordBuilder<String, Object>(tenantId)
       .key(key)

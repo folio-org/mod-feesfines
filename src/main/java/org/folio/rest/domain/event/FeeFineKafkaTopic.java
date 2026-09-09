@@ -1,11 +1,11 @@
-package org.folio.rest.domain;
+package org.folio.rest.domain.event;
 
 import org.folio.kafka.services.KafkaTopic;
+import org.folio.rest.domain.EventType;
 
 public enum FeeFineKafkaTopic implements KafkaTopic {
   FEE_FINE_BALANCE_CHANGED_TOPIC(EventType.FEE_FINE_BALANCE_CHANGED),
-  LOAN_RELATED_FEE_FINE_CLOSED_TOPIC(EventType.LOAN_RELATED_FEE_FINE_CLOSED),
-  LOG_RECORD_TOPIC(EventType.LOG_RECORD);
+  LOAN_RELATED_FEE_FINE_CLOSED_TOPIC(EventType.LOAN_RELATED_FEE_FINE_CLOSED);
 
   private static final String MODULE_NAME = "feesfines";
 

@@ -40,7 +40,7 @@ import org.folio.rest.domain.MonetaryValue;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.DefaultActionRequest;
 import org.folio.rest.jaxrs.model.DefaultBulkActionRequest;
-import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.rest.domain.event.FeeFineKafkaTopic;
 import org.folio.test.support.KafkaTestHelper;
 import org.folio.rest.utils.ResourceClient;
 import org.folio.test.support.ActionsAPITests;

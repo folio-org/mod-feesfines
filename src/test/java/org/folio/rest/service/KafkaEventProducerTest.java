@@ -1,8 +1,6 @@
 package org.folio.rest.service;
 
 import static java.util.UUID.randomUUID;
-import static org.folio.rest.domain.EventType.FEE_FINE_BALANCE_CHANGED;
-import static org.folio.rest.domain.FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED_TOPIC;
 import static org.folio.test.support.ApiTests.TENANT_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -13,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.folio.kafka.headers.FolioKafkaHeaders;
+import org.folio.rest.domain.event.FeeFineKafkaTopic;
 import org.junit.jupiter.api.Test;
 
 import io.vertx.core.Future;
@@ -31,10 +30,10 @@ class KafkaEventProducerTest {
     });
 
     Future<Void> result = producer.publish(randomUUID().toString(),
-      FEE_FINE_BALANCE_CHANGED, payload, okapiHeaders());
+      FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED_TOPIC, payload, okapiHeaders());
 
     assertTrue(result.succeeded());
-    assertEquals(FEE_FINE_BALANCE_CHANGED_TOPIC.fullTopicName(TENANT_NAME), sentRecord.get().topic());
+    assertEquals(FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED_TOPIC.fullTopicName(TENANT_NAME), sentRecord.get().topic());
     assertNotNull(sentRecord.get().key());
     assertEquals(payload, sentRecord.get().value());
     assertEquals(TENANT_NAME, tenantHeader(sentRecord.get()));
@@ -57,7 +56,7 @@ class KafkaEventProducerTest {
     });
 
     Future<Void> result = producer.publish(randomUUID().toString(),
-      FEE_FINE_BALANCE_CHANGED, "{\"balance\":0}", okapiHeaders);
+      FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED_TOPIC, "{\"balance\":0}", okapiHeaders);
 
     assertTrue(result.succeeded());
     assertEquals(okapiToken, headerValue(sentRecord.get(), "X-Okapi-Token"));
@@ -71,7 +70,7 @@ class KafkaEventProducerTest {
     KafkaEventProducer producer = new KafkaEventProducer(
       producerRecord -> Future.failedFuture(expectedFailure));
 
-    Future<Void> result = producer.publish(randomUUID().toString(), FEE_FINE_BALANCE_CHANGED, "{}", okapiHeaders());
+    Future<Void> result = producer.publish(randomUUID().toString(), FeeFineKafkaTopic.FEE_FINE_BALANCE_CHANGED_TOPIC, "{}", okapiHeaders());
 
     assertTrue(result.failed());
     assertSame(expectedFailure, result.cause());
