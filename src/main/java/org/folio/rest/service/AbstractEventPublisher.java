@@ -13,7 +13,7 @@ import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class AbstractEventPublisher {
+public abstract class AbstractEventPublisher {
 
   protected static final Logger log = LogManager.getLogger(AbstractEventPublisher.class);
 
