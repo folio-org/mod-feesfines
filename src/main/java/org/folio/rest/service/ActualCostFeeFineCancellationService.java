@@ -15,7 +15,7 @@ public class ActualCostFeeFineCancellationService extends ActualCostFeeFineServi
 
   public ActualCostFeeFineCancellationService(Context context, Map<String, String> okapiHeaders) {
     super(context, okapiHeaders);
-    this.accountEventPublisher = new AccountEventPublisher(context.owner(), okapiHeaders);
+    this.accountEventPublisher = new AccountEventPublisher(context, okapiHeaders);
   }
 
   public Future<ActualCostRecord> cancel(ActualCostFeeFineCancel request) {

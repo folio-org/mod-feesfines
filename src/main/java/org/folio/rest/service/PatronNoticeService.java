@@ -317,12 +317,12 @@ public class PatronNoticeService {
   }
 
   private Future<Void> publishLogEvent(FeeFineNoticeContext context, LogEventPayloadType eventType) {
-    return publishLogEvent(context.getLogEventPayload(), eventType);
+    return publishLogEvent(context.getUserId(), context.getLogEventPayload(), eventType);
   }
 
-  private Future<Void> publishLogEvent(JsonObject logEventPayload, LogEventPayloadType eventType) {
+  private Future<Void> publishLogEvent(String userId, JsonObject logEventPayload, LogEventPayloadType eventType) {
     logEventPayload.put(DATE.value(), DateTime.now().toString(ISODateTimeFormat.dateTime()));
-    CompletableFuture.runAsync(() -> logEventPublisher.publishLogEvent(logEventPayload, eventType));
+    CompletableFuture.runAsync(() -> logEventPublisher.publishPatronNoticeLogEvent(userId, logEventPayload, eventType));
 
     return succeededFuture();
   }
@@ -336,7 +336,7 @@ public class PatronNoticeService {
 
   private void handleFailure(Throwable throwable, Feefineaction action) {
     logger.error("Failed to send patron notice: {}", throwable.getMessage());
-    publishLogEvent(buildNoticeErrorLogEventPayload(throwable, action), NOTICE_ERROR);
+    publishLogEvent(action.getUserId(), buildNoticeErrorLogEventPayload(throwable, action), NOTICE_ERROR);
   }
 
 }

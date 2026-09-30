@@ -7,11 +7,13 @@ import java.util.function.BooleanSupplier;
 
 import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.kafka.services.KafkaTopic;
-import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.rest.domain.event.FeeFineKafkaTopic;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class KafkaService {
   private static final String KAFKA_HOST_ENV = "KAFKA_HOST";
   private static final String KAFKA_HOST_SYS_PROP = "kafka-host";
@@ -56,9 +58,11 @@ public class KafkaService {
 
   public Future<Void> createTopics(String tenantId) {
     if (!topicAdministrationEnabled.getAsBoolean()) {
+      log.info("createTopics:: skipping creation of Kafka topics");
       return Future.succeededFuture();
     }
 
+    log.info("createTopics:: creating Kafka topics for tenant {}", tenantId);
     return topicCreator.apply(FeeFineKafkaTopic.values(), tenantId);
   }
 

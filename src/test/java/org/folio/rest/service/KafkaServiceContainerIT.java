@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.util.Arrays;
 import java.util.List;
 
-import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.rest.domain.event.FeeFineKafkaTopic;
 import org.folio.test.support.KafkaTestHelper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;

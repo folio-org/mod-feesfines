@@ -1,7 +1,6 @@
 package org.folio.rest.service;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.rest.jaxrs.resource.Accounts.PutAccountsByAccountIdResponse;
 import static org.folio.rest.jaxrs.resource.Accounts.PutAccountsByAccountIdResponse.respond500WithTextPlain;
@@ -10,7 +9,6 @@ import static org.folio.rest.utils.AccountHelper.isClosedAndHasZeroRemainingAmou
 import static org.folio.rest.utils.MetadataHelper.populateMetadata;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import javax.ws.rs.core.Response;
 
@@ -21,7 +19,6 @@ import org.folio.rest.service.action.context.ActionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
@@ -41,31 +38,27 @@ public class AccountUpdateService {
     this.eventPublisher = new AccountEventPublisher(context, okapiHeaders);
   }
 
-  public CompletableFuture<AsyncResult<Response>> updateAccount(String accountId, Account account) {
-    final CompletableFuture<AsyncResult<Response>> putCompleted = new CompletableFuture<>();
+  public Future<Response> updateAccount(String accountId, Account account) {
+    return put(ACCOUNTS_TABLE, account, accountId, okapiHeaders, context, PutAccountsByAccountIdResponse.class)
+      .compose(putResponse -> {
+        if (putResponse.getStatus() != HTTP_NO_CONTENT.toInt()) {
+          return succeededFuture(putResponse);
+        }
 
-    put(ACCOUNTS_TABLE, account, accountId, okapiHeaders, context,
-      PutAccountsByAccountIdResponse.class, putCompleted::complete);
+        eventPublisher.publishAccountBalanceChangeEvent(account);
 
-    return putCompleted.thenCompose(responseResult -> {
-      if (!isFeeFineUpdateSucceeded(responseResult)) {
-        return completedFuture(responseResult);
-      }
+        if (isFeeFineWithLoanClosed(account)) {
+          return eventPublisher.publishLoanRelatedFeeFineClosedEvent(account)
+            .map(putResponse);
+        }
 
-      eventPublisher.publishAccountBalanceChangeEvent(account);
+        return succeededFuture(putResponse);
+      }).recover(error -> {
+        log.error("Cannot publish fee/fine closed event [feeFineId - {}, loanId - {}]",
+          account.getId(), account.getLoanId(), error);
 
-      if (isFeeFineWithLoanClosed(account)) {
-        return eventPublisher.publishLoanRelatedFeeFineClosedEvent(account.getLoanId())
-          .thenApply(notUsed -> responseResult);
-      }
-
-      return completedFuture(responseResult);
-    }).exceptionally(error -> {
-      log.error("Cannot publish fee/fine closed event [feeFineId - {}, loanId - {}]" +
-        " error occurred {}", account.getLoanId(), account.getId(), error);
-
-      return succeededFuture(respond500WithTextPlain(error.getMessage()));
-    });
+        return succeededFuture(respond500WithTextPlain(error.getMessage()));
+      });
   }
 
   public Future<Account> updateAccount(Account account, Map<String, String> headers) {
@@ -78,7 +71,6 @@ public class AccountUpdateService {
   public void publishLoanRelatedFeeFineClosedEvent(ActionContext actionContext) {
     actionContext.getAccounts().values().stream()
       .filter(this::isFeeFineWithLoanClosed)
-      .map(Account::getLoanId)
       .distinct()
       .forEach(eventPublisher::publishLoanRelatedFeeFineClosedEvent);
   }
@@ -89,10 +81,5 @@ public class AccountUpdateService {
 
   private boolean isFeeFineAssociatedToLoan(Account feeFine) {
     return StringUtils.isNotBlank(feeFine.getLoanId());
-  }
-
-  private boolean isFeeFineUpdateSucceeded(AsyncResult<Response> responseAsyncResult) {
-    return responseAsyncResult.succeeded()
-      && responseAsyncResult.result().getStatus() == HTTP_NO_CONTENT.toInt();
   }
 }

@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
 import org.folio.kafka.services.KafkaTopic;
-import org.folio.rest.domain.FeeFineKafkaTopic;
+import org.folio.rest.domain.event.FeeFineKafkaTopic;
 import org.junit.jupiter.api.Test;
 
 import io.vertx.core.Future;

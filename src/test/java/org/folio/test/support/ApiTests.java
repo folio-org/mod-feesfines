@@ -19,35 +19,30 @@ import static org.folio.rest.utils.ResourceClients.buildFeeFinesClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockClient;
 import static org.folio.rest.utils.ResourceClients.buildManualBlockTemplateClient;
 import static org.folio.util.PomUtils.getModuleVersion;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.http.HttpStatus;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.client.TenantClient;
 import org.folio.rest.domain.AutomaticFeeFineType;
-import org.folio.rest.impl.TenantRefAPI;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.service.KafkaService;
 import org.folio.rest.utils.OkapiClient;
 import org.folio.rest.utils.ResourceClient;
-import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,10 +63,12 @@ import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import lombok.SneakyThrows;
@@ -92,6 +89,7 @@ public class ApiTests {
   public static final OkapiDeployment okapiDeployment = new OkapiDeployment();
 
   protected static Vertx vertx;
+  protected static WebClient webClient;
 
   protected final ResourceClient accountsClient = buildAccountClient();
   protected final ResourceClient feeFineActionsClient = buildFeeFineActionsClient();
@@ -100,17 +98,27 @@ public class ApiTests {
   protected final ResourceClient manualBlockTemplatesClient = buildManualBlockTemplateClient();
   protected final OkapiClient client = new OkapiClient(getOkapiUrl());
   protected static PostgresClient pgClient;
+  protected static long testStartTime;
+  protected static KafkaTestHelper kafkaTestHelper;
 
   @BeforeAll
   static void deployVerticle(VertxTestContext context) {
+    // Start Kafka before deploying the verticle so KafkaEventProducer can connect.
+    kafkaTestHelper = KafkaTestHelper.getInstance();
+
+    // Starting Testcontainers from the deployment callback blocks the Vert.x event loop and can
+    // exceed VertxExtension's 30-second lifecycle timeout on a busy Docker host.
+    ReadyPostgresTester postgresTester = new ReadyPostgresTester();
+    postgresTester.start("postgres", "username", "password");
+    PostgresClient.setPostgresTester(postgresTester);
+
     vertx = Vertx.vertx();
+    webClient = WebClient.create(vertx);
     okapiDeployment.start();
     okapiDeployment.setUpMapping();
 
-    PostgresClient.setPostgresTester(new ReadyPostgresTester());
-
     vertx.deployVerticle(RestVerticle.class.getName(), createDeploymentOptions())
-      .compose(ignored -> createTenantAsync(getTenantAttributes()))
+      .compose(ignored -> postTenantAsync(getTenantAttributes()))
       .onComplete(context.succeeding(ignored -> {
         pgClient = PostgresClient.getInstance(vertx, TENANT_NAME);
         context.completeNow();
@@ -130,51 +138,34 @@ public class ApiTests {
 
   @BeforeEach
   public void setUpMapping() {
+    testStartTime = System.currentTimeMillis();
     okapiDeployment.setUpMapping();
   }
 
+  protected static void createTenant() {
+    HttpResponse<Buffer> response = postTenant(getTenantAttributes());
+    assertEquals(HttpStatus.SC_NO_CONTENT, response.statusCode());
+  }
+
   @SneakyThrows
-  protected static Response createTenant(TenantAttributes attributes) {
-    return createTenantAsync(attributes)
+  protected static HttpResponse<Buffer> postTenant(TenantAttributes attributes) {
+    return postTenantAsync(attributes)
       .toCompletionStage()
       .toCompletableFuture()
       .get(10, TimeUnit.SECONDS);
   }
 
-  protected static Future<Response> createTenantAsync(TenantAttributes attributes) {
-    TenantRefAPI tenantAPI = new TenantRefAPI() {
-      @Override
-      protected KafkaService kafkaService(Vertx vertx) {
-        return new KafkaService(vertx) {
-          @Override
-          public Future<Void> createTopics(String tenantId) {
-            return Future.succeededFuture();
-          }
-        };
-      }
-    };
-    Map<String, String> headers = new CaseInsensitiveMap<>();
-
-    headers.put("Content-type", "application/json");
-    headers.put("Accept", "application/json,text/plain");
-    headers.put("x-okapi-tenant", TENANT_NAME);
-    headers.put(OKAPI_URL_HEADER, getOkapiUrl());
-    Promise<Response> promise = Promise.promise();
-    tenantAPI.postTenant(attributes, headers, responseAsyncResult -> {
-      assertThat(responseAsyncResult.succeeded(), CoreMatchers.is(true));
-      assertThat(responseAsyncResult.result().getStatus(), CoreMatchers.is(HttpStatus.SC_NO_CONTENT));
-      promise.handle(responseAsyncResult);
-    }, vertx.getOrCreateContext());
-
-    return promise.future();
+  protected static Future<HttpResponse<Buffer>> postTenantAsync(TenantAttributes attributes) {
+    return new TenantClient(getOkapiUrl(), TENANT_NAME, generateOkapiToken(), webClient)
+      .postTenant(attributes);
   }
 
-  public static Response postTenant(String moduleFrom, String moduleTo) {
+  public static void postTenant(String moduleFrom, String moduleTo) {
     TenantAttributes tenantAttributes = getTenantAttributes()
       .withModuleFrom(moduleFrom)
       .withModuleTo(moduleTo);
 
-    return createTenant(tenantAttributes);
+    postTenant(tenantAttributes);
   }
 
   protected static TenantAttributes getTenantAttributes() {

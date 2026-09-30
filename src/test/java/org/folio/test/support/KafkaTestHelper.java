@@ -1,14 +1,21 @@
 package org.folio.test.support;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.awaitility.Awaitility.await;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.UUID;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -18,6 +25,7 @@ import io.vertx.kafka.admin.KafkaAdminClient;
 
 public final class KafkaTestHelper {
   private static final int TIMEOUT_SECONDS = 30;
+  private static final int POLL_TIMEOUT_SECONDS = 5;
   private static final DockerImageName KAFKA_IMAGE = DockerImageName.parse("apache/kafka-native:4.2.0");
   private static final String LEGACY_KAFKA_HOST_PROPERTY = "kafka-host";
   private static final String LEGACY_KAFKA_PORT_PROPERTY = "kafka-port";
@@ -126,6 +134,43 @@ public final class KafkaTestHelper {
       .until(() -> listTopics().stream().noneMatch(topicNames::contains));
   }
 
+  /**
+   * Polls the given Kafka topic for messages published at or after the given timestamp.
+   * Uses a fresh consumer group with earliest offset reset to read all messages,
+   * filtering by record timestamp. Polls for up to {@code POLL_TIMEOUT_SECONDS} seconds.
+   *
+   * @param topic           Kafka topic name
+   * @param fromTimestampMs only return messages with timestamp &gt;= this value
+   * @return list of message values (strings)
+   */
+  public List<String> pollMessages(String topic, long fromTimestampMs) {
+    String bootstrapServers = kafkaContainer.getHost() + ":" + kafkaContainer.getFirstMappedPort();
+    Properties props = new Properties();
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group-" + UUID.randomUUID());
+    props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+    List<String> messages = new ArrayList<>();
+    long pollDeadline = System.currentTimeMillis() + POLL_TIMEOUT_SECONDS * 1000L;
+
+    try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+      consumer.subscribe(List.of(topic));
+      while (System.currentTimeMillis() < pollDeadline) {
+        ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(200));
+        for (ConsumerRecord<String, String> rec : records) {
+          if (rec.timestamp() >= fromTimestampMs) {
+            messages.add(rec.value());
+          }
+        }
+      }
+    }
+
+    return messages;
+  }
+
   public static <T> T waitFor(Future<T> future) {
     try {
       return future.toCompletionStage()
@@ -138,7 +183,7 @@ public final class KafkaTestHelper {
 
   private KafkaAdminClient createAdminClient(String kafkaUrl) {
     Properties config = new Properties();
-    config.put(BOOTSTRAP_SERVERS_CONFIG, kafkaUrl);
+    config.put("bootstrap.servers", kafkaUrl);
 
     return KafkaAdminClient.create(vertx, config);
   }

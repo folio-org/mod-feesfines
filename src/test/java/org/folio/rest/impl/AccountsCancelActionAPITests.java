@@ -82,7 +82,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
         hasJsonPath("typeAction", is(CANCELLED_AS_ERROR.value()))
       )));
 
-    assertThat(fetchLogEventPayloads(getOkapi()).get(0),
+    assertThat(fetchLogEventPayloads(testStartTime).get(0),
       is(LogEventMatcher.cancelledActionLogEventPayload(accountToPost, cancelActionRequest)));
   }
 
@@ -204,7 +204,7 @@ public class AccountsCancelActionAPITests extends ApiTests {
         )
       ));
 
-    fetchLogEventPayloads(getOkapi()).forEach(payload -> assertThat(payload,
+    fetchLogEventPayloads(testStartTime).forEach(payload -> assertThat(payload,
       is(either(
         LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(0), cancelActionRequest))
         .or(LogEventMatcher.cancelledActionLogEventPayload(accountsToPost.get(1),

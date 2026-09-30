@@ -39,7 +39,7 @@ public class FeeFineTypesDefaultReferenceRecordsTest extends ApiTests {
       .withModuleFrom(MODULE_NAME + "-" + moduleFromVersion)
       .withModuleTo(MODULE_NAME + "-" + moduleToVersion);
 
-    createTenant(tenantAttributes);
+    postTenant(tenantAttributes);
   }
 
   @Test
